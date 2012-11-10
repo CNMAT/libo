@@ -93,7 +93,7 @@ test-clean:
 
 .PHONY: clean
 clean:
-	rm -f *.o libo.a libo.dylib test/osc_test *~ $(LIBO_PARSER_CFILES) $(LIBO_PARSER_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_SCANNER_HFILES)
+	rm -f *.o libo.a libo.dylib test/osc_test *~ $(LIBO_PARSER_CFILES) $(LIBO_PARSER_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_SCANNER_HFILES) *.output
 	cd doc && rm -rf html latex man
 	cd test && $(MAKE) clean
 	cd contrib && rm -rf *.o
