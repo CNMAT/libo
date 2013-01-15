@@ -56,6 +56,7 @@
 %code requires{
 #include "osc.h"
 #include "osc_error.h"
+#include "osc_message_u.h"
 
 #define YY_DECL int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
 
