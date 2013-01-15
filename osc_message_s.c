@@ -116,7 +116,8 @@ t_osc_err osc_message_s_wrap(t_osc_msg_s *m, char *bytes)
 	return OSC_ERR_NONE;
 }
 
-int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, char *new_address){
+int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, char *new_address)
+{
 	if(!dest){
 		return 0;
 	}
@@ -143,7 +144,8 @@ int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, 
 	return newlen;
 }
 
-uint32_t osc_message_s_getSize(t_osc_msg_s *m){
+uint32_t osc_message_s_getSize(t_osc_msg_s *m)
+{
 	if(m){
 		if(m->size){
 			return ntoh32(*((uint32_t *)(m->size)));
