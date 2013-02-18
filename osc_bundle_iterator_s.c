@@ -32,7 +32,8 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_iterator_s.h"
 #include "osc_bundle_iterator_s.r"
 
-t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator(long len, char *ptr){
+t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator(long len, char *ptr)
+{
 	t_osc_bndl_it_s *it = (t_osc_bndl_it_s *)osc_mem_alloc(sizeof(t_osc_bndl_it_s));
 	if(!it){
 		return NULL;
@@ -43,20 +44,27 @@ t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator(long len, char *ptr){
 	return it;
 }
 
-void osc_bundle_iterator_s_destroyIterator(t_osc_bndl_it_s *it){
+void osc_bundle_iterator_s_destroyIterator(t_osc_bndl_it_s *it)
+{
 	osc_mem_free(it);
 }
 
-void osc_bundle_iterator_s_resetIterator(t_osc_bndl_it_s *it){
+void osc_bundle_iterator_s_resetIterator(t_osc_bndl_it_s *it)
+{
 	it->msgptr = it->bndl;
 	osc_message_s_initMsg(&(it->msg));
 	//osc_message_s_wrap(&(it->msg), it->bndl + OSC_HEADER_SIZE);
 }
 
-t_osc_msg_s *osc_bundle_iterator_s_next(t_osc_bndl_it_s *it){
+t_osc_msg_s *osc_bundle_iterator_s_next(t_osc_bndl_it_s *it)
+{
+	t_osc_err e;
 	if(it->msgptr == it->bndl){
 		it->msgptr += OSC_HEADER_SIZE;
-		osc_message_s_wrap(&(it->msg), it->msgptr);
+		e = osc_message_s_wrap(&(it->msg), it->msgptr);
+		if(e){
+			return NULL;
+		}
 		return &(it->msg);
 	}
 	if(it->msgptr - it->bndl < it->len){
@@ -66,7 +74,10 @@ t_osc_msg_s *osc_bundle_iterator_s_next(t_osc_bndl_it_s *it){
 		return &(it->msg);
 	}
 	if(it->msgptr - it->bndl < it->len){
-		osc_message_s_wrap(&(it->msg), it->msgptr);
+		e = osc_message_s_wrap(&(it->msg), it->msgptr);
+		if(e){
+			return NULL;
+		}
 		return &(it->msg);
 	}else{
 		osc_message_s_initMsg(&(it->msg));
@@ -74,7 +85,8 @@ t_osc_msg_s *osc_bundle_iterator_s_next(t_osc_bndl_it_s *it){
 	}
 }
 
-int osc_bundle_iterator_s_hasNext(t_osc_bndl_it_s *it){
+int osc_bundle_iterator_s_hasNext(t_osc_bndl_it_s *it)
+{
 	if((it->msgptr - it->bndl >= it->len) || (it->len == OSC_HEADER_SIZE) || (it->msgptr == NULL)){
 		return 0;
 	}
