@@ -33,12 +33,14 @@ extern "C" {
 #define OSC_HEADER_SIZE 4
 #define OSC_IDENTIFIER "#OSC"
 #define OSC_IDENTIFIER_SIZE 4
+#define OSC_EMPTY_HEADER "#OSC"
 
 #else
 
 #define OSC_HEADER_SIZE 16 // bundle\0 + 8 byte timetag.
 #define OSC_IDENTIFIER "#bundle\0"
 #define OSC_IDENTIFIER_SIZE 8
+#define OSC_EMPTY_HEADER "#bundle\0\0\0\0\0\0\0\0\0"
 #endif
 
 #define OSC_ID OSC_IDENTIFIER
