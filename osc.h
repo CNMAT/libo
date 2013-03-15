@@ -45,6 +45,7 @@ extern "C" {
 #define OSC_ID_SIZE OSC_IDENTIFIER_SIZE
 
 #define OSC_BUNDLE_TYPETAG '.'
+#define OSC_TIMETAG_TYPETAG 't'
 
 #define OSC_ARRAY_CLEAR_ON_ALLOC 1
 

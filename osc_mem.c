@@ -26,6 +26,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc.h"
 #include "osc_mem.h"
 #include "osc_byteorder.h"
+#include "osc_timetag.h"
 
 static void *(*osc_mem_alloc_fp)(size_t size) = malloc;
 static void (*osc_mem_free_fp)(void *ptr) = free;
@@ -67,6 +68,9 @@ void osc_set_mem(void *(*malloc_func)(size_t),
 	}
 }
 
+// we don't define the size for the bundle or timetag typetags here since they're switchable with
+// #defines (in osc.h and osc_timetag.h respectively).  It's not necessary to define their sizes
+// here because they're special cases in osc_sizeof() below.
 char osc_data_lengths[128] = {
 	/*	0		*/	-1	,
 	/*	1		*/	-1	,
@@ -184,7 +188,7 @@ char osc_data_lengths[128] = {
 	/*	113	q	*/	-1	,
 	/*	114	r	*/	4	,
 	/*	115	s	*/	sizeof(char *)	,
-	/*	116	t	*/	8	,
+	/*	116	t	*/	-1	, 
 	/*	117	u	*/	4	,
 	/*	118	v	*/	-1	,
 	/*	119	w	*/	-1	,
@@ -216,6 +220,8 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 		}
 	case OSC_BUNDLE_TYPETAG:
 		return ntoh32(*((uint32_t *)data)) + 4;
+	case OSC_TIMETAG_TYPETAG:
+		return OSC_TIMETAG_SIZEOF;
 	default:
 		return osc_data_lengths[typetag];
 	}
@@ -248,7 +254,8 @@ int osc_mem_shouldByteswap(unsigned char typetag){
 	}
 }
 
-t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out){
+t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out)
+{
 	size_t size = osc_sizeof(typetag, data);
 	if(!osc_mem_shouldByteswap(typetag)){
 		memcpy(*out, data, size);
@@ -275,7 +282,8 @@ t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out)
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out){
+t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out)
+{
 	size_t size = osc_sizeof(typetag, data);
 	if(!osc_mem_shouldByteswap(typetag)){
 		memcpy(*out, data, size);

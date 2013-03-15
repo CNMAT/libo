@@ -64,6 +64,7 @@ typedef struct _osc_atom_s t_osc_atom_s;
 #include "osc_byteorder.h"
 #include "osc_atom_u.h"
 #include "osc_bundle_s.h"
+#include "osc_timetag.h"
 
 /** \brief Allocate a #t_osc_atom_s and set it to refer to ptr
 
@@ -93,6 +94,7 @@ int osc_atom_s_getString(t_osc_atom_s *a, size_t n, char **out);
 int osc_atom_s_getBool(t_osc_atom_s *a);
 t_osc_err osc_atom_s_getBndl(t_osc_bndl_s **b, t_osc_atom_s *a);
 t_osc_err osc_atom_s_getBndlCopy(t_osc_bndl_s **b, t_osc_atom_s *a);
+t_osc_timetag osc_atom_s_getTimetag(t_osc_atom_s *a);
 
 void osc_atom_s_setFloat(t_osc_atom_s *a, float v);
 void osc_atom_s_setDouble(t_osc_atom_s *a, double v);
@@ -108,6 +110,7 @@ void osc_atom_s_setString(t_osc_atom_s *a, char *v);
 void osc_atom_s_setTrue(t_osc_atom_s *a);
 void osc_atom_s_setFalse(t_osc_atom_s *a);
 void osc_atom_s_setNull(t_osc_atom_s *a);
+void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t);
 
 size_t osc_atom_s_sizeof(t_osc_atom_s *a);
 t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u);

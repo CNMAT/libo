@@ -33,6 +33,7 @@ extern "C" {
 #endif
 
 #include "osc_bundle_u.h"
+#include "osc_timetag.h"
 
 struct _osc_atom_u{
 	union _word{
@@ -48,6 +49,7 @@ struct _osc_atom_u{
 		double d;
 		char *s;
 		t_osc_bndl_u *bndl;
+		t_osc_timetag t;
 	} w;
 	int typetag;
 	int alloc;

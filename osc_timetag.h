@@ -36,54 +36,46 @@ Audio Technologies, University of California, Berkeley.
 
 #include <stdint.h>
 
+//#define OSC_TIMETAG_MSGSIZE_NTP 32
+//#define OSC_TIME_RECORD "/osc/time/record\0\0\0\0,s\0\0"
+//#define OSC_TIME_RECORD_LEN 24
+
+enum {
+	OSC_TIMETAG_NTP,
+	OSC_TIMETAG_PTP
+};
+
+#define OSC_TIMETAG_SIZEOF_NTP 8
+#define OSC_TIMETAG_SIZEOF_PTP 16 // correct?
+
+#define OSC_TIMETAG_FORMAT OSC_TIMETAG_NTP
+
+#if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
+#define OSC_TIMETAG_SIZEOF OSC_TIMETAG_SIZEOF_NTP
 typedef uint64_t t_osc_timetag;
-
-#define TIME_NULL       0 
-#define TIME_NOW        1
-#define TIME_IMMEDIATE  2
-#define TIME_STAMP      3
-
-typedef struct _ntptime {
-  unsigned long int sec;
-  unsigned long int frac_sec;
-  int sign;
-  int type;
-} ntptime;
-
-#define OSC_TIMETAG_MSGSIZE_NTP 32
-#define OSC_TIME_RECORD "/osc/time/record\0\0\0\0,s\0\0"
-#define OSC_TIME_RECORD_LEN 24
+#define OSC_TIMETAG_NULL 0
+#elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
+#define OSC_TIMETAG_SIZEOF OSC_TIMETAG_SIZEOF_NTP
+#else
+#error Unrecognized timetag format in osc_timetag.h!
+#endif
 
 // conversions 
-void osc_timetag_iso8601_to_ntp(char* s, ntptime* n);
-void osc_timetag_ntp_to_iso8601(ntptime* n, char* s);
-
-void osc_timetag_float_to_ntp(double d, ntptime* n);
-double osc_timetag_ntp_to_float(ntptime* n);
-
-void osc_timetag_ut_to_ntp(long int ut, ntptime* n);
-long int osc_timetag_ntp_to_ut(ntptime* n);
+void osc_timetag_fromISO8601(char *s, t_osc_timetag t);
+int osc_timetag_format(t_osc_timetag t, char *buf);
 
 // operations
-void osc_timetag_add(ntptime* a, ntptime* b, ntptime* r);
-int osc_timetag_cmp(ntptime* a, ntptime* b);
+t_osc_timetag osc_timetag_add(t_osc_timetag t1, t_osc_timetag t2);
+t_osc_timetag osc_timetag_subtract(t_osc_timetag t1, t_osc_timetag t2);
+int osc_timetag_cmp(t_osc_timetag t1, t_osc_timetag t2);
 
-int osc_timetag_is_immediate(char *buf);
+t_osc_timetag osc_timetag_floatToTimetag(double d);
+double osc_timetag_timetagToFloat(t_osc_timetag timetag);
+
+//int osc_timetag_is_immediate(char *buf);
 
 // generation
-void osc_timetag_now_to_ntp(ntptime* n);
-
-/**	Get the timetag out of the OSC bundle
-
-	@param	n	The length of the OSC data
-	@param	ptr	A pointer to the OSC data
-	@param	r	A pointer to an ntptime struct where the timetag will be stored.
-	@returns	An error if one occured, or #SUCCESS;
-	@retval		#SUCCESS
-	@retval 	#OSC_EBADBNDL
-*/
-int osc_timetag_get(long n, long ptr, ntptime *r);
-int osc_timetag_set(long n, long ptr, ntptime *r);
+t_osc_timetag osc_timetag_now(void);
 
 #endif
 

@@ -56,6 +56,8 @@ int osc_strfmt_countMeta(int len, char *buf);
 int osc_strfmt_isMeta(char c);
 int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out);
 
+int osc_strfmt_strlenPadded(char *str);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

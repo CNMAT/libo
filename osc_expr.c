@@ -62,7 +62,7 @@
 #include "osc_profile.h"
 
 //i hope i don't have to add any more ;)
-char *osc_expr_typestrings[] = {"", "number", "list", "", "string", "", "", "", "atom", "", "", "", "", "", "", "", "expression", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "OSC address", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "boolean", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "function"};
+char *osc_expr_typestrings[] = {"", "number", "list", "", "string", "", "", "", "atom", "", "", "", "", "", "", "", "expression", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "OSC address", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "boolean", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "function", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "timetag"};
 
 #define OSC_EXPR_MAX_TYPESTRING_LEN strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_NUMBER]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_LIST]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_STRING]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_ATOM]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_EXPR]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_OSCADDRESS]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_BOOLEAN]) + 1 + 12 // commas, spaces, and null byte
 
@@ -1632,6 +1632,21 @@ int osc_expr_add(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		sprintf(buf, "%s%s", sp1, sp2);
 		osc_atom_u_setString(*result, buf);
 		osc_mem_free(sp1);
+	}else if(tt1 == OSC_TIMETAG_TYPETAG || tt2 == OSC_TIMETAG_TYPETAG){
+		t_osc_timetag timetag1, timetag2;
+		if(tt1 == OSC_TIMETAG_TYPETAG && tt2 == OSC_TIMETAG_TYPETAG){
+			timetag1 = osc_atom_u_getTimetag(f1);
+			timetag2 = osc_atom_u_getTimetag(f2);
+		}else if(tt1 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt2)){
+			timetag1 = osc_atom_u_getTimetag(f1);
+			timetag2 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f2));
+		}else if(tt2 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt1)){
+			timetag1 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f1));
+			timetag2 = osc_atom_u_getTimetag(f2);
+		}else{
+			return 1;
+		}
+		osc_atom_u_setTimetag(*result, osc_timetag_add(timetag1, timetag2));
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		if(OSC_TYPETAG_ISFLOAT(tt1) || OSC_TYPETAG_ISFLOAT(tt2)){
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) + osc_atom_u_getDouble(f2));
@@ -1666,6 +1681,25 @@ int osc_expr_subtract(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		}else{
 			osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) - osc_atom_u_getInt32(f2));
 		}
+	}else if(tt1 == OSC_TIMETAG_TYPETAG || tt2 == OSC_TIMETAG_TYPETAG){
+		t_osc_timetag timetag1, timetag2;
+		if(tt1 == OSC_TIMETAG_TYPETAG && tt2 == OSC_TIMETAG_TYPETAG){
+			timetag1 = osc_atom_u_getTimetag(f1);
+			timetag2 = osc_atom_u_getTimetag(f2);
+			t_osc_timetag res = osc_timetag_subtract(timetag1, timetag2);
+			double f = osc_timetag_timetagToFloat(res);
+			osc_atom_u_setDouble(*result, f);
+			return 0;
+		}else if(tt1 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt2)){
+			timetag1 = osc_atom_u_getTimetag(f1);
+			timetag2 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f2));
+		}else if(tt2 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt1)){
+			timetag1 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f1));
+			timetag2 = osc_atom_u_getTimetag(f2);
+		}else{
+			return 1;
+		}
+		osc_atom_u_setTimetag(*result, osc_timetag_subtract(timetag1, timetag2));
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1)){
 			osc_expr_err_badInfixArg("-", tt1, 1, f1, f2);
@@ -1743,6 +1777,25 @@ int osc_expr_divide(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 	return 0;
 }
 
+int osc_expr_compareTimetag(t_osc_atom_u *f1, t_osc_atom_u *f2)
+{
+	char tt1 = osc_atom_u_getTypetag(f1), tt2 = osc_atom_u_getTypetag(f2);
+	t_osc_timetag timetag1, timetag2;
+	if(tt1 == OSC_TIMETAG_TYPETAG && tt2 == OSC_TIMETAG_TYPETAG){
+		timetag1 = osc_atom_u_getTimetag(f1);
+		timetag2 = osc_atom_u_getTimetag(f2);
+	}else if(tt1 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt2)){
+		timetag1 = osc_atom_u_getTimetag(f1);
+		timetag2 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f2));
+	}else if(tt2 == OSC_TIMETAG_TYPETAG && OSC_TYPETAG_ISNUMERIC(tt1)){
+		timetag1 = osc_timetag_floatToTimetag(osc_atom_u_getDouble(f1));
+		timetag2 = osc_atom_u_getTimetag(f2);
+	}else{
+		return 0;
+	}
+	return osc_timetag_cmp(timetag1, timetag2);
+}
+
 int osc_expr_lt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 {
 	if(!f1 || !f2){
@@ -1759,6 +1812,9 @@ int osc_expr_lt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		osc_atom_u_setTrue(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) < osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) == -1);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg("<", tt1, 1, f1, f2);
@@ -1786,6 +1842,9 @@ int osc_expr_lte(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		osc_atom_u_setTrue(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) <= osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) != 1);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg("<=", tt1, 1, f1, f2);
@@ -1813,6 +1872,9 @@ int osc_expr_gt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		osc_atom_u_setFalse(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) > osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) == 1);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg(">", tt1, 1, f1, f2);
@@ -1840,6 +1902,9 @@ int osc_expr_gte(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		osc_atom_u_setFalse(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) >= osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) != -1);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg(">=", tt1, 1, f1, f2);
@@ -1865,6 +1930,9 @@ int osc_expr_eq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		//osc_atom_u_setFalse(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) == osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) == 0);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg("==", tt1, 1, f1, f2);
@@ -1890,6 +1958,9 @@ int osc_expr_neq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		//osc_atom_u_setTrue(*result);
 	}else if(OSC_TYPETAG_ISNUMERIC(tt1) && OSC_TYPETAG_ISNUMERIC(tt2)){
 		osc_atom_u_setBool(*result, osc_atom_u_getDouble(f1) != osc_atom_u_getDouble(f2));
+	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
+		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
+		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) != 0);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg("!=", tt1, 1, f1, f2);

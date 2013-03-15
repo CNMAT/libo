@@ -110,6 +110,7 @@ typedef struct _osc_atom_u t_osc_atom_u;
 #include "osc_bundle_u.h"
 #include "osc_atom_u.h"
 #include "osc_array.h"
+#include "osc_timetag.h"
 
 /** \brief Allocate a #t_osc_atom_u
 
@@ -338,6 +339,7 @@ int osc_atom_u_getBool(t_osc_atom_u *a);
 t_osc_bndl_u *osc_atom_u_getBndl(t_osc_atom_u *a);
 //long osc_atom_u_getBndlLen(t_osc_atom_u *a);
 //char *osc_atom_u_getBndlPtr(t_osc_atom_u *a);
+t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a);
 
 /** \brief Set the contents of a #t_osc_atom_u to a 32-bit floating point value.
 
@@ -486,6 +488,13 @@ for freeing it.
 \param bndl The #t_osc_bndl_u to be referenced
 */
 void osc_atom_u_setSerializedBndl(t_osc_atom_u *a, t_osc_bndl_u *bndl);
+
+/** \brief Set the #t_osc_atom_u to a timetag
+
+\param a The #t_osc_atom_u
+\param timetag The timetag
+*/
+void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag);
 
 /** \brief Return the size of the data represented by the #t_osc_atom_u.
 

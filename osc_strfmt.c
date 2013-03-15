@@ -178,3 +178,14 @@ int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out)
 	(*out)[i] = '\0';
 	return n;
 }
+
+int osc_strfmt_strlenPadded(char *str)
+{
+	int len = strlen(str);
+	int rem = len % 4;
+	if(rem){
+		return len + (4 - rem);
+	}else{
+		return len + 4;
+	}
+}
