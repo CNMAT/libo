@@ -34,10 +34,13 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 extern "C" {
 #endif
 
+#pragma pack(push)
+#pragma pack(4)
 struct _osc_bundle_s{
 	long len;
 	char *ptr;
 };
+#pragma pack(pop)
 
 #ifdef __cplusplus
 extern "C"{

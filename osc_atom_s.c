@@ -42,6 +42,11 @@ t_osc_atom_s *osc_atom_s_alloc(char typetag, char *ptr)
 	return a;
 }
 
+void osc_atom_s_free(t_osc_atom_s *a)
+{
+	osc_mem_free(a);
+}
+
 size_t osc_atom_s_getStructSize(void)
 {
 	return sizeof(t_osc_atom_s);

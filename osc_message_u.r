@@ -36,6 +36,8 @@ extern "C" {
 
 #include "osc_atom_u.h"
 
+#pragma pack(push)
+#pragma pack(4)
 struct _osc_message_u{
 	uint32_t size;
 	char *address;
@@ -43,6 +45,7 @@ struct _osc_message_u{
 	t_osc_atom_u *arghead, *argtail;
 	struct _osc_message_u *next, *prev;
 };
+#pragma pack(pop)
 
 #ifdef __cplusplus
 }

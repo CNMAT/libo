@@ -1793,7 +1793,7 @@ int osc_expr_compareTimetag(t_osc_atom_u *f1, t_osc_atom_u *f2)
 	}else{
 		return 0;
 	}
-	return osc_timetag_cmp(timetag1, timetag2);
+	return osc_timetag_compare(timetag1, timetag2);
 }
 
 int osc_expr_lt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)

@@ -268,6 +268,11 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 	return OSC_ERR_NONE;
 }
 
+t_osc_err osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, t_osc_ar **osc_msg_s_array, int fullmatch)
+{
+	return osc_bundle_s_lookupAddress(bndl->len, bndl->ptr, address, osc_msg_s_array, fullmatch);
+}
+
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc)
 {
 	*alloc = 0;

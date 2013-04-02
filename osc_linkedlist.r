@@ -1,6 +1,6 @@
 /*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
-University of California, Berkeley.  Copyright (c) 2009-ll, The Regents of
+University of California, Berkeley.  Copyright (c) 2013, The Regents of
 the University of California (Regents). 
 Permission to use, copy, modify, distribute, and distribute modified versions
 of this software and its documentation without fee and without a signed
@@ -20,47 +20,32 @@ HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE
 MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_atom_u.r
+/** 	\file osc_linkedlist.r
 	\author John MacCallum
 
 */
-
-#ifndef __OSC_ATOM_U_R__
-#define __OSC_ATOM_U_R__
+#ifndef __OSC_LINKEDLIST_R__
+#define __OSC_LINKEDLIST_R__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "osc_bundle_u.h"
-#include "osc_timetag.h"
-
-#pragma pack(push)
-#pragma pack(4)
-struct _osc_atom_u{
-	union _word{
-		int8_t c;
-		uint8_t C;
-		int16_t u;
-		uint16_t U;
-		int32_t i;
-		uint32_t I;
-		int64_t h;
-		uint64_t H;
-		float f;
-		double d;
-		char *s;
-		t_osc_bndl_u *bndl;
-		t_osc_timetag t;
-	} w;
-	int typetag;
-	int alloc;
-	struct _osc_atom_u *next, *prev;
+struct _osc_linkedlist_elem{
+	void *data;
+	struct _osc_linkedlist_elem *next, *prev;
 };
-#pragma pack(pop)
+
+struct _osc_linkedlist{
+	t_osc_linkedlist_elem *e;
+	unsigned long count;
+	t_osc_linkedlist_elem *head, *tail;
+	void (*dtor)(void *data);
+};
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __OSC_ATOM_U_R__
+#endif // __OSC_LINKEDLIST_R__
+

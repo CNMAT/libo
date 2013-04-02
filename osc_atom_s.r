@@ -33,10 +33,13 @@ extern "C" {
 #endif
 
 
+#pragma pack(push)
+#pragma pack(4)
 struct _osc_atom_s{
 	char *data;
 	char typetag;
 };
+#pragma pack(pop)
 
 #ifdef __cplusplus
 }

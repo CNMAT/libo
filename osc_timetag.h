@@ -67,12 +67,12 @@ int osc_timetag_format(t_osc_timetag t, char *buf);
 // operations
 t_osc_timetag osc_timetag_add(t_osc_timetag t1, t_osc_timetag t2);
 t_osc_timetag osc_timetag_subtract(t_osc_timetag t1, t_osc_timetag t2);
-int osc_timetag_cmp(t_osc_timetag t1, t_osc_timetag t2);
+int osc_timetag_compare(t_osc_timetag t1, t_osc_timetag t2);
 
 t_osc_timetag osc_timetag_floatToTimetag(double d);
 double osc_timetag_timetagToFloat(t_osc_timetag timetag);
 
-//int osc_timetag_is_immediate(char *buf);
+int osc_timetag_isImmediate(t_osc_timetag timetag);
 
 // generation
 t_osc_timetag osc_timetag_now(void);

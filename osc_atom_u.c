@@ -150,6 +150,8 @@ float osc_atom_u_getFloat(t_osc_atom_u *a){
 		return (float)a->w.U;
 	case 'N': // NULL
 		return 0.f;
+	case OSC_TIMETAG_TYPETAG:
+		return (float)osc_timetag_timetagToFloat(a->w.t);
 	}
 	return 0.f;
 }
@@ -190,6 +192,8 @@ double osc_atom_u_getDouble(t_osc_atom_u *a){
 		return (double)a->w.U;
 	case 'N': // NULL
 		return 0.;
+	case OSC_TIMETAG_TYPETAG:
+		return osc_timetag_timetagToFloat(a->w.t);
 	}
 	return 0.;
 }

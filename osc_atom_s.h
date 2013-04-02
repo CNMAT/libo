@@ -73,6 +73,7 @@ and must be freed by the caller.
 \return A #t_osc_atom_s
  */
 t_osc_atom_s *osc_atom_s_alloc(char typetag, char *ptr);
+void osc_atom_s_free(t_osc_atom_s *a);
 size_t osc_atom_s_getStructSize(void);
 void osc_atom_s_set(t_osc_atom_s *a, char typetag, char *ptr);
 char osc_atom_s_getTypetag(t_osc_atom_s *a);

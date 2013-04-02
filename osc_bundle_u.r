@@ -36,10 +36,13 @@ extern "C" {
 
 #include "osc_message_u.h"
 
+#pragma pack(push)
+#pragma pack(4)
 struct _osc_bundle_u{
 	int msgcount;
 	t_osc_msg_u *msghead, *msgtail;
 };
+#pragma pack(pop)
 
 #ifdef __cplusplus
 extern "C"{

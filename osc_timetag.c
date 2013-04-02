@@ -68,24 +68,33 @@ t_osc_timetag osc_timetag_subtract(t_osc_timetag t1, t_osc_timetag t2)
 	t_osc_timetag_ntptime t2_ntp = *((t_osc_timetag_ntptime *)(&t2));
 	t_osc_timetag_ntptime r;
 
-	int64_t sec = t1_ntp.sec - t2_ntp.sec;
-	int64_t frac_sec = t1_ntp.frac_sec - t2_ntp.frac_sec;
-	if(sec < 0){
-		sec *= -1;
+	if(t1_ntp.sec > t2_ntp.sec || (t1_ntp.sec == t2_ntp.sec && t1_ntp.frac_sec >= t2_ntp.frac_sec)){
+		r.sec = t1_ntp.sec - t2_ntp.sec;
+		if(t1_ntp.frac_sec >= t2_ntp.frac_sec){
+			r.frac_sec = t1_ntp.frac_sec - t2_ntp.frac_sec;
+		}else{
+			if(r.sec == 0){
+				r.frac_sec = t2_ntp.frac_sec - t1_ntp.frac_sec;
+			}else{
+				r.sec--;
+				r.frac_sec = t1_ntp.frac_sec - t2_ntp.frac_sec;
+			}
+		}
+	}else{
+		r.sec = t2_ntp.sec - t1_ntp.sec;
+		if(t1_ntp.frac_sec >= t2_ntp.frac_sec){
+			r.frac_sec = t1_ntp.frac_sec - t2_ntp.frac_sec;
+		}else{
+			r.frac_sec = t2_ntp.frac_sec - t1_ntp.frac_sec;
+		}
 	}
-	if(frac_sec < 0){
-		sec -= 1;
-		frac_sec += 1;
-	}
-	r.sec = (uint32_t)sec;
-	r.frac_sec = (uint32_t)frac_sec;
 
 	return *((t_osc_timetag *)(&r));
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
 #endif
 }
 
-int osc_timetag_cmp(t_osc_timetag t1, t_osc_timetag t2)
+int osc_timetag_compare(t_osc_timetag t1, t_osc_timetag t2)
 {
 #if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
 	t_osc_timetag_ntptime t1_ntp = *((t_osc_timetag_ntptime *)(&t1));
@@ -103,19 +112,15 @@ int osc_timetag_cmp(t_osc_timetag t1, t_osc_timetag t2)
 #endif
 }
 
-/*
-int osc_timetag_is_immediate(char *buf){
-	int offset = 0;
-	if(!(strcmp(buf, "#bundle"))){
-		offset = 8;
-	}
-	if(*(unsigned long long *)(buf + offset) == 0x100000000000000LL){
-		return 1;
-	}else{
-		return 0;
-	}
+int osc_timetag_isImmediate(t_osc_timetag timetag)
+{
+#if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
+	t_osc_timetag_ntptime ntp = *((t_osc_timetag_ntptime *)&timetag);
+	return (ntp.sec == 0 && ntp.frac_sec == 1);
+#elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
+#endif
 }
-*/
+
 // conversion functions
 
 // timegm is not portable.

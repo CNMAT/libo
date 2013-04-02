@@ -53,25 +53,6 @@ extern "C" {
 
 #define OSC_QUOTE_STRINGS 1
 
-// this is a workaround for a bug in Max.  the function that passes arguments to functions
-// declared with static types (ie, not with A_GIMME) is not thread safe.  This has been fixed in
-// max 6, but not in earlier versions.
-#define OSC_GET_LEN_AND_PTR \
-	if(argc != 2){\
-		object_error((t_object *)x, "%s: expected 2 arguments but got %d", __func__, argc);\
-		return;\
-	}\
-	if(atom_gettype(argv) != A_LONG){\
-		object_error((t_object *)x, "%s: argument 1 should be an int", __func__);\
-		return;\
-	}\
-	if(atom_gettype(argv + 1) != A_LONG){\
-		object_error((t_object *)x, "%s: argument 2 should be an int", __func__);\
-		return;\
-	}\
-	long len = atom_getlong(argv);\
-	long ptr = atom_getlong(argv + 1);
-
 #ifdef __cplusplus
 }
 #endif

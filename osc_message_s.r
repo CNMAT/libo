@@ -34,6 +34,8 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 extern "C" {
 #endif
 
+#pragma pack(push)
+#pragma pack(4)
 struct _osc_message_s{
 	char *size; /**< Pointer to the size field of the message */
 	char *address; /**< Pointer to the address field of the message */
@@ -44,6 +46,7 @@ struct _osc_message_s{
 	int *data_offset_cache; /**< Offsets from the #t_osc_msg_s.data for each item */
 	int *data_size_cache; /**< Size of each element of data stored in the data field */
 };
+#pragma pack(pop)
 
 #ifdef __cplusplus
 extern "C"{
