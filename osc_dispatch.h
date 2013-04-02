@@ -39,13 +39,13 @@ extern "C" {
 #include "osc_vtable.h"
 
 t_osc_err osc_dispatch(t_osc_vtable *vtab,
-		       long bndllen,
+		       int32_t bndllen,
 		       char *bndl,
 		       int strip_matched_portion_of_address);
 t_osc_err osc_dispatch_selectors(t_osc_vtable *vtab,
 				 int nselectors,
 				 char **selectors,
-				 long bndllen,
+				 int32_t bndllen,
 				 char *bndl,
 				 int strip_matched_portion_of_address);
 #ifdef __cplusplus

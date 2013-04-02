@@ -44,7 +44,7 @@
 #include "osc_vtable.h"
 
 t_osc_err osc_dispatch_impl(t_osc_vtable *vtab,
-			    long bndllen,
+			    int32_t bndllen,
 			    char *bndl,
 			    int strip_matched_portion_of_address,
 			    t_osc_bndl_s **partial_matches,
@@ -52,7 +52,7 @@ t_osc_err osc_dispatch_impl(t_osc_vtable *vtab,
 			    t_osc_bndl_s **unmatched);
 
 t_osc_err osc_dispatch_impl_nest(char *selector,
-				 long bndllen,
+				 int32_t bndllen,
 				 char *bndl,
 				 int strip_matched_portion_of_address,
 				 t_osc_bndl_s **partial_match,
@@ -85,7 +85,7 @@ int osc_dispatch_msg(t_osc_msg_s *msg,
 					char *nested_bndl = osc_atom_s_getData(a);
 					char *sel_offset = selector + ao + 1;
 					osc_dispatch_impl_nest(sel_offset,
-							       ntoh32(*((uint32_t *)nested_bndl)),
+							       ntoh32(*((int32_t *)nested_bndl)),
 							       nested_bndl + 4,
 							       strip_matched_portion_of_address,
 							       partial_match,
@@ -131,7 +131,7 @@ int osc_dispatch_msg(t_osc_msg_s *msg,
 }
 
 t_osc_err osc_dispatch_impl_nest(char *selector,
-				 long bndllen,	
+				 int32_t bndllen,	
 			         char *bndl,
 				 int strip_matched_portion_of_address,
 				 t_osc_bndl_s **partial_match,
@@ -151,7 +151,7 @@ t_osc_err osc_dispatch_impl_nest(char *selector,
 }
 
 t_osc_err osc_dispatch_impl(t_osc_vtable *vtab,
-			    long bndllen,
+			    int32_t bndllen,
 			    char *bndl,
 			    int strip_matched_portion_of_address,
 			    t_osc_bndl_s **partial_matches,
@@ -182,7 +182,7 @@ t_osc_err osc_dispatch_impl(t_osc_vtable *vtab,
 }
 
 t_osc_err osc_dispatch(t_osc_vtable *vtab,
-		       long bndllen,
+		       int32_t bndllen,
 		       char *bndl,
 		       int strip_matched_portion_of_address)
 {
@@ -237,7 +237,7 @@ t_osc_err osc_dispatch(t_osc_vtable *vtab,
 t_osc_err osc_dispatch_selectors(t_osc_vtable *vtab,
 				 int nselectors,
 				 char **selectors,
-				 long bndllen,
+				 int32_t bndllen,
 				 char *bndl,
 				 int strip_matched_portion_of_address)
 {

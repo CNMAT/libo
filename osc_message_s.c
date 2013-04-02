@@ -90,7 +90,7 @@ t_osc_err osc_message_s_wrap(t_osc_msg_s *m, char *bytes)
 	if(!m || !bytes){
 		return OSC_ERR_NULLPTR;
 	}
-	int len = ntoh32(*((uint32_t *)bytes));
+	int32_t len = ntoh32(*((int32_t *)bytes));
 	m->size = bytes;
 	m->address = bytes + 4;
 	if(!(m->address)){
@@ -116,7 +116,7 @@ t_osc_err osc_message_s_wrap(t_osc_msg_s *m, char *bytes)
 	return OSC_ERR_NONE;
 }
 
-int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, char *new_address)
+int32_t osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int32_t new_address_len, char *new_address)
 {
 	if(!dest){
 		return 0;
@@ -124,13 +124,13 @@ int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, 
 	if(osc_error_validateAddress(new_address)){
 		return 0;
 	}
-	int oldlen = osc_message_s_getSize(src);
-	int old_address_len = strlen(osc_message_s_getAddress(src));
-	int newlen = oldlen - (old_address_len - new_address_len);
+	int32_t oldlen = osc_message_s_getSize(src);
+	int32_t old_address_len = strlen(osc_message_s_getAddress(src));
+	int32_t newlen = oldlen - (old_address_len - new_address_len);
 	while(newlen % 4){
 		newlen++;
 	}
-	*((uint32_t *)dest) = hton32(newlen);
+	*((int32_t *)dest) = hton32(newlen);
 	char *ptr = dest + 4;
 	if(new_address_len > 0){
 		memcpy(ptr, new_address, new_address_len);
@@ -144,11 +144,11 @@ int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, 
 	return newlen;
 }
 
-uint32_t osc_message_s_getSize(t_osc_msg_s *m)
+int32_t osc_message_s_getSize(t_osc_msg_s *m)
 {
 	if(m){
 		if(m->size){
-			return ntoh32(*((uint32_t *)(m->size)));
+			return ntoh32(*((int32_t *)(m->size)));
 		}else{
 			return 0;
 		}

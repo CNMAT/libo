@@ -37,7 +37,7 @@ extern "C" {
 
 t_osc_err osc_query_select(int nselectors,
 	char **selectors,
-	long bndllen,
+	int32_t bndllen,
 	char *bndl,
 	int strip_matched_portion_of_address,
 	t_osc_rset **rset);

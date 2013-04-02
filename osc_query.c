@@ -49,7 +49,7 @@
 int osc_query_select_impl(int nselectors,
 			  char **selectors,
 			  char *rec_selector,
-			  long bndllen,
+			  int32_t bndllen,
 			  char *bndl,
 			  int strip_matched_portion_of_address,
 			  t_osc_rset **rset)
@@ -88,7 +88,7 @@ int osc_query_select_impl(int nselectors,
 							result = osc_query_select_impl(1,
 										       &sel_offset,
 										       rec_selector ? rec_selector : selector,
-										       ntoh32(*((uint32_t *)nested_bndl)),
+										       ntoh32(*((int32_t *)nested_bndl)),
 										       nested_bndl + 4,
 										       strip_matched_portion_of_address,
 										       rset);
@@ -146,7 +146,7 @@ int osc_query_select_impl(int nselectors,
 
 t_osc_err osc_query_select(int nselectors,
 			   char **selectors,
-			   long bndllen,
+			   int32_t bndllen,
 			   char *bndl,
 			   int strip_matched_portion_of_address,
 			   t_osc_rset **rset)

@@ -135,7 +135,7 @@ t_osc_err osc_bundle_s_getMsgCount(int len, char *buf, int *count)
 	}
 	char *ptr = buf + OSC_HEADER_SIZE;
 	while((ptr - buf) < len){
-		int size = ntoh32(*((uint32_t *)ptr));
+		int32_t size = ntoh32(*((int32_t *)ptr));
 		*count += 1;
 		ptr += size + 4;
 	}
@@ -298,8 +298,8 @@ t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 {
 	char *om = osc_message_s_getPtr(oldmsg);
 	char *nm = osc_message_s_getPtr(newmsg);
-	uint32_t old_size = ntoh32(*((uint32_t *)om));
-	uint32_t new_size = ntoh32(*((uint32_t *)nm));
+	int32_t old_size = ntoh32(*((int32_t *)om));
+	int32_t new_size = ntoh32(*((int32_t *)nm));
 	long newbuflen = *bufpos - (old_size + 4) + (new_size + 4);
 	char copy[newbuflen];// = (char *)osc_mem_alloc(buflen * 2);
 	char *oldptr = *bndl, *newptr = copy;
@@ -336,7 +336,7 @@ t_osc_err osc_bundle_s_appendMessage(long *len, char **bndl, t_osc_msg_s *msg){
 		//printf("no freaking message\n");
 		return OSC_ERR_NONE;
 	}
-	uint32_t msglen = osc_message_s_getSize(msg);
+	int32_t msglen = osc_message_s_getSize(msg);
 	char *tmp = NULL;
 	if(*bndl){
 		tmp = (char *)osc_mem_resize(*bndl, *len + msglen + 4);

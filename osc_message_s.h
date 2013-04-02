@@ -90,7 +90,7 @@ void osc_message_s_copy(t_osc_msg_s **dest, t_osc_msg_s *src);
    @param new_address The new address.
    @return The length of the renamed (copied) message.
  */
-int osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int new_address_len, char *new_address);
+int32_t osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int32_t new_address_len, char *new_address);
 
 /**
    Wrap an array of bytes containing a serialized OSC message in a #t_osc_msg_s object
@@ -105,7 +105,7 @@ t_osc_err osc_message_s_wrap(t_osc_msg_s *m, char *bytes);
    @param m OSC message
    @return Size of the message
 */
-uint32_t osc_message_s_getSize(t_osc_msg_s *m);
+int32_t osc_message_s_getSize(t_osc_msg_s *m);
 
 /**
    Return a pointer to the address field of m.
