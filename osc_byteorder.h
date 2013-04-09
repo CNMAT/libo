@@ -68,6 +68,8 @@ typedef struct uint128_ {
 #endif
 #endif
 
+// need to handle the case where these are not defined
+
 #if OSC_BYTE_ORDER == OSC_LITTLE_ENDIAN
 #define hton16(x) OSC_BYTE_SWAP16(x)
 #define ntoh16(x) OSC_BYTE_SWAP16(x)
