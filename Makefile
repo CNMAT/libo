@@ -1,4 +1,4 @@
-LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag
+LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag
 
 LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
@@ -23,10 +23,10 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -funroll-loops 
 
 MAC_SYSROOT = MacOSX10.8.sdk 
 MAC-CFLAGS = -arch i386 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/$(MAC_SYSROOT)
-WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
+WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 
 MAC-INCLUDES = -F/System/Library/Frameworks -I/System/Library/Frameworks/Carbon.framework/Headers -I/System/Library/Frameworks/CoreServices.framework/Headers -I/usr/include
-WIN-INCLUDES = -I/usr/include
+WIN-INCLUDES = 
 
 all: CFLAGS += $(RELEASE-CFLAGS)
 all: CFLAGS += $(MAC-CFLAGS)
@@ -45,7 +45,8 @@ debug: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
 win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
-win: CC = gcc
+win: CC = i686-w64-mingw32-gcc
+#win: CC = gcc
 win: I = $(WIN-INCLUDES)
 win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a 
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
