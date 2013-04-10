@@ -32,6 +32,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <libgen.h>
 #ifndef WIN_VERSION
 #include <Carbon.h>
 #include <CoreServices.h>
@@ -262,13 +263,13 @@ void osc_expr_error(YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
-		osc_error_handler(basename(__FILE__),
+		osc_error_handler(__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
 				  NULL,
 				  -1,
 				  errorcode,
 				  buf);
 	}else{
-		osc_error_handler(basename(__FILE__),
+	  osc_error_handler(__FILE__,//basename(__FILE__),
 				  NULL,
 				  -1,
 				  errorcode,
