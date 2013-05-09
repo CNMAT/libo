@@ -53,26 +53,29 @@ inline double osc_profile_getCyclesPerSecond(){
 	double t1 = osc_profile_getTime();
         usleep(1000000);
         double t2 = osc_profile_getTime();
-	double cps = floor((t2 - t1) / 10000000.) * 10000000.;
+	//printf("%f - %f = %f (%f, %f)\n", t2, t1, t2 - t1, (t2 - t2) / 1000000., floor((t2 - t1) / 1000000.) * 1000000.);
+	double cps = (t2 - t1);//floor((t2 - t1) / 10000000.) * 10000000.;
         return cps;
 }
 
 #ifdef __OSC_PROFILE__
-#define RDTSC_CYCLES_PER_SECOND osc_profile_getCyclesPerSecond();
-#define TIMER_START(varname, rdtsc_cps) int varname##_line_start = __LINE__;	\
-	double varname##_start = osc_profile_getTime() / rdtsc_cps
+static double osc_profile_rdtsc_cps = 0;
+#define OSC_PROFILE_TIMER_START(varname) int varname##_line_start = __LINE__;	\
+	if(osc_profile_rdtsc_cps == 0){\
+		osc_profile_rdtsc_cps = osc_profile_getCyclesPerSecond(); \
+	}\
+	double varname##_start = osc_profile_getTime()
 
-#define TIMER_STOP(varname, rdtsc_cps) int varname##_line_stop = __LINE__;	\
-	double varname##_stop = osc_profile_getTime() / rdtsc_cps
+#define OSC_PROFILE_TIMER_STOP(varname) int varname##_line_stop = __LINE__;	\
+	double varname##_stop = osc_profile_getTime()
 
-#define TIMER_PRINTF(varname) printf("%s time elapsed: %f\" (%f ms).  (%s:%d--%d)\n", #varname, varname##_stop - varname##_start, (varname##_stop - varname##_start) * 1000., __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
-#define TIMER_SNPRINTF(varname, bufname) char bufname [128]; snprintf(bufname, 128, "%s time elapsed: %f\" (%f ms).  (%s:%d--%d)", #varname, varname##_stop - varname##_start, (varname##_stop - varname##_start) * 1000., __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
+#define OSC_PROFILE_TIMER_PRINTF(varname) printf("%s time elapsed: %f\" (%f ms).  (%s:%d--%d)\n", #varname, (varname##_stop - varname##_start) / osc_profile_rdtsc_cps, ((varname##_stop - varname##_start) / osc_profile_rdtsc_cps) * 1000, __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
+#define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname) char bufname [128]; snprintf(bufname, 128, "%s time elapsed: %f\" (%f ms).  (%s:%d--%d)", #varname, varname##_stop - varname##_start, (varname##_stop - varname##_start) / 1000., __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
 #else
-#define RDTSC_CYCLES_PER_SECOND 0
-#define TIMER_START(varname, rdtsc_cps)
-#define TIMER_STOP(varname, rdtsc_cps)
-#define TIMER_PRINTF(varname)
-#define TIMER_SNPRINTF(varname, bufname)
+#define OSC_PROFILE_TIMER_START(varname)
+#define OSC_PROFILE_TIMER_STOP(varname)
+#define OSC_PROFILE_TIMER_PRINTF(varname)
+#define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname)
 #endif
 
 #ifdef __cplusplus
