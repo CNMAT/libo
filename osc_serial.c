@@ -52,7 +52,7 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 		case '#':
 			return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID;
 		case '/':
-			return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS:
+			return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS;
 		default: 
 			return OSC_SERIAL_ERROR_BADHEADER;
 		}
@@ -117,30 +117,30 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				return s + 1;
 			case 7:
 				// negative size check
-				return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24);
+				return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24);
 			}
 		}
-	case OSC_SERIAL_MESSAGE:
+	case OSC_SERIAL_BUNDLE_MESSAGE:
 		switch(state){
 		case OSC_SERIAL_MESSAGE_SIZE:
 			{
 				int32_t c = count & 0xff;
 				switch(c){
 				case 0:
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1);
 				case 1:
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1);
 				case 2:
 					// negative size check
 					//count = ntoh32(count | b);
 					count = count | b;
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (count - 2);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (count - 2);
 				default:
 					//count = ntoh32(count);
 					if(b == '/'){
-						return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
 					}else{
-						return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_ERROR_NOLEADINGSLASH;
+						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_ERROR_NOLEADINGSLASH;
 					}
 				}
 			}
@@ -173,9 +173,9 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '?':
 					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
 				case ',':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count - 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count - 1);
 				case '}':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
 				default:
 					return s - 1;
 				}
@@ -195,16 +195,16 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '?':
 					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
 				case '-':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count - 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count - 1);
 				case ']':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
 				default:
 					return s - 1;
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING:
 				if(ctrm4 == 0){
 					if(b == ','){
-						return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count - 1);
+						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count - 1);
 					}else if(b == '\0'){
 						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
 					}else{
@@ -246,7 +246,7 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				}
 			case OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING:
 				if(ctrm4 == 0){
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count - 1);
+					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count - 1);
 				}else{
 					if(b == '\0'){
 						return s - 1;
@@ -257,10 +257,126 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			}
 		case OSC_SERIAL_MESSAGE_DATA:
 			if(count <= 0){
-				return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_SIZE;
+				return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE;
 			}else{
 				return s - 1;
 			}
+		}
+	case OSC_SERIAL_MESSAGE: // naked message not contained in a bundle
+		switch(state){
+		case OSC_SERIAL_MESSAGE_ADDRESS:
+			switch(micro){
+			case 0:
+				switch(b){
+				case '[':
+					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS) + 1;
+				case '{':
+					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS) + 1;
+				case '\0':
+					return (s | OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING) + 1;
+				default:
+					return s + 1;
+				}
+			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA:
+				switch(b){
+				case ',':
+					return s | OSC_SERIAL_ERROR_DOUBLECOMMA;
+				}
+				// intentional fallthrough to the next case
+			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS:
+				switch(b){
+				case '[':
+				case ']':
+				case '{':
+					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+				case '*':
+				case '?':
+					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+				case ',':
+					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count + 1);
+				case '}':
+					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1);
+				default:
+					return s + 1;
+				}
+			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH:
+				switch(b){
+				case '-':
+					return s | OSC_SERIAL_ERROR_DOUBLEDASH;
+				}
+				// intentional fallthrough to the next case
+			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS:
+				switch(b){
+				case '{':
+				case '}':
+				case '[':
+					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+				case '*':
+				case '?':
+					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+				case '-':
+					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count + 1);
+				case ']':
+					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1);
+				default:
+					return s + 1;
+				}
+			case OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING:
+				if(ctrm4 == 3){
+					if(b == ','){
+						return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count + 1);
+					}else if(b == '\0'){
+						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+					}else{
+						return s | OSC_SERIAL_ERROR_NOTYPETAGS;
+					}
+				}else{
+					if(b == '\0'){
+						return s + 1;
+					}else{
+						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+					}
+				}
+			}
+		case OSC_SERIAL_MESSAGE_TYPETAGS:
+			switch(micro){
+			case 0:
+				switch(b){
+				case 'c':
+				case 'C':
+				case 'u':
+				case 'U':
+				case 'i':
+				case 'I':
+				case 'h':
+				case 'H':
+				case 'f':
+				case 'd':
+				case 's':
+				case 'T':
+				case 'F':
+				case 'N':
+				case OSC_TIMETAG_TYPETAG:
+				case OSC_BUNDLE_TYPETAG:
+					return s + 1;
+				case '\0':
+					return (s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) + 1;
+				default:
+					return s | OSC_SERIAL_ERROR_UNSUPPORTEDTYPETAG;
+				}
+			case OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING:
+				if(ctrm4 == 3){
+					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count + 1);
+				}else{
+					if(b == '\0'){
+						return s + 1;
+					}else{
+						return OSC_SERIAL_ERROR_BADALIGNMENT;
+					}
+				}
+			}
+		case OSC_SERIAL_MESSAGE_DATA:
+			return s + 1;
 		}
 
 	default:

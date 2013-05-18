@@ -43,6 +43,7 @@ gone off the end of the buffer or started a new message.
 // macro states
 #define OSC_SERIAL_BUNDLE_HEADER 0x0100000000000000ull
 #define OSC_SERIAL_BUNDLE_MESSAGE 0x0200000000000000ull
+#define OSC_SERIAL_MESSAGE 0x0400000000000000ull
 
 // header states
 #define OSC_SERIAL_BUNDLE_HEADER_ID 0x0001000000000000ull
