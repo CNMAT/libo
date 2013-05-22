@@ -1144,11 +1144,11 @@ static int osc_expr_specFunc_eval(t_osc_expr *f,
 		if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg, 0)) == 's' && osc_atom_array_u_getLen(arg) == 1){
 			char *expr = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg, 0));
 			t_osc_expr *f = NULL;
-			TIMER_START(foo, rdtsc_cps);
+			OSC_PROFILE_TIMER_START(foo);
 			osc_expr_parser_parseExpr(expr, &f);
-			TIMER_STOP(foo, rdtsc_cps);
-			TIMER_PRINTF(foo);
-			TIMER_SNPRINTF(foo, buff);
+			OSC_PROFILE_TIMER_STOP(foo);
+			OSC_PROFILE_TIMER_PRINTF(foo);
+			OSC_PROFILE_TIMER_SNPRINTF(foo, buff);
 #ifdef __OSC_PROFILE__
 			printf("%s\n", buff);
 #endif
