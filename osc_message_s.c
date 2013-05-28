@@ -158,22 +158,38 @@ int32_t osc_message_s_getSize(t_osc_msg_s *m)
 }
 
 char *osc_message_s_getAddress(t_osc_msg_s *m){
-	return m->address;
+	if(m){
+		return m->address;
+	}else{
+		return NULL;
+	}
 }
 
 char *osc_message_s_getTypetags(t_osc_msg_s *m){
-	return m->typetags;
+	if(m){
+		return m->typetags;
+	}else{
+		return NULL;
+	}
 }
 
 char *osc_message_s_getData(t_osc_msg_s *m){
-	return m->data;
+	if(m){
+		return m->data;
+	}else{
+		return NULL;
+	}
 }
 
 int osc_message_s_getArgCount(t_osc_msg_s *m){
-	if(!(m->typetags)){
+	if(m){
+		if(!(m->typetags)){
+			return 0;
+		}
+		return strlen(m->typetags) - 1;
+	}else{
 		return 0;
 	}
-	return strlen(m->typetags) - 1;
 }
 
 char *osc_message_s_getPtr(t_osc_msg_s *m){

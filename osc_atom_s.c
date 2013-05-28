@@ -671,7 +671,7 @@ void osc_atom_s_setFloat(t_osc_atom_s *a, float v)
 		a->data = osc_mem_alloc(sizeof(float));
 	}
 	a->typetag = 'f';
-	*((float *)(a->data)) = hton32(*((uint32_t *)&v));
+	*((uint32_t *)(a->data)) = hton32(*((uint32_t *)&v));
 }
 
 void osc_atom_s_setDouble(t_osc_atom_s *a, double v)
@@ -683,7 +683,7 @@ void osc_atom_s_setDouble(t_osc_atom_s *a, double v)
 		a->data = osc_mem_alloc(sizeof(double));
 	}
 	a->typetag = 'd';
-	*((double *)(a->data)) = hton64(*((uint64_t *)&v));
+	*((uint64_t *)(a->data)) = hton64(*((uint64_t *)&v));
 }
 
 void osc_atom_s_setInt8(t_osc_atom_s *a, int8_t v)

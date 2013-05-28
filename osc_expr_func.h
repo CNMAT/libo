@@ -1391,19 +1391,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 osc_expr_aseq,
 	 NULL},
 	//////////////////////////////////////////////////
-	/*
-	  {"gseq",
-	  "/result = ",
-	  -1,
-	  0,
-	  (char *[]){NULL},
-	  (char *[]){NULL},
-	  (char *[]){"/vector", NULL},
-	  "Geometric sequence from <arg1> to <arg2> in <arg3> steps.  <arg3> is optional and defaults to 1",
-	  osc_expr_gseq,
-	  NULL},
-	*/
-	//////////////////////////////////////////////////
 	{"interleave",
 	 "/result = interleave($1, $2)",
 	 2,
@@ -1781,21 +1768,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 osc_expr_tokenize,
 	 NULL},
 	//////////////////////////////////////////////////
-	/*
-	  {"compile",
-	  "/result = compile($1, $2)",
-	  2,
-	  0,
-	  (char *[]){NULL},
-	  (int []){},
-	  (char *[]){NULL},
-	  (int []){},
-	  (char *[]){"/core", NULL},
-	  "Compile a function <arg2> and bind it to an OSC address <arg1>",
-	  osc_expr_compile,
-	  NULL},
-	*/
-	//////////////////////////////////////////////////
 	{"prog1",
 	 "/result = prog1($1)",
 	 1,
@@ -2146,34 +2118,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 "Cast to float64",
 	 osc_expr_explicitCast,
 	 (void *)osc_expr_explicitCast_float64},
-	//////////////////////////////////////////////////
-	/*
-	{"float",
-	 "/result = float($1)",
-	 1,
-	 0,
-	 (char *[]){"argument to be converted"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Cast to float (float32)",
-	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_float32},
-	//////////////////////////////////////////////////
-	{"double",
-	 "/result = double($1)",
-	 1,
-	 0,
-	 (char *[]){"argument to be converted"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Cast to double (float64)",
-	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_float64},
-	*/
 	//////////////////////////////////////////////////
 	{"int8",
 	 "/result = int8($1)",

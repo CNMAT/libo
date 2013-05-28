@@ -203,7 +203,6 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 	}
 	switch(arg->type){
 	case OSC_EXPR_ARG_TYPE_ATOM:
-		printf("%s:%d atom\n", __func__, __LINE__);
 		{
 			if(lexenv && osc_atom_u_getTypetag(arg->arg.atom) == 's'){
 				t_osc_atom_ar_u *tmp = NULL;
@@ -229,7 +228,6 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 			return e;
 		}
 	case OSC_EXPR_ARG_TYPE_OSCADDRESS:
-		printf("%s:%d address\n", __func__, __LINE__);
 		{
 			*out = NULL;
 			if(!oscbndl || !len){
@@ -965,6 +963,32 @@ static int osc_expr_specFunc_existsorbound(t_osc_expr *f,
 			osc_util_strdup(&address, tmp);
 		}
 		break;
+	case OSC_EXPR_ARG_TYPE_EXPR:
+		{
+			// this could be value(/foo)
+			t_osc_atom_ar_u *ar = NULL;
+			int err = osc_expr_evalInLexEnv(osc_expr_arg_getExpr(f_argv), lexenv, len, oscbndl, &ar);
+			if(!err && ar){
+				if(osc_atom_array_u_getLen(ar) != 1){
+					goto err;
+				}
+				t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+				if(!a){
+					goto err;
+				}
+				if(osc_atom_u_getTypetag(a) != 's'){
+					goto err;
+				}
+				osc_atom_u_getString(a, 0, &address);
+				if(!address){
+					goto err;
+				}
+				if(address[0] != '/'){
+					goto err;
+				}
+			}
+		}
+		break;
 	}
 	if(address){
 		*out = osc_atom_array_u_alloc(1);
@@ -973,11 +997,11 @@ static int osc_expr_specFunc_existsorbound(t_osc_expr *f,
 		osc_atom_u_setBool(osc_atom_array_u_get(*out, 0), res);
 		osc_mem_free(address);
 		return 0;
-	}else{
-		osc_error(OSC_ERR_EXPR_ARGCHK, "arg 1 should be an OSC address");
-		return 1;
 	}
-	return 0;
+ err:
+	osc_error(OSC_ERR_EXPR_ARGCHK, "arg 1 should be an OSC address");
+	return 1;
+
 }
 
 static int osc_expr_specFunc_bound(t_osc_expr *f,
