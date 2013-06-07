@@ -36,7 +36,7 @@ extern "C" {
 
 //#define RDTSC_CYCLES_PER_SECOND 2.261E09
 
-static __inline__ unsigned long long osc_profile_rdtsc(void){
+inline unsigned long long osc_profile_rdtsc(void){
 	unsigned hi, lo;
 	__asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
 	return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
