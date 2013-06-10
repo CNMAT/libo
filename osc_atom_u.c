@@ -34,17 +34,20 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_atom_u.r"
 #include "osc_strfmt.h"
 
-t_osc_atom_u *osc_atom_u_alloc(void){
+t_osc_atom_u *osc_atom_u_alloc(void)
+{
 	t_osc_atom_u *a = osc_mem_alloc(sizeof(t_osc_atom_u));
 	memset(a, '\0', sizeof(t_osc_atom_u));
 	return a;
 }
 
-size_t osc_atom_u_getStructSize(void){
+size_t osc_atom_u_getStructSize(void)
+{
 	return sizeof(t_osc_atom_u);
 }
 
-void osc_atom_u_free(t_osc_atom_u *a){
+void osc_atom_u_free(t_osc_atom_u *a)
+{
 	if(!a){
 		return;
 	}
