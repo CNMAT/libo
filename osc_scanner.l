@@ -83,14 +83,14 @@ quoted_string [^\"\\]
 	}
 }
 
-$[1-9]+	{
+$[1-9][0-9]?	{
 		//printf("sub\n");
 		char *endp = NULL;
 		yylval->i = strtol(yytext + 1, &endp, 0);
 		return DOLLARSUB;
 	}
 
-\"$[1-9]+\"	{
+\"$[1-9][0-9]?\"	{
 		//printf("sub\n");
 		char *endp = NULL;
 		yylval->i = strtol(yytext + 2, &endp, 0);
@@ -162,7 +162,7 @@ $[1-9]+	{
 			*/
 
 			/* [a-zA-Z0-9][^ \t\n]* */
-{string}	{
+{string}|$0	{
 				int len = strlen(yytext) + 1;
 				char *copy = osc_mem_alloc(len);
 				memcpy(copy, yytext, len);
