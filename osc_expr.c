@@ -2321,17 +2321,203 @@ int osc_expr_sum(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
 
 int osc_expr_cumsum(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
-	int i;
+	const uint32_t _i8 = 0x1;
+	const uint32_t _u8 = 0x2;
+	const uint32_t _i16 = 0x4;
+	const uint32_t _u16 = 0x8;
+	const uint32_t _i32 = 0x10;
+	const uint32_t _u32 = 0x20;
+	const uint32_t _i64 = 0x40;
+	const uint32_t _u64 = 0x80;
+	const uint32_t _f32 = 0x100;
+	const uint32_t _f64 = 0x200;
+	uint32_t largest_type = 0;
+
 	int n = 0;
-	int k = 0;
-	double val = 0;
-	int doubleup = 0;
-	for(i = 0; i < argc; i++){
+	for(int i = 0; i < argc; i++){
 		n += osc_atom_array_u_getLen(argv[i]);
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			switch(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[i], j))){
+			case 'c':
+				if(_i8 > largest_type){
+					largest_type = _i8;
+				}
+				break;
+			case 'C':
+				if(_u8 > largest_type){
+					largest_type = _u8;
+				}
+				break;
+			case 'u':
+				if(_i16 > largest_type){
+					largest_type = _i16;
+				}
+				break;
+			case 'U':
+				if(_u16 > largest_type){
+					largest_type = _u16;
+				}
+				break;
+			default:
+			case 'i':
+				if(_i32 > largest_type){
+					largest_type = _i32;
+				}
+				break;
+			case 'I':
+				if(_u32 > largest_type){
+					largest_type = _u32;
+				}
+				break;
+			case 'h':
+				if(_i64 > largest_type){
+					largest_type = _i64;
+				}
+				break;
+			case 'H':
+				if(_u64 > largest_type){
+					largest_type = _u64;
+				}
+				break;
+			case 'f':
+				if(_f32 > largest_type){
+					largest_type = _f32;
+				}
+				break;
+			case 'd':
+				if(_f64 > largest_type){
+					largest_type = _f64;
+				}
+				break;
+			}
+		}
 	}
 	*out = osc_atom_array_u_alloc(n);
-	double lst[n];
-		
+
+	switch(largest_type){
+	case _i8:
+		{
+			int k = 0;
+			char cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getInt8(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setInt8(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _u8:
+		{
+			int k = 0;
+			unsigned char cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getUInt8(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setUInt8(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _i16:
+		{
+			int k = 0;
+			int16_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getInt16(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setInt16(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _u16:
+		{
+			int k = 0;
+			uint16_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getUInt16(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setUInt16(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	default:
+	case _i32:
+		{
+			int k = 0;
+			int32_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getInt32(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setInt32(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _u32:
+		{
+			int k = 0;
+			uint32_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getUInt32(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _i64:
+		{
+			int k = 0;
+			int64_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getInt64(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setInt64(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _u64:
+		{
+			int k = 0;
+			uint64_t cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getUInt64(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _f32:
+		{
+			int k = 0;
+			float cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getFloat(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setFloat(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	case _f64:
+		{
+			int k = 0;
+			double cumsum = 0;
+			for(int i = 0; i < argc; i++){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+					cumsum += osc_atom_u_getDouble(osc_atom_array_u_get(argv[i], j));
+					osc_atom_u_setDouble(osc_atom_array_u_get(*out, k++), cumsum);
+				}
+			}
+		}
+		break;
+	}
+	/*		
 	for(i = 0; i < argc; i++){
 		int j;
 		for(j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
@@ -2367,6 +2553,7 @@ int osc_expr_cumsum(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 			}
 		}
 	}
+	*/
 	return 0;
 }
 
