@@ -98,6 +98,7 @@ int osc_expr_rest(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 int osc_expr_butlast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_not(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_dot(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_min(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_max(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -1480,6 +1481,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Dot product of arg1 and arg2",
 	 osc_expr_dot,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"cross",
+	 "/result = cross($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"list 1", "list 2"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/arithmetic", NULL},
+	 "Cross product of arg1 and arg2",
+	 osc_expr_cross,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"l2norm",

@@ -122,7 +122,7 @@ $[1-9][0-9]?	{
 		return '\n';
 	}
 
-\'[a-zA-Z]\' {
+\'.\' {
 	//printf("char: %c\n", yytext[1]);
 	yylval->c = yytext[1];
 	return OSCCHAR;

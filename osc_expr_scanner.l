@@ -247,7 +247,13 @@ quote[[:space:]]*\( {
 						osc_atom_u_setDouble(yylval->atom, f);
 						return OSC_EXPR_NUM;
 					}
-
+\'.\'					{
+						if(alloc_atom){
+							yylval->atom = osc_atom_u_alloc();
+						}
+						osc_atom_u_setInt8(yylval->atom, yytext[1]);
+						return OSC_EXPR_NUM;
+					}
 (true|True|TRUE)			{
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
@@ -262,7 +268,7 @@ quote[[:space:]]*\( {
 						osc_atom_u_setFalse(yylval->atom);
 						return OSC_EXPR_NUM;
 					}
-(lambda|fn)				{
+lambda				{
 						return OSC_EXPR_LAMBDA;
 					}
 

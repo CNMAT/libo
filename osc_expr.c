@@ -1,4 +1,3 @@
-
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
   University of California, Berkeley.  Copyright (c) 2011, The Regents of
@@ -766,7 +765,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 	t_osc_msg_ar_s *msg_ar = NULL;
 	osc_bundle_s_lookupAddress(*len, *oscbndl, f_argv->arg.osc_address, &msg_ar, 1);
 	if(!msg_ar){
-		// error
+		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
 		return 1;
 	}
 
@@ -805,7 +804,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 	}else if(nindexes == 1 && ndata > 1){
 		int idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, 0));
 		if(idx >= outlen || idx < 0){
-			// error!
+			osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
 			return 1;
 		}
 		t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
@@ -816,7 +815,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		for(i = 0; i < nindexes; i++){
 			idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
 			if(idx >= outlen || idx < 0){
-				// error!
+				osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
 				continue;
 			}
 			t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
@@ -831,7 +830,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		for(i = 0; i < n; i++){
 			idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
 			if(idx >= outlen || idx < 0){
-				// error!
+				osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
 				continue;
 			}
 			t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
@@ -1339,19 +1338,26 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
 	osc_expr_scanner_set_out(NULL, scanner);
 	int n = 64;
-	size_t atomsize = osc_atom_u_getStructSize();
-	t_osc_atom_u *out = osc_mem_alloc(n * atomsize);
-	memset(out, '\0', n * atomsize);
+	//size_t atomsize = osc_atom_u_getStructSize();
+	//t_osc_atom_u *out = osc_mem_alloc(n * atomsize);
+	//memset(out, '\0', n * atomsize);
+	*ar = osc_atom_array_u_alloc(n);
 	int i = 0;
-	yylval_param.atom = out;
-	int ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0);
+	//yylval_param.atom = out;
+	yylval_param.atom = osc_atom_array_u_get(*ar, 0);
+	long buflen = 0;
+	char *buf = NULL;
+	int startcond = START_EXPNS, started = 0;
+	int ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf, startcond, &started);
 	while(ret){
 		if(i == n){
 			n += 64;
-			osc_mem_resize(out, n * atomsize);
+			osc_array_resize(*ar, n);
 		}
 		char *st = NULL;
 		switch(ret){
+		case START_EXPNS:
+			goto cont;
 		case OSC_EXPR_STRING:
 		case OSC_EXPR_NUM:
 		case OSC_EXPR_OSCADDRESS:
@@ -1414,18 +1420,27 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 			{
 				char buf[2];
 				sprintf(buf, "%c", ret);
-				osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), buf);
+				//osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), buf);
+				osc_atom_u_setString(osc_atom_array_u_get(*ar, i), buf);
+				//osc_atom_u_setInt8(osc_atom_array_u_get(*ar, i), ret);
 			}
 		}
 		if(st){
-			osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), st);
+			//osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), st);
+			osc_atom_u_setString(osc_atom_array_u_get(*ar, i), st);
 		}
+		long len = 0;
+		char *fmt = NULL;
+		osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
 		i++;
-		yylval_param.atom = (t_osc_atom_u *)(((long)out) + (i * atomsize));
-		ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0);
+		//yylval_param.atom = (t_osc_atom_u *)(((long)out) + (i * atomsize));
+	cont:
+		yylval_param.atom = osc_atom_array_u_get(*ar, i);
+		ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf, startcond, &started);
 	}
-	*ar = osc_atom_array_u_alloc(0);
-	osc_atom_array_u_set(*ar, out, i);
+	//*ar = osc_atom_array_u_alloc(0);
+	//osc_atom_array_u_set(*ar, out, i);
+	osc_array_resize(*ar, i);
 	osc_expr_scanner__delete_buffer(buf_state, scanner);
 	osc_expr_scanner_lex_destroy(scanner);
 	return 0;
@@ -2911,7 +2926,8 @@ int osc_expr_not(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
 	return 0;
 }
 
-int osc_expr_dot(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){
+int osc_expr_dot(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
 	if(argc < 2){
 		return 0;
 	}
@@ -2936,7 +2952,21 @@ int osc_expr_dot(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
 	return 0;
 }
 
-int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){
+int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		return 1;
+	}
+	if(osc_atom_array_u_getLen(*argv) != 3 || osc_atom_array_u_getLen(argv[1]) != 3){
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(3);
+	//switch(osc_expr_types_getLargestType(
+	//osc_atom_u_set
+}
+
+int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
 	if(argc < 0){
 		return 0;
 	}
