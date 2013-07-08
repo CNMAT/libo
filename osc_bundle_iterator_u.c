@@ -33,7 +33,11 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_iterator_u.h"
 #include "osc_bundle_iterator_u.r"
 
-t_osc_bndl_it_u *osc_bundle_iterator_u_getIterator(t_osc_bndl_u *bndl){
+t_osc_bndl_it_u *osc_bundle_iterator_u_getIterator(t_osc_bndl_u *bndl)
+{
+	if(!bndl){
+		return NULL;
+	}
 	t_osc_bndl_it_u *it = (t_osc_bndl_it_u *)osc_mem_alloc(sizeof(t_osc_bndl_it_u));
 	if(!it){
 		return NULL;
@@ -44,25 +48,39 @@ t_osc_bndl_it_u *osc_bundle_iterator_u_getIterator(t_osc_bndl_u *bndl){
 	return it;
 }
 
-void osc_bundle_iterator_u_destroyIterator(t_osc_bndl_it_u *it){
-	osc_mem_free(it);
-}
-
-void osc_bundle_iterator_u_resetIterator(t_osc_bndl_it_u *it){
-	it->msg = &(it->start);
-}
-
-t_osc_msg_u *osc_bundle_iterator_u_next(t_osc_bndl_it_u *it){
-	if(it->msg){
-		it->msg = it->msg->next;
+void osc_bundle_iterator_u_destroyIterator(t_osc_bndl_it_u *it)
+{
+	if(it){
+		osc_mem_free(it);
 	}
-	return it->msg;
 }
 
-int osc_bundle_iterator_u_hasNext(t_osc_bndl_it_u *it){
-	if(it->msg){
-		if(it->msg->next){
-			return 1;
+void osc_bundle_iterator_u_resetIterator(t_osc_bndl_it_u *it)
+{
+	if(it){
+		it->msg = &(it->start);
+	}
+}
+
+t_osc_msg_u *osc_bundle_iterator_u_next(t_osc_bndl_it_u *it)
+{
+	if(it){
+		if(it->msg){
+			it->msg = it->msg->next;
+		}
+		return it->msg;
+	}else{
+		return NULL;
+	}
+}
+
+int osc_bundle_iterator_u_hasNext(t_osc_bndl_it_u *it)
+{
+	if(it){
+		if(it->msg){
+			if(it->msg->next){
+				return 1;
+			}
 		}
 	}
 	return 0;

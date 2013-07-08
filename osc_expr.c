@@ -2961,8 +2961,7 @@ int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 		return 1;
 	}
 	*out = osc_atom_array_u_alloc(3);
-	//switch(osc_expr_types_getLargestType(
-	//osc_atom_u_set
+	// f->rec->vtab[osc_typetag_getLargestType(argc, argv)](f, argc, argv, out);
 }
 
 int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
