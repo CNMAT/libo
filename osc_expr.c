@@ -685,7 +685,41 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 	if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
 		osc_util_strdup(&address, f_argv->arg.osc_address);
 	}else{
-		t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &address_ar);
+		/*
+		  assign() treats an address in its first argument slot differently in that it doesn't replace
+		  it with its value---the address is the target of assignment.  I.e., assign(/foo, 10) assigns 
+		  10 to /foo, not 10 to whatever /foo is bound to which is why assign() is a special function.
+
+		  This means that the use of the value() function in the first slot of assign() function has
+		  to be treated differently as well.  Normally, value() would look up the value of the thing
+		  bound to the address, i.e., 
+
+		  /foo "/bar"
+		  /bar 10
+
+		  value(/foo) => 10
+
+		  since /foo would be substituted for /bar before value() gets a hold of it.  Here, we would want
+		  one fewer level of resolution, so assign(value(/foo), ...) should assign something to /bar.
+		*/
+		t_osc_err err = OSC_ERR_NONE;
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
+			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
+			t_osc_expr_rec *r = osc_expr_getRec(e);
+			if(r){
+				if(!strcmp(osc_expr_rec_getName(r), "value")){
+					t_osc_expr_arg *value_args = osc_expr_getArgs(e);
+					if(value_args){
+						err = osc_expr_evalArgInLexEnv(value_args, lexenv, len, oscbndl, &address_ar);
+						// don't report error--we'll try again below
+					}
+				}
+			}
+		}
+		if(!address_ar){
+			printf("no address_ar\n");
+			err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &address_ar);
+		}
 		if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
 			osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
 			return err;
@@ -696,6 +730,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		t_osc_atom_u *address_atom = osc_atom_array_u_get(address_ar, 0);
 		if(osc_atom_u_getTypetag(address_atom) != 's'){
 			osc_atom_array_u_free(address_ar);
+			osc_error(OSC_ERR_EXPR_ARGCHK, "the first argument to assign() should resolve to an OSC address");
 			return 1;
 		}
 		osc_atom_u_getString(address_atom, 0, &address);
@@ -4130,15 +4165,22 @@ void osc_expr_arg_freeList(t_osc_expr_arg *a)
 
 void osc_expr_setRec(t_osc_expr *e, t_osc_expr_rec *rec)
 {
-	e->rec = rec;
+	if(e){
+		e->rec = rec;
+	}
 }
 
 t_osc_expr_rec *osc_expr_getRec(t_osc_expr *e)
 {
-	return e->rec;
+	if(e){
+		return e->rec;
+	}else{
+		return NULL;
+	}
 }
 
-void osc_expr_setArg(t_osc_expr *e, t_osc_expr_arg *a){
+void osc_expr_setArg(t_osc_expr *e, t_osc_expr_arg *a)
+{
 	if(e){
 		if(a){
 			t_osc_expr_arg *aa = a;
