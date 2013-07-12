@@ -99,6 +99,7 @@ int osc_expr_butlast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
 int osc_expr_not(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_dot(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_det(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_min(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_max(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -161,6 +162,7 @@ int osc_expr_explicitCast_uint16(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint32(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint64(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src);
+int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -1496,6 +1498,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 osc_expr_cross,
 	 NULL},
 	//////////////////////////////////////////////////
+	{"det",
+	 "/result = det($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"list 1", "list 2"},
+	 (int []){OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){"additional addresses"},
+	 (int []){OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){"/math/arithmetic", NULL},
+	 "Determinant of a square matrix represented as a list of rows (det(row1, row2, ..., rowN))",
+	 osc_expr_det,
+	 NULL},
+	//////////////////////////////////////////////////
 	{"l2norm",
 	 "/result = l2norm($1)",
 	 1,
@@ -2262,6 +2277,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 "Cast to string",
 	 osc_expr_explicitCast,
 	 (void *)osc_expr_explicitCast_string},
+	//////////////////////////////////////////////////
+	{"cast",
+	 "/result = cast($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"typetag(s)", "argument(s) to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Cast",
+	 osc_expr_explicitCast_dynamic,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"typetags",
 	 "/result = typetags($1)",
