@@ -2370,16 +2370,16 @@ int osc_expr_sum(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
 
 int osc_expr_cumsum(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
-	const uint32_t _i8 = 0x1;
-	const uint32_t _u8 = 0x2;
-	const uint32_t _i16 = 0x4;
-	const uint32_t _u16 = 0x8;
-	const uint32_t _i32 = 0x10;
-	const uint32_t _u32 = 0x20;
-	const uint32_t _i64 = 0x40;
-	const uint32_t _u64 = 0x80;
-	const uint32_t _f32 = 0x100;
-	const uint32_t _f64 = 0x200;
+#define _i8 0x1
+#define _u8 0x2
+#define _i16 0x4
+#define _u16 0x8
+#define _i32 0x10
+#define _u32 0x20
+#define _i64 0x40
+#define _u64 0x80
+#define _f32 0x100
+#define _f64 0x200
 	uint32_t largest_type = 0;
 
 	int n = 0;
