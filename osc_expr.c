@@ -717,7 +717,6 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 			}
 		}
 		if(!address_ar){
-			printf("no address_ar\n");
 			err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &address_ar);
 		}
 		if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
