@@ -903,7 +903,8 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 {
 	int f_argc = osc_expr_getArgCount(f);
 	if(f_argc < 2){
-		printf("osc_expr: osc_expr_if expected at least 2 arguments but only got %d\n", f_argc);
+		//printf("osc_expr: osc_expr_if expected at least 2 arguments but only got %d\n", f_argc);
+		osc_expr_err_argnum(2, f_argc, 1, "osc_expr: if()");
 		return 1;
 	}
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
@@ -2773,7 +2774,8 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 
 int osc_expr_aseq(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){
 	if(argc < 2){
-		printf("osc_expr: aseq requires at least 2 arguments:  start and end.");
+		//printf("osc_expr: aseq requires at least 2 arguments:  start and end.");
+		osc_expr_err_argnum(2, argc, 1, "osc_expr: aseq()");
 		return 1;
 	}
 	int dblup = 0;
@@ -4794,4 +4796,23 @@ static void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc
 static void osc_expr_err_unbound(char *address, char *func)
 {
 	osc_error(OSC_ERR_EXPR_ADDRESSUNBOUND, "%s: address %s is unbound", func, address);
+}
+
+static void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func)
+{
+	if(expected == found){
+		// come on
+		return;
+	}
+	char *errstr = NULL;
+	if(optional_args_allowed){
+		if(expected < found){
+			errstr = "%s: expected %d arguments but found %d\n";
+		}else{
+			errstr = "%s: expected at least %d arguments but found only %d\n";
+		}
+	}else{
+		errstr = "%s: expected %d arguments but found %d\n";
+	}
+	osc_error(OSC_ERR_EXPR_ARGCHK, errstr, func, expected, found);
 }

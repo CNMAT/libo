@@ -75,6 +75,7 @@ void osc_linkedlist_clear(t_osc_linkedlist *ll)
 			}
 		}
 		ll->head = ll->tail = NULL;
+		ll->count = 0;
 	}
 }
 
