@@ -64,7 +64,8 @@ void osc_atom_u_free(t_osc_atom_u *a)
 	osc_mem_free(a);
 }
 
-void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src){
+void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src)
+{
 	if(!src){
 		return;
 	}
@@ -94,13 +95,15 @@ void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src){
 	*dest = aa;
 }
 
-void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int bool){
+void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int bool)
+{
 	if(a){
 		a->alloc = bool;
 	}
 }
 
-void osc_atom_u_clear(t_osc_atom_u *a){
+void osc_atom_u_clear(t_osc_atom_u *a)
+{
 	if(!a){
 		return;
 	}
@@ -110,7 +113,8 @@ void osc_atom_u_clear(t_osc_atom_u *a){
 	a->alloc = 0;
 }
 
-char osc_atom_u_getTypetag(t_osc_atom_u *a){
+char osc_atom_u_getTypetag(t_osc_atom_u *a)
+{
 	if(!a){
 		return '\0';
 	}

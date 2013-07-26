@@ -902,8 +902,7 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 			    t_osc_atom_ar_u **out)
 {
 	int f_argc = osc_expr_getArgCount(f);
-	if(f_argc < 2){
-		//printf("osc_expr: osc_expr_if expected at least 2 arguments but only got %d\n", f_argc);
+	if(f_argc < 2 && f_argc > 3){
 		osc_expr_err_argnum(2, f_argc, 1, "osc_expr: if()");
 		return 1;
 	}
@@ -911,35 +910,50 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 	t_osc_atom_ar_u *argv = NULL;
 	t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &argv);
 	if(err){
-		// the first argument shouldn't be an osc address, so we don't have to
-		// post an addressunbound error.
-		//if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-		//osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "if");
-		//}
+		osc_error(OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating test argument");
 		if(argv){
 			osc_atom_array_u_free(argv);
 		}
 		return err;
 	}
 
-	int j;
-	for(j = 0; j < osc_atom_array_u_getLen(argv); j++){
-		if(osc_atom_u_getInt32(osc_atom_array_u_get(argv, j)) && (f_argc > 1)){
-			err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, out);
-			if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-				osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv->next), "if");
-				return err;
+	int test_result_len = osc_atom_array_u_getLen(argv);
+	t_osc_atom_ar_u *boolvec[test_result_len];
+	memset(boolvec, '\0', test_result_len * sizeof(t_osc_atom_ar_u *));
+	int outlen = 0;
+	for(int j = 0; j < osc_atom_array_u_getLen(argv); j++){
+		if(osc_atom_u_getInt32(osc_atom_array_u_get(argv, j))){
+			err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, boolvec + j);
+			if(err){
+				osc_error(OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"then\" expression");
+				goto out;
 			}
-		}else if(f_argc > 2){
-			err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, out);
-			if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-				osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv->next->next), "if");
-				return err;
+			outlen += osc_atom_array_u_getLen(boolvec[j]);
+		}else{
+			if(f_argc > 2){
+				err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, boolvec + j);
+				if(err){
+					osc_error(OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"else\" expression");
+					goto out;
+				}
+				outlen += osc_atom_array_u_getLen(boolvec[j]);
 			}
 		}
 	}
+	*out = osc_atom_array_u_alloc(outlen);
+	int j = 0;
+	for(int i = 0; i < test_result_len; i++){
+		osc_atom_array_u_copyInto(out, boolvec[i], j);
+		j += osc_atom_array_u_getLen(boolvec[i]);
+	}
+ out:
+	for(int i = 0; i < test_result_len; i++){
+		if(boolvec[i]){
+			osc_atom_array_u_free(boolvec[i]);
+		}
+	}
 	osc_atom_array_u_free(argv);
-	return 0;
+	return err;
 }
 
 static int osc_expr_specFunc_emptybundle(t_osc_expr *f,
@@ -2774,7 +2788,6 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 
 int osc_expr_aseq(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){
 	if(argc < 2){
-		//printf("osc_expr: aseq requires at least 2 arguments:  start and end.");
 		osc_expr_err_argnum(2, argc, 1, "osc_expr: aseq()");
 		return 1;
 	}
