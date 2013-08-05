@@ -219,7 +219,6 @@ void osc_message_s_getArg(t_osc_msg_s *m, int n, t_osc_atom_s **atom){
 	}
 #endif
 	char tt = osc_message_s_getTypetag(m, n);
-
 	if(m->cache_size){
 		if(*atom){
 			osc_atom_s_set(*atom, tt, m->data + m->data_offset_cache[n]);
@@ -230,7 +229,7 @@ void osc_message_s_getArg(t_osc_msg_s *m, int n, t_osc_atom_s **atom){
 	}else{
 		int offset = 0;
 		int i;
-		for(i = 1; i < n + 1; i++){
+		for(i = 0; i < n; i++){
 			offset += osc_sizeof(osc_message_s_getTypetag(m, i), m->data + offset);
 		}
 		if(*atom){

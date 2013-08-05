@@ -903,6 +903,12 @@ expr:
 		$$ = e;
 	}
 // assignment
+/*
+| OSC_EXPR_OSCADDRESS '=' {
+	printf("just an address...\n");
+  }
+*/
+
 	| OSC_EXPR_OSCADDRESS '=' arg {
 		// basic assignment 
 		char *ptr = NULL;

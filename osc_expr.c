@@ -1159,6 +1159,7 @@ static int osc_expr_specFunc_value(t_osc_expr *f,
 					osc_message_s_getArg(m, i, &a);
 					t_osc_atom_u *au = osc_atom_array_u_get(*out, i);
 					osc_atom_s_deserialize(a, &au);
+					double f1 = osc_atom_s_getDouble(a);
 				}
 				osc_mem_free(a);
 				osc_message_array_s_free(ar);
@@ -4710,6 +4711,7 @@ t_osc_err osc_expr_formatFunctionDoc(t_osc_expr_rec *rec, t_osc_bndl_u **bndl)
 	osc_message_u_setAddress(categories, "/doc/function/categories");
 	i = 0;
 	while(rec->categories[i]){
+		printf("%d: %d\n", __LINE__, i);
 		osc_message_u_appendString(categories, rec->categories[i++]);
 	}
 	osc_bundle_u_addMsg(b, categories);
