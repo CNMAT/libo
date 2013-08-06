@@ -1157,7 +1157,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] = {
 	 (int []){},
 	 (char *[]){"/math/constant", NULL},
 	 "Next representable double-precision floating-point number",
-	 osc_expr_2arg_dbl_dbl,
+	 osc_expr_1arg_dbl,
 	 (void *)nextafter},
 	//////////////////////////////////////////////////
 	{"remainder",
