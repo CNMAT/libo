@@ -8,6 +8,13 @@
 #include "osc_bundle_u.h"
 #include "osc_message_u.h"
 
+//#define OSC_SERIAL_DEBUG
+#ifdef OSC_SERIAL_DEBUG
+#define OSC_SERIAL_RETURN(s) printf("%s:%d: 0x%x 0x%x 0x%x 0x%x %u\n", __func__, __LINE__, (int8_t)((s & 0xff00000000000000) >> 56), (int8_t)((s & 0x00ff000000000000) >> 48), (int8_t)((s & 0x0000ff0000000000) >> 40), (int8_t)((s & 0x000000ff00000000) >> 32), (uint32_t)((s) & 0xffffffff)); return (s);
+#else
+#define OSC_SERIAL_RETURN(s) return s;
+#endif
+
 static char *_osc_serial_errstr[] = {
 	"",
 	"bad header",
@@ -20,9 +27,94 @@ static char *_osc_serial_errstr[] = {
 	"no typetags (or typetags begin without a comma)",
 	"buffer overrun", // can we actually detect this?
 	"two dashes in a row within square brackets",
-	"two commas in a row within curly brackets"
+	"two commas in a row within curly brackets",
+	"extraneous closing curly brace",
+	"unmatched open curly brace",
+	"extraneous closing square bracket",
+	"unmatched open square bracket"
 	};
+/*
+static char *_osc_serial_macroStr[] = {
+	"",
+	"bundle header",
+	"bundle message",
+	"message"
+};
 
+static char *_osc_serial_headerStateStr[] = {
+	"",
+	"id",
+	"timetag"
+};
+
+static char *_osc_serial_messageStateStr[] = {
+	"",
+	"size",
+	"address",
+	"typetags",
+	"data"
+};
+
+static char *_osc_serial_addressMicroStr[] = {
+	"",
+	"inside curly braces",
+	"inside curly braces: comma",
+	"inside square brackets",
+	"inside square brackets: dash",
+	"null padding"
+};
+
+static char *_osc_serial_typetagMicroStr[] = {
+	"",
+	"null padding"
+};
+
+void osc_serial_statestr(uint64_t s, int slen, char **string)
+{
+	uint64_t macro = s & 0xff00000000000000;
+	uint64_t state = s & 0x00ff000000000000;
+	uint64_t micro = s & 0x0000ff0000000000;
+	uint64_t counter = s & 0x00000000ffffffff;
+
+	uint32_t macro_32 = macro >> 56;
+	uint32_t state_32 = state >> 56;
+	uint32_t micro_32 = micro >> 56;
+	uint32_t counter_32 = counter >> 56;
+
+	char buf[128];
+	switch(macro){
+	case OSC_SERIAL_BUNDLE_HEADER:
+		switch(state){
+		case OSC_SERIAL_BUNDLE_HEADER_ID:
+			snprintf(slen, buf, "%s
+			break;
+		case OSC_SERIAL_BUNDLE_HEADER_TIMETAG:
+
+			break;
+		}
+		break;
+	case OSC_SERIAL_BUNDLE_MESSAGE:
+		switch(state){
+		case OSC_SERIAL_MESSAGE_SIZE:
+
+			break;
+		case OSC_SERIAL_MESSAGE_ADDRESS:
+
+			break;
+		case OSC_SERIAL_MESSAGE_TYPETAGS:
+
+			break;
+		case OSC_SERIAL_MESSAGE_DATA:
+
+			break;
+		}
+		break;
+	case OSC_SERIAL_MESSAGE:
+
+		break;
+	}
+}
+*/
 char *osc_serial_errstr(uint64_t err)
 {
 	err = (err & 0x000000ff00000000) >> 32;
@@ -50,11 +142,11 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 	case OSC_SERIAL_INIT:
 		switch(b){
 		case '#':
-			return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID;
+			OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID);
 		case '/':
-			return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS;
+			OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS);
 		default: 
-			return OSC_SERIAL_ERROR_BADHEADER;
+			OSC_SERIAL_RETURN(OSC_SERIAL_ERROR_BADHEADER);
 		}
 	case OSC_SERIAL_BUNDLE_HEADER:
 		switch(state){
@@ -62,48 +154,48 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			switch(count){
 			case 0:
 				if(b == 'b'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 1:
 				if(b == 'u'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 2:
 				if(b == 'n'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 3:
 				if(b == 'd'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 4:
 				if(b == 'l'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 5:
 				if(b == 'e'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 6:
 				if(b == '\0'){
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}else{
-					return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER;
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 7:
-				return OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_TIMETAG;
+				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_TIMETAG);
 			}
 		case OSC_SERIAL_BUNDLE_HEADER_TIMETAG:
 			switch(count){
@@ -114,10 +206,10 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			case 4:
 			case 5:
 			case 6:
-				return s + 1;
+				OSC_SERIAL_RETURN(s + 1);
 			case 7:
 				// negative size check
-				return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24);
+				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24));
 			}
 		}
 	case OSC_SERIAL_BUNDLE_MESSAGE:
@@ -127,20 +219,20 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				int32_t c = count & 0xff;
 				switch(c){
 				case 0:
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1));
 				case 1:
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1));
 				case 2:
 					// negative size check
 					//count = ntoh32(count | b);
 					count = count | b;
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (count - 2);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (count - 2));
 				default:
 					//count = ntoh32(count);
 					if(b == '/'){
-						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+						OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1));
 					}else{
-						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_ERROR_NOLEADINGSLASH;
+						OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_ERROR_NOLEADINGSLASH);
 					}
 				}
 			}
@@ -149,18 +241,22 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			case 0:
 				switch(b){
 				case '[':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS) - 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS) - 1);
 				case '{':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS) - 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS) - 1);
 				case '\0':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING) - 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING) - 1);
+				case ']':
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_UNMATCHEDRIGHTSQUAREBRACKET);
+				case '}':
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_UNMATCHEDRIGHTCURLYBRACE);
 				default:
-					return s - 1;
+					OSC_SERIAL_RETURN(s - 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA:
 				switch(b){
 				case ',':
-					return s | OSC_SERIAL_ERROR_DOUBLECOMMA;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_DOUBLECOMMA);
 				}
 				// intentional fallthrough to the next case
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS:
@@ -168,21 +264,23 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '[':
 				case ']':
 				case '{':
-					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NESTEDBRACKETS);
 				case '*':
 				case '?':
-					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS);
 				case ',':
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count - 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count - 1));
 				case '}':
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1));
+				case '\0':
+					OSC_SERIAL_RETURN(OSC_SERIAL_ERROR_UNMATCHEDLEFTCURLYBRACE);
 				default:
-					return s - 1;
+					OSC_SERIAL_RETURN(s - 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH:
 				switch(b){
 				case '-':
-					return s | OSC_SERIAL_ERROR_DOUBLEDASH;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_DOUBLEDASH);
 				}
 				// intentional fallthrough to the next case
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS:
@@ -190,31 +288,33 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '{':
 				case '}':
 				case '[':
-					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NESTEDBRACKETS);
 				case '*':
 				case '?':
-					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS);
 				case '-':
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count - 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count - 1));
 				case ']':
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count - 1));
+				case '\0':
+					OSC_SERIAL_RETURN(OSC_SERIAL_ERROR_UNMATCHEDLEFTSQUAREBRACKET);
 				default:
-					return s - 1;
+					OSC_SERIAL_RETURN(s - 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING:
 				if(ctrm4 == 0){
 					if(b == ','){
-						return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count - 1);
+						OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count - 1));
 					}else if(b == '\0'){
-						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_BADALIGNMENT);
 					}else{
-						return s | OSC_SERIAL_ERROR_NOTYPETAGS;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NOTYPETAGS);
 					}
 				}else{
 					if(b == '\0'){
-						return s - 1;
+						OSC_SERIAL_RETURN(s - 1);
 					}else{
-						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_BADALIGNMENT);
 					}
 				}
 			}
@@ -238,28 +338,28 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case 'N':
 				case OSC_TIMETAG_TYPETAG:
 				case OSC_BUNDLE_TYPETAG:
-					return s - 1;
+					OSC_SERIAL_RETURN(s - 1);
 				case '\0':
-					return (s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) - 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) - 1);
 				default:
-					return s | OSC_SERIAL_ERROR_UNSUPPORTEDTYPETAG;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_UNSUPPORTEDTYPETAG);
 				}
 			case OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING:
 				if(ctrm4 == 0){
-					return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count - 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count - 1));
 				}else{
 					if(b == '\0'){
-						return s - 1;
+						OSC_SERIAL_RETURN(s - 1);
 					}else{
-						return OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(OSC_SERIAL_ERROR_BADALIGNMENT);
 					}
 				}
 			}
 		case OSC_SERIAL_MESSAGE_DATA:
 			if(count <= 0){
-				return OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE;
+				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE);
 			}else{
-				return s - 1;
+				OSC_SERIAL_RETURN(s - 1);
 			}
 		}
 	case OSC_SERIAL_MESSAGE: // naked message not contained in a bundle
@@ -269,18 +369,18 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			case 0:
 				switch(b){
 				case '[':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS) + 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS) + 1);
 				case '{':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS) + 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS) + 1);
 				case '\0':
-					return (s | OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING) + 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING) + 1);
 				default:
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA:
 				switch(b){
 				case ',':
-					return s | OSC_SERIAL_ERROR_DOUBLECOMMA;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_DOUBLECOMMA);
 				}
 				// intentional fallthrough to the next case
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS:
@@ -288,21 +388,21 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '[':
 				case ']':
 				case '{':
-					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NESTEDBRACKETS);
 				case '*':
 				case '?':
-					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS);
 				case ',':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDECURLYBRACKETS_COMMA | (count + 1));
 				case '}':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1));
 				default:
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH:
 				switch(b){
 				case '-':
-					return s | OSC_SERIAL_ERROR_DOUBLEDASH;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_DOUBLEDASH);
 				}
 				// intentional fallthrough to the next case
 			case OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS:
@@ -310,31 +410,31 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case '{':
 				case '}':
 				case '[':
-					return s | OSC_SERIAL_ERROR_NESTEDBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NESTEDBRACKETS);
 				case '*':
 				case '?':
-					return s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_WILDCARDINSIDEBRACKETS);
 				case '-':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | OSC_SERIAL_MESSAGE_ADDRESS_INSIDESQUAREBRACKETS_DASH | (count + 1));
 				case ']':
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_ADDRESS | (count + 1));
 				default:
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				}
 			case OSC_SERIAL_MESSAGE_ADDRESS_NULLPADDING:
 				if(ctrm4 == 3){
 					if(b == ','){
-						return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count + 1);
+						OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_TYPETAGS | (count + 1));
 					}else if(b == '\0'){
-						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_BADALIGNMENT);
 					}else{
-						return s | OSC_SERIAL_ERROR_NOTYPETAGS;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_NOTYPETAGS);
 					}
 				}else{
 					if(b == '\0'){
-						return s + 1;
+						OSC_SERIAL_RETURN(s + 1);
 					}else{
-						return s | OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_BADALIGNMENT);
 					}
 				}
 			}
@@ -358,25 +458,25 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				case 'N':
 				case OSC_TIMETAG_TYPETAG:
 				case OSC_BUNDLE_TYPETAG:
-					return s + 1;
+					OSC_SERIAL_RETURN(s + 1);
 				case '\0':
-					return (s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) + 1;
+					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) + 1);
 				default:
-					return s | OSC_SERIAL_ERROR_UNSUPPORTEDTYPETAG;
+					OSC_SERIAL_RETURN(s | OSC_SERIAL_ERROR_UNSUPPORTEDTYPETAG);
 				}
 			case OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING:
 				if(ctrm4 == 3){
-					return OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count + 1);
+					OSC_SERIAL_RETURN(OSC_SERIAL_MESSAGE | OSC_SERIAL_MESSAGE_DATA | (count + 1));
 				}else{
 					if(b == '\0'){
-						return s + 1;
+						OSC_SERIAL_RETURN(s + 1);
 					}else{
-						return OSC_SERIAL_ERROR_BADALIGNMENT;
+						OSC_SERIAL_RETURN(OSC_SERIAL_ERROR_BADALIGNMENT);
 					}
 				}
 			}
 		case OSC_SERIAL_MESSAGE_DATA:
-			return s + 1;
+			OSC_SERIAL_RETURN(s + 1);
 		}
 
 	default:
@@ -409,11 +509,11 @@ int main(int argc, char **argv)
 		state = process_byte(bundle[i], state);
 		if(state & 0x000000ff00000000){
 			printf("error:(byte %d): %s\n", i, osc_serial_errstr(state));
-			return 0;
+			OSC_SERIAL_RETURN(0);
 		}else{
 			//printf("state: 0x%llx\n", state);
 		}
 	}
-	return 0;
+	OSC_SERIAL_RETURN(0);
 }
 */
