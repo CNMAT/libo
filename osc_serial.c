@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <inttypes.h>
 #include "osc.h"
 #include "osc_serial.h"
@@ -10,7 +11,16 @@
 
 //#define OSC_SERIAL_DEBUG
 #ifdef OSC_SERIAL_DEBUG
-#define OSC_SERIAL_RETURN(s) printf("%s:%d: 0x%x 0x%x 0x%x 0x%x %u\n", __func__, __LINE__, (int8_t)((s & 0xff00000000000000) >> 56), (int8_t)((s & 0x00ff000000000000) >> 48), (int8_t)((s & 0x0000ff0000000000) >> 40), (int8_t)((s & 0x000000ff00000000) >> 32), (uint32_t)((s) & 0xffffffff)); return (s);
+#define OSC_SERIAL_RETURN(s) {						\
+		char buf[256];						\
+		if(osc_serial_errorp(s)){				\
+			printf("%d: ERROR: %s\n", __LINE__, osc_serial_errstr(s)); \
+		}else{							\
+			osc_serial_statestr(s, sizeof(buf), buf);	\
+			printf("%d: %s\n", __LINE__, buf);		\
+		}							\
+		return s;						\
+	}
 #else
 #define OSC_SERIAL_RETURN(s) return s;
 #endif
@@ -33,22 +43,19 @@ static char *_osc_serial_errstr[] = {
 	"extraneous closing square bracket",
 	"unmatched open square bracket"
 	};
-/*
+
 static char *_osc_serial_macroStr[] = {
-	"",
 	"bundle header",
 	"bundle message",
-	"message"
+	"naked message"
 };
 
 static char *_osc_serial_headerStateStr[] = {
-	"",
 	"id",
 	"timetag"
 };
 
 static char *_osc_serial_messageStateStr[] = {
-	"",
 	"size",
 	"address",
 	"typetags",
@@ -56,7 +63,6 @@ static char *_osc_serial_messageStateStr[] = {
 };
 
 static char *_osc_serial_addressMicroStr[] = {
-	"",
 	"inside curly braces",
 	"inside curly braces: comma",
 	"inside square brackets",
@@ -65,56 +71,88 @@ static char *_osc_serial_addressMicroStr[] = {
 };
 
 static char *_osc_serial_typetagMicroStr[] = {
-	"",
 	"null padding"
 };
 
-void osc_serial_statestr(uint64_t s, int slen, char **string)
+#define OSC_SERIAL_NULLSTATE ""
+
+char *osc_serial_macroStr(uint64_t s)
 {
-	uint64_t macro = s & 0xff00000000000000;
-	uint64_t state = s & 0x00ff000000000000;
-	uint64_t micro = s & 0x0000ff0000000000;
-	uint64_t counter = s & 0x00000000ffffffff;
+	uint32_t state = (uint32_t)log2f((float)((s & 0xff00000000000000) >> 56));
+	if(state <= sizeof(_osc_serial_macroStr) / sizeof(char *)){
+		return _osc_serial_macroStr[state];
+	}else{
+		return OSC_SERIAL_NULLSTATE;
+	}
+}
 
-	uint32_t macro_32 = macro >> 56;
-	uint32_t state_32 = state >> 56;
-	uint32_t micro_32 = micro >> 56;
-	uint32_t counter_32 = counter >> 56;
-
-	char buf[128];
+char *osc_serial_stateStr(uint64_t s)
+{
+	uint64_t macro = (uint64_t)(s & 0xff00000000000000);
+	uint32_t state = (uint32_t)log2f((float)((s & 0x00ff000000000000) >> 48));
 	switch(macro){
 	case OSC_SERIAL_BUNDLE_HEADER:
-		switch(state){
-		case OSC_SERIAL_BUNDLE_HEADER_ID:
-			snprintf(slen, buf, "%s
-			break;
-		case OSC_SERIAL_BUNDLE_HEADER_TIMETAG:
-
-			break;
+		if(state < sizeof(_osc_serial_headerStateStr) / sizeof(char *)){
+			return _osc_serial_headerStateStr[state];
+		}else{
+			return OSC_SERIAL_NULLSTATE;
 		}
 		break;
 	case OSC_SERIAL_BUNDLE_MESSAGE:
-		switch(state){
-		case OSC_SERIAL_MESSAGE_SIZE:
-
-			break;
-		case OSC_SERIAL_MESSAGE_ADDRESS:
-
-			break;
-		case OSC_SERIAL_MESSAGE_TYPETAGS:
-
-			break;
-		case OSC_SERIAL_MESSAGE_DATA:
-
-			break;
+	case OSC_SERIAL_MESSAGE:
+		if(state < sizeof(_osc_serial_messageStateStr) / sizeof(char *)){
+			return _osc_serial_messageStateStr[state];
+		}else{
+			return OSC_SERIAL_NULLSTATE;
 		}
 		break;
-	case OSC_SERIAL_MESSAGE:
-
-		break;
+	default:
+		return OSC_SERIAL_NULLSTATE;
 	}
 }
-*/
+
+char *osc_serial_microStr(uint64_t s)
+{
+	uint64_t macro = (uint64_t)(s & 0xff00000000000000);
+	uint64_t state = (uint64_t)(s & 0x00ff000000000000);
+	uint32_t micro = (uint32_t)log2f((float)((s & 0x00ff000000000000) >> 40));
+	switch(macro){
+	case OSC_SERIAL_BUNDLE_MESSAGE:
+	case OSC_SERIAL_MESSAGE:
+		switch(state){
+		case OSC_SERIAL_MESSAGE_ADDRESS:
+			if(micro < sizeof(_osc_serial_addressMicroStr) / sizeof(char *)){
+				return _osc_serial_addressMicroStr[micro];
+			}else{
+				return OSC_SERIAL_NULLSTATE;
+			}
+			break;
+		case OSC_SERIAL_MESSAGE_TYPETAGS:
+			if(micro < sizeof(_osc_serial_typetagMicroStr) / sizeof(char *)){
+				return _osc_serial_typetagMicroStr[micro];
+			}else{
+				return OSC_SERIAL_NULLSTATE;
+			}
+			break;
+		default:
+			return OSC_SERIAL_NULLSTATE;
+		}
+		break;
+	default:
+		return OSC_SERIAL_NULLSTATE;
+	}
+}
+
+uint32_t osc_serial_counter(uint64_t s)
+{
+	return (uint32_t)(s & 0x00000000ffffffff);
+}
+
+void osc_serial_statestr(uint64_t s, int slen, char *string)
+{
+	snprintf(string, slen, "%20s : %20s : %20s : %u", osc_serial_macroStr(s), osc_serial_stateStr(s), osc_serial_microStr(s), osc_serial_counter(s));
+}
+
 char *osc_serial_errstr(uint64_t err)
 {
 	err = (err & 0x000000ff00000000) >> 32;
