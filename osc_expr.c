@@ -2673,11 +2673,14 @@ int osc_expr_median(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	osc_atom_array_u_getDoubleArray(*argv, &tmp);
 	qsort((void *)(tmp), len, sizeof(double), comp);
 	if((len % 2) == 0){
-		double left = osc_atom_u_getDouble(osc_atom_array_u_get(*argv, (int)((len - 1) / 2.)));
-		double right = osc_atom_u_getDouble(osc_atom_array_u_get(*argv, ((int)((len - 1) / 2.) + 1)));
+		//double left = osc_atom_u_getDouble(osc_atom_array_u_get(*argv, (int)((len - 1) / 2.)));
+		//double right = osc_atom_u_getDouble(osc_atom_array_u_get(*argv, ((int)((len - 1) / 2.) + 1)));
+		double left = tmp[(int)((len - 1) / 2.)];
+		double right = tmp[(int)((len - 1) / 2.) + 1];
 		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), (left + right) / 2.);
 	}else{
-		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), osc_atom_u_getDouble(osc_atom_array_u_get(*argv, ((len - 1) / 2))));
+		//osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), osc_atom_u_getDouble(osc_atom_array_u_get(*argv, ((len - 1) / 2))));
+		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), tmp[((len - 1) / 2)]);
 	}
 	if(tmp){
 		osc_mem_free(tmp);

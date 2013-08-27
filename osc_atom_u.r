@@ -49,6 +49,8 @@ struct _osc_atom_u{
 		uint64_t H;
 		float f;
 		double d;
+		float q[4];
+		double Q[4];
 		char *s;
 		t_osc_bndl_u *bndl;
 		t_osc_timetag t;
