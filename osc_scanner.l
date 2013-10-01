@@ -1,6 +1,7 @@
 %{
 #include "osc_parser.h"
 #include "osc_mem.h"
+#include "osc_timetag.h"
 
 int osc_scanner_wrap(yyscan_t scanner){
 	return 1;
@@ -162,6 +163,14 @@ $[1-9][0-9]?	{
 			*/
 
 			/* [a-zA-Z0-9][^ \t\n]* */
+
+(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|0[1-9]|[1-2][0-9])?T(2[0-3]|[0-1][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)??(Z|[+-](?:2[0-3]|[0-1][0-9]):[0-5][0-9])? { /* ISO 8601 from Regular Expressions Cookbook */
+	t_osc_timetag t;
+	osc_timetag_fromISO8601(yytext, &t);
+	yylval->t = t;
+	return OSCTIMETAG;
+}
+
 {string}|$0	{
 				int len = strlen(yytext) + 1;
 				char *copy = osc_mem_alloc(len);

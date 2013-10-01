@@ -43,6 +43,7 @@
 #include "osc_atom_u.h"
 #include "osc_parser.h"
 #include "osc_scanner.h"
+#include "osc_timetag.h"
 
 	//#define OSC_PARSER_DEBUG
 #ifdef OSC_PARSER_DEBUG
@@ -161,6 +162,7 @@ void osc_parser_substitution(t_osc_parser_subst **subs_list, t_osc_msg_u *msg, i
 	char c;
 	char *string;
 	char b;
+	t_osc_timetag t;
 	struct _osc_message_u *msg;
 }
 
@@ -172,6 +174,7 @@ void osc_parser_substitution(t_osc_parser_subst **subs_list, t_osc_msg_u *msg, i
 %token <c>OSCCHAR
 %token <string>STRING OSCADDRESS 
 %token <b>OSCBOOL
+%token <t>OSCTIMETAG
 
 %type <msg>arglist msg 
 
@@ -276,6 +279,14 @@ arglist:
 		*msg = m;
 		osc_message_u_appendBool(*msg, (int)$1);
 	  }
+	| OSCTIMETAG {
+		t_osc_msg_u *m = osc_message_u_alloc();
+		PP("push MSG %p->%p\n", m, *msg);
+		PP("add OSCTIMETAG to MSG %p := %llu\n", m, $1);
+		m->next = *msg;
+		*msg = m;
+		osc_message_u_appendTimetag(*msg, $1);
+	  }
 	| DOLLARSUB {
 		t_osc_msg_u *m = osc_message_u_alloc();
 		PP("push MSG %p->%p\n", m, *msg);
@@ -321,8 +332,12 @@ arglist:
 		osc_message_u_appendInt8(*msg, $2);
  	}
 	| arglist OSCBOOL {
-		PP("add OSCCHAR to MSG %p := %c\n", *msg, $2);
+		PP("add OSCTIMETAG to MSG %p := %c\n", *msg, $2);
 		osc_message_u_appendBool(*msg, (int)$2);
+ 	}
+	| arglist OSCTIMETAG {
+		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
+		osc_message_u_appendTimetag(*msg, $2);
  	}
 	| arglist DOLLARSUB {
 		PP("add DOLLARSUB to MSG %p := %d\n", *msg, $2);
