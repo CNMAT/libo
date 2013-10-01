@@ -1412,6 +1412,9 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		case OSC_EXPR_NUM:
 		case OSC_EXPR_OSCADDRESS:
 			break;
+		case OSC_EXPR_LAMBDA:
+			st = "lambda";
+			break;
 		case OSC_EXPR_POWEQ:
 			st = "^=";
 			break;
