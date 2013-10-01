@@ -61,7 +61,7 @@ typedef uint64_t t_osc_timetag;
 #endif
 
 // conversions 
-void osc_timetag_fromISO8601(char *s, t_osc_timetag t);
+void osc_timetag_fromISO8601(char *s, t_osc_timetag *t);
 int osc_timetag_format(t_osc_timetag t, char *buf);
 
 // operations

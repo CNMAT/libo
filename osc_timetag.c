@@ -22,6 +22,7 @@
 #include "osc.h"
 #include "osc_byteorder.h"
 #include "osc_timetag.h"
+#include "osc_strfmt.h"
 
 #if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
 typedef struct _osc_timetag_ntptime{
@@ -36,8 +37,8 @@ typedef struct _osc_ptptime{
 #error Unrecognized timetag format in osc_timetag.c!
 #endif
 
-void osc_timetag_ut_to_ntp(long int ut, t_osc_timetag_ntptime *n);
-long int osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);
+void osc_timetag_ut_to_ntp(uint32_t ut, t_osc_timetag_ntptime *n);
+int32_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);
 void osc_timetag_float_to_ntp(double d, t_osc_timetag_ntptime *t);
 double osc_timetag_ntp_to_float(t_osc_timetag_ntptime t);
 int osc_timetag_ntp_to_iso8601(t_osc_timetag t, char *s);
@@ -153,7 +154,6 @@ time_t osc_timetag_timegm (struct tm *tm)
 {
 	time_t ret;
 	char *tz;
-
 	tz = getenv("TZ");
 #ifdef WIN_VERSION
 	osc_timetag_setenv("TZ", "UTC");
@@ -177,7 +177,7 @@ int osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
 	time_t i;
 	struct tm *t;
 	char s1[24];
-	char s2[10];
+	//char s2[10];
 	double d;
 
 	t_osc_timetag_ntptime n = *((t_osc_timetag_ntptime *)&timetag);
@@ -188,31 +188,49 @@ int osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
     	t = localtime(&i);
 
 	strftime(s1, 24, "%Y-%m-%dT%H:%M:%S", t);
-	sprintf(s2, "%05fZ", fmod(d, 1.0));
-	return sprintf(s, "%s.%s", s1, s2+2);
+	double dm1 = fmod(d, 1.0);
+	int l = osc_strfmt_float64(NULL, 0, dm1);
+	char s2[l + 1];
+	//sprintf(s2, "%05fZ", fmod(d, 1.0));
+	osc_strfmt_float64(s2, l + 1, dm1);
+	return sprintf(s, "%s.%sZ", s1, s2+2);
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
 #endif
 }
 
-void osc_timetag_fromISO8601(char *s, t_osc_timetag timetag)
+void osc_timetag_fromISO8601(char *s, t_osc_timetag *timetag)
 {
 #if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP  
 	struct tm t;
-	float sec;
-	char s1[20];
+	memset(&t, '\0', sizeof(struct tm));
+	double sec;
+	//char s1[];
+	//memset(s1, '\0', sizeof(s1));
     
 	// read out the fractions part
-	sscanf(s, "%*d-%*d-%*dT%*d:%*d:%fZ", &sec);
-    
+	sscanf(s, "%*d-%*d-%*dT%*d:%*d:%lfZ", &sec);
+
+	time_t now = time(NULL);
+	struct tm *unsafe = localtime(&now);
+	if(unsafe){
+		t = *unsafe;
+	} 
 	// null-terminate the string
-	strncat(s1, s, 19);
+	//strncat(s1, s, OSC_TIMETAG_MAX_STRING_LENGTH - 1);
 
 	// parse the time
-	strptime(s1, "%Y-%m-%dT%H:%M:%S", &t);
-    
+	//strptime(s1, "%Y-%m-%dT%H:%M:%S", &t);
+	strptime(s, "%Y-%m-%dT%H:%M:%S", &t);
+
 	t_osc_timetag_ntptime n;
-	osc_timetag_ut_to_ntp(osc_timetag_timegm(&t), &n);
-	n.frac_sec = (unsigned long int)(fmod(sec, 1.0) * 4294967295.0);
+	osc_timetag_ut_to_ntp(mktime(&t), &n);
+
+	/**************************************************
+	 * The connversion from double precision float to 32-bit int obviously 
+	 * results in a loss of precision that I don't think can be overcome...
+	 **************************************************/
+	n.frac_sec = (uint32_t)(fmod(sec, 1.0) * 4294967295.0);
+	*timetag = *((t_osc_timetag *)(&n));
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
 #endif
 }
@@ -233,14 +251,14 @@ void osc_timetag_float_to_ntp(double d, t_osc_timetag_ntptime *n)
 	frac_sec = fmod(d, 1.0);
 	sec = d - frac_sec;
     
-	n->sec = (unsigned long int)(sec);
-	n->frac_sec= (unsigned long int)(frac_sec * 4294967295.0);
+	n->sec = (uint32_t)(sec);
+	n->frac_sec= (uint32_t)(frac_sec * 4294967295.0);
 	//n->type = TIME_STAMP;
 }
 
 double osc_timetag_ntp_to_float(t_osc_timetag_ntptime n)
 {
-	return ((double)(n.sec)) + ((double)((unsigned long int)(n.frac_sec))) / 4294967295.0;
+	return ((double)(n.sec)) + ((double)((uint32_t)(n.frac_sec))) / 4294967295.0;
 }
 
 t_osc_timetag osc_timetag_floatToTimetag(double d)
@@ -261,29 +279,32 @@ double osc_timetag_timetagToFloat(t_osc_timetag timetag)
 #endif
 }
 
-void osc_timetag_ut_to_ntp(long int ut, t_osc_timetag_ntptime *n)
+void osc_timetag_ut_to_ntp(uint32_t ut, t_osc_timetag_ntptime *n)
 {
 	struct timeval tv;
 	struct timezone tz;
     
 	gettimeofday(&tv, &tz); // this is just to get the timezone...
     
-	n->sec = (unsigned long)2208988800UL + 
-		(unsigned long)ut - 
-		(unsigned long)(60 * tz.tz_minuteswest) +
-		(unsigned long)(tz.tz_dsttime == 1 ? 3600 : 0);
+	n->sec = (uint32_t)2208988800UL + 
+		(uint32_t)ut - 
+		(uint32_t)(60 * tz.tz_minuteswest) + 
+		(uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
+	//printf("%s ut: %lu n->sec: %u minuteswest: %d dst: %d\n", __func__, ut, n->sec, 60 * tz.tz_minuteswest, tz.tz_dsttime == 1 ? 3600 : 0);
 
 	n->frac_sec = 0;
 }
 
-long int osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n)
+int32_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n)
 {
 	struct timeval tv;
 	struct timezone tz;
     
 	gettimeofday(&tv, &tz); // this is just to get the timezone...
     
-	return n.sec - (unsigned long)2208988800UL + (unsigned long)(60 * tz.tz_minuteswest) - (unsigned long)(tz.tz_dsttime == 1 ? 3600 : 0);
+	int32_t ut =  n.sec - (uint32_t)2208988800UL + (uint32_t)(60 * tz.tz_minuteswest) - (uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
+	//printf("%s: ut: %lu n.sec: %u minuteswest: %d dst: %d\n", __func__, ut, n.sec, 60 * tz.tz_minuteswest, tz.tz_dsttime == 1 ? 3600 : 0);
+	return ut;
 }
 
 
@@ -296,12 +317,12 @@ t_osc_timetag osc_timetag_now(void)
 
 	gettimeofday(&tv, &tz);
     
-	n.sec = (unsigned long)2208988800UL + 
-		(unsigned long) tv.tv_sec - 
-		(unsigned long)(60 * tz.tz_minuteswest) +
-		(unsigned long)(tz.tz_dsttime == 1 ? 3600 : 0);
+	n.sec = (uint32_t)2208988800UL + 
+		(uint32_t) tv.tv_sec - 
+		(uint32_t)(60 * tz.tz_minuteswest) +
+		(uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
     
-	n.frac_sec = (unsigned long)(tv.tv_usec * 4295); // 2^32-1 / 1.0e6
+	n.frac_sec = (uint32_t)(tv.tv_usec * 4295); // 2^32-1 / 1.0e6
 
 	return *((t_osc_timetag *)(&n));
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
