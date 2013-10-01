@@ -24,7 +24,16 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_mem.h"
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
+#include <float.h>
 
+#if __DBL_DIG__ == 15 && __DBL_MANT_DIG__ == 53  && FLT_RADIX == 2 
+#define OSC_STRFMT_PRINTALLBITS
+#else
+#error nope
+#endif
+
+int osc_strfmt_precision(double d);
 
 int osc_strfmt_int8(char *buf, size_t n, int8_t i)
 {
@@ -67,12 +76,17 @@ int osc_strfmt_uint64(char *buf, size_t n, uint64_t i)
 	return snprintf(buf, n, "%"PRIu64, i);
 }
 
-
 int osc_strfmt_float32(char *buf, size_t n, float f)
 {
 	return osc_strfmt_float64(buf, n, f);
 }
 
+#ifdef OSC_STRFMT_PRINTALLBITS
+int osc_strfmt_float64(char *buf, size_t n, double f)
+{
+	snprintf(buf, n, "%.*f", osc_strfmt_precision(f), f);
+}
+#else
 int osc_strfmt_float64(char *buf, size_t n, double f)
 {
 	int need_point = f - floor(f) == 0 ? 1 : 0;
@@ -83,7 +97,7 @@ int osc_strfmt_float64(char *buf, size_t n, double f)
 	}
 
 }
-
+#endif
 
 int osc_strfmt_bool(char *buf, size_t n, char b)
 {
@@ -102,6 +116,14 @@ int osc_strfmt_bool(char *buf, size_t n, char b)
 int osc_strfmt_null(char *buf, size_t n)
 {
 	return snprintf(buf, n, "null");
+}
+
+int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)
+{
+	if(!buf){
+		return 1024;
+	}
+	return osc_timetag_format(t, buf);
 }
 
 int osc_strfmt_addQuotes(int len, char *buf, char **out)
@@ -188,4 +210,95 @@ int osc_strfmt_strlenPadded(char *str)
 	}else{
 		return len + 4;
 	}
+}
+
+int osc_strfmt_precision(double d)
+{
+	char buf[43];
+		 //1 + // sign, '-' or '+'
+		 //(sizeof(d) * CHAR_BIT + 3) / 4 + // mantissa hex digits max
+		 //1 + // decimal point, '.'
+		 //1 + // mantissa-exponent separator, 'p'
+		 //1 + // mantissa sign, '-' or '+'
+		 //(sizeof(d) * CHAR_BIT + 2) / 3 + // exponent decimal digits max
+		 //1 // string terminator, '\0'
+		 //];
+	int n;
+	char *pp, *p;
+	int e, lsbFound, lsbPos;
+
+	// convert d into "+/- 0x h.hhhh p +/- ddd" representation and check for errors
+	if ((n = snprintf(buf, sizeof(buf), "%+a", d)) < 0 ||
+	    (unsigned)n >= sizeof(buf))
+	return -1;
+
+	//printf("{%s}", buf);
+
+	// make sure the conversion didn't produce something like "nan" or "inf"
+	// instead of "+/- 0x h.hhhh p +/- ddd"
+	if (strstr(buf, "0x") != buf + 1 ||
+	    (pp = strchr(buf, 'p')) == NULL)
+	return 0;
+
+	// extract the base-2 exponent manually, checking for overflows
+	e = 0;
+	p = pp + 1 + (pp[1] == '-' || pp[1] == '+'); // skip the exponent sign at first
+	for (; *p != '\0'; p++)
+	{
+		if (e > INT_MAX / 10)
+		return -2;
+		e *= 10;
+		if (e > INT_MAX - (*p - '0'))
+		return -2;
+		e += *p - '0';
+	}
+	if (pp[1] == '-') // apply the sign to the exponent
+	e = -e;
+
+	//printf("[%s|%d]", buf, e);
+
+	// find the position of the least significant non-zero bit
+	lsbFound = lsbPos = 0;
+	for (p = pp - 1; *p != 'x'; p--)
+	{
+		if (*p == '.')
+		continue;
+		if (!lsbFound)
+		{
+			int hdigit = (*p >= 'a') ? (*p - 'a' + 10) : (*p - '0'); // assuming ASCII chars
+			if (hdigit)
+			{
+				static const int lsbPosInNibble[16] = { 0,4,3,4,  2,4,3,4, 1,4,3,4, 2,4,3,4 };
+				lsbFound = 1;
+				lsbPos = -lsbPosInNibble[hdigit];
+			}
+		}
+    else
+	    {
+		    lsbPos -= 4;
+	    }
+	}
+	lsbPos += 4;
+
+	if (!lsbFound)
+		return 0; // d is 0 (integer)
+
+	// adjust the least significant non-zero bit position
+	// by the base-2 exponent (just add them), checking
+	// for overflows
+
+	if (lsbPos >= 0 && e >= 0)
+		return 0; // lsbPos + e >= 0, d is integer
+
+	if (lsbPos < 0 && e < 0)
+		if (lsbPos < INT_MIN - e)
+			return -2; // d isn't integer and needs too many fractional digits
+
+	if ((lsbPos += e) >= 0)
+		return 0; // d is integer
+
+	if (lsbPos == INT_MIN && -INT_MAX != INT_MIN)
+		return -2; // d isn't integer and needs too many fractional digits
+
+	return -lsbPos;
 }

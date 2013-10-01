@@ -31,6 +31,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 extern "C" {
 #endif
 
+#include "osc_timetag.h"
 #include <inttypes.h>
 #include <string.h>
 
@@ -51,6 +52,8 @@ int osc_strfmt_float64(char *buf, size_t n, double f);
 
 int osc_strfmt_bool(char *buf, size_t n, char b);
 int osc_strfmt_null(char *buf, size_t n);
+
+int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t);
 
 int osc_strfmt_countMeta(int len, char *buf);
 int osc_strfmt_isMeta(char c);
