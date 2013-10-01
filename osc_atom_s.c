@@ -466,6 +466,8 @@ int osc_atom_s_getStringLen(t_osc_atom_s *a)
 		return osc_strfmt_bool(NULL, 0, 'F');
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
+	case 't': // timetag
+		return 1024; // we should compute this...
 	}
 	return 0;
 }
@@ -558,6 +560,9 @@ int osc_atom_s_getString(t_osc_atom_s *a, size_t n, char **out)
 		break;
 	case 'N': // NULL
 		osc_strfmt_null(*out, nn);
+		break;
+	case 't': // timetag
+		stringlen = osc_strfmt_timetag(*out, nn, *((t_osc_timetag *)(a->data)));
 		break;
 	}
 	return stringlen;
@@ -940,9 +945,9 @@ t_osc_err osc_atom_s_doFormat(t_osc_atom_s *a, long *buflen, long *bufpos, char 
 		extern t_osc_err osc_bundle_s_doFormat(long len, char *bndl, long *buflen, long *bufpos, char **buf);
 		osc_bundle_s_doFormat(ntoh32(*((uint32_t *)data)), data + 4, buflen, bufpos, buf);
 		*bufpos += sprintf(*buf + *bufpos, "]");
-	}else if(osc_atom_s_getTypetag(a) == OSC_TIMETAG_TYPETAG){
+		//}else if(osc_atom_s_getTypetag(a) == OSC_TIMETAG_TYPETAG){
 		//*bufpos += sprintf(*buf + *bufpos, "timetag");
-		*bufpos += osc_timetag_format(*((t_osc_timetag *)osc_atom_s_getData(a)), *buf + *bufpos);
+		//*bufpos += osc_timetag_format(*((t_osc_timetag *)osc_atom_s_getData(a)), *buf + *bufpos);
 	}else if(osc_atom_s_getTypetag(a) == 's'){
 		char *stringptr = osc_atom_s_getData(a);
 		int stringlen = strlen(stringptr);
