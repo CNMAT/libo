@@ -1066,6 +1066,17 @@ expr:
 		osc_expr_arg_append(arg, $4);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "apply", arg);
 	}
+// shorthand value()
+	| '`' OSC_EXPR_STRING '`' {
+		t_osc_expr_arg *arg = osc_expr_arg_alloc();
+		osc_expr_arg_setOSCAtom(arg, $2);
+		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
+	}
+	| '`' OSC_EXPR_OSCADDRESS '`' {
+		t_osc_expr_arg *arg = osc_expr_arg_alloc();
+		osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr($2));
+		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
+	}
 // invalid constructs that result in errors
 	| OSC_EXPR_STRING OSC_EXPR_INC '=' arg {
 		char buf[strlen(osc_atom_u_getStringPtr($1)) + 3];
