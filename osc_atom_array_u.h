@@ -33,6 +33,7 @@ extern "C" {
 #endif
 
 #include "osc_atom_u.h"
+#include "osc_array.h"
 
 typedef t_osc_array t_osc_atom_array_u, t_osc_atom_ar_u;
 

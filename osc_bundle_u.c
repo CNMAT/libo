@@ -103,11 +103,24 @@ t_osc_err osc_bundle_u_copy(t_osc_bndl_u **dest, t_osc_bndl_u *src)
 	return OSC_ERR_NONE;
 }
 
-int osc_bundle_u_getMsgCount(t_osc_bndl_u *bndl){
-	return bndl->msgcount;
+int osc_bundle_u_getMsgCount(t_osc_bndl_u *bndl)
+{
+	if(bndl){
+		return bndl->msgcount;
+	}
+	return 0;
 }
 
-t_osc_err osc_bundle_u_getMessagesWithCallback(t_osc_bndl_u *bndl, void (*f)(t_osc_msg_u*, void *), void *context){
+t_osc_msg_u *osc_bundle_u_getFirstMsg(t_osc_bndl_u *bndl)
+{
+	if(bndl){
+		return bndl->msghead;
+	}
+	return NULL;
+}
+
+t_osc_err osc_bundle_u_getMessagesWithCallback(t_osc_bndl_u *bndl, void (*f)(t_osc_msg_u*, void *), void *context)
+{
 	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
 	while(osc_bndl_it_u_hasNext(it)){
 		t_osc_msg_u *m = osc_bndl_it_u_next(it);
@@ -241,6 +254,17 @@ t_osc_err osc_bundle_u_addMsgCopy(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
 		t_osc_msg_u *copy = NULL;
 		osc_message_u_deepCopy(&copy, msg);
 		osc_bundle_u_addMsg(bndl, copy);
+		return OSC_ERR_NONE;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_addMsgWithoutDupsCopy(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
+{
+	if(bndl && msg){
+		t_osc_msg_u *copy = NULL;
+		osc_message_u_deepCopy(&copy, msg);
+		osc_bundle_u_addMsgWithoutDups(bndl, copy);
 		return OSC_ERR_NONE;
 	}
 	return OSC_ERR_NONE;

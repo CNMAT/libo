@@ -40,7 +40,9 @@ typedef struct _osc_message_u t_osc_message_u, t_osc_msg_u;
 #include "osc_bundle_u.h"
 #include "osc_bundle_s.h"
 #include "osc_atom_u.h"
+#include "osc_atom_array_u.h"
 #include "osc_array.h"
+#include "osc_timetag.h"
 
 typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
 
@@ -82,6 +84,7 @@ t_osc_atom_u *osc_message_u_appendNull(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_appendBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
+t_osc_atom_u *osc_message_u_appendTimetag(t_osc_msg_u *m, t_osc_timetag t);
 
 t_osc_atom_u *osc_message_u_prependInt8(t_osc_msg_u *m, int8_t v);
 t_osc_atom_u *osc_message_u_prependInt16(t_osc_msg_u *m, int16_t v);
@@ -102,6 +105,7 @@ t_osc_atom_u *osc_message_u_prependNull(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_prependBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_prependBndl_s(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
+t_osc_atom_u *osc_message_u_prependTimetag(t_osc_msg_u *m, t_osc_timetag t);
 
 t_osc_atom_u *osc_message_u_insertInt8(t_osc_msg_u *m, int8_t v, int pos);
 t_osc_atom_u *osc_message_u_insertInt16(t_osc_msg_u *m, int16_t v, int pos);
@@ -122,6 +126,7 @@ t_osc_atom_u *osc_message_u_insertNull(t_osc_msg_u *m, int pos);
 t_osc_atom_u *osc_message_u_insertBndl(t_osc_msg_u *m, long len, char *bndl, int pos);
 t_osc_atom_u *osc_message_u_insertBndl_s(t_osc_msg_u *m, long len, char *bndl, int pos);
 t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos);
+t_osc_atom_u *osc_message_u_insertTimetag(t_osc_msg_u *m, t_osc_timetag t, int pos);
 
 t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlevel, char *sep);
 
@@ -138,6 +143,7 @@ void osc_message_array_u_free(t_osc_msg_ar_u *ar);//#define osc_message_array_u_
 #define osc_message_array_u_resize(ar, newlen) osc_array_resize((ar), (newlen))
 
 t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg);
+t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_array *ar);
 
 #ifdef __cplusplus
 }
