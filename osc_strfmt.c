@@ -28,7 +28,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <float.h>
 
 #if __DBL_DIG__ == 15 && __DBL_MANT_DIG__ == 53  && FLT_RADIX == 2 
-#define OSC_STRFMT_PRINTALLBITS
+//#define OSC_STRFMT_PRINTALLBITS
 #else
 #error nope
 #endif
