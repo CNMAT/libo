@@ -21,13 +21,12 @@ LIBO_OBJECTS = $(LIBO_OFILES) $(LIBO_SCANNER_OBJECTS) $(LIBO_PARSER_OBJECTS)
 RELEASE-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O3 -funroll-loops -std=c99
 DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -funroll-loops -std=c99
 
-#MAC_SYSROOT = MacOSX10.8.sdk 
-#MAC-CFLAGS = -arch i386 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/$(MAC_SYSROOT)
 MAC-CFLAGS = -arch i386 -arch x86_64
+ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 
-#MAC-INCLUDES = -F/System/Library/Frameworks -I/System/Library/Frameworks/Carbon.framework/Headers -I/System/Library/Frameworks/CoreServices.framework/Headers -I/usr/include
 MAC-INCLUDES = -I/usr/include
+ARM-INCLUDES = -I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/usr/include -I/usr/include
 WIN-INCLUDES = 
 
 all: CFLAGS += $(RELEASE-CFLAGS)
@@ -37,6 +36,14 @@ all: I = $(MAC-INCLUDES)
 all: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 all: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
 all: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
+
+arm: CFLAGS += $(RELEASE-CFLAGS)
+arm: CFLAGS += $(ARM-CFLAGS)
+arm: CC = clang
+arm: I = $(ARM-INCLUDES)
+arm: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
+arm: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
+arm: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
 debug: CFLAGS += $(DEBUG-CFLAGS)
 debug: CFLAGS += $(MAC-CFLAGS)
@@ -48,7 +55,6 @@ debug: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
 win: CC = i686-w64-mingw32-gcc
-#win: CC = gcc
 win: I = $(WIN-INCLUDES)
 win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a 
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
