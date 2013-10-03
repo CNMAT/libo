@@ -176,9 +176,12 @@ quote[[:space:]]*\( {
 	}else{
 		//char *copy = osc_mem_alloc(yyleng + 1);
 		//strncpy(copy, yytext, yyleng + 1);
-		t_osc_atom_u *a = osc_atom_u_alloc();
-		osc_atom_u_setString(a, yytext);
-		yylval->atom = a;
+		//t_osc_atom_u *a = osc_atom_u_alloc();
+		//yylval->atom = a;
+		if(alloc_atom){
+			yylval->atom = osc_atom_u_alloc();
+		}
+		osc_atom_u_setString(yylval->atom, yytext);
 		return OSC_EXPR_OSCADDRESS;
 	}
 	}
@@ -191,9 +194,12 @@ quote[[:space:]]*\( {
 	}else{
 		//char *copy = osc_mem_alloc(yyleng + 1);
 		//strncpy(copy, yytext, yyleng + 1);
-		t_osc_atom_u *a = osc_atom_u_alloc();
-		osc_atom_u_setString(a, yytext);
-		yylval->atom = a;
+		//t_osc_atom_u *a = osc_atom_u_alloc();
+		//yylval->atom = a;
+		if(alloc_atom){
+			yylval->atom = osc_atom_u_alloc();
+		}
+		osc_atom_u_setString(yylval->atom, yytext);
 		return OSC_EXPR_STRING;
 	}
 }

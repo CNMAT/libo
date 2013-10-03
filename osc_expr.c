@@ -65,7 +65,7 @@ char *osc_expr_typestrings[] = {"", "number", "list", "", "string", "", "", "", 
 
 #define OSC_EXPR_MAX_TYPESTRING_LEN strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_NUMBER]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_LIST]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_STRING]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_ATOM]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_EXPR]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_OSCADDRESS]) + strlen(osc_expr_typestrings[OSC_EXPR_ARG_TYPE_BOOLEAN]) + 1 + 12 // commas, spaces, and null byte
 
-char *osc_expr_categories[] = {"/math/operator/arithmetic", "/math/operator/relational", "/math/operator/logical", "/math/operator/assignment", "/math/arithmetic", "/math/trigonometric", "/math/power", "/math/conversion", "/math/specialfunction", "/math/constant", "/vector", "/statistics", "/string/operator", "/predicate", "/conditional", "/core"};
+char *osc_expr_categories[] = {"/math/operator/arithmetic", "/math/operator/relational", "/math/operator/logical", "/math/operator/assignment", "/math/arithmetic", "/math/trigonometric", "/math/power", "/math/conversion", "/math/specialfunction", "/math/constant", "/vector", "/statistics", "/string/function", "/string/operator", "/predicate", "/conditional", "/core"};
 
 // this gets created the first time it's needed and then it's never freed
 t_osc_bndl_u *osc_expr_functionBundle = NULL;
@@ -1411,6 +1411,7 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		case OSC_EXPR_STRING:
 		case OSC_EXPR_NUM:
 		case OSC_EXPR_OSCADDRESS:
+		case OSC_EXPR_QUOTED_EXPR:
 			break;
 		case OSC_EXPR_LAMBDA:
 			st = "lambda";
