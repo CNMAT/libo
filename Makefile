@@ -21,11 +21,13 @@ LIBO_OBJECTS = $(LIBO_OFILES) $(LIBO_SCANNER_OBJECTS) $(LIBO_PARSER_OBJECTS)
 RELEASE-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O3 -funroll-loops -std=c99
 DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -funroll-loops -std=c99
 
-MAC_SYSROOT = MacOSX10.8.sdk 
-MAC-CFLAGS = -arch i386 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/$(MAC_SYSROOT)
+#MAC_SYSROOT = MacOSX10.8.sdk 
+#MAC-CFLAGS = -arch i386 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/$(MAC_SYSROOT)
+MAC-CFLAGS = -arch i386 -arch x86_64
 WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 
-MAC-INCLUDES = -F/System/Library/Frameworks -I/System/Library/Frameworks/Carbon.framework/Headers -I/System/Library/Frameworks/CoreServices.framework/Headers -I/usr/include
+#MAC-INCLUDES = -F/System/Library/Frameworks -I/System/Library/Frameworks/Carbon.framework/Headers -I/System/Library/Frameworks/CoreServices.framework/Headers -I/usr/include
+MAC-INCLUDES = -I/usr/include
 WIN-INCLUDES = 
 
 all: CFLAGS += $(RELEASE-CFLAGS)

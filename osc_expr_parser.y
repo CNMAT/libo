@@ -33,10 +33,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <libgen.h>
-#ifndef WIN_VERSION
-#include <Carbon.h>
-#include <CoreServices.h>
-#endif
+	//#ifndef WIN_VERSION
+	//#include <Carbon.h>
+	//#include <CoreServices.h>
+	//#endif
 #include "osc_expr.h"
 #include "osc_expr_rec.h"
 #include "osc_expr_rec.r"

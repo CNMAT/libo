@@ -30,10 +30,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifndef WIN_VERSION
-#include <Carbon.h>
-#include <CoreServices.h>
-#endif
+	//#ifndef WIN_VERSION
+	//#include <Carbon.h>
+	//#include <CoreServices.h>
+	//#endif
 #include "osc.h"
 #include "osc_mem.h"
 #include "osc_error.h"

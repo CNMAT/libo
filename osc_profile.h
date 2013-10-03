@@ -32,6 +32,8 @@
 extern "C" {
 #endif
 
+#if defined(__i386__) || defined(__X86__)
+
 #include <unistd.h>
 
 //#define RDTSC_CYCLES_PER_SECOND 2.261E09
@@ -72,6 +74,14 @@ static double osc_profile_rdtsc_cps = 0;
 #define OSC_PROFILE_TIMER_PRINTF(varname) printf("%s time elapsed: %f\" (%f ms).  (%s:%d--%d)\n", #varname, (varname##_stop - varname##_start) / osc_profile_rdtsc_cps, ((varname##_stop - varname##_start) / osc_profile_rdtsc_cps) * 1000, __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
 #define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname) char bufname [128]; snprintf(bufname, 128, "%s time elapsed: %f\" (%f ms).  (%s:%d--%d)", #varname, varname##_stop - varname##_start, (varname##_stop - varname##_start) / 1000., __PRETTY_FUNCTION__, varname##_line_start, varname##_line_stop);
 #else
+#define OSC_PROFILE_TIMER_START(varname)
+#define OSC_PROFILE_TIMER_STOP(varname)
+#define OSC_PROFILE_TIMER_PRINTF(varname)
+#define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname)
+#endif
+
+#else
+// not on i386 or x86
 #define OSC_PROFILE_TIMER_START(varname)
 #define OSC_PROFILE_TIMER_STOP(varname)
 #define OSC_PROFILE_TIMER_PRINTF(varname)
