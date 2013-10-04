@@ -62,13 +62,22 @@
 #include "osc_atom_u.h"
 #include "osc_expr.h"
 
-
+#ifdef __cplusplus
+#define YY_DECL extern "C" int osc_expr_scanner_lex \
+		(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#else
 #define YY_DECL int osc_expr_scanner_lex \
 		(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#endif
 	//t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f);
+#ifdef __cplusplus
+extern "C"{
+#endif
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f);
 t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
-
+#ifdef __cplusplus
+}
+#endif
 }
 
 %{

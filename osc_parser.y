@@ -59,7 +59,11 @@
 #include "osc_error.h"
 #include "osc_message_u.h"
 
+#ifdef __cplusplus
+#define YY_DECL extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
+#else
 #define YY_DECL int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
+#endif
 
 #ifndef __HAVE_OSC_PARSER_SUBST__
 #define __HAVE_OSC_PARSER_SUBST__
@@ -82,7 +86,13 @@ typedef struct _osc_parser_bndl_list{
 
 #ifndef __HAVE_OSC_PARSER_PARSESTRING__
 #define __HAVE_OSC_PARSER_PARSESTRING__
+#ifdef __cplusplus
+extern "C"{
+#endif
 t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl, long *nsubs, t_osc_parser_subst **subs);
+#ifdef __cplusplus
+}
+#endif
 #endif
 }
 
