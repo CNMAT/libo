@@ -1,0 +1,125 @@
+* CNMAT Max/MSP external development
+** Building the odot objects
+
+
+1. Check out the following repositories:
+   * https://github.com/CNMAT/CNMAT-odot
+	
+	-Odot universe, patches extern etc.
+
+   * https://github.com/CNMAT/libo
+
+	-OSC stuff, nothing to do with max
+
+   * https://github.com/CNMAT/libomax
+
+	-bridge between libo and max
+
+   * https://github.com/Cycling74/max6-sdk
+
+   * pd source code
+
+2. Install flex and bison
+
+	-Flex builds tokenizer (lexical)
+	-Bison writes a c file that is a compiler (syntatic)
+	-(both are trans-compilers)
+
+   Compiling libo requires flex >2.5 and bison >2.4 to be installed. The OSX developer tools come with older versions
+   of flex and bison which will not work. 
+   * Download the latest version of flex here:  http://flex.sourceforge.net
+   * Download the latest version of bison here:  http://www.gnu.org/software/bison/
+   * Follow the instructions that come with the source code---it should be the normal ./configure; make; sudo make install.
+   * Be aware that Apple's versions of flex and bison are installed in /usr/bin and that the ones you install will likely
+     end up in /usr/local/bin, so you will have to remove Apple's, or adjust your path accordingly.
+
+
+3. Build libo
+   * Mac:
+     1. Add the following lines to your .profile (in your home directory), changing 8 to match the version of your OS
+   	    MAC_SYSROOT = MacOSX10.8.sdk   (latest version of operating system that you have)   
+   	    export MAC_SYSROOT
+
+     2. Execute the following commands at the command line:
+   	    $ cd <path/to/libo>
+   	    $ make
+
+     3. Don't worry about warnings!
+
+
+4. Build libomax
+   $ cd <path/to/libomax>
+   $ make
+
+   (need to make sure pd source is in the same dir as libomax)
+
+5. Build the odot objects
+   $ cd <path/to/CNMAT-odot>
+   $ make
+
+Build (one object) from Buildall in Xcode:
+
+	-product -> scheme -> myobject
+
+** Adding an object to the odot objects
+
+1. Make a folder in CNMAT-odot for your object.
+2. Put a copy of your source code in the folder and copy an Info.plist file from one of the other odot objects into the folder.
+   The name of your .c file should be the same as the folder that contains it.
+3. Open odot.xcodeproj
+4. Click on the odot project at the top of the leftmost pane 
+   <INCLUDE IMAGE>
+5. Select a target in the pane just to the right of the leftmost pane and duplicate it (apple-d).
+6. Double click on the copy of the target you just made and rename it to the name of your object.
+7. Find the source code file in the left pane that corresponds to the target that you duplicated (the original, not the copy that was made).
+	Select it and you will see a window in the rightmost pane called Target Membership. Make sure that you unselect the target that you
+	just created, so that the file is only a member of the target that it belongs to.
+8. Drag your .c file into the list of source files in the left pane. When asked what target it should belong to, 
+       check the target you just created and unselect any others.
+
+Tricky thing:
+
+	When you dupe the o. object in the TARGETS panel, you must go to the C file of the object you duplicated and deselect anything in the target 	membership panel that is not that object. AND OR check the C file of the object you're working on and make sure that nothing else in the 	target membership panel is checked.
+
+	To get to project-target pane (if you're looking at the c file) you must click the Xcode top level symbol.
+
+9. Take a deep breath and maybe stand up and stretch a bit.
+10. Select your target in the pane just to the right of the leftmost pane.
+11. In the Build Settings tab, find this line:
+
+	Info.plist File
+
+	and change its value to
+
+	$(inherited)
+
+	when you click out of that dialog, you should see <o.myobj>/Info.plist. If for some reason you don't, type it in manually.
+
+12. In the same window, find this line:
+
+	Product Name
+
+	and change its value to the name of your object OR $(inherited)
+
+13. Click the Info tab at the top of the middle pane and change the value of "Bundle identifier" to edu.cnmat.berkeley.o.<myobj>
+14. In the same Info tab, change the value of "Executable file" to o.<myobj>
+
+	-in your c file
+		-in your class_new method, you must match the name of the object (O.o or whatever) to the name of the value in the executable file 		 setting from the previous step
+		
+		-Appropriately rename the prefix on all your methods
+
+
+15. Not done yet---maybe you should have a coffee?
+
+THIS IS WHERE IT GETS ANNOYING
+
+16. Select Product->Scheme->Manage Schemes. In the window that appears, you'll find a scheme whose name is the name of 
+	the target that you duplicated what seems like an hour ago with the word copy after it. Select it and hit the minus button
+	in the lower left corner.
+
+17. Hit "Autocreate Schemes Now" at the top right of that window.
+18. Find the scheme for your object (probably at the bottom), select it, and hit Edit... at the bottom left of the window.
+19. Select Run in the leftmost pane and make sure that Build Configuration is set to Release. Click Ok.
+20. Select Product->Scheme->o.<myobj>.
+21. Select Product->Build or hit Apple-b.
