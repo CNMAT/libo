@@ -1209,3 +1209,12 @@ t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf)
 	*buflen = mybufpos;
 	return e;
 }
+/*
+long osc_atom_u_getFormatLen(t_osc_atom_u *a)
+{
+	if(!a){
+		return 0;
+	}
+	osc_atom_u_doFormat_n(NULL, 0, a);
+}
+*/
