@@ -102,10 +102,8 @@ int osc_strfmt_float64(char *buf, size_t n, double f)
 int osc_strfmt_bool(char *buf, size_t n, char b)
 {
 	switch(b){
-	case 't':
 	case 'T':
 		return snprintf(buf, n, "true");
-	case 'f':
 	case 'F':
 		return snprintf(buf, n, "false");
 	default:
