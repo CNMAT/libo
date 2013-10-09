@@ -181,7 +181,7 @@ The string will be allocated with #osc_mem_alloc and must be freed by the caller
    @return An error or #OSC_ERR_NONE
  */
 t_osc_err osc_message_s_format(t_osc_msg_s *m, long *buflen, char **buf) __attribute__((deprecated));
-long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m);
+long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent);
 
 t_osc_err osc_message_s_formatArgs(t_osc_msg_s *m, long *buflen, char **buf, int offset) __attribute__((deprecated));
 

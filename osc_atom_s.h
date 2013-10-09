@@ -116,7 +116,7 @@ void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t);
 size_t osc_atom_s_sizeof(t_osc_atom_s *a);
 t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u);
 t_osc_err osc_atom_s_format(t_osc_atom_s *a, long *buflen, char **buf) __attribute__((deprecated));
-long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a);
+long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent);
 
 #ifdef __cplusplus
 }
