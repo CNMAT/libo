@@ -4,28 +4,32 @@
 #include <string.h>
 #include "osc_bundle_u.h"
 #include "osc_strfmt.h"
-
-
+#include "osc_parser.h"
+#define __OSC_PROFILE__
+#include "osc_profile.h"
 
 int main(int len, char **argv)
 {
-	char *str = "ab\"c\"";
-	int n = osc_strfmt_quotedString(NULL, 0, str);
-	int nn = osc_strfmt_stringWithQuotedMeta(NULL, 0, str);
-	int nnn = osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, str);
-	printf("%d %d %d\n", n, nn, nnn);
+	char *st = "/foo [\n/bar 1 2 3\n]\n";
+	t_osc_bndl_u *bndl = NULL;
+	t_osc_parser_subst *subs = NULL;
+	long nsubs = 0;
+	t_osc_err e = osc_parser_parseString(strlen(st), st, &bndl, &nsubs, &subs);
 
-	int x = 3;
-	int xx = 10;
-	char s[n + xx];
-	char ss[nn + xx];
-	char sss[nnn + xx];
+	long sbndllen = 0;
+	char *sbndl = NULL;
+	osc_bundle_u_serialize(bndl, &sbndllen, &sbndl);
 
-	n = osc_strfmt_quotedString(s, n + xx, str);
-	nn = osc_strfmt_stringWithQuotedMeta(ss, nn + xx, str);
-	nnn = osc_strfmt_quotedStringWithQuotedMeta(sss, nnn + xx, str);
-
-	printf("%d: %s\n", n, s);
-	printf("%d: %s\n", nn, ss);
-	printf("%d: %s\n", nnn, sss);
+	long flen = osc_bundle_u_nformat(NULL, 0, bndl, 0);
+	char fbuf[flen + 1];
+	osc_bundle_u_nformat(fbuf, flen + 1, bndl, 0);
+	/*
+	long flen = 0;
+	char *fbuf = NULL;
+	osc_bundle_s_format(sbndllen, sbndl, &flen, &fbuf);
+	*/
+	printf("%s\n", fbuf);
+	for(int i = 0; i < flen; i++){
+		printf("%d: %c %d\n", i, fbuf[i], fbuf[i]);
+	}
 }

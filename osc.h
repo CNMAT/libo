@@ -53,6 +53,8 @@ extern "C" {
 
 #define OSC_QUOTE_STRINGS 1
 
+#define OSC_SAFESTRINGS
+
 #ifdef __cplusplus
 }
 #endif

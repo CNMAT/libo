@@ -533,6 +533,14 @@ t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf)
 	if(!bndl){
 		return OSC_ERR_NOBUNDLE;
 	}
+#ifdef OSC_SAFESTRINGS
+	if(!(*buf)){
+		*buflen = osc_bundle_u_nformat(NULL, 0, bndl, 0) + 1;
+		*buf = osc_mem_alloc(*buflen);
+	}
+	osc_bundle_u_nformat(*buf, *buflen, bndl, 0);
+	return OSC_ERR_NONE;
+#else
 	long mybuflen = 0, mybufpos = 0;
 	if(*buflen > 0){
 		if(*buf){
@@ -543,6 +551,47 @@ t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf)
 	// don't return the actual buffer length since it may be longer than the number of bytes used
 	*buflen = mybufpos;
 	return e;
+#endif
+}
+
+long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
+{
+	if(!bndl || osc_bundle_u_getMsgCount(bndl) == 0){
+		return 0;
+	}
+	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
+	long offset = 0;
+	if(!buf){
+		while(osc_bndl_it_u_hasNext(it)){
+			t_osc_msg_u *m = osc_bndl_it_u_next(it);
+			offset += osc_message_u_nformat(NULL, 0, m, nindent);
+		}
+	}else{
+		while(osc_bndl_it_u_hasNext(it)){
+			t_osc_msg_u *m = osc_bndl_it_u_next(it);
+			offset += osc_message_u_nformat(buf + offset, n - offset, m, nindent);
+		}
+	}
+	osc_bndl_it_u_destroy(it);
+	return offset;
+}
+
+long osc_bundle_u_formatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
+{
+	if(!bndl){
+		return 0;
+	}
+	long offset = 0;
+	if(!buf){
+		offset += snprintf(NULL, 0, "[\n");
+		offset += osc_bundle_u_nformat(NULL, 0, bndl, nindent);
+		offset += snprintf(NULL, 0, "]");
+	}else{
+		offset += snprintf(buf + offset, n - offset, "[\n");
+		offset += osc_bundle_u_nformat(buf + offset, n - offset, bndl, nindent);
+		offset += snprintf(buf + offset, n - offset, "]");
+	}
+	return offset;
 }
 
 t_osc_array *osc_bundle_array_u_alloc(long len)

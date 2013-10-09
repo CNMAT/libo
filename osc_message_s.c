@@ -354,6 +354,32 @@ t_osc_err osc_message_s_doFormat(t_osc_msg_s *m, long *buflen, long *bufpos, cha
 	return OSC_ERR_NONE;
 }
 
+long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m)
+{
+	if(!m){
+		return 0;
+	}
+	long offset = 0;
+	t_osc_msg_it_s *it = osc_msg_it_s_get(m);
+	offset += snprintf(buf, n, "%s", osc_message_s_getAddress(m));
+	if(!buf){
+		while(osc_msg_it_s_hasNext(it)){
+			offset += snprintf(NULL, 0, " ");
+			t_osc_atom_s *a = osc_msg_it_s_next(it);
+			offset += osc_atom_s_nformat(NULL, 0, a);
+		}
+		offset += snprintf(NULL, 0, "\n");
+	}else{
+		while(osc_msg_it_s_hasNext(it)){
+			offset += snprintf(buf + offset, n - offset, " ");
+			t_osc_atom_s *a = osc_msg_it_s_next(it);
+			offset += osc_atom_s_nformat(buf + offset, n - offset, a);
+		}
+		offset += snprintf(buf + offset, n - offset, "\n");
+	}
+	return offset;
+}
+
 t_osc_array *osc_message_array_s_alloc(long len){
 	return osc_array_allocWithSize(len, sizeof(t_osc_msg_s));
 }
