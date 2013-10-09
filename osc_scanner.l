@@ -33,6 +33,8 @@ quoted_string [^\"\\]
 %option reentrant
 %option bison-bridge
 %option bison-locations
+%option noinput
+%option nounput
 
 %%
 

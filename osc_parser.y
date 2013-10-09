@@ -52,6 +52,12 @@
 #define PP(fmt, ...)
 #endif
 
+#ifdef __cplusplus
+extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
+#else
+int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
+#endif
+
 %}
 
 %code requires{

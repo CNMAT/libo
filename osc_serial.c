@@ -520,6 +520,7 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 	default:
 		;// state is fucked...
 	}
+	OSC_SERIAL_RETURN(0);
 }
 
 /*

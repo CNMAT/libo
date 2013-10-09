@@ -62,6 +62,8 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 %option reentrant
 %option bison-bridge
 %option bison-locations
+%option noinput
+%option nounput
 
 %x quote quote_function escape
 

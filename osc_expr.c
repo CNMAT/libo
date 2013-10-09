@@ -71,7 +71,7 @@ char *osc_expr_categories[] = {"/math/operator/arithmetic", "/math/operator/rela
 t_osc_bndl_u *osc_expr_functionBundle = NULL;
 t_osc_bndl_s *osc_expr_categoryBundle = NULL;
 
-static double rdtsc_cps = 0;
+//static double rdtsc_cps = 0;
 
 #ifdef __WIN32
 char *strtok_r(char *str, const char *delim, char **save)
@@ -1159,7 +1159,7 @@ static int osc_expr_specFunc_value(t_osc_expr *f,
 					osc_message_s_getArg(m, i, &a);
 					t_osc_atom_u *au = osc_atom_array_u_get(*out, i);
 					osc_atom_s_deserialize(a, &au);
-					double f1 = osc_atom_s_getDouble(a);
+					//double f1 = osc_atom_s_getDouble(a);
 				}
 				osc_mem_free(a);
 				osc_message_array_s_free(ar);
@@ -1201,11 +1201,6 @@ static int osc_expr_specFunc_eval(t_osc_expr *f,
 			    char **oscbndl,
 			    t_osc_atom_ar_u **out)
 {
-#ifdef  __OSC_PROFILE__
-	if(!rdtsc_cps){
-		rdtsc_cps = RDTSC_CYCLES_PER_SECOND;
-	}
-#endif
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg = NULL;
 	t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg);
@@ -1378,6 +1373,7 @@ static int osc_expr_specFunc_compile(t_osc_expr *f,
 	return 0;
 }
 
+int osc_expr_scanner_lex (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
 t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 	//char *ptr = "/foo = sin(2 * pi() * /bar";
 	char *ptr = str;
@@ -3188,7 +3184,7 @@ int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 
 int osc_expr_det(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
-
+	return 0;
 }
 
 int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)

@@ -54,6 +54,11 @@
 #define PP(fmt, ...)
 #endif
 
+#ifdef __cplusplus
+extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
+#else
+int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
+#endif
 
 }
 %code requires{
@@ -63,11 +68,9 @@
 #include "osc_expr.h"
 
 #ifdef __cplusplus
-#define YY_DECL extern "C" int osc_expr_scanner_lex \
-		(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#define YY_DECL extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
 #else
-#define YY_DECL int osc_expr_scanner_lex \
-		(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#define YY_DECL int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
 #endif
 	//t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f);
 #ifdef __cplusplus
@@ -91,6 +94,7 @@ int osc_expr_parser_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanne
 	return osc_expr_scanner_lex(yylval_param, llocp, yyscanner, 1, buflen, buf, startcond, started);
 }
 
+/*
 static t_osc_atom_ar_u *osc_expr_parser_foldConstants_impl(t_osc_expr *expr, t_osc_expr_lexenv *lexenv)
 {
 	printf("%s: %s\n", __func__, osc_expr_rec_getName(osc_expr_getRec(expr)));
@@ -148,6 +152,7 @@ static void osc_expr_parser_foldConstants(t_osc_expr *expr)
 {
 	osc_expr_parser_foldConstants_impl(expr, NULL);
 }
+*/
 
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 {
@@ -634,7 +639,7 @@ arg:    OSC_EXPR_NUM {
 	}
 	| expr {
 		t_osc_expr *e = $1;
-		t_osc_expr_arg *a = osc_expr_getArgs(e);
+		//t_osc_expr_arg *a = osc_expr_getArgs(e);
 		$$ = osc_expr_arg_alloc();
 		/*
 		int eval = 1;

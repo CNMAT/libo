@@ -50,6 +50,7 @@ static long primes[] = {
 };
 
 static void osc_hashtab_store_elem(t_osc_hashtab *ht, char *key, OSC_HASHTYPE hash, t_osc_hashtab_elem *e);
+static void osc_hashtab_rehash(t_osc_hashtab *ht) __attribute__((unused));
 
 static uint32_t osc_hash(int len, char *key){
 #define __ELFHASH__
