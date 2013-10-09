@@ -467,7 +467,7 @@ int osc_atom_s_getStringLen(t_osc_atom_s *a)
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
 	case 't': // timetag
-		return 1024; // we should compute this...
+		return osc_strfmt_timetag(NULL, 0, *((t_osc_timetag *)(a->data)));
 	}
 	return 0;
 }

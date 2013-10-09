@@ -118,10 +118,7 @@ int osc_strfmt_null(char *buf, size_t n)
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)
 {
-	if(!buf){
-		return 1024;
-	}
-	return osc_timetag_format(t, buf);
+	return osc_timetag_format(buf, n, t);
 }
 
 int osc_strfmt_quotedString(char *buf, size_t n, char *str)
