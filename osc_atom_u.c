@@ -41,6 +41,177 @@ t_osc_atom_u *osc_atom_u_alloc(void)
 	return a;
 }
 
+t_osc_atom_u *osc_atom_u_allocInt8(int8_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt8(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocUInt8(uint8_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setUInt8(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocInt16(int16_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt16(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocUInt16(uint16_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setUInt16(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocInt32(int32_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt32(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocUInt32(uint32_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setUInt32(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocInt64(int64_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt64(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocUInt64(uint64_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setUInt64(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocFloat(float i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setFloat(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocDouble(double i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setDouble(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocString(const char *s)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setString(a, s);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocStringPtr(char *s)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setStringPtr(a, s);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocBool(int i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setBool(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocTrue()
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setTrue(a);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocFalse()
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setFalse(a);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocNull()
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setNull(a);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocBndl_s(long len, char *ptr)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setBndl_s(a, len, ptr);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocBndl_u(t_osc_bndl_u *b)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setBndl_u(a, b);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocTimetag(t_osc_timetag t)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setTimetag(a, t);
+	}
+	return a;
+}
+
 size_t osc_atom_u_getStructSize(void)
 {
 	return sizeof(t_osc_atom_u);

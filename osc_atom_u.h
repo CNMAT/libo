@@ -118,6 +118,26 @@ typedef struct _osc_atom_u t_osc_atom_u;
  */
 t_osc_atom_u *osc_atom_u_alloc(void);
 
+t_osc_atom_u *osc_atom_u_allocInt8(int8_t i);
+t_osc_atom_u *osc_atom_u_allocUInt8(uint8_t i);
+t_osc_atom_u *osc_atom_u_allocInt16(int16_t i);
+t_osc_atom_u *osc_atom_u_allocUInt16(uint16_t i);
+t_osc_atom_u *osc_atom_u_allocInt32(int32_t i);
+t_osc_atom_u *osc_atom_u_allocUInt32(uint32_t i);
+t_osc_atom_u *osc_atom_u_allocInt64(int64_t i);
+t_osc_atom_u *osc_atom_u_allocUInt64(uint64_t i);
+t_osc_atom_u *osc_atom_u_allocFloat(float i);
+t_osc_atom_u *osc_atom_u_allocDouble(double i);
+t_osc_atom_u *osc_atom_u_allocString(const char *s);
+t_osc_atom_u *osc_atom_u_allocStringPtr(char *s);
+t_osc_atom_u *osc_atom_u_allocBool(int i);
+t_osc_atom_u *osc_atom_u_allocTrue();
+t_osc_atom_u *osc_atom_u_allocFalse();
+t_osc_atom_u *osc_atom_u_allocNull();
+t_osc_atom_u *osc_atom_u_allocBndl_s(long len, char *ptr);
+t_osc_atom_u *osc_atom_u_allocBndl_u(t_osc_bndl_u *b);
+t_osc_atom_u *osc_atom_u_allocTimetag(t_osc_timetag t);
+
 /**
   \return The size in bytes of the #t_osc_atom_u struct.
  */
