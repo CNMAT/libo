@@ -45,15 +45,30 @@ extern "C" {
 typedef struct _osc_hashtab_elem t_osc_hashtab_elem;
 typedef struct _osc_hashtab t_osc_hashtab;
 
+/** \brief Destructor function for hashtab entries 
+ */
 typedef void (*t_osc_hashtab_dtor)(char *key, void *val);
 
 t_osc_hashtab *osc_hashtab_new(int nslots, t_osc_hashtab_dtor dtor);
+
+/** \brief Store a key/value pair overwriting previous entries with the same key
+ */
 void osc_hashtab_store(t_osc_hashtab *ht, int keylen, char *key, void *val);
+
+/** \brief Store a key/value pair without overwriting other entries with the same key
+ */
 void osc_hashtab_storeSafe(t_osc_hashtab *ht, int keylen, char *key, void *val);
 void *osc_hashtab_lookup(t_osc_hashtab *ht, int keylen, char *key);
 void osc_hashtab_remove(t_osc_hashtab *ht, int keylen, char *key, t_osc_hashtab_dtor dtor);
 void osc_hashtab_clear(t_osc_hashtab *ht);
 void osc_hashtab_destroy(t_osc_hashtab *ht);
+
+/** 
+Iterate over each entry of the hashtab. 
+\param ht The hashtab
+\param cb The function to be called for each entry
+\param context An object to be passed to your callback function with each call
+ */
 void osc_hashtab_foreach(t_osc_hashtab *ht, void (*cb)(char *key, void *val, void *context), void *context);
 
 #ifdef __cplusplus
