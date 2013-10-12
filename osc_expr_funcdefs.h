@@ -20,12 +20,12 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_func.h
+/** 	\file osc_expr_funcdefs.h
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_FUNC_H__
-#define __OSC_EXPR_FUNC_H__
+#ifndef __OSC_EXPR_FUNCDEFS_H__
+#define __OSC_EXPR_FUNCDEFS_H__
 
 #ifdef __cplusplus
 extern "C" {

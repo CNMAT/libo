@@ -40,7 +40,8 @@
 #include "osc_expr.h"
 #include "osc_expr_rec.h"
 #include "osc_expr_rec.r"
-#include "osc_expr_func.h"
+#include "osc_expr_funcdefs.h"
+#include "osc_expr_funcdecls.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
 #include "osc_expr_scanner.h"
@@ -382,7 +383,7 @@ t_osc_expr *osc_expr_parser_reduce_InfixOperator(YYLTYPE *llocp,
 						t_osc_expr_arg *left,
 						t_osc_expr_arg *right)
 {
-	t_osc_expr_rec *r = osc_expr_lookupFunction(function_name);
+	t_osc_expr_rec *r = osc_expr_funcdecls_lookupFunction(function_name);
 	if(!r){
 		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
 		return NULL;
@@ -415,7 +416,7 @@ t_osc_expr *osc_expr_parser_reduce_PrefixFunction(YYLTYPE *llocp,
 						 char *function_name,
 						 t_osc_expr_arg *arglist)
 {
-	t_osc_expr_rec *r = osc_expr_lookupFunction(function_name);
+	t_osc_expr_rec *r = osc_expr_funcdecls_lookupFunction(function_name);
 	if(!r){
 		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
 		return NULL;
@@ -499,7 +500,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 		return NULL;
 	}
 	t_osc_expr *expr_def = osc_expr_alloc();
-	osc_expr_setRec(expr_def, osc_expr_lookupFunction("bound"));
+	osc_expr_setRec(expr_def, osc_expr_funcdecls_lookupFunction("bound"));
 	t_osc_expr_arg *def_arg = osc_expr_arg_alloc();
 
 	osc_expr_arg_setOSCAddress(def_arg, address);
@@ -863,7 +864,7 @@ expr:
 // prefix not
 	| '!' arg {
 		$$ = osc_expr_alloc();
-		osc_expr_setRec($$, osc_expr_lookupFunction("!"));
+		osc_expr_setRec($$, osc_expr_funcdecls_lookupFunction("!"));
 		osc_expr_setArg($$, $2);
 	}
 // prefix inc/dec
