@@ -383,6 +383,7 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 		}
 		offset += snprintf(buf + offset, n - offset, "\n");
 	}
+	osc_msg_it_s_destroy(it);
 	return offset;
 }
 

@@ -1075,6 +1075,7 @@ long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent)
 		}
 		offset += snprintf(buf + offset, n - offset, "\n");
 	}
+	osc_msg_it_u_destroy(it);
 	return offset;
 }
 
