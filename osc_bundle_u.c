@@ -492,7 +492,10 @@ t_osc_err osc_bundle_u_doSerialize(t_osc_bndl_u *bndl, long *buflen, long *bufpo
 	(*bufpos) += OSC_HEADER_SIZE;
 	t_osc_msg_u *m = bndl->msghead;
 	while(m){
-		osc_message_u_doSerialize(m, buflen, bufpos, buf);
+		t_osc_err e = osc_message_u_doSerialize(m, buflen, bufpos, buf);
+		if(e){
+			return e;
+		}
 		m = m->next;
 	}
 	return OSC_ERR_NONE;
