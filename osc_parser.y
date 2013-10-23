@@ -141,6 +141,7 @@ void yyerror (YYLTYPE *yylloc, t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg,
 }
 
 void osc_parser_substitution(t_osc_parser_subst **subs_list, t_osc_msg_u *msg, int listitem, t_osc_atom_u *osc_atom, int item_to_replace){
+	return;
 	t_osc_parser_subst *s = (t_osc_parser_subst *)osc_mem_alloc(sizeof(t_osc_parser_subst));
 	s->msg = msg;
 	s->listitem = listitem;

@@ -467,7 +467,7 @@ int osc_atom_s_getStringLen(t_osc_atom_s *a)
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
 	case 't': // timetag
-		return 1024; // we should compute this...
+		return osc_strfmt_timetag(NULL, 0, *((t_osc_timetag *)(a->data)));
 	}
 	return 0;
 }
@@ -998,4 +998,31 @@ t_osc_err osc_atom_s_format(t_osc_atom_s *a, long *buflen, char **buf)
 	t_osc_err e = osc_atom_s_doFormat(a, &mybuflen, &mybufpos, buf);
 	*buflen = mybufpos;
 	return e;
+}
+
+long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
+{
+	if(!a){
+		return 0;
+	}
+	char tt = osc_atom_s_getTypetag(a);
+	if(!buf){
+		if(tt == OSC_BUNDLE_TYPETAG){
+			char *data = osc_atom_s_getData(a);
+			return osc_bundle_s_formatNestedBndl(NULL, 0, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
+		}else if(tt == 's'){
+			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_s_getData(a));
+		}else{
+			return osc_atom_s_getStringLen(a);
+		}
+	}else{
+		if(tt == OSC_BUNDLE_TYPETAG){
+			char *data = osc_atom_s_getData(a);
+			return osc_bundle_s_formatNestedBndl(buf, n, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
+		}else if(tt == 's'){
+			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_s_getData(a));
+		}else{
+			return osc_atom_s_getString(a, n, &buf);
+		}
+	}
 }

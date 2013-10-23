@@ -618,7 +618,7 @@ int osc_atom_u_getStringLen(t_osc_atom_u *a)
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
 	case 't': // timetag
-		return 1024; // we should compute this...
+		return osc_strfmt_timetag(NULL, 0, a->w.t);
 	}
 	return 0;
 }
@@ -1129,6 +1129,7 @@ t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf){
 	return e;
 }
 
+long osc_atom_u_getFormatLen(t_osc_atom_u *a);
 t_osc_err osc_atom_u_doFormat(t_osc_atom_u *a, long *buflen, long *bufpos, char **buf)
 {
 	if(!a){
@@ -1209,3 +1210,29 @@ t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf)
 	*buflen = mybufpos;
 	return e;
 }
+
+long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
+{
+	if(!a){
+		return 0;
+	}
+	char tt = osc_atom_u_getTypetag(a);
+	if(!buf){
+		if(tt == OSC_BUNDLE_TYPETAG){
+			return osc_bundle_u_formatNestedBndl(NULL, 0, a->w.bndl, nindent + 1);
+		}else if(tt == 's'){
+			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_u_getStringPtr(a));
+		}else{
+			return osc_atom_u_getStringLen(a);
+		}
+	}else{
+		if(tt == OSC_BUNDLE_TYPETAG){
+			return osc_bundle_u_formatNestedBndl(buf, n, a->w.bndl, nindent + 1);
+		}else if(tt == 's'){
+			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_u_getStringPtr(a));
+		}else{
+			return osc_atom_u_getString(a, n, &buf);
+		}
+	}
+}
+

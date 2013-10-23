@@ -118,10 +118,63 @@ int osc_strfmt_null(char *buf, size_t n)
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)
 {
-	if(!buf){
-		return 1024;
+	return osc_timetag_format(buf, n, t);
+}
+
+int osc_strfmt_quotedString(char *buf, size_t n, char *str)
+{
+	if(!str){
+		return 0;
 	}
-	return osc_timetag_format(t, buf);
+	return snprintf(buf, n, "\"%s\"", str);
+}
+
+int osc_strfmt_stringWithQuotedMeta(char *buf, size_t n, char *str)
+{
+	if(!str){
+		return 0;
+	}
+	long len = strlen(str);
+	if(!buf){
+		return osc_strfmt_countMeta(len, str) + len; 
+	}
+
+	{
+		int i = 0;
+		for(int j = 0; j < len; j++){
+			if(osc_strfmt_isMeta(str[j])){
+				if(i < n){
+					buf[i] = '\\';
+				}
+				i++;
+			}
+			if(i < n){
+				buf[i] = str[j];
+			}
+			i++;
+		}
+		if(i < n){
+			buf[i] = '\0';
+		}else{
+			buf[i - 1] = '\0';
+		}
+		return i;
+	}
+}
+
+int osc_strfmt_quotedStringWithQuotedMeta(char *buf, size_t n, char *str)
+{
+	if(!str){
+		return 0;
+	}
+	if(!buf){
+		return osc_strfmt_stringWithQuotedMeta(buf, n, str) + 2;
+	}else{
+		char tmp[n];
+		int nn = osc_strfmt_stringWithQuotedMeta(tmp, n, str);
+		osc_strfmt_quotedString(buf, n, tmp);
+		return nn + 2;
+	}
 }
 
 int osc_strfmt_addQuotes(int len, char *buf, char **out)

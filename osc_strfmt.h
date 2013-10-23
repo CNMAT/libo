@@ -55,9 +55,12 @@ int osc_strfmt_null(char *buf, size_t n);
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t);
 
+int osc_strfmt_quotedString(char *buf, size_t n, char *str);
+int osc_strfmt_stringWithQuotedMeta(char *buf, size_t n, char *str);
+int osc_strfmt_quotedStringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_countMeta(int len, char *buf);
 int osc_strfmt_isMeta(char c);
-int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out);
+int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out) __attribute__((deprecated("use osc_strfmt_quotedStringWithQuotedMeta() instead.")));
 
 int osc_strfmt_strlenPadded(char *str);
 

@@ -171,7 +171,8 @@ time_t osc_timetag_timegm (struct tm *tm)
 	return ret;
 }
 
-int osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
+//long osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
+long osc_timetag_toISO8601(char *buf, long n, t_osc_timetag timetag)
 {
 #if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP  
 	time_t i;
@@ -180,10 +181,10 @@ int osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
 	//char s2[10];
 	double d;
 
-	t_osc_timetag_ntptime n = *((t_osc_timetag_ntptime *)&timetag);
+	t_osc_timetag_ntptime ntptime = *((t_osc_timetag_ntptime *)&timetag);
     
-	i = (time_t)osc_timetag_ntp_to_ut(n);
-	d = osc_timetag_ntp_to_float(n);
+	i = (time_t)osc_timetag_ntp_to_ut(ntptime);
+	d = osc_timetag_ntp_to_float(ntptime);
 	//t = gmtime(&i);
     	t = localtime(&i);
 
@@ -193,7 +194,7 @@ int osc_timetag_toISO8601(t_osc_timetag timetag, char *s)
 	char s2[l + 1];
 	//sprintf(s2, "%05fZ", fmod(d, 1.0));
 	osc_strfmt_float64(s2, l + 1, dm1);
-	return sprintf(s, "%s.%sZ", s1, s2+2);
+	return snprintf(buf, n, "%s.%sZ", s1, s2+2);
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
 #endif
 }
@@ -337,7 +338,8 @@ void osc_timetag_toBytes(t_osc_timetag t, char *ptr)
 #endif
 }
 
-int osc_timetag_format(t_osc_timetag t, char *buf)
+//int osc_timetag_format(t_osc_timetag t, char *buf)
+long osc_timetag_format(char *buf, long n, t_osc_timetag t)
 {
-	return osc_timetag_toISO8601(t, buf);
+	return osc_timetag_toISO8601(buf, n, t);
 }
