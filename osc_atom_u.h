@@ -535,7 +535,7 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
 */
-t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf) __attribute__((deprecated));
+t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf) __attribute__((deprecated("use osc_atom_u_nformat() instead.")));
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 

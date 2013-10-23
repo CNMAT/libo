@@ -72,7 +72,7 @@ t_osc_err osc_bundle_u_flatten(t_osc_bndl_u **dest,
 t_osc_err osc_bundle_u_union(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_osc_bndl_u **bndl_out);
 t_osc_err osc_bundle_u_intersection(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_osc_bndl_u **bndl_out);
 t_osc_err osc_bundle_u_serialize(t_osc_bndl_u *bndl, long *buflen, char **buf);
-t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf) __attribute__((deprecated));
+t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf) __attribute__((deprecated("use osc_bundle_u_nformat() instead.")));
 long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
 long osc_bundle_u_formatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
 

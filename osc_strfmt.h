@@ -60,7 +60,7 @@ int osc_strfmt_stringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_quotedStringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_countMeta(int len, char *buf);
 int osc_strfmt_isMeta(char c);
-int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out) __attribute__((deprecated));
+int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out) __attribute__((deprecated("use osc_strfmt_quotedStringWithQuotedMeta() instead.")));
 
 int osc_strfmt_strlenPadded(char *str);
 

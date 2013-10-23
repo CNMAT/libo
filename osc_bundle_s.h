@@ -98,7 +98,7 @@ t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest,
 			       int remove_enclosing_address_if_empty);
 t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxlevel, char *sep);
 t_osc_err osc_bundle_s_deserialize(long len, char *ptr, t_osc_bndl_u **bndl);
-t_osc_err osc_bundle_s_format(long len, char *bndl, long *buflen, char **buf) __attribute__((deprecated));
+t_osc_err osc_bundle_s_format(long len, char *bndl, long *buflen, char **buf) __attribute__((deprecated("use osc_bundle_s_nformat() instead.")));
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent);
 long osc_bundle_s_formatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent);
 t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out);
