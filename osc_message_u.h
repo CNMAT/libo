@@ -146,6 +146,10 @@ void osc_message_array_u_free(t_osc_msg_ar_u *ar);//#define osc_message_array_u_
 t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg);
 t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_array *ar);
 
+t_osc_msg_u *osc_message_u_allocWithAddress(char *address);
+t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f);
+t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
+
 #ifdef __cplusplus
 }
 #endif

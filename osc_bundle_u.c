@@ -102,7 +102,23 @@ t_osc_err osc_bundle_u_copy(t_osc_bndl_u **dest, t_osc_bndl_u *src)
 	osc_mem_free(buf);
 	return OSC_ERR_NONE;
 }
+/*
+void osc_bundle_u_setTimetag(t_osc_bndl_u *bndl, t_osc_timetag t)
+{
+	if(!bndl){
+		return;
+	}
+	bndl->timetag = t;
+}
 
+t_osc_timetag osc_bundle_u_getTimetag(t_osc_bndl_u *bndl)
+{
+	if(bndl){
+		return bndl->timetag;
+	}
+	return 0;
+}
+*/
 int osc_bundle_u_getMsgCount(t_osc_bndl_u *bndl)
 {
 	if(bndl){
