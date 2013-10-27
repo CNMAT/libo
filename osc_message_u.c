@@ -1153,7 +1153,7 @@ t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f)
 	return m;
 }
 
-t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag tm)
+t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t)
 {
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
