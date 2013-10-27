@@ -37,6 +37,8 @@ extern "C" {
  */
 #define OSC_MATCH_ENABLE_NSTARS		1
 
+#define OSC_MATCH_NOMATCH 0
+
 /**
  * Return code for osc_match() that indicates that the entire address was successfully matched
  */
@@ -55,6 +57,11 @@ typedef struct _osc_callback {
 	int callback;				// ROM
 } osc_callback;
 */
+
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET 0x100
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET 0x200
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE 0x300
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE 0x400
 
 /**
  * Match a pattern against an address.  In the case of a partial match, pattern_offset

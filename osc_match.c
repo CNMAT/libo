@@ -22,12 +22,17 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_match.h"
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 static int osc_match_star(const char *pattern, const char *address);
 static int osc_match_star_r(const char *pattern, const char *address);
 static int osc_match_single_char(const char *pattern, const char *address);
 static int osc_match_bracket(const char *pattern, const char *address);
 static int osc_match_curly_brace(const char *pattern, const char *address);
+
+static int osc_match_range(const char *pattern, const char *address);
+
+#define OSC_MATCH_RANGE_NOMATCH 1
 
 int osc_match(const char *pattern, const char *address, int *pattern_offset, int *address_offset)
 {
@@ -37,71 +42,147 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 		return OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE;
 	}
 
-	const char *pattern_start;
-	const char *address_start;
-
-	pattern_start = pattern;
-	address_start = address;
+	const char *pattern_start = pattern;
+	const char *address_start = address;
 
 	*pattern_offset = 0;
 	*address_offset = 0;
 
-	while(*address != '\0' && *pattern != '\0'){
-		if(*pattern == '*'){
-			if(!osc_match_star(pattern, address)){
-				return 0;
-			}
-			while(*pattern != '/' && *pattern != '\0'){
-				pattern++;
-			}
-			while(*address != '/' && *address != '\0'){
-				address++;
-			}
-		}else if(*address == '*'){
-			while(*pattern != '/' && *pattern != '\0'){
-				pattern++;
-			}
-			while(*address != '/' && *address != '\0'){
-				address++;
-			}
-		}else{
-			int n = 0;
-			if(!(n = osc_match_single_char(pattern, address))){
-				return 0;
-			}
-			if(*pattern == '['){
-				while(*pattern != ']'){
-					pattern++;
-				}
-				pattern++;
-				address++;
-			}else if(*pattern == '{'){
-				while(*pattern != '}'){
-					pattern++;
-				}
-				pattern++;
-				address += n;
+	struct state {uint16_t p,a;} stack[100];
+	struct state *sp = stack;
+	sp->p = sp->a = 0;
+
+	while(1){
+		if(sp < stack){
+			return OSC_MATCH_NOMATCH;
+		}
+		char p = pattern[sp->p];
+		char a = address[sp->a];
+		*pattern_offset = sp->p;
+		*address_offset = sp->a;
+		if(a == '\0'){
+			if(p == '\0'){
+				return OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE;
+			}else if(p == '/'){
+				return OSC_MATCH_ADDRESS_COMPLETE;
 			}else{
-				pattern++;
-				address++;
+				return OSC_MATCH_NOMATCH;
 			}
 		}
+		switch(p){
+		case '/':
+			if(a == '/'){
+				uint32_t pp = sp->p;
+				uint32_t aa = sp->a;
+				sp = stack;
+				sp->p = pp + 1;
+				sp->a = aa + 1;
+			}else{
+				return OSC_MATCH_NOMATCH;
+			}
+			break;
+		case '\0':
+			if(a == '\0'){
+				return OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE;
+			}else if(a == '/'){
+				return OSC_MATCH_PATTERN_COMPLETE;
+			}else{
+				sp--;
+			}
+			break;
+		case '?':
+			if(a == '\0' || a == '/'){
+				sp--;
+			}else{
+				sp->p++;
+				sp->a++;
+			}
+			break;
+		case '[':
+			if(a == '\0' || a == '/'){
+				sp--;
+			}else{
+				int ret;
+				switch((ret = osc_match_range(pattern + sp->p, address + sp->a))){
+				case OSC_MATCH_RANGE_NOMATCH:
+					sp--;
+					break;
+				case 0:
+					sp->a++;
+					while(pattern[sp->p] != ']'){
+						sp->p++;
+					}
+					sp->p++;
+					break;
+				default:
+					return ret;
+				}
+			}
+			break;
+		case ']':
+			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET;
+		case '{':
+			if(a == '\0' || a == '/'){
+				sp--;
+			}else{
+				uint16_t rest = sp->p;
+				while(pattern[rest] != '}'){
+					rest++;
+				}
+				rest++;
+				int cont = 0;
+				sp->p++;
+				uint16_t p1 = sp->p, p2 = sp->p;
+				uint16_t aa = sp->a;
+				sp--;
+				while(pattern[p2] != '/' && pattern[p2] != '\0'){
+					if(pattern[p2] == '/'){
+						return OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE;
+					}else if(pattern[p2] == ',' || pattern[p2] == '}'){
+						if(!strncmp(pattern + p1, address + aa, p2 - p1)){
+							cont = 1;
+							sp++;
+							sp->p = rest;
+							sp->a = aa + (p2 - p1);
+						}
+						p1 = p2 + 1;
+					}
+					if(pattern[p2] == '}'){
+						break;
+					}
+					p2++;
+				}
+				//if(!cont){
+				//sp--;
+				//}
+			}
+			break;
+		case '}':
+			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE;
+		case '*':
+			{
+				uint16_t pp = sp->p + 1;
+				uint16_t aa = sp->a;
+				sp--;
+				while(address[aa] != '/' && address[aa] != '\0'){
+					sp++;
+					sp->p = pp;
+					sp->a = aa;
+					aa++;
+				}
+			}
+			break;
+		default:
+			if(p == a){
+				sp->p++;
+				sp->a++;
+			}else{
+				sp--;
+			}
+			break;
+		}
 	}
-
-	*pattern_offset = pattern - pattern_start;
-	*address_offset = address - address_start;
-
-	int r = 0;
-
-	if(*address == '\0') {
-		r |= OSC_MATCH_ADDRESS_COMPLETE;
-	}
-
-	if(*pattern == '\0') {
-		r |= OSC_MATCH_PATTERN_COMPLETE;
-	}
-
-	return r;
+	// unreachable
 }
 
 static int osc_match_star(const char *pattern, const char *address)
@@ -227,61 +308,42 @@ static int osc_match_star_r(const char *pattern, const char *address)
 }
 #endif
 
-static int osc_match_single_char(const char *pattern, const char *address)
+static int osc_match_range(const char *pattern, const char *address)
 {
-	switch(*pattern){
-	case '[':
-		return osc_match_bracket(pattern, address);
-	case ']':
-		while(*pattern != '['){
-			pattern--;
-		}
-		return osc_match_bracket(pattern, address);
-	case '{':
-		return osc_match_curly_brace(pattern, address);
-	case '}':
-		while(*pattern != '{'){
-			pattern--;
-		}
-		return osc_match_curly_brace(pattern, address);
-	case '?':
-		return 1;
-	default:
-		if(*pattern == *address){
-			return 1;
-		}else{
-			return 0;
-		}
-	}
-	return 0;
-}
-
-static int osc_match_bracket(const char *pattern, const char *address)
-{
-	pattern++;
-	int val = 1;
-	if(*pattern == '!'){
-		pattern++;
-		val = 0;
+	const char *p = pattern;
+	// the first char in pattern should be the first char after the '['
+	//p++;
+	int val = 0;
+	if(*p == '!'){
+		p++;
+		val = 1;
 	}
 	int matched = !val;
-	while(*pattern != ']' && *pattern != '\0'){
-		// the character we're on now is the beginning of a range
-		if(*(pattern + 1) == '-'){
-			if(*address >= *pattern && *address <= *(pattern + 2)){
-				matched = val;
-				break;
-			}else{
-				pattern += 3;
-			}
-		}else{
-			// just test the character
-			if(*pattern == *address){
-				matched = val;
-				break;
-			}
-			pattern++;
+	while(*p != ']'){
+		char c = *p++, c2;
+		if(c == '\0' || c == '/'){
+			return OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET;
 		}
+		if(*p == '-' && p[1] != '\0' && p[1] != '/' && p[1] != ']'){
+			p++;
+			c2 = *p++;
+			if(c <= *address && *address <= c2){
+				matched = val;
+				break;
+			}
+		}
+		if(c == *address){
+			matched = val;
+			break;
+		}
+	}
+	if(matched == val){
+		/*
+		while(*p != ']'){
+			p++;
+		}
+		*pattern = ++p;
+		*/
 	}
 	return matched;
 }
