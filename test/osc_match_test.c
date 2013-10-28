@@ -3,6 +3,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdarg.h>
+
 #define __OSC_PROFILE__
 #include "../osc_profile.h"
 
@@ -134,6 +135,7 @@ t_test testar[] = {
 	{"/*e*{a,aa,s}l", "/wessel", 0, -1, -1}, // PatternMatch() succeeds which is a bug
 	{"/david/??", "/david/l/wessel", 0, -1, -1},
 	{"/david/l/", "/david/l/wessel", 0, -1, -1},
+<<<<<<< HEAD
 	{"/david/a", "/david/l/wessel", 0, -1, -1},
 	{"/david/[!a-z]", "/david/l/wessel", 0, -1, -1},
 	{"/david{l,/,w}", "/david/l/wessel", 0, -1, -1},
@@ -166,11 +168,6 @@ int main(int argc, char **argv)
 	int numtests = sizeof(testar) / sizeof(t_test);
 	int num_osc_match_fails = 0;
 	int num_osckit_match_fails = 0;
-	/*
-	  for(int i = 0; i < numtests; i++){
-	  printf("%s %s\n", testar[i].pattern, testar[i].address);
-	  }
-	*/
 	for(int i = 0; i < numtests; i++){
 		t_test t = testar[i];
 
@@ -526,7 +523,6 @@ static Boolean MatchList (const char *pattern, const char *test) {
 			}
 		}
 	}
-
 }
 
 

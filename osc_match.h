@@ -62,6 +62,11 @@ typedef struct _osc_callback {
 #define OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET 0x200
 #define OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE 0x300
 #define OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE 0x400
+#define OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH 0x500
+#define OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH 0x600
+#define OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE 0x700
+
+const char const *osc_match_errstr(unsigned long e);
 
 /**
  * Match a pattern against an address.  In the case of a partial match, pattern_offset

@@ -28,21 +28,83 @@ static int osc_match_range(const char *pattern, const char *address);
 
 #define OSC_MATCH_RANGE_NOMATCH 1
 
+static const char const *_osc_match_errstr[] = 
+	{
+		"no error",
+		"unmatched left square bracket",
+		"unmatched right square bracket",
+		"unmatched left curly brace",
+		"unmatched right curly brace",
+		"pattern does not begin with a slash",
+		"address does not begin with a slash",
+		"invalid character range",
+	};
+
+const char const *osc_match_errstr(unsigned long e)
+{
+	e >>= 8;
+	if(e < sizeof(_osc_match_errstr) / sizeof(char *)){
+		return _osc_match_errstr[e];
+	}
+	return NULL;
+}
+
+//#define OSC_MATCH_LOGSTATE
+#ifdef OSC_MATCH_LOGSTATE
+#define OSC_MATCH_PRINTSTATE(p, a, po, ao) osc_match_printState(p, a, po, ao);
+static void osc_match_printState(const char *pattern, const char *address, int po, int ao)
+{
+	for(int i = 0; i < strlen(pattern); i++){
+		if(i == po){
+			printf("v ");
+		}else{
+			printf("  ");
+		}
+	}
+	printf("\n");
+	for(int i = 0; i < strlen(pattern); i++){
+		printf("%c ", pattern[i]);
+	}
+	printf("\n");
+	for(int i = 0; i < strlen(address); i++){
+		printf("%c ", address[i]);
+	}
+	printf("\n");
+	for(int i = 0; i < strlen(address); i++){
+		if(i == ao){
+			printf("^ ");
+		}else{
+			printf("  ");
+		}
+	}
+	printf("\n");
+}
+#else
+#define OSC_MATCH_PRINTSTATE(p, a, po, ao) ;
+#endif
+
 int osc_match(const char *pattern, const char *address, int *pattern_offset, int *address_offset)
 {
+	if(*pattern != '/'){
+		return OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH;
+	}
+	if(*address != '/'){
+		return OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH;
+	}
+	/*
 	if(!strcmp(pattern, address)){
 		*pattern_offset = strlen(pattern);
 		*address_offset = strlen(address);
 		return OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE;
 	}
-
+	*/
 	const char *pattern_start = pattern;
 	const char *address_start = address;
 
 	*pattern_offset = 0;
 	*address_offset = 0;
 
-	struct state {uint16_t p,a;} stack[100];
+	struct state {int p,a;} stack[100];
 	struct state *sp = stack;
 	sp->p = sp->a = 0;
 
@@ -50,29 +112,35 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 		if(sp < stack){
 			return OSC_MATCH_NOMATCH;
 		}
+
 		char p = pattern[sp->p];
 		char a = address[sp->a];
+
 		*pattern_offset = sp->p;
 		*address_offset = sp->a;
+
 		if(a == '\0'){
 			if(p == '\0'){
 				return OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE;
 			}else if(p == '/'){
 				return OSC_MATCH_ADDRESS_COMPLETE;
 			}else{
-				return OSC_MATCH_NOMATCH;
+				sp--;
+				continue;
 			}
 		}
+		OSC_MATCH_PRINTSTATE(pattern, address, sp->p, sp->a);
+
 		switch(p){
 		case '/':
 			if(a == '/'){
-				uint32_t pp = sp->p;
-				uint32_t aa = sp->a;
+				int pp = sp->p;
+				int aa = sp->a;
 				sp = stack;
 				sp->p = pp + 1;
 				sp->a = aa + 1;
 			}else{
-				return OSC_MATCH_NOMATCH;
+				sp--;
 			}
 			break;
 		case '\0':
@@ -98,12 +166,23 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			}else{
 				int ret;
 				switch((ret = osc_match_range(pattern + sp->p, address + sp->a))){
-				case OSC_MATCH_RANGE_NOMATCH:
+				case 0:
 					sp--;
 					break;
-				case 0:
+				case 1:
 					sp->a++;
-					while(pattern[sp->p] != ']'){
+					// if the first char inside the opening square bracket is 
+					// a closing square bracket, it's treated as a normal char,
+					// so skip over it
+					if(pattern[sp->p + 1] == ']'){
+						sp->p += 2;
+					}
+					while(1){
+						if(pattern[sp->p] == ']'){
+							break;
+						}else if(pattern[sp->p] == '/' || pattern[sp->p] == '\0'){
+							return OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET;
+						}
 						sp->p++;
 					}
 					sp->p++;
@@ -113,21 +192,22 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				}
 			}
 			break;
-		case ']':
-			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET;
 		case '{':
 			if(a == '\0' || a == '/'){
 				sp--;
 			}else{
-				uint16_t rest = sp->p;
+				int rest = sp->p;
 				while(pattern[rest] != '}'){
+					if(pattern[rest] == '/' || pattern[rest] == '\0'){
+						return OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE;
+					}
 					rest++;
 				}
 				rest++;
 				int cont = 0;
 				sp->p++;
-				uint16_t p1 = sp->p, p2 = sp->p;
-				uint16_t aa = sp->a;
+				int p1 = sp->p, p2 = sp->p;
+				int aa = sp->a;
 				sp--;
 				while(pattern[p2] != '/' && pattern[p2] != '\0'){
 					if(pattern[p2] == '/'){
@@ -146,23 +226,33 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 					}
 					p2++;
 				}
-				//if(!cont){
-				//sp--;
-				//}
 			}
 			break;
 		case '}':
 			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE;
+		case ']':
+			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET;
 		case '*':
 			{
-				uint16_t pp = sp->p + 1;
-				uint16_t aa = sp->a;
-				sp--;
-				while(address[aa] != '/' && address[aa] != '\0'){
-					sp++;
-					sp->p = pp;
-					sp->a = aa;
-					aa++;
+				while(pattern[sp->p + 1] == '*'){
+					// avoid all kinds of extra backtracking with multiple stars
+					sp->p++;
+				}
+				if(pattern[sp->p + 1] == '\0' || pattern[sp->p + 1] == '/'){
+					sp->p++;
+					while(address[sp->a] != '/' && address[sp->a] != '\0'){
+						sp->a++;
+					}
+				}else{
+					int pp = sp->p + 1;
+					int aa = sp->a;
+					sp--;
+					while(address[aa] != '/' && address[aa] != '\0'){
+						sp++;
+						sp->p = pp;
+						sp->a = aa;
+						aa++;
+					}
 				}
 			}
 			break;
@@ -179,31 +269,42 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 	// unreachable
 }
 
-static int osc_match_range(const char *pattern, const char *address)
+static inline int osc_match_range(const char *pattern, const char *address)
 {
 	const char *p = pattern;
-	// the first char in pattern should be the first char after the '['
-	//p++;
-	int val = 0;
+	p++;
+	int val = 1;
 	if(*p == '!'){
 		p++;
-		val = 1;
+		val = 0;
 	}
 	int matched = !val;
+
+	// we're on the first character inside the square brackets
+	// if it's a - or a ], it gets treated as a normal character
+	if(*p == ']'){
+		if(*p == *address){
+			return val;
+		}
+	}
 	while(*p != ']'){
 		char c = *p++, c2;
 		if(c == '\0' || c == '/'){
 			return OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET;
 		}
-		if(*p == '-' && p[1] != '\0' && p[1] != '/' && p[1] != ']'){
-			p++;
-			c2 = *p++;
-			if(c <= *address && *address <= c2){
-				matched = val;
-				break;
+		if(*p == '-'){
+			if(p[1] != '\0' && p[1] != '/' && p[1] != ']'){
+				p++;
+				c2 = *p++;
+				if(c2 <= c){
+					return OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE;
+				}
+				if(c <= *address && *address <= c2){
+					matched = val;
+					break;
+				}
 			}
-		}
-		if(c == *address){
+		}else if(c == *address){
 			matched = val;
 			break;
 		}
