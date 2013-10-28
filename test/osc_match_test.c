@@ -231,6 +231,10 @@ int main(int argc, char **argv)
 		osc_match_test_errno = 0;
 		OSC_PROFILE_TIMER_START(t2);
 		for(int i = 0; i < nnn; i++){
+			osckit_match_ret = 1;
+			osckit_po = 0;
+			osckit_ao = 0;
+			osc_match_test_errno = 0;
 			for(level = 0; level < num_pattern_parts && level < num_address_parts; level++){
 				if(!(osckit_match_ret *= PatternMatch(pattern_parts[level], address_parts[level]))){
 					break;
