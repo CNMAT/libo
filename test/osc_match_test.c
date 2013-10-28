@@ -147,7 +147,6 @@ t_test testar[] = {
 	{"/w[essel", "/wessel", OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET, -1, -1},
 	{"/wess]el", "/wessel", OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET, -1, -1}, 
 	{"/w[ab--cde]ssel", "/w-ssel", OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE, -1, -1}, // b > -
-	{"/*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l*e{a,aa,s,ss}*l", "/wesselwesselwesselwesselwesselwesselwesselwessel", FULLMATCH, -1, -1},
 };
 
 void osc_match_test_printFail(char *fmt, int i1, int i2)
