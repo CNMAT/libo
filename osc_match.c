@@ -24,6 +24,16 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <stdio.h>
 #include <inttypes.h>
 
+#define OSC_MATCH_PUSH(__p, __a){						\
+		sp++;							\
+		if((sp - stack) >= OSC_MATCH_BACKTRACK_LIMIT){		\
+			return OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED; \
+		}							\
+		sp->p = __p;						\
+		sp->a = __a;						\
+	}
+#define OSC_MATCH_POP() sp--;
+
 static int osc_match_range(const char *pattern, const char *address);
 
 #define OSC_MATCH_RANGE_NOMATCH 1
@@ -38,6 +48,7 @@ static const char const *_osc_match_errstr[] =
 		"pattern does not begin with a slash",
 		"address does not begin with a slash",
 		"invalid character range",
+		"backtrack limit exceeded"
 	};
 
 const char const *osc_match_errstr(unsigned long e)
@@ -91,20 +102,13 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 	if(*address != '/'){
 		return OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH;
 	}
-	/*
-	if(!strcmp(pattern, address)){
-		*pattern_offset = strlen(pattern);
-		*address_offset = strlen(address);
-		return OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE;
-	}
-	*/
 	const char *pattern_start = pattern;
 	const char *address_start = address;
 
 	*pattern_offset = 0;
 	*address_offset = 0;
 
-	struct state {int p,a;} stack[100];
+	struct state {int p,a;} stack[OSC_MATCH_BACKTRACK_LIMIT];
 	struct state *sp = stack;
 	sp->p = sp->a = 0;
 
@@ -125,7 +129,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			}else if(p == '/'){
 				return OSC_MATCH_ADDRESS_COMPLETE;
 			}else{
-				sp--;
+				OSC_MATCH_POP();
 				continue;
 			}
 		}
@@ -140,7 +144,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				sp->p = pp + 1;
 				sp->a = aa + 1;
 			}else{
-				sp--;
+				OSC_MATCH_POP();
 			}
 			break;
 		case '\0':
@@ -149,12 +153,12 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			}else if(a == '/'){
 				return OSC_MATCH_PATTERN_COMPLETE;
 			}else{
-				sp--;
+				OSC_MATCH_POP();
 			}
 			break;
 		case '?':
 			if(a == '\0' || a == '/'){
-				sp--;
+				OSC_MATCH_POP();
 			}else{
 				sp->p++;
 				sp->a++;
@@ -162,12 +166,12 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			break;
 		case '[':
 			if(a == '\0' || a == '/'){
-				sp--;
+				OSC_MATCH_POP();
 			}else{
 				int ret;
 				switch((ret = osc_match_range(pattern + sp->p, address + sp->a))){
 				case 0:
-					sp--;
+					OSC_MATCH_POP();
 					break;
 				case 1:
 					sp->a++;
@@ -194,7 +198,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			break;
 		case '{':
 			if(a == '\0' || a == '/'){
-				sp--;
+				OSC_MATCH_POP();
 			}else{
 				int rest = sp->p;
 				while(pattern[rest] != '}'){
@@ -208,16 +212,17 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				sp->p++;
 				int p1 = sp->p, p2 = sp->p;
 				int aa = sp->a;
-				sp--;
+				OSC_MATCH_POP();
 				while(pattern[p2] != '/' && pattern[p2] != '\0'){
 					if(pattern[p2] == '/'){
 						return OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE;
 					}else if(pattern[p2] == ',' || pattern[p2] == '}'){
 						if(!strncmp(pattern + p1, address + aa, p2 - p1)){
 							cont = 1;
-							sp++;
-							sp->p = rest;
-							sp->a = aa + (p2 - p1);
+							OSC_MATCH_PUSH(rest, aa + (p2 - p1));
+							//sp++;
+							//sp->p = rest;
+							//sp->a = aa + (p2 - p1);
 						}
 						p1 = p2 + 1;
 					}
@@ -246,12 +251,18 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				}else{
 					int pp = sp->p + 1;
 					int aa = sp->a;
-					sp--;
+					OSC_MATCH_POP();
+					int here = aa;
 					while(address[aa] != '/' && address[aa] != '\0'){
-						sp++;
-						sp->p = pp;
-						sp->a = aa;
+						//sp++;
+						//sp->p = pp;
+						//sp->a = aa;
+						//OSC_MATCH_PUSH(pp, aa);
 						aa++;
+					}
+					while(aa != here){
+						OSC_MATCH_PUSH(pp, aa);
+						aa--;
 					}
 				}
 			}
@@ -261,7 +272,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				sp->p++;
 				sp->a++;
 			}else{
-				sp--;
+				OSC_MATCH_POP();
 			}
 			break;
 		}

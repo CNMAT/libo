@@ -27,6 +27,8 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 extern "C" {
 #endif
 
+#define OSC_MATCH_BACKTRACK_LIMIT 1000
+
 /**
  * Switch this off to disable matching against a pattern with 2 stars
  */
@@ -65,6 +67,7 @@ typedef struct _osc_callback {
 #define OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH 0x500
 #define OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH 0x600
 #define OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE 0x700
+#define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
 
 const char const *osc_match_errstr(unsigned long e);
 
