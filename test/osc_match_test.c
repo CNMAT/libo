@@ -3,7 +3,6 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdarg.h>
-
 #define __OSC_PROFILE__
 #include "../osc_profile.h"
 
@@ -32,7 +31,7 @@
 #define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
 #endif
 
-#define BULLSHIT
+//#define BULLSHIT
 #ifdef BULLSHIT
 static const char const *_osc_match_errstr[] = 
 	{
@@ -168,9 +167,9 @@ int main(int argc, char **argv)
 	int num_osc_match_fails = 0;
 	int num_osckit_match_fails = 0;
 	/*
-	for(int i = 0; i < numtests; i++){
-		printf("%s %s\n", testar[i].pattern, testar[i].address);
-	}
+	  for(int i = 0; i < numtests; i++){
+	  printf("%s %s\n", testar[i].pattern, testar[i].address);
+	  }
 	*/
 	for(int i = 0; i < numtests; i++){
 		t_test t = testar[i];
