@@ -3,8 +3,58 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdarg.h>
-//#define __OSC_PROFILE__
+#define __OSC_PROFILE__
 #include "../osc_profile.h"
+
+#ifndef OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET 0x100
+#endif
+#ifndef OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET 0x200
+#endif
+#ifndef OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE 0x300
+#endif
+#ifndef OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE 0x400
+#endif
+#ifndef OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH
+#define OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH 0x500
+#endif
+#ifndef OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH
+#define OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH 0x600
+#endif
+#ifndef OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE
+#define OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE 0x700
+#endif
+#ifndef OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED
+#define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
+#endif
+
+#define BULLSHIT
+#ifdef BULLSHIT
+static const char const *_osc_match_errstr[] = 
+	{
+		"no error",
+		"unmatched left square bracket",
+		"unmatched right square bracket",
+		"unmatched left curly brace",
+		"unmatched right curly brace",
+		"pattern does not begin with a slash",
+		"address does not begin with a slash",
+		"invalid character range",
+		"backtrack limit exceeded"
+	};
+
+const char const *osc_match_errstr(unsigned long e)
+{
+	e >>= 8;
+	if(e < sizeof(_osc_match_errstr) / sizeof(char *)){
+		return _osc_match_errstr[e];
+	}
+	return NULL;
+}
+#endif
 
 static const char *theWholePattern;	/* Just for warning messages */
 
