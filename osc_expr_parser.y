@@ -576,8 +576,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %left '+' '-'
 
 // level 5
-%left '/' '%'
-%left '*' 
+%left '*' '/' '%'
 %left '^' 
 
 // level 3
