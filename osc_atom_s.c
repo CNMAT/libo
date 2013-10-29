@@ -467,7 +467,8 @@ int osc_atom_s_getStringLen(t_osc_atom_s *a)
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
 	case 't': // timetag
-		return osc_strfmt_timetag(NULL, 0, *((t_osc_timetag *)(a->data)));
+		//return osc_strfmt_timetag(NULL, 0, *((t_osc_timetag *)(a->data)));
+		return osc_strfmt_timetag(NULL, 0, osc_atom_s_getTimetag(a));
 	}
 	return 0;
 }
@@ -562,7 +563,8 @@ int osc_atom_s_getString(t_osc_atom_s *a, size_t n, char **out)
 		osc_strfmt_null(*out, nn);
 		break;
 	case 't': // timetag
-		stringlen = osc_strfmt_timetag(*out, nn, *((t_osc_timetag *)(a->data)));
+		//stringlen = osc_strfmt_timetag(*out, nn, *((t_osc_timetag *)(a->data)));
+		stringlen = osc_strfmt_timetag(*out, nn, osc_atom_s_getTimetag(a));
 		break;
 	}
 	return stringlen;
@@ -660,7 +662,8 @@ t_osc_timetag osc_atom_s_getTimetag(t_osc_atom_s *a)
 {
 	switch(a->typetag){
 	case OSC_TIMETAG_TYPETAG:
-		return *((t_osc_timetag *)a->data);
+		//return *((t_osc_timetag *)a->data);
+		return osc_timetag_decodeFromHeader(a->data);
 	default:
 		return OSC_TIMETAG_NULL;
 	}
@@ -834,7 +837,8 @@ void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t)
 	if(a->data == NULL){
 		a->data = osc_mem_alloc(OSC_TIMETAG_SIZEOF);
 	}
-	*((t_osc_timetag *)a->data) = t;
+	//*((t_osc_timetag *)a->data) = t;
+	osc_timetag_encodeForHeader(t, a->data);
 	a->typetag = OSC_TIMETAG_TYPETAG;
 }
 

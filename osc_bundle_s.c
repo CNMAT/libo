@@ -406,16 +406,21 @@ int osc_bundle_s_strcmpID(char *buf)
 	return strncmp(buf, OSC_ID, OSC_ID_SIZE);
 }
 
-#ifdef OSC_2_0
-t_osc_timetag osc_bundle_s_getTimetag(int len, char *buf)
+t_osc_timetag osc_bundle_s_getTimetag(long len, char *buf)
 {
+	if(!buf || len < OSC_HEADER_SIZE){
+		return OSC_TIMETAG_NULL;
+	}
+	return osc_timetag_decodeFromHeader(buf + OSC_IDENTIFIER_SIZE);
 }
-#else
-t_osc_timetag osc_bundle_s_getTimetag(int len, char *buf)
+
+void osc_bundle_s_setTimetag(long len, char *buf, t_osc_timetag t)
 {
-	return 0;
+	if(!buf || len < OSC_HEADER_SIZE){
+		return;
+	}
+	osc_timetag_encodeForHeader(t, buf + OSC_IDENTIFIER_SIZE);
 }
-#endif
 
 t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest, 
 			       t_osc_bndl_s *src, 

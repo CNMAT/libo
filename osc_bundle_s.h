@@ -41,6 +41,7 @@ typedef struct _osc_bundle_s t_osc_bundle_s, t_osc_bndl_s;
 #include "osc_message_s.h"
 #include "osc_error.h"
 #include "osc_array.h"
+#include "osc_timetag.h"
 
 #ifdef __WIN32
 #include <malloc.h> // for alloca in the macro below
@@ -91,6 +92,8 @@ t_osc_err osc_bundle_s_appendMessage_b(t_osc_bndl_s **bndl, t_osc_msg_s *msg);
 t_osc_err osc_bundle_s_setBundleID(char *buf);
 t_osc_err osc_bundle_s_setBundleID_b(t_osc_bndl_s *bndl);
 int osc_bundle_s_strcmpID(char *buf);
+t_osc_timetag osc_bundle_s_getTimetag(long len, char *buf);
+void osc_bundle_s_setTimetag(long len, char *buf, t_osc_timetag t);
 t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest, 
 			       t_osc_bndl_s *src, 
 			       int maxlevel, 

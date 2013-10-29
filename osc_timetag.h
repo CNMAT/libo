@@ -77,6 +77,9 @@ int osc_timetag_isImmediate(t_osc_timetag timetag);
 // generation
 t_osc_timetag osc_timetag_now(void);
 
+t_osc_timetag osc_timetag_decodeFromHeader(char *buf);
+void osc_timetag_encodeForHeader(t_osc_timetag t, char *buf);
+
 #endif
 
 /**@}*/
