@@ -38,7 +38,7 @@ typedef struct _osc_ptptime{
 #endif
 
 void osc_timetag_ut_to_ntp(uint32_t ut, t_osc_timetag_ntptime *n);
-int32_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);
+time_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);
 void osc_timetag_float_to_ntp(double d, t_osc_timetag_ntptime *t);
 double osc_timetag_ntp_to_float(t_osc_timetag_ntptime t);
 int osc_timetag_ntp_to_iso8601(t_osc_timetag t, char *s);
@@ -296,14 +296,14 @@ void osc_timetag_ut_to_ntp(uint32_t ut, t_osc_timetag_ntptime *n)
 	n->frac_sec = 0;
 }
 
-int32_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n)
+time_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n)
 {
 	struct timeval tv;
 	struct timezone tz;
     
 	gettimeofday(&tv, &tz); // this is just to get the timezone...
     
-	int32_t ut =  n.sec - (uint32_t)2208988800UL + (uint32_t)(60 * tz.tz_minuteswest) - (uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
+	time_t ut = n.sec - (uint64_t)2208988800UL + (uint64_t)(60 * tz.tz_minuteswest) - (uint64_t)(tz.tz_dsttime == 1 ? 3600 : 0);
 	//printf("%s: ut: %lu n.sec: %u minuteswest: %d dst: %d\n", __func__, ut, n.sec, 60 * tz.tz_minuteswest, tz.tz_dsttime == 1 ? 3600 : 0);
 	return ut;
 }
@@ -342,4 +342,39 @@ void osc_timetag_toBytes(t_osc_timetag t, char *ptr)
 long osc_timetag_format(char *buf, long n, t_osc_timetag t)
 {
 	return osc_timetag_toISO8601(buf, n, t);
+}
+
+t_osc_timetag osc_timetag_decodeFromHeader(char *buf)
+{
+	if(!buf){
+		return OSC_TIMETAG_NULL;
+	}
+#if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
+	char *p1 = buf;
+	char *p2 = buf + 4;
+	t_osc_timetag tt = 0;
+	char *ttp1 = (char *)&tt;
+	char *ttp2 = ttp1 + 4;
+	*((uint32_t *)ttp1) = ntoh32(*((uint32_t *)p1));
+	*((uint32_t *)ttp2) = ntoh32(*((uint32_t *)p2));
+	return tt;
+#elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
+#endif
+}
+
+void osc_timetag_encodeForHeader(t_osc_timetag t, char *buf)
+{
+	if(!buf){
+		return;
+	}
+#if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
+	char *p1 = buf;
+	char *p2 = buf + 4;
+	char *ttp1 = (char *)&t;
+	char *ttp2 = ttp1 + 4;
+
+	*((uint32_t *)p1) = hton32(*((uint32_t *)ttp1));
+	*((uint32_t *)p2) = hton32(*((uint32_t *)ttp2));
+#elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
+#endif
 }

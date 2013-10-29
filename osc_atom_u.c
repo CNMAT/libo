@@ -1094,7 +1094,8 @@ t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, ch
 				memset((*buf) + (*buflen), '\0', OSC_TIMETAG_SIZEOF);
 				(*buflen) += OSC_TIMETAG_SIZEOF;
 			}
-			*((t_osc_timetag *)((*buf) + (*bufpos))) = a->w.t;
+			//*((t_osc_timetag *)((*buf) + (*bufpos))) = a->w.t;
+			osc_timetag_encodeForHeader(a->w.t, (*buf) + (*bufpos));
 			(*bufpos) += OSC_TIMETAG_SIZEOF;
 		}
 		break;
