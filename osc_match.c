@@ -112,8 +112,6 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 	if(*address != '/'){
 		return OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH;
 	}
-	const char *pattern_start = pattern;
-	const char *address_start = address;
 
 	*pattern_offset = 0;
 	*address_offset = 0;
