@@ -132,6 +132,9 @@ int osc_expr_rreduce(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
 int osc_expr_quote(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_value(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_now(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 // constants
 int osc_expr_pi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -1925,6 +1928,45 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Anonymous function",
 	 osc_expr_lambda,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"now",
+	 "/now = now()",
+	 0,
+	 0,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Get the current time.",
+	 osc_expr_now,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"gettimetag",
+	 "/timetag = gettimetag()",
+	 0,
+	 0,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Get the timetag from the OSC bundle header.",
+	 osc_expr_gettimetag,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"settimetag",
+	 "settimetag(/time)",
+	 1,
+	 0,
+	 (char *[]){"time to place in the header"},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Put a timetag in the header of the OSC bundle.",
+	 osc_expr_settimetag,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"pi",

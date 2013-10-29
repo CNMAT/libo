@@ -149,6 +149,10 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_tokenize(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_compile){
 		return osc_expr_specFunc_compile(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_gettimetag){
+		return osc_expr_specFunc_gettimetag(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_settimetag){
+		return osc_expr_specFunc_settimetag(f, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -1371,6 +1375,43 @@ static int osc_expr_specFunc_compile(t_osc_expr *f,
 		osc_mem_free(expression);
 	}
 	return 0;
+}
+
+static int osc_expr_specFunc_gettimetag(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+	osc_atom_u_setTimetag(a, osc_bundle_s_getTimetag(*len, *oscbndl));
+	return 0;
+}
+
+static int osc_expr_specFunc_settimetag(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+	t_osc_atom_ar_u *arg = NULL;
+	t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg);
+	if(err){
+		return 1;
+	}
+	if(arg){
+		if(osc_atom_array_u_getLen(arg) > 0){
+			t_osc_atom_u *a = osc_atom_array_u_get(arg, 0);
+			if(a){
+				t_osc_timetag t = osc_atom_u_getTimetag(a);
+				osc_bundle_s_setTimetag(*len, *oscbndl, t);
+				return 0;
+			}
+		}
+	}
+	return 1;
 }
 
 int osc_expr_scanner_lex (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
@@ -3650,6 +3691,26 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 }
 
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// dummy
+	return 0;
+}
+
+int osc_expr_now(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+	osc_atom_u_setTimetag(a, osc_timetag_now());
+	return 0;
+}
+
+int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// dummy
+	return 0;
+}
+
+int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	// dummy
 	return 0;
