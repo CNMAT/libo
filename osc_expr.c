@@ -713,7 +713,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 			if(r){
 				if(!strcmp(osc_expr_rec_getName(r), "value")){
 					t_osc_expr_arg *value_args = osc_expr_getArgs(e);
-					if(value_args && osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
+					if(value_args && osc_expr_arg_getType(value_args) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
 						err = osc_expr_evalArgInLexEnv(value_args, lexenv, len, oscbndl, &address_ar);
 						// don't report error--we'll try again below
 					}
