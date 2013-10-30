@@ -760,29 +760,33 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		osc_message_u_free(mm);
 		return ret;
 	}
-	int i;
-	for(i = 0; i < osc_atom_array_u_getLen(*out); i++){
+	for(int i = 0; i < osc_atom_array_u_getLen(*out); i++){
 		t_osc_atom_u *cpy = NULL;
 		osc_atom_u_copy(&cpy, osc_atom_array_u_get(*out, i));
 		osc_message_u_appendAtom(mm, cpy);
 	}
 	char *msg_s = NULL;
-	long len_s = 0;
-	osc_message_u_serialize(mm, &len_s, &msg_s);
-	char osc_msg_s[osc_message_s_getStructSize()];
-	osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
-	osc_message_s_wrap((t_osc_msg_s *)osc_msg_s, msg_s);
-	if(msg_ar){
-		osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
-		osc_message_array_s_free(msg_ar);
-	}else{
-		osc_bundle_s_appendMessage(len, oscbndl, (t_osc_msg_s *)osc_msg_s);
-	}
-	if(address){
-		osc_mem_free(address);
-	}
-	osc_message_u_free(mm);
-	osc_mem_free(msg_s);
+        long len_s = 0;
+        osc_message_u_serialize(mm, &len_s, &msg_s);
+        char osc_msg_s[osc_message_s_getStructSize()];
+        osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
+	osc_message_s_wrap(osc_msg_s, msg_s);
+
+	int mc = 0;
+	err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+        if(msg_ar){
+                osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
+                osc_message_array_s_free(msg_ar);
+        }else{
+                osc_bundle_s_appendMessage(len, oscbndl, (t_osc_msg_s *)osc_msg_s);
+        }
+	err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+
+        if(address){
+                osc_mem_free(address);
+        }
+        osc_message_u_free(mm);
+        osc_mem_free(msg_s);
 	return 0;
 }
 
