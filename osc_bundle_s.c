@@ -346,7 +346,7 @@ t_osc_err osc_bundle_s_appendMessage(long *len, char **bndl, t_osc_msg_s *msg){
 		if(!tmp){
 			return OSC_ERR_OUTOFMEM;
 		}
-		memset(tmp + OSC_IDENTIFIER_SIZE, '\0', 8); // clear timetag
+		memset(tmp + OSC_IDENTIFIER_SIZE, '\0', OSC_TIMETAG_SIZEOF); // clear timetag
 		osc_bundle_s_setBundleID(tmp);
 		*len = OSC_HEADER_SIZE;
 		*bndl = tmp;
@@ -354,6 +354,7 @@ t_osc_err osc_bundle_s_appendMessage(long *len, char **bndl, t_osc_msg_s *msg){
 	if(!tmp){
 		return OSC_ERR_OUTOFMEM;
 	}
+
 	memcpy(tmp + *len, osc_message_s_getPtr(msg), msglen + 4);
 	*len = *len + msglen + 4;
 	*bndl = tmp;
