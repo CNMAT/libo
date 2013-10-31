@@ -545,7 +545,10 @@ long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int ninde
 		return 0;
 	}
 	int msgcount = 0;
-	osc_bundle_s_getMsgCount(bndllen, bndl, &msgcount);
+	t_osc_err e = osc_bundle_s_getMsgCount(bndllen, bndl, &msgcount);
+	if(e){
+		return 0;
+	}
 	if(msgcount == 0){
 		return 0;
 	}
