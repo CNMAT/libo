@@ -158,6 +158,17 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				continue;
 			}
 		}
+#ifdef OSC_MATCH_ALLOW_STAR_IN_ADDRESS
+		if(a == '*' && sp->a > 0 && address[sp->a - 1] == '/' && (address[sp->a + 1] == '/' || address[sp->a + 1] == '\0')){
+			while(address[sp->a] != '/' && address[sp->a] != '\0'){
+				sp->a++;
+			}
+			while(pattern[sp->p] != '/' && pattern[sp->p] != '\0'){
+				sp->p++;
+			}
+			continue;
+		}
+#endif
 		OSC_MATCH_PRINTSTATE(pattern, address, sp->p, sp->a);
 
 		switch(p){
