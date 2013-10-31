@@ -79,7 +79,8 @@ void osc_error_setHandler(t_osc_error_handler eh)
 	_osc_error_handler = eh;
 }
 
-char *osc_error_string(t_osc_err err){
+char *osc_error_string(t_osc_err err)
+{
 	switch(err){
 	case OSC_ERR_NONE:
 		return "no error";
@@ -93,6 +94,8 @@ char *osc_error_string(t_osc_err err){
 		return "no bundle id ("OSC_IDENTIFIER") found at beginning of bundle";
 	case OSC_ERR_MSGTOOSMALL:
 		return "OSC message was too small (< 4 bytes)";
+	case OSC_ERR_MSGTOOLARGE:
+		return "OSC message size is incorrect; message extends beyond the end of the bundle";
 	case OSC_ERR_MALFORMEDADDRESS:
 		return "malformed OSC address (probably missing an initial '/')";
 	case OSC_ERR_NOBUNDLE:
@@ -125,7 +128,8 @@ char *osc_error_string(t_osc_err err){
 	}
 }
 
-t_osc_err osc_error_bundleSanityCheck(int len, char *bundle){
+t_osc_err osc_error_bundleSanityCheck(int len, char *bundle)
+{
 	if(!bundle){
 		return OSC_ERR_NOBUNDLE;
 	}
@@ -136,8 +140,14 @@ t_osc_err osc_error_bundleSanityCheck(int len, char *bundle){
 		return OSC_ERR_NOBUNDLEID;
 	}
 	char *ptr = bundle + OSC_HEADER_SIZE;
+	int cumsize = OSC_HEADER_SIZE;
 	while((ptr - bundle) < len){
+		cumsize += 4; // msg size
 		int size = ntoh32(*((uint32_t *)ptr));
+		cumsize += size;
+		if(cumsize > len){
+			return OSC_ERR_MSGTOOLARGE;
+		}
 		int ret;
 		if((ret = osc_error_msgSanityCheck(ptr))){
 			return ret;
@@ -147,7 +157,8 @@ t_osc_err osc_error_bundleSanityCheck(int len, char *bundle){
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_error_msgSanityCheck(char *msg){
+t_osc_err osc_error_msgSanityCheck(char *msg)
+{
 	int size = ntoh32(*((uint32_t *)msg));
 	if(size < 4){
 		return OSC_ERR_MSGTOOSMALL;
