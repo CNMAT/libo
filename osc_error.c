@@ -123,6 +123,8 @@ char *osc_error_string(t_osc_err err)
 		return "invalid arguments for function";
 	case OSC_ERR_EXPR_EVAL:
 		return "error evaluating expression";
+	case OSC_ERR_INVALIDCHARINADDRESS:
+		return "invalid character found in address";
 	default:
 		return "unrecognized error code";
 	}
@@ -179,6 +181,18 @@ t_osc_err osc_error_validateAddress(char *address){
 	}
 	if(strlen(address) < 2){
 		return OSC_ERR_MALFORMEDADDRESS;
+	}
+	int len = strlen(address);
+	for(int i = 0; i < len; i++){
+		switch(address[i]){
+		case '\0':
+			return OSC_ERR_NONE;
+		case '#':
+		case ' ':
+			return OSC_ERR_INVALIDCHARINADDRESS;
+		default:
+			;
+		}
 	}
 	return OSC_ERR_NONE;
 }
