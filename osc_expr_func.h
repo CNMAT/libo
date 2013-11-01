@@ -132,7 +132,6 @@ int osc_expr_rreduce(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
 int osc_expr_quote(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_value(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_now(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -1928,19 +1927,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Anonymous function",
 	 osc_expr_lambda,
-	 NULL},
-	//////////////////////////////////////////////////
-	{"now",
-	 "/now = now()",
-	 0,
-	 0,
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Get the current time.",
-	 osc_expr_now,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"gettimetag",
