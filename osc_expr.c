@@ -770,7 +770,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
         osc_message_u_serialize(mm, &len_s, &msg_s);
         char osc_msg_s[osc_message_s_getStructSize()];
         osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
-	osc_message_s_wrap(osc_msg_s, msg_s);
+	osc_message_s_wrap((t_osc_msg_s *)osc_msg_s, msg_s);
 
 	int mc = 0;
 	err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
@@ -3697,14 +3697,6 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	// dummy
-	return 0;
-}
-
-int osc_expr_now(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	*out = osc_atom_array_u_alloc(1);
-	t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
-	osc_atom_u_setTimetag(a, osc_timetag_now());
 	return 0;
 }
 
