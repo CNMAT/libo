@@ -24,7 +24,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <stdio.h>
 #include <inttypes.h>
 
-//#define OSC_MATCH_LOGSTATE
+#define OSC_MATCH_LOGSTATE
 
 static int osc_match_range(const char *pattern, const char *address);
 
@@ -91,6 +91,29 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 		sp->a = __a;						\
 		printf("PUSH{%c(%d); %c(%d);}\n", pattern[__p], __p, address[__a], __a); \
 	}
+#define OSC_MATCH_RETURN(__r){						\
+		if(__r >= 0x100){					\
+			printf("return: ERROR: %s\n", osc_match_errstr(__r)); \
+		}else{							\
+			switch(__r){					\
+			case 0:						\
+				printf("return: NO MATCH\n");		\
+				break;					\
+			case 1:						\
+				printf("return: ADDRESS complete\n");	\
+				break;					\
+			case 2:						\
+				printf("return: PATTERN complete\n");	\
+				break;					\
+			case 3:						\
+				printf("return: BOTH complete\n");	\
+				break;					\
+			default:					\
+				break;					\
+			}						\
+		}							\
+		return __r;						\
+	}
 #else
 #define OSC_MATCH_PRINTSTATE(p, a, po, ao) ;
 #define OSC_MATCH_PUSH(__p, __a){						\
@@ -101,16 +124,17 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 		sp->p = __p;						\
 		sp->a = __a;						\
 	}
+#define OSC_MATCH_RETURN(__r) return __r;
 #endif
 #define OSC_MATCH_POP() sp--;
 
 int osc_match(const char *pattern, const char *address, int *pattern_offset, int *address_offset)
 {
 	if(*pattern != '/'){
-		return OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH;
+		OSC_MATCH_RETURN( OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH);
 	}
 	if(*address != '/'){
-		return OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH;
+		OSC_MATCH_RETURN( OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH);
 	}
 
 	*pattern_offset = 0;
@@ -121,8 +145,14 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 	sp->p = sp->a = 0;
 
 	while(1){
+#ifdef OSC_MATCH_LOGSTATE
+		printf("stackptr: %ld: ", (long)(sp - stack));
+#endif
 		if(sp < stack){
-			return OSC_MATCH_NOMATCH;
+#ifdef OSC_MATCH_LOGSTATE
+			printf("fail\n");
+#endif
+			OSC_MATCH_RETURN(OSC_MATCH_NOMATCH);
 		}
 #ifdef OSC_MATCH_LOGSTATE
 		printf("sp{%c(%d); %c(%d);}\n", pattern[sp->p], sp->p, address[sp->a], sp->a); 
@@ -133,11 +163,13 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 		*pattern_offset = sp->p;
 		*address_offset = sp->a;
 
+		OSC_MATCH_PRINTSTATE(pattern, address, sp->p, sp->a);
+
 		if(a == '\0'){
 			if(p == '\0'){
-				return OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE;
+				OSC_MATCH_RETURN((OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE));
 			}else if(p == '/'){
-				return OSC_MATCH_ADDRESS_COMPLETE;
+				OSC_MATCH_RETURN(OSC_MATCH_ADDRESS_COMPLETE);
 			}else{
 				OSC_MATCH_POP();
 				continue;
@@ -152,7 +184,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				sp->a = aa + 1;
 				continue;
 			}else if(p == '\0'){
-				return OSC_MATCH_PATTERN_COMPLETE;
+				OSC_MATCH_RETURN(OSC_MATCH_PATTERN_COMPLETE);
 			}else{
 				OSC_MATCH_POP();
 				continue;
@@ -169,7 +201,6 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			continue;
 		}
 #endif
-		OSC_MATCH_PRINTSTATE(pattern, address, sp->p, sp->a);
 
 		switch(p){
 		case '/':
@@ -188,10 +219,10 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				break;
 		case '\0':
 			//if(a == '\0'){
-			//return OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE;
+			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE);
 			//}else 
 			//if(a == '/'){
-			//return OSC_MATCH_PATTERN_COMPLETE;
+			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE);
 			//}else{
 			// we know a is not a '/' or a '\0', so just pop and continue;
 				OSC_MATCH_POP();
@@ -227,14 +258,14 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 						if(pattern[sp->p] == ']'){
 							break;
 						}else if(pattern[sp->p] == '/' || pattern[sp->p] == '\0'){
-							return OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET;
+		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET);
 						}
 						sp->p++;
 					}
 					sp->p++;
 					break;
 				default:
-					return ret;
+					OSC_MATCH_RETURN( ret);
 				}
 			}
 				//}
@@ -247,7 +278,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				int rest = sp->p;
 				while(pattern[rest] != '}'){
 					if(pattern[rest] == '/' || pattern[rest] == '\0'){
-						return OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE;
+		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
 					}
 					rest++;
 				}
@@ -259,7 +290,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				OSC_MATCH_POP();
 				while(pattern[p2] != '/' && pattern[p2] != '\0'){
 					if(pattern[p2] == '/'){
-						return OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE;
+		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
 					}else if(pattern[p2] == ',' || pattern[p2] == '}'){
 						if(!strncmp(pattern + p1, address + aa, p2 - p1)){
 							cont = 1;
@@ -275,9 +306,9 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			}
 			break;
 		case '}':
-			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE;
+			OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE);
 		case ']':
-			return OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET;
+			OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET);
 		case '*':
 			{
 				while(pattern[sp->p + 1] == '*'){
