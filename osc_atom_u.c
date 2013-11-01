@@ -869,14 +869,22 @@ void osc_atom_u_setString(t_osc_atom_u *a, const char *v)
 		return;
 	}
 	if(a->w.s && a->typetag == 's' && a->alloc){
-		long len = strlen(v) + 1;
-		a->w.s = osc_mem_resize(a->w.s, len);
-		strncpy(a->w.s, v, len);
+		if(v){
+			long len = strlen(v) + 1;
+			a->w.s = osc_mem_resize(a->w.s, len);
+			strncpy(a->w.s, v, len);
+		}else{
+			a->w.s = NULL;
+		}
 	}else{
-		a->w.s = osc_mem_alloc(strlen(v) + 1);
-		strcpy(a->w.s, v);
-		a->typetag = 's';
-		a->alloc = 1;
+		if(v){
+			a->w.s = osc_mem_alloc(strlen(v) + 1);
+			strcpy(a->w.s, v);
+			a->typetag = 's';
+			a->alloc = 1;
+		}else{
+			a->w.s = NULL;
+		}
 	}
 }
 
