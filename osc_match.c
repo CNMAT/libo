@@ -1,30 +1,30 @@
 /*
-Written by John MacCallum, The Center for New Music and Audio Technologies,
-University of California, Berkeley.  Copyright (c) 2009, The Regents of
-the University of California (Regents). 
-Permission to use, copy, modify, distribute, and distribute modified versions
-of this software and its documentation without fee and without a signed
-licensing agreement, is hereby granted, provided that the above copyright
-notice, this paragraph and the following two paragraphs appear in all copies,
-modifications, and distributions.
+  Written by John MacCallum, The Center for New Music and Audio Technologies,
+  University of California, Berkeley.  Copyright (c) 2009, The Regents of
+  the University of California (Regents). 
+  Permission to use, copy, modify, distribute, and distribute modified versions
+  of this software and its documentation without fee and without a signed
+  licensing agreement, is hereby granted, provided that the above copyright
+  notice, this paragraph and the following two paragraphs appear in all copies,
+  modifications, and distributions.
 
-IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
-SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
-OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS
-BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+  SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
+  OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS
+  BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED
-HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE
-MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+  REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED
+  HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE
+  MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 #include "osc_match.h"
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
 
-#define OSC_MATCH_LOGSTATE
+//#define OSC_MATCH_LOGSTATE
 
 static int osc_match_range(const char *pattern, const char *address);
 
@@ -82,7 +82,7 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 	printf("\n");
 }
 
-#define OSC_MATCH_PUSH(__p, __a){						\
+#define OSC_MATCH_PUSH(__p, __a){					\
 		sp++;							\
 		if((sp - stack) >= OSC_MATCH_BACKTRACK_LIMIT){		\
 			return OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED; \
@@ -91,32 +91,35 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 		sp->a = __a;						\
 		printf("PUSH{%c(%d); %c(%d);}\n", pattern[__p], __p, address[__a], __a); \
 	}
-#define OSC_MATCH_RETURN(__r){						\
+#define OSC_MATCH_RETURN_SUCCESS(__r){				\
+		switch(__r){					\
+		case 1:						\
+			printf("return: ADDRESS complete\n");	\
+			break;					\
+		case 2:						\
+			printf("return: PATTERN complete\n");	\
+			break;					\
+		case 3:						\
+			printf("return: BOTH complete\n");	\
+			break;					\
+		default:					\
+			break;					\
+		}						\
+		return __r;					\
+	}
+#define OSC_MATCH_RETURN_FAILURE(__r){					\
+		*pattern_offset = 0;					\
+		*address_offset = 0;					\
 		if(__r >= 0x100){					\
 			printf("return: ERROR: %s\n", osc_match_errstr(__r)); \
 		}else{							\
-			switch(__r){					\
-			case 0:						\
-				printf("return: NO MATCH\n");		\
-				break;					\
-			case 1:						\
-				printf("return: ADDRESS complete\n");	\
-				break;					\
-			case 2:						\
-				printf("return: PATTERN complete\n");	\
-				break;					\
-			case 3:						\
-				printf("return: BOTH complete\n");	\
-				break;					\
-			default:					\
-				break;					\
-			}						\
+			printf("return: NO MATCH\n");			\
 		}							\
 		return __r;						\
 	}
 #else
 #define OSC_MATCH_PRINTSTATE(p, a, po, ao) ;
-#define OSC_MATCH_PUSH(__p, __a){						\
+#define OSC_MATCH_PUSH(__p, __a){					\
 		sp++;							\
 		if((sp - stack) >= OSC_MATCH_BACKTRACK_LIMIT){		\
 			return OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED; \
@@ -124,17 +127,18 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 		sp->p = __p;						\
 		sp->a = __a;						\
 	}
-#define OSC_MATCH_RETURN(__r) return __r;
+#define OSC_MATCH_RETURN_SUCCESS(__r) return __r;
+#define OSC_MATCH_RETURN_FAILURE(__r) *pattern_offset = *address_offset = 0; return __r;
 #endif
 #define OSC_MATCH_POP() sp--;
 
 int osc_match(const char *pattern, const char *address, int *pattern_offset, int *address_offset)
 {
 	if(*pattern != '/'){
-		OSC_MATCH_RETURN( OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH);
+		OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH);
 	}
 	if(*address != '/'){
-		OSC_MATCH_RETURN( OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH);
+		OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH);
 	}
 
 	*pattern_offset = 0;
@@ -152,7 +156,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 #ifdef OSC_MATCH_LOGSTATE
 			printf("fail\n");
 #endif
-			OSC_MATCH_RETURN(OSC_MATCH_NOMATCH);
+			OSC_MATCH_RETURN_FAILURE(OSC_MATCH_NOMATCH);
 		}
 #ifdef OSC_MATCH_LOGSTATE
 		printf("sp{%c(%d); %c(%d);}\n", pattern[sp->p], sp->p, address[sp->a], sp->a); 
@@ -166,10 +170,16 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 		OSC_MATCH_PRINTSTATE(pattern, address, sp->p, sp->a);
 
 		if(a == '\0'){
+			while(pattern[sp->p] == '*'){
+				sp->p++;
+			}
+			*pattern_offset = sp->p;
+			p = pattern[sp->p];
+
 			if(p == '\0'){
-				OSC_MATCH_RETURN((OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE));
+				OSC_MATCH_RETURN_SUCCESS((OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE));
 			}else if(p == '/'){
-				OSC_MATCH_RETURN(OSC_MATCH_ADDRESS_COMPLETE);
+				OSC_MATCH_RETURN_SUCCESS(OSC_MATCH_ADDRESS_COMPLETE);
 			}else{
 				OSC_MATCH_POP();
 				continue;
@@ -184,7 +194,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				sp->a = aa + 1;
 				continue;
 			}else if(p == '\0'){
-				OSC_MATCH_RETURN(OSC_MATCH_PATTERN_COMPLETE);
+				OSC_MATCH_RETURN_SUCCESS(OSC_MATCH_PATTERN_COMPLETE);
 			}else{
 				OSC_MATCH_POP();
 				continue;
@@ -205,18 +215,18 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 		switch(p){
 		case '/':
 			/*
-			if(a == '/'){
-				int pp = sp->p;
-				int aa = sp->a;
-				sp = stack;
-				sp->p = pp + 1;
-				sp->a = aa + 1;
-			}else{
+			  if(a == '/'){
+			  int pp = sp->p;
+			  int aa = sp->a;
+			  sp = stack;
+			  sp->p = pp + 1;
+			  sp->a = aa + 1;
+			  }else{
 			*/
 			// we already checked to see if a is a '/' or a '\0', so just pop and continue;
-				OSC_MATCH_POP();
-				//}
-				break;
+			OSC_MATCH_POP();
+			//}
+			break;
 		case '\0':
 			//if(a == '\0'){
 			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE);
@@ -225,17 +235,17 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE);
 			//}else{
 			// we know a is not a '/' or a '\0', so just pop and continue;
-				OSC_MATCH_POP();
-				//}
-				break;
+			OSC_MATCH_POP();
+			//}
+			break;
 		case '?':
 			//if(a == '\0' || a == '/'){
 			//OSC_MATCH_POP();
 			//}else{
-				sp->p++;
-				sp->a++;
-				//}
-				break;
+			sp->p++;
+			sp->a++;
+			//}
+			break;
 		case '[':
 			//if(a == '\0' || a == '/'){
 			//OSC_MATCH_POP();
@@ -258,17 +268,17 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 						if(pattern[sp->p] == ']'){
 							break;
 						}else if(pattern[sp->p] == '/' || pattern[sp->p] == '\0'){
-		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET);
+							OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET);
 						}
 						sp->p++;
 					}
 					sp->p++;
 					break;
 				default:
-					OSC_MATCH_RETURN( ret);
+					OSC_MATCH_RETURN_FAILURE(ret);
 				}
 			}
-				//}
+			//}
 			break;
 		case '{':
 			//if(a == '\0' || a == '/'){
@@ -278,7 +288,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				int rest = sp->p;
 				while(pattern[rest] != '}'){
 					if(pattern[rest] == '/' || pattern[rest] == '\0'){
-		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
+						OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
 					}
 					rest++;
 				}
@@ -290,7 +300,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				OSC_MATCH_POP();
 				while(pattern[p2] != '/' && pattern[p2] != '\0'){
 					if(pattern[p2] == '/'){
-		OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
+						OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE);
 					}else if(pattern[p2] == ',' || pattern[p2] == '}'){
 						if(!strncmp(pattern + p1, address + aa, p2 - p1)){
 							cont = 1;
@@ -306,9 +316,9 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 			}
 			break;
 		case '}':
-			OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE);
+			OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE);
 		case ']':
-			OSC_MATCH_RETURN( OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET);
+			OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET);
 		case '*':
 			{
 				while(pattern[sp->p + 1] == '*'){
@@ -376,15 +386,17 @@ static inline int osc_match_range(const char *pattern, const char *address)
 			if(p[1] != '\0' && p[1] != '/' && p[1] != ']'){
 				p++;
 				c2 = *p++;
-				if(c2 <= c){
+				if(c2 < c){
 					return OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE;
 				}
 				if(c <= *address && *address <= c2){
 					matched = val;
 					break;
 				}
+				continue;
 			}
-		}else if(c == *address){
+		}
+		if(c == *address){
 			matched = val;
 			break;
 		}
