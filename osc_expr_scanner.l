@@ -169,25 +169,7 @@ quote[[:space:]]*\( {
 \" {
 	BEGIN(quote);
 }
-	/*
-	<quote>\/[^\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t\"\']+  {
-	if(*buf){
-		*buf = osc_mem_resize(*buf, *buflen + yyleng + 1);
-		*buflen += yyleng + 1;
-		strcat(*buf, yytext);
-	}else{
-		//char *copy = osc_mem_alloc(yyleng + 1);
-		//strncpy(copy, yytext, yyleng + 1);
-		//t_osc_atom_u *a = osc_atom_u_alloc();
-		//yylval->atom = a;
-		if(alloc_atom){
-			yylval->atom = osc_atom_u_alloc();
-		}
-		osc_atom_u_setString(yylval->atom, yytext);
-		return OSC_EXPR_OSCADDRESS;
-	}
-	}
-	*/
+
 <quote>[^\"]+ { 
 	if(*buf){
 		*buf = osc_mem_resize(*buf, *buflen + yyleng + 1);
@@ -288,7 +270,7 @@ lambda				{
 						return OSC_EXPR_OSCADDRESS;
 				 	}
 
-[^0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
+[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
 						}
