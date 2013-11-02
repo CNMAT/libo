@@ -1153,11 +1153,29 @@ t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f)
 	return m;
 }
 
+t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendString(m, s);
+	}
+	return m;
+}
+
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t)
 {
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_appendTimetag(m, t);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_atom_ar_u *ar)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_setArgArrayCopy(m, ar);
 	}
 	return m;
 }
