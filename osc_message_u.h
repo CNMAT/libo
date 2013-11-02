@@ -150,7 +150,7 @@ t_osc_msg_u *osc_message_u_allocWithAddress(char *address);
 t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f);
 t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s);
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
-t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_atom_ar_u *ar);
+t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_array *ar);
 
 #ifdef __cplusplus
 }
