@@ -159,6 +159,15 @@ float osc_atom_u_getFloat(t_osc_atom_u *a){
 		return 0.f;
 	case OSC_TIMETAG_TYPETAG:
 		return (float)osc_timetag_timetagToFloat(a->w.t);
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				int32_t i = ntoh32(*((int32_t *)(blob + 4)));
+				return *((float *)&i);
+			}
+		}
 	}
 	return 0.f;
 }
@@ -201,6 +210,15 @@ double osc_atom_u_getDouble(t_osc_atom_u *a){
 		return 0.;
 	case OSC_TIMETAG_TYPETAG:
 		return osc_timetag_timetagToFloat(a->w.t);
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 8){
+				int64_t i = ntoh64(*((int64_t *)(blob + 4)));
+				return *((double *)&i);
+			}
+		}
 	}
 	return 0.;
 }
@@ -243,6 +261,14 @@ int8_t osc_atom_u_getInt8(t_osc_atom_u *a){
 		return (int8_t)a->w.H;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return blob[4];
+			}
+		}
 	}
 	return 0;
 }
@@ -283,6 +309,14 @@ int16_t osc_atom_u_getInt16(t_osc_atom_u *a){
 		return (int16_t)a->w.H;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return ntoh16(*((int16_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -325,6 +359,14 @@ int32_t osc_atom_u_getInt32(t_osc_atom_u *a){
 		return (int32_t)a->w.H;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return ntoh32(*((int32_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -365,6 +407,14 @@ int64_t osc_atom_u_getInt64(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 8){
+				return ntoh64(*((int64_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -407,6 +457,14 @@ uint8_t osc_atom_u_getUInt8(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return (uint8_t)blob[4];
+			}
+		}
 	}
 	return 0;
 }
@@ -447,6 +505,14 @@ uint16_t osc_atom_u_getUInt16(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return ntoh16(*((uint16_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -487,6 +553,14 @@ uint32_t osc_atom_u_getUInt32(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 4){
+				return ntoh32(*((uint32_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -527,6 +601,14 @@ uint64_t osc_atom_u_getUInt64(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == 8){
+				return ntoh32(*((uint32_t *)(blob + 4)));
+			}
+		}
 	}
 	return 0;
 }
@@ -567,6 +649,18 @@ int osc_atom_u_getInt(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
+	case 'b': // blob
+		{
+			char *blob = a->w.b;
+			int32_t len = ntoh32(*((int32_t *)blob));
+			if(len == sizeof(int)){
+				if(sizeof(int) == 4){
+					return ntoh32(*((uint32_t *)(blob + 4)));
+				}else if(sizeof(int) == 8){
+					return ntoh64(*((uint64_t *)(blob + 4)));
+				}
+			}
+		}
 	}
 	return 0;
 }
@@ -619,6 +713,8 @@ int osc_atom_u_getStringLen(t_osc_atom_u *a)
 		return osc_strfmt_null(NULL, 0);
 	case 't': // timetag
 		return osc_strfmt_timetag(NULL, 0, a->w.t);
+	case 'b': // blob
+		return osc_strfmt_blob(NULL, 0, a->w.b);
 	}
 	return 0;
 }
@@ -682,6 +778,9 @@ int osc_atom_u_getString(t_osc_atom_u *a, size_t n, char **out)
 		break;
 	case 't': // timetag
 		stringlen = osc_strfmt_timetag(*out, nn, a->w.t);
+		break;
+	case 'b': // blob
+		stringlen = osc_strfmt_blob(*out, nn, a->w.b);
 		break;
 	}
 	return stringlen;
@@ -760,6 +859,129 @@ t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a)
 		return a->w.t;
 	}else{
 		return OSC_TIMETAG_NULL;
+	}
+}
+
+int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a)
+{
+	if(!a){
+		return -1;
+	}
+	switch(osc_atom_u_getTypetag(a)){
+	case 'b':
+		if(a->w.b){
+			return ntoh32(*((int32_t *)a->w.b));
+		}else{
+			return 0;
+		}
+	case OSC_BUNDLE_TYPETAG:
+		{
+			long len = 0;
+			char *buf = NULL;
+			osc_bundle_u_serialize(a->w.bndl, &len, &buf);
+			if(buf){
+				osc_mem_free(buf);
+			}
+			return len;
+		}
+	case 'q':
+		return 16;
+	case 'Q':
+		return 32;
+	default:
+		return osc_sizeof(osc_atom_u_getTypetag(a), a->w.s);
+	}
+}
+
+char *osc_atom_u_getBlob(t_osc_atom_u *a)
+{
+	if(!a){
+		return NULL;
+	}
+	if(osc_atom_u_getTypetag(a) != 'b'){
+		return NULL;
+	}
+	return a->w.b;
+}
+
+void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob)
+{
+	if(!a){
+		return;
+	}
+	if(!(*blob)){
+		*len = osc_atom_u_getBlobLen(a) + 4;
+		*blob = osc_mem_alloc(*len);
+	}
+	memset(*blob, '\0', *len);
+	switch(osc_atom_u_getTypetag(a)){
+	case 'b':
+		memcpy(*blob, a->w.b, *len);
+		break;
+	case 'c':
+	case 'C':
+		*((int32_t *)(*blob)) = hton32(4);
+		(*blob)[4] = a->w.c;
+		break;
+	case 'u':
+	case 'U':
+		*((int32_t *)(*blob)) = hton32(4);
+		*((int16_t *)((*blob) + 4)) = hton16(a->w.u);
+		break;
+	case 'i':
+	case 'I':
+		*((int32_t *)(*blob)) = hton32(4);
+		*((int32_t *)((*blob) + 4)) = hton32(a->w.i);
+		break;
+	case 'h':
+	case 'H':
+		{
+			int64_t i = a->w.i;
+			*((int32_t *)(*blob)) = hton32(8);
+			*((int64_t *)((*blob) + 4)) = hton64(i);
+		}
+		break;		
+	case 'f':
+		{
+			float f = a->w.f;
+			*((int32_t *)(*blob)) = hton32(4);
+			*((int32_t *)((*blob) + 4)) = hton32(*((int32_t *)&f));
+		}
+		break;
+	case 'd':
+		{
+			double f = a->w.d;
+			*((int32_t *)(*blob)) = hton32(8);
+			*((int64_t *)((*blob) + 4)) = hton64(*((int64_t *)&f));
+		}
+		break;
+	case 's':
+		{
+			*((int32_t *)(*blob)) = hton32(*len - 4);
+			char *p = (*blob) + 4;
+			osc_atom_u_getString(a, *len, &p);
+		}
+		break;
+	case OSC_BUNDLE_TYPETAG:
+		{
+			// this is to avoid a possible realloc that could happen during serialization.
+			// currently, the serialization algorithm doesn't precompute sizes and so 
+			// reallocs aggressively. 
+			long l = 0;
+			char *bndl = NULL;
+			osc_bundle_u_serialize(a->w.bndl, &l, &bndl);
+			if(bndl){
+				*((int32_t *)(*blob)) = hton32(l);
+				memcpy((*blob) + 4, bndl, l);
+				osc_mem_free(bndl);
+			}
+		}
+		break;
+	case OSC_TIMETAG_TYPETAG:
+		*((int32_t *)(*blob)) = hton32(OSC_TIMETAG_SIZEOF);
+		osc_timetag_encodeForHeader(a->w.t, (*blob) + 4);
+		break;
+		default: ;
 	}
 }
 
@@ -979,6 +1201,29 @@ void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)
 	a->typetag = OSC_TIMETAG_TYPETAG;
 }
 
+void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob)
+{
+	if(!a){
+		return;
+	}
+	osc_atom_u_clear(a);
+	int32_t l = ntoh32(*((int32_t *)blob));
+	char *copy = osc_mem_alloc(l + 4);
+	memcpy(copy, blob, l + 4);
+	a->w.b = copy;
+	a->typetag = 'b';
+}
+
+void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob)
+{
+	if(!a){
+		return;
+	}
+	osc_atom_u_clear(a);
+	a->w.b = blob;
+	a->typetag = 'b';
+}
+
 size_t osc_atom_u_sizeof(t_osc_atom_u *a)
 {
 	if(!a){
@@ -1116,13 +1361,9 @@ t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, ch
 // nothing to do for T, F, or N
 	case 'b':
 		{
-			/*
-			int j, n = osc_sizeof(*(m->typetags), a->w.);
-			*bufpos += sprintf(*buf + *bufpos, "blob (%d bytes): ", n);
-			for(j = 0; j < n; j++){
-				*bufpos += sprintf(*buf + *bufpos, "%d ", a->w.[j]);
-			}
-			*/
+			int32_t l = ntoh32(*((int32_t *)a->w.b));
+			memcpy(*buf + *bufpos, a->w.b, l + 4);
+			(*bufpos) += l + 4;
 		}
 		break;
 	}

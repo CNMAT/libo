@@ -85,6 +85,7 @@ t_osc_atom_u *osc_message_u_appendBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
 t_osc_atom_u *osc_message_u_appendTimetag(t_osc_msg_u *m, t_osc_timetag t);
+t_osc_atom_u *osc_message_u_appendBlob(t_osc_msg_u *m, char *b);
 
 t_osc_atom_u *osc_message_u_prependInt8(t_osc_msg_u *m, int8_t v);
 t_osc_atom_u *osc_message_u_prependInt16(t_osc_msg_u *m, int16_t v);
@@ -106,6 +107,7 @@ t_osc_atom_u *osc_message_u_prependBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_prependBndl_s(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
 t_osc_atom_u *osc_message_u_prependTimetag(t_osc_msg_u *m, t_osc_timetag t);
+t_osc_atom_u *osc_message_u_prependBlob(t_osc_msg_u *m, char *b);
 
 t_osc_atom_u *osc_message_u_insertInt8(t_osc_msg_u *m, int8_t v, int pos);
 t_osc_atom_u *osc_message_u_insertInt16(t_osc_msg_u *m, int16_t v, int pos);
@@ -127,6 +129,7 @@ t_osc_atom_u *osc_message_u_insertBndl(t_osc_msg_u *m, long len, char *bndl, int
 t_osc_atom_u *osc_message_u_insertBndl_s(t_osc_msg_u *m, long len, char *bndl, int pos);
 t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos);
 t_osc_atom_u *osc_message_u_insertTimetag(t_osc_msg_u *m, t_osc_timetag t, int pos);
+t_osc_atom_u *osc_message_u_insertBlob(t_osc_msg_u *m, char *b, int pos);
 
 t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlevel, char *sep);
 
@@ -151,6 +154,7 @@ t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f);
 t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s);
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
 t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_array *ar);
+t_osc_msg_u *osc_message_u_allocWithBlob(char *address, char *blob);
 
 #ifdef __cplusplus
 }

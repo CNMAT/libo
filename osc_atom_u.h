@@ -153,6 +153,8 @@ The default is 0 (false).
 */
 void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int val);
 
+void osc_atom_u_clear(t_osc_atom_u *a);
+
 /** \brief Get the OSC typetag associated with the #t_osc_atom_u
 
 \param a The #t_osc_atom_u whose typetag will be returned.
@@ -341,6 +343,10 @@ t_osc_bndl_u *osc_atom_u_getBndl(t_osc_atom_u *a);
 //char *osc_atom_u_getBndlPtr(t_osc_atom_u *a);
 t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a);
 
+int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a);
+char *osc_atom_u_getBlob(t_osc_atom_u *a);
+void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob);
+
 /** \brief Set the contents of a #t_osc_atom_u to a 32-bit floating point value.
 
 \param a The #t_osc_atom_u
@@ -495,6 +501,9 @@ void osc_atom_u_setSerializedBndl(t_osc_atom_u *a, t_osc_bndl_u *bndl);
 \param timetag The timetag
 */
 void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag);
+
+void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob);
+void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob);
 
 /** \brief Return the size of the data represented by the #t_osc_atom_u.
 

@@ -169,7 +169,7 @@ char osc_data_lengths[128] = {
 	/*	94		*/	-1	,
 	/*	95		*/	-1	,
 	/*	96		*/	-1	,
-	/*	97	a	*/	3	,
+	/*	97	a	*/	-1	,
 	/*	98	b	*/	sizeof(char *)	,
 	/*	99	c	*/	4	,
 	/*	100	d	*/	8	,
@@ -206,8 +206,12 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 	if(typetag > 127){
 		return -1;
 	}
+	if(!data){
+		return -1;
+	}
 	switch(typetag){
 	case 'b':
+		return ntoh32(*((int32_t *)data));
 	case 's':
 	case 'S':
 		{

@@ -478,6 +478,14 @@ t_osc_atom_u *osc_message_u_appendTimetag(t_osc_msg_u *m, t_osc_timetag t)
 	return a;
 }
 
+t_osc_atom_u *osc_message_u_appendBlob(t_osc_msg_u *m, char *b)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	osc_atom_u_setBlob(a, b);
+	osc_message_u_appendAtom(m, a);
+	return a;
+}
+
 t_osc_atom_u *osc_message_u_prependInt8(t_osc_msg_u *m, int8_t v)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
@@ -639,6 +647,14 @@ t_osc_atom_u *osc_message_u_prependTimetag(t_osc_msg_u *m, t_osc_timetag t)
 	return a;
 }
 
+t_osc_atom_u *osc_message_u_prependBlob(t_osc_msg_u *m, char *b)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	osc_atom_u_setBlob(a, b);
+	osc_message_u_prependAtom(m, a);
+	return a;
+}
+
 t_osc_atom_u *osc_message_u_insertInt8(t_osc_msg_u *m, int8_t v, int pos)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
@@ -796,6 +812,14 @@ t_osc_atom_u *osc_message_u_insertTimetag(t_osc_msg_u *m, t_osc_timetag t, int p
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
 	osc_atom_u_setTimetag(a, t);
+	osc_message_u_insertAtom(m, a, pos);
+	return a;
+}
+
+t_osc_atom_u *osc_message_u_insertBlob(t_osc_msg_u *m, char *b, int pos)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	osc_atom_u_setBlob(a, b);
 	osc_message_u_insertAtom(m, a, pos);
 	return a;
 }
@@ -1176,6 +1200,15 @@ t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_atom_ar_u *ar)
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_setArgArrayCopy(m, ar);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithBlob(char *address, char *blob)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendBlob(m, blob);
 	}
 	return m;
 }

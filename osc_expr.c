@@ -4065,14 +4065,29 @@ int osc_expr_explicitCast_bool(t_osc_atom_u *dest, t_osc_atom_u *src)
 int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src)
 {
 	char *s = NULL;
-	osc_atom_u_getString(src, 0, &s);
-	if(s){
-		osc_atom_u_setString(dest, s);
-		osc_mem_free(s);
+	if(osc_atom_u_getTypetag(src) == 'b'){
+		char *b = osc_atom_u_getBlob(src);
+		osc_atom_u_setString(dest, b + 4);
 		return 0;
 	}else{
-		return 1;
+		osc_atom_u_getString(src, 0, &s);
+		if(s){
+			osc_atom_u_setString(dest, s);
+			osc_mem_free(s);
+			return 0;
+		}else{
+			return 1;
+		}
 	}
+}
+
+int osc_expr_explicitCast_blob(t_osc_atom_u *dest, t_osc_atom_u *src)
+{
+	int32_t l = 0;
+	char *blob = NULL;
+	osc_atom_u_getBlobCopy(src, &l, &blob);
+	osc_atom_u_setBlobPtr(dest, blob);
+	return 0;
 }
 
 int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
@@ -4133,6 +4148,9 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 			case 's':
 				osc_expr_explicitCast_string(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(argv[1], i));
 				break;
+			case 'b':
+				osc_expr_explicitCast_blob(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(argv[1], i));
+				break;
 			}
 		}
 		if(alloc){
@@ -4141,6 +4159,106 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 		return 0;
 	}
 	return 1;
+}
+
+int osc_expr_hton32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getInt32(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getUInt32(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_ntoh32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getInt32(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getUInt32(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getInt64(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getInt64(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
 }
 
 t_osc_expr *osc_expr_alloc(void)
