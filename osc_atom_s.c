@@ -696,6 +696,18 @@ int32_t osc_atom_s_getBlobLen(t_osc_atom_s *a)
 	}
 }
 
+char *osc_atom_s_getBlob(t_osc_atom_s *a)
+{
+	if(!a){
+		return NULL;
+	}
+	if(osc_atom_s_getTypetag(a) == 'b'){
+		return a->data;
+	}else{
+		return NULL;
+	}
+}
+
 t_osc_err osc_atom_s_getBlobCopy(char **blob, int32_t *len, t_osc_atom_s *a)
 {
 	if(!a){
