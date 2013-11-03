@@ -211,7 +211,7 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 	}
 	switch(typetag){
 	case 'b':
-		return ntoh32(*((int32_t *)data));
+		return ntoh32(*((int32_t *)data)) + 4;
 	case 's':
 	case 'S':
 		{
