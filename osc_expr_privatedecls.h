@@ -96,6 +96,12 @@ static int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
+static int osc_expr_specFunc_delete(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+				    t_osc_atom_ar_u **out);
+
 static int osc_expr_specFunc_getmsgcount(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,

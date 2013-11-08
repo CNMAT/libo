@@ -137,6 +137,8 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_exists(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_getaddresses){
 		return osc_expr_specFunc_getaddresses(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_delete){
+		return osc_expr_specFunc_delete(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_getmsgcount){
 		return osc_expr_specFunc_getmsgcount(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_value){
@@ -1102,6 +1104,29 @@ static int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 		n++;
 	}
 	osc_bndl_it_s_destroy(it);
+	return 0;
+}
+
+static int osc_expr_specFunc_delete(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	if(!len || !oscbndl){
+		return 1;
+	}
+	int argc = osc_expr_getArgCount(f);
+	if(!argc){
+		return 1;
+	}
+	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+	while(f_argv){
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
+			osc_bundle_s_removeMessage(osc_expr_arg_getOSCAddress(f_argv), len, *oscbndl, 1);
+		}
+		f_argv = f_argv->next;
+	}
 	return 0;
 }
 
@@ -3588,6 +3613,12 @@ int osc_expr_getaddresses(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 	return 0;
 }
 
+int osc_expr_delete(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// this is a dummy function.  we'll use this to do a pointer comparison.
+	return 0;
+}
+
 int osc_expr_getmsgcount(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	// this is a dummy function.  we'll use this to do a pointer comparison.
@@ -4022,6 +4053,12 @@ int osc_expr_explicitCast_uint32(t_osc_atom_u *dest, t_osc_atom_u *src)
 int osc_expr_explicitCast_uint64(t_osc_atom_u *dest, t_osc_atom_u *src)
 {
 	osc_atom_u_setUInt64(dest, osc_atom_u_getUInt64(src));
+	return 0;
+}
+
+int osc_expr_explicitCast_bool(t_osc_atom_u *dest, t_osc_atom_u *src)
+{
+	osc_atom_u_setBool(dest, osc_atom_u_getBool(src));
 	return 0;
 }
 

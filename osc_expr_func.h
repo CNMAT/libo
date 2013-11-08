@@ -117,6 +117,7 @@ int osc_expr_bound(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 int osc_expr_exists(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_emptybundle(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_getaddresses(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_delete(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_getmsgcount(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_identity(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_eval_call(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -163,6 +164,7 @@ int osc_expr_explicitCast_uint8(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint16(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint32(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint64(t_osc_atom_u *dest, t_osc_atom_u *src);
+int osc_expr_explicitCast_bool(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -1747,6 +1749,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_getaddresses,
 	 NULL},
 	//////////////////////////////////////////////////
+	{"delete",
+	 "/result = delete($1)",
+	 1,
+	 0,
+	 (char *[]){"OSC address to be deleted"},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Remove the message with the corresponding address from the bundle.",
+	 osc_expr_delete,
+	 NULL},
+	//////////////////////////////////////////////////
 	{"getmsgcount",
 	 "/result = getmsgcount()",
 	 0,
@@ -2292,6 +2307,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "Cast to uint64",
 	 osc_expr_explicitCast,
 	 (void *)osc_expr_explicitCast_uint64},
+	//////////////////////////////////////////////////
+	{"bool",
+	 "/result = bool($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Cast to bool",
+	 osc_expr_explicitCast,
+	 (void *)osc_expr_explicitCast_bool},
 	//////////////////////////////////////////////////
 	{"string",
 	 "/result = string($1)",
