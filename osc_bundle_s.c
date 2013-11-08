@@ -290,6 +290,43 @@ t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bn
 	return OSC_ERR_NONE;
 }
 
+t_osc_err osc_bundle_s_removeMessage(char *address, long *len, char *ptr, int fullmatch)
+{
+	char tmp[*len];
+	memset(tmp, '\0', *len);
+	char *p1 = tmp, *p2 = ptr + OSC_HEADER_SIZE, *p3 = ptr + OSC_HEADER_SIZE;
+	memcpy(p1, ptr, OSC_HEADER_SIZE);
+	p1 += OSC_HEADER_SIZE;
+	while((p3 - ptr) < *len){
+		int32_t size = ntoh32(*((int32_t *)p3));
+		char *pattern = p3 + 4;
+		int po = 0, ao = 0;
+		int ret = osc_match(pattern, address, &po, &ao);
+		if(ret){
+			if(fullmatch){
+				if(ret != (OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE)){
+					ret = 0;
+				}
+			}
+		}
+		if(ret){
+			if(p2 != p3){
+				memcpy(p1, p2, p3 - p2);
+				p1 += p3 - p2;
+			}
+			p2 = p3 + size + 4;
+		}
+		p3 += size + 4;
+	}
+	if(p2 != p3){
+		memcpy(p1, p2, p3 - p2);
+		p1 += p3 - p2;
+	}
+	memcpy(ptr, tmp, p1 - tmp);
+	*len = p1 - tmp;
+	return OSC_ERR_NONE;
+}
+
 t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 				      long *bufpos,
 				      char **bndl,

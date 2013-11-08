@@ -974,6 +974,7 @@ void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)
 		return;
 	}
 	osc_atom_u_clear(a);
+	t_osc_timetag copy;
 	a->w.t = timetag;
 	a->typetag = OSC_TIMETAG_TYPETAG;
 }

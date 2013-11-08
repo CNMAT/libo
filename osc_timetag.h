@@ -51,9 +51,16 @@ enum {
 #define OSC_TIMETAG_FORMAT OSC_TIMETAG_NTP
 
 #if OSC_TIMETAG_FORMAT == OSC_TIMETAG_NTP
+typedef struct _osc_timetag_ntptime{
+	uint32_t sec;
+	uint32_t frac_sec;
+} t_osc_timetag_ntptime;
 #define OSC_TIMETAG_SIZEOF OSC_TIMETAG_SIZEOF_NTP
-typedef uint64_t t_osc_timetag;
-#define OSC_TIMETAG_NULL 0
+//typedef uint64_t t_osc_timetag;
+typedef t_osc_timetag_ntptime t_osc_timetag;
+//#define OSC_TIMETAG_NULL 0
+#define OSC_TIMETAG_NULL (t_osc_timetag){0, 0}
+#define OSC_TIMETAG_IMMEDIATE (t_osc_timetag){0, 1}
 #elif OSC_TIMETAG_FORMAT == OSC_TIMETAG_PTP
 #define OSC_TIMETAG_SIZEOF OSC_TIMETAG_SIZEOF_NTP
 #else
@@ -79,6 +86,9 @@ t_osc_timetag osc_timetag_now(void);
 
 t_osc_timetag osc_timetag_decodeFromHeader(char *buf);
 void osc_timetag_encodeForHeader(t_osc_timetag t, char *buf);
+
+uint32_t osc_timetag_ntp_getSeconds(t_osc_timetag t);
+uint32_t osc_timetag_ntp_getFraction(t_osc_timetag t);
 
 #endif
 

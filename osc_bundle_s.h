@@ -82,6 +82,7 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 t_osc_err osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, t_osc_ar **osc_msg_s_array, int fullmatch);
 
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc);
+t_osc_err osc_bundle_s_removeMessage(char *address, long *len, char *ptr, int fullmatch);
 t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 				      long *bufpos,
 				      char **bndl,
