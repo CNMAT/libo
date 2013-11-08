@@ -35,7 +35,6 @@ extern "C" {
 #if defined(__i386__) || defined(__X86__)
 
 #include <unistd.h>
-
 //#define RDTSC_CYCLES_PER_SECOND 2.261E09
 
 inline unsigned long long osc_profile_rdtsc(void){

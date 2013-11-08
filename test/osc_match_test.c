@@ -31,7 +31,7 @@
 #define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
 #endif
 
-#define BULLSHIT
+//#define BULLSHIT
 #ifdef BULLSHIT
 static const char const *_osc_match_errstr[] = 
 	{
@@ -526,7 +526,6 @@ static Boolean MatchList (const char *pattern, const char *test) {
 			}
 		}
 	}
-
 }
 
 

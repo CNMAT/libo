@@ -27,6 +27,8 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 extern "C" {
 #endif
 
+#define OSC_MATCH_BACKTRACK_LIMIT 1000
+
 /**
  * Switch this off to disable matching against a pattern with 2 stars
  */
@@ -36,6 +38,8 @@ extern "C" {
  * be done recursively.
  */
 #define OSC_MATCH_ENABLE_NSTARS		1
+
+#define OSC_MATCH_NOMATCH 0
 
 /**
  * Return code for osc_match() that indicates that the entire address was successfully matched
@@ -55,6 +59,19 @@ typedef struct _osc_callback {
 	int callback;				// ROM
 } osc_callback;
 */
+
+#define OSC_MATCH_ALLOW_STAR_IN_ADDRESS
+
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_SQUARE_BRACKET 0x100
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_SQUARE_BRACKET 0x200
+#define OSC_MATCH_ERROR_UNMATCHED_LEFT_CURLY_BRACE 0x300
+#define OSC_MATCH_ERROR_UNMATCHED_RIGHT_CURLY_BRACE 0x400
+#define OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH 0x500
+#define OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH 0x600
+#define OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE 0x700
+#define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
+
+const char const *osc_match_errstr(unsigned long e);
 
 /**
  * Match a pattern against an address.  In the case of a partial match, pattern_offset
