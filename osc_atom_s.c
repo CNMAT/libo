@@ -983,6 +983,7 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 		{
 			osc_atom_u_setTimetag(atom_u, osc_atom_s_getTimetag(a));
 		}
+		break;
 	case 'b':
 		osc_atom_u_setBlob(atom_u, a->data);
 		break;
