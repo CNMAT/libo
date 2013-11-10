@@ -627,15 +627,6 @@ arg:    OSC_EXPR_NUM {
 		$$ = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAtom($$, $1);
  	}
-	| bundlelookupexpn {
-		$$ = osc_expr_arg_alloc();
-		char *st = osc_atom_u_getStringPtr($1);
-		int len = strlen(st) + 1;
-		char *buf = osc_mem_alloc(len);
-		memcpy(buf, st, len);
-		osc_expr_arg_setOSCAddress($$, buf);
-		osc_atom_u_free($1);
-	}
 	| expr {
 		t_osc_expr *e = $1;
 		//t_osc_expr_arg *a = osc_expr_getArgs(e);
@@ -866,7 +857,7 @@ expr:
 		osc_expr_setArg($$, $2);
 	}
 // prefix inc/dec
-	| OSC_EXPR_INC bundlelookupexpn %prec OSC_EXPR_PREFIX_INC {
+	| OSC_EXPR_INC OSC_EXPR_OSCADDRESS %prec OSC_EXPR_PREFIX_INC {
 		char *copy = NULL;
 		osc_atom_u_getString($2, 0, &copy);
 		t_osc_expr *e = osc_expr_parser_reduce_PrefixUnaryOperator(&yylloc, input_string, copy, "plus1");
@@ -878,7 +869,7 @@ expr:
 		osc_atom_u_free($2);
 		$$ = e;
 	}
-	| OSC_EXPR_DEC bundlelookupexpn %prec OSC_EXPR_PREFIX_DEC {
+	| OSC_EXPR_DEC OSC_EXPR_OSCADDRESS %prec OSC_EXPR_PREFIX_DEC {
 		char *copy = NULL;
 		osc_atom_u_getString($2, 0, &copy);
 		t_osc_expr *e = osc_expr_parser_reduce_PrefixUnaryOperator(&yylloc, input_string, copy, "minus1");
@@ -891,7 +882,7 @@ expr:
 		$$ = e;
 	}
 // postfix inc/dec
-	| bundlelookupexpn OSC_EXPR_INC {
+	| OSC_EXPR_OSCADDRESS OSC_EXPR_INC {
 		char *copy = NULL;
 		osc_atom_u_getString($1, 0, &copy);
 		t_osc_expr *e = osc_expr_parser_reduce_PostfixUnaryOperator(&yylloc, input_string, copy, "plus1");
@@ -903,7 +894,7 @@ expr:
 		osc_atom_u_free($1);
 		$$ = e;
 	}
-	| bundlelookupexpn OSC_EXPR_DEC {
+	| OSC_EXPR_OSCADDRESS OSC_EXPR_DEC {
 		char *copy = NULL;
 		osc_atom_u_getString($1, 0, &copy);
 		t_osc_expr *e = osc_expr_parser_reduce_PostfixUnaryOperator(&yylloc, input_string, copy, "minus1");
@@ -917,12 +908,12 @@ expr:
 	}
 // assignment
 /*
-| bundlelookupexpn '=' {
+| OSC_EXPR_OSCADDRESS '=' {
 	printf("just an address...\n");
   }
 */
 
-	| bundlelookupexpn '=' arg {
+	| OSC_EXPR_OSCADDRESS '=' arg {
 		// basic assignment 
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
@@ -935,7 +926,7 @@ expr:
 		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "assign", arg, $3);
 		osc_atom_u_free($1);
  	}
-	| bundlelookupexpn OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS '=' arg{
+	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS '=' arg{
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
@@ -958,7 +949,7 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
 		osc_atom_u_free($1);
 	}
-	| bundlelookupexpn OPEN_DBL_BRKTS arg ':' arg CLOSE_DBL_BRKTS '=' arg{
+	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg ':' arg CLOSE_DBL_BRKTS '=' arg{
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
@@ -979,7 +970,7 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
 		osc_atom_u_free($1);
 	}
-	| bundlelookupexpn OPEN_DBL_BRKTS arg ':' arg ':' arg CLOSE_DBL_BRKTS '=' arg{
+	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg ':' arg ':' arg CLOSE_DBL_BRKTS '=' arg{
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
@@ -1002,7 +993,7 @@ expr:
 		osc_atom_u_free($1);
 	}
 /*
-	| bundlelookupexpn '=' arg {
+	| OSC_EXPR_OSCADDRESS '=' arg {
 		// basic assignment 
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
@@ -1048,13 +1039,13 @@ expr:
 		osc_expr_arg_append($1, $5);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
   	}
-	| bundlelookupexpn OSC_EXPR_DBLQMARK arg {
+	| OSC_EXPR_OSCADDRESS OSC_EXPR_DBLQMARK arg {
 		// null coalescing operator from C#.  
 		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
 		$$ = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
 		osc_atom_u_free($1); // the above function will copy that
 	}
-	| bundlelookupexpn OSC_EXPR_DBLQMARKEQ arg {
+	| OSC_EXPR_OSCADDRESS OSC_EXPR_DBLQMARKEQ arg {
 		// null coalescing operator from C#.  
 		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
 		t_osc_expr *if_expr = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
@@ -1078,7 +1069,7 @@ expr:
 		osc_expr_arg_setNext($1, $3);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "nth", $1);
 	}
-	| bundlelookupexpn OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS {
+	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS {
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
@@ -1100,7 +1091,7 @@ expr:
 		osc_expr_arg_setOSCAtom(arg, $2);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
 	}
-	| '`' bundlelookupexpn '`' {
+	| '`' OSC_EXPR_OSCADDRESS '`' {
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr($2));
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
