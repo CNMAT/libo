@@ -74,7 +74,7 @@ int osc_query_select_impl(int nselectors,
 			   osc_message_s_getAddress(msg)[po + 1] == '\0'){
 				star_at_end = 1;
 			}
-#define NEST
+			//#define NEST
 #ifdef NEST
 			if(selector[ao] == '.'){
 				if(selector[ao + 1] == '/'){
@@ -138,7 +138,9 @@ int osc_query_select_impl(int nselectors,
 				result = OSC_QUERY_NO_MATCH;
 		}
 	}
+#ifdef NEST
  out:
+#endif
 	osc_bndl_it_s_destroy(b_it);
 
 	return result;

@@ -155,6 +155,8 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_gettimetag(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_settimetag){
 		return osc_expr_specFunc_settimetag(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_getbundlemember){
+		return osc_expr_specFunc_getBundleMember(f, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -1436,6 +1438,34 @@ static int osc_expr_specFunc_settimetag(t_osc_expr *f,
 			if(a){
 				t_osc_timetag t = osc_atom_u_getTimetag(a);
 				osc_bundle_s_setTimetag(*len, *oscbndl, t);
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
+					     t_osc_expr_lexenv *lexenv,
+					     long *len,
+					     char **oscbndl,
+					     t_osc_atom_ar_u **out)
+{
+	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+	t_osc_atom_ar_u *arg1 = NULL;
+	osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1);
+	if(!arg1){
+		return 1;
+	}
+	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
+		if(b){
+			long l = 0;
+			char *p = NULL;
+			osc_bundle_u_serialize(b, &l, &p);
+			if(p){
+				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &l, &p, out);
+				osc_mem_free(p);
 				return 0;
 			}
 		}
@@ -3738,6 +3768,12 @@ int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 }
 
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// dummy
+	return 0;
+}
+
+int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	// dummy
 	return 0;

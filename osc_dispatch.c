@@ -73,7 +73,7 @@ int osc_dispatch_msg(t_osc_msg_s *msg,
 		star_at_end = 1;
 	}
 
-#define NEST
+	//#define NEST
 #ifdef NEST
 	if(selector[ao] == ':'){
 		if(selector[ao + 1] == '/'){

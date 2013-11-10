@@ -33,6 +33,7 @@ extern "C" {
 
 #include <inttypes.h>
 #include <math.h>
+#include "osc.h"
 #include "osc_expr_rec.h"
 #include "osc_expr_rec.r"
 #include "osc_atom_u.h"
@@ -135,6 +136,7 @@ int osc_expr_value(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 // constants
 int osc_expr_pi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -456,6 +458,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/relational", NULL},
 	 "Null coalescing operator, returns the left operand if it exists, otherwise it returns the right.",
 	 NULL,
+	 NULL},
+	//////////////////////////////////////////////////
+	{OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING,
+	 "/bundle"OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING"/member",
+	 2,
+	 0,
+	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle."},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Extract a message from a nested bundle.",
+	 osc_expr_getbundlemember,
 	 NULL},
 	//////////////////////////////////////////////////
 	// functional equivalents of operators
@@ -1968,6 +1983,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Put a timetag in the header of the OSC bundle.",
 	 osc_expr_settimetag,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"getbundlemember",
+	 "getbundlemember(/bundle, /member)",
+	 2,
+	 0,
+	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle."},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Extract a message from a nested bundle.",
+	 osc_expr_getbundlemember,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"pi",
