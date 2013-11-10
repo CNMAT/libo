@@ -547,7 +547,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 
 %type <expr>expr 
 %type <func>function
-%type <arg>arg args bundlelookupexpn
+%type <arg>arg args 
 %type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter
 %nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
@@ -766,15 +766,6 @@ parameter: OSC_EXPR_STRING {
 	}
 ;
 
-bundlelookupexpn:
-	OSC_EXPR_OSCADDRESS {
-		printf("address: %s\n", osc_atom_u_getStringPtr($1));
-	}
-	| bundlelookupexpn '.' OSC_EXPR_OSCADDRESS {
-		printf("recursive: %s\n", osc_atom_u_getStringPtr($3));
-	}
-;
-
 expr:
 	'(' expr ')' {
 		$$ = $2;
@@ -867,19 +858,7 @@ expr:
 	| arg OSC_EXPR_POWEQ arg {
 		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "^", $1, $3);
  	}
-//| bundlememberlookup {
-		/*
-		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
-		char *s1 = NULL;
-		char *s2 = NULL;
-		osc_atom_u_getString($1, 0, &s1);
-		osc_atom_u_getString($3, 0, &s2);
-		osc_expr_arg_setOSCAddress(a1, s1);
-		osc_expr_arg_setOSCAddress(a2, s2);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ".", a1, a2);
-		*/
-//}
+
 // prefix not
 	| '!' arg {
 		$$ = osc_expr_alloc();
