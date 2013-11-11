@@ -63,7 +63,9 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
 		if(ast->copy){
-			return ast->copy(ast);
+			t_osc_expr_ast_expr *copy = ast->copy(ast);
+			copy->next = osc_expr_ast_expr_copy(ast->next);
+			return copy;
 		}else{
 			return osc_expr_ast_expr_alloc();
 		}
@@ -76,6 +78,9 @@ void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
 		if(e->free){
+			if(e->next){
+				osc_expr_ast_expr_free(e->next);
+			}
 			e->free(e);
 		}else{
 			osc_mem_free(e);

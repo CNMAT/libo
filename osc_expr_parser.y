@@ -47,6 +47,7 @@
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_oscaddress.h"
 #include "osc_expr_ast_value.h"
+#include "osc_expr_ast_arraysubscript.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
 #include "osc_expr_scanner.h"
@@ -777,8 +778,9 @@ oscaddress:
 		osc_atom_u_free($3);
   	}
 	| oscaddress OPEN_DBL_BRKTS commaseparatedexprs CLOSE_DBL_BRKTS {
-		osc_expr_ast_expr_append($1, $3);
-		$$ = osc_expr_parser_reducePrefixFunction(&yylloc, input_string, "nth", $1);
+		//osc_expr_ast_expr_append($1, $3);
+		//$$ = osc_expr_parser_reducePrefixFunction(&yylloc, input_string, "nth", $1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3);
 	}
 ;
 
