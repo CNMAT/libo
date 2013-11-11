@@ -20,13 +20,13 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_value.h
+/** 	\file osc_expr_ast_literal.h
 	\author John MacCallum
 
 */
 
-#ifndef __OSC_EXPR_AST_VALUE_H__
-#define __OSC_EXPR_AST_VALUE_H__
+#ifndef __OSC_EXPR_AST_LITERAL_H__
+#define __OSC_EXPR_AST_LITERAL_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,20 +34,20 @@ extern "C" {
 
 #include "osc_atom_u.h"
 
-typedef struct _osc_expr_ast_value t_osc_expr_ast_value;
+typedef struct _osc_expr_ast_literal t_osc_expr_ast_literal;
 
-int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
+int osc_expr_ast_literal_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    t_osc_expr_lexenv *lexenv,
 				    long *len,
 				    char **oscbndl,
 				    t_osc_atom_ar_u **out);
-long osc_expr_ast_value_format(char *buf, long n, t_osc_expr_ast_expr *v);
-t_osc_expr_ast_expr *osc_expr_ast_value_copy(t_osc_expr_ast_expr *ast);
-void osc_expr_ast_value_free(t_osc_expr_ast_expr *v);
-t_osc_atom_u *osc_expr_ast_value_getValue(t_osc_expr_ast_value *v);
-char osc_expr_ast_value_getValueType(t_osc_expr_ast_value *v);
-void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, t_osc_atom_u *a);
-t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a);
+long osc_expr_ast_literal_format(char *buf, long n, t_osc_expr_ast_expr *v);
+t_osc_expr_ast_expr *osc_expr_ast_literal_copy(t_osc_expr_ast_expr *ast);
+void osc_expr_ast_literal_free(t_osc_expr_ast_expr *v);
+t_osc_atom_u *osc_expr_ast_literal_getValue(t_osc_expr_ast_literal *v);
+char osc_expr_ast_literal_getType(t_osc_expr_ast_literal *v);
+void osc_expr_ast_literal_setValue(t_osc_expr_ast_literal *v, t_osc_atom_u *a);
+t_osc_expr_ast_literal *osc_expr_ast_literal_alloc(t_osc_atom_u *a);
 
 #ifdef __cplusplus
 }

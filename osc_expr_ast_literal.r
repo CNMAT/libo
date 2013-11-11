@@ -20,12 +20,12 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_value.r
+/** 	\file osc_expr_ast_literal.r
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_AST_VALUE_R__
-#define __OSC_EXPR_AST_VALUE_R__
+#ifndef __OSC_EXPR_AST_LITERAL_R__
+#define __OSC_EXPR_AST_LITERAL_R__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,7 @@ extern "C" {
 #include "osc_expr_ast_expr.r"
 #include "osc_atom_u.h"
 
-struct _osc_expr_ast_value
+struct _osc_expr_ast_literal
 {
 	struct _osc_expr_ast_expr expr; // parent
 	t_osc_atom_u *value;

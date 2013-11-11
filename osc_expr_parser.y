@@ -46,7 +46,7 @@
 #include "osc_expr_ast_function.h"
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_oscaddress.h"
-#include "osc_expr_ast_value.h"
+#include "osc_expr_ast_literal.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
@@ -631,7 +631,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 	t_osc_atom_u *atom;
 }
 
-%type <expr>expr function funcall oscaddress value list unaryop binaryop commaseparatedexprs
+%type <expr>expr function funcall oscaddress literal list unaryop binaryop commaseparatedexprs
 %type <atom>parameters parameter
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS
 %nonassoc OSC_EXPR_LAMBDA
@@ -778,18 +778,16 @@ oscaddress:
 		osc_atom_u_free($3);
   	}
 	| oscaddress OPEN_DBL_BRKTS commaseparatedexprs CLOSE_DBL_BRKTS {
-		//osc_expr_ast_expr_append($1, $3);
-		//$$ = osc_expr_parser_reducePrefixFunction(&yylloc, input_string, "nth", $1);
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3);
 	}
 ;
 
-value:    
+literal:    
 	OSC_EXPR_NUM {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_literal_alloc($1);
 	}
 	| OSC_EXPR_STRING {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_literal_alloc($1);
 	}
 ;
 
@@ -912,7 +910,7 @@ expr:
 	| funcall
 	| unaryop 
 	| binaryop
-	| value
+	| literal
 	| list
 	| '(' expr ')' {
 		$$ = $2;
