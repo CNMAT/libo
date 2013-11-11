@@ -58,8 +58,8 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	if(!buf){
 		offset += snprintf(NULL, 0, "%s(", osc_expr_rec_getName(r));
 		while(arg){
-			offset += osc_expr_ast_expr_format(NULL, n, arg);
-			arg = arg->next;
+			offset += osc_expr_ast_expr_format(NULL, 0, arg);
+			arg = osc_expr_ast_expr_next(arg);
 			if(arg){
 				offset += snprintf(NULL, 0, ", ");
 			}
@@ -69,7 +69,7 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e)
 		offset += snprintf(buf + offset, n - offset, "%s(", osc_expr_rec_getName(r));
 		while(arg){
 			offset += osc_expr_ast_expr_format(buf + offset, n - offset, arg);
-			arg = arg->next;
+			arg = osc_expr_ast_expr_next(arg);
 			if(arg){
 				offset += snprintf(buf + offset, n - offset, ", ");
 			}

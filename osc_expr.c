@@ -1473,7 +1473,7 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 	return 1;
 }
 
-int osc_expr_scanner_lex (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
+int osc_expr_scanner_lex (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf);
 t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 	//char *ptr = "/foo = sin(2 * pi() * /bar";
 	char *ptr = str;
@@ -1493,8 +1493,7 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 	yylval_param.atom = osc_atom_array_u_get(*ar, 0);
 	long buflen = 0;
 	char *buf = NULL;
-	int startcond = START_EXPNS, started = 0;
-	int ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf, startcond, &started);
+	int ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf);
 	while(ret){
 		if(i == n){
 			n += 64;
@@ -1502,8 +1501,6 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		}
 		char *st = NULL;
 		switch(ret){
-		case START_EXPNS:
-			goto cont;
 		case OSC_EXPR_STRING:
 		case OSC_EXPR_NUM:
 		case OSC_EXPR_OSCADDRESS:
@@ -1584,9 +1581,9 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
 		i++;
 		//yylval_param.atom = (t_osc_atom_u *)(((long)out) + (i * atomsize));
-	cont:
+
 		yylval_param.atom = osc_atom_array_u_get(*ar, i);
-		ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf, startcond, &started);
+		ret = osc_expr_scanner_lex(&yylval_param, &llocp, scanner, 0, &buflen, &buf);
 	}
 	//*ar = osc_atom_array_u_alloc(0);
 	//osc_atom_array_u_set(*ar, out, i);
