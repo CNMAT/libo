@@ -37,7 +37,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    size_t objsize)
 {
 	if(e){
-		e->nodetype = OSC_EXPR_AST_NODETYPE_EXPR;
+		e->nodetype = nodetype;
 		e->next = next;
 		e->eval = evalfn;
 		e->format = formatfn;

@@ -38,7 +38,7 @@ typedef struct _osc_expr_ast_expr t_osc_expr_ast_expr;
 #include "osc_atom_array_u.h"
 
 enum{
-	OSC_EXPR_AST_NODETYPE_EXPR,
+	OSC_EXPR_AST_NODETYPE_EXPR = 1,
 	OSC_EXPR_AST_NODETYPE_FUNCALL,
 	OSC_EXPR_AST_NODETYPE_UNARYOP,
 	OSC_EXPR_AST_NODETYPE_BINARYOP,
