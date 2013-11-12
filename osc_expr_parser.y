@@ -46,7 +46,7 @@
 #include "osc_expr_ast_function.h"
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_oscaddress.h"
-#include "osc_expr_ast_literal.h"
+#include "osc_expr_ast_value.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
@@ -93,6 +93,9 @@ t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
 }
 
 %{
+
+	//#define YYDEBUG 1
+	//int yydebug = 1;
 
 // this is a dummy so that the compiler won't complain.  we pass the hard-coded
 // value of 1 to osc_expr_scanner_lex() inside of osc_expr_parser_lex() down below.
@@ -632,8 +635,8 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 }
 
 %type <expr>expr function funcall oscaddress literal list unaryop binaryop commaseparatedexprs compoundassign
-%type <atom>parameters parameter
-%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS
+%type <atom> lambdalist
+%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA
  //%type <func>function
  //%type <arg>arg args 
@@ -643,7 +646,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
 
-%precedence oscaddress_prec list_prec
+%precedence oscaddress_prec
 
 // level 16
 %right '=' OSC_EXPR_PLUSEQ OSC_EXPR_MINUSEQ OSC_EXPR_MULTEQ OSC_EXPR_DIVEQ OSC_EXPR_MODEQ OSC_EXPR_POWEQ
@@ -701,7 +704,7 @@ expns:  {
 ;
 
 function: 
-	OSC_EXPR_LAMBDA '(' parameters ')' '{' expns '}' {
+	OSC_EXPR_LAMBDA '(' lambdalist ')' '{' expns '}' {
 		int n = 0;
 		t_osc_atom_u *a = $3;
 		while(a){
@@ -742,52 +745,37 @@ function:
 	}
 ;
 
-parameters: parameter
-	| parameters ',' parameter {
+lambdalist: {$$ = NULL;}
+	| OSC_EXPR_IDENTIFIER
+	| lambdalist ',' OSC_EXPR_IDENTIFIER {
 		$3->next = $1;
 		$$ = $3;
- 	}
-;
-
-parameter: OSC_EXPR_STRING {
-		if(osc_atom_u_getTypetag($1) == 's'){
-			char *st = osc_atom_u_getStringPtr($1);
-			if(st){
-				if(*st == '/' && st[1] != '\0'){
-					// this is an OSC address
-					//error
-				}else{
-					$$ = $1;
-				}
-			}else{
-				//error
-			}
-		}else{
-			//error
-		}
 	}
 ;
 
+// these are the only allowable lvalues 
 oscaddress:
 	OSC_EXPR_OSCADDRESS {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_atom_u_getStringPtr($1));
-		osc_atom_u_free($1);
+		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_atom_u_getStringPtr($1));
+		//osc_atom_u_free($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1));
 	}
 	| oscaddress '.' OSC_EXPR_OSCADDRESS {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ".", (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_atom_u_getStringPtr($3)));
-		osc_atom_u_free($3);
+		//$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ".", (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_atom_u_getStringPtr($3)));
+		//osc_atom_u_free($3);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ".", (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3))));
   	}
 	| oscaddress OPEN_DBL_BRKTS commaseparatedexprs CLOSE_DBL_BRKTS {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3));
 	}
 ;
 
 literal:    
 	OSC_EXPR_NUM {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_literal_alloc($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
 	}
 	| OSC_EXPR_STRING {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_literal_alloc($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
 	}
 ;
 
@@ -951,7 +939,7 @@ binaryop:
 
 funcall:
 // prefix function call
-	OSC_EXPR_STRING '(' commaseparatedexprs ')' %prec OSC_EXPR_FUNC_CALL {
+	OSC_EXPR_IDENTIFIER '(' commaseparatedexprs ')' %prec OSC_EXPR_FUNC_CALL {
 		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
 							  input_string,
 							  osc_atom_u_getStringPtr($1),
@@ -974,6 +962,9 @@ expr:
 	| literal
 	| list
 	| compoundassign
+	| OSC_EXPR_IDENTIFIER {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	}
 	| '(' expr ')' {
 		$$ = $2;
   	}

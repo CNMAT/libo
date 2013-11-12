@@ -270,15 +270,22 @@ lambda				{
 						osc_atom_u_setString(yylval->atom, yytext);
 						return OSC_EXPR_OSCADDRESS;
 				 	}
-
-[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
+	/*
+	[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
 						}
 						osc_atom_u_setString(yylval->atom, yytext);
 						return OSC_EXPR_STRING;
 					}
-
+	*/
+[_a-zA-Z][_a-zA-Z0-9]* {
+	if(alloc_atom){
+		yylval->atom = osc_atom_u_alloc();
+	}
+	osc_atom_u_setString(yylval->atom, yytext);
+	return OSC_EXPR_IDENTIFIER;
+}
 
 ;+|(;[[:space:]]*)+			{
 						// attempt to get rid of repeated semicolons
