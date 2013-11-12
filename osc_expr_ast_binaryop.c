@@ -76,8 +76,6 @@ t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
 		t_osc_expr_ast_expr *left = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
 		t_osc_expr_ast_expr *right = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
 		t_osc_expr_ast_binaryop *copy = osc_expr_ast_binaryop_alloc(r, left, right);
-		osc_expr_ast_binaryop_setLeftArg(copy, left);
-		osc_expr_ast_binaryop_setRightArg(copy, right);
 		return (t_osc_expr_ast_expr *)copy;
 	}else{
 		return NULL;
