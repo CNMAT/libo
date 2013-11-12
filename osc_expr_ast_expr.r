@@ -41,6 +41,8 @@ struct _osc_expr_ast_expr
 	t_osc_expr_ast_formatfn format;
 	t_osc_expr_ast_freefn free;
 	t_osc_expr_ast_copyfn copy;
+	t_osc_expr_ast_serializefn serialize;
+	t_osc_expr_ast_deserializefn deserialize;
 	size_t objsize;
 
 };

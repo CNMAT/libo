@@ -34,6 +34,8 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_formatfn formatfn,
 			    t_osc_expr_ast_freefn freefn,
 			    t_osc_expr_ast_copyfn copyfn,
+			    t_osc_expr_ast_serializefn serializefn,
+			    t_osc_expr_ast_deserializefn deserializefn,
 			    size_t objsize)
 {
 	if(e){
@@ -42,6 +44,8 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->eval = evalfn;
 		e->format = formatfn;
 		e->free = freefn;
+		e->serialize = serializefn;
+		e->deserialize = deserializefn;
 		e->objsize = sizeof(t_osc_expr_ast_expr);
 	}
 }
@@ -138,6 +142,21 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	}
 }
 
+t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(e && e->serialize){
+		return e->serialize(e, len, ptr);
+	}else{
+		// serialize this bitch
+		return OSC_ERR_NONE;
+	}
+}
+
+t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	return OSC_ERR_NONE;
+}
+
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)
 {
 	if(e){
@@ -150,6 +169,6 @@ size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void)
 {
 	t_osc_expr_ast_expr *e = (t_osc_expr_ast_expr *)osc_mem_alloc(sizeof(t_osc_expr_ast_expr));
-	osc_expr_ast_expr_init(e, OSC_EXPR_AST_NODETYPE_EXPR, NULL, NULL, NULL, NULL, NULL, sizeof(t_osc_expr_ast_expr));
+	osc_expr_ast_expr_init(e, OSC_EXPR_AST_NODETYPE_EXPR, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sizeof(t_osc_expr_ast_expr));
 	return e;
 }

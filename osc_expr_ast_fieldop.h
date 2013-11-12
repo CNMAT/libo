@@ -47,6 +47,8 @@ int osc_expr_ast_fieldop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	t_osc_atom_ar_u **out);
 long osc_expr_ast_fieldop_format(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_fieldop_copy(t_osc_expr_ast_expr *ast);
+t_osc_err osc_expr_ast_fieldop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
+t_osc_err osc_expr_ast_fieldop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 void osc_expr_ast_fieldop_free(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_fieldop_getLeftArg(t_osc_expr_ast_fieldop *e);
 t_osc_expr_ast_expr *osc_expr_ast_fieldop_getRightArg(t_osc_expr_ast_fieldop *e);

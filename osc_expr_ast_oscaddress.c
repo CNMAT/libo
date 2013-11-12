@@ -68,6 +68,22 @@ void osc_expr_ast_oscaddress_free(t_osc_expr_ast_expr *v)
 	}
 }
 
+t_osc_err osc_expr_ast_oscaddress_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_oscaddress_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_getAddressExpr(t_osc_expr_ast_oscaddress *v)
 {
 	if(v){
@@ -94,6 +110,8 @@ t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *ad
 				       osc_expr_ast_oscaddress_format,
 				       osc_expr_ast_oscaddress_free,
 				       osc_expr_ast_oscaddress_copy,
+				       osc_expr_ast_oscaddress_serialize,
+				       osc_expr_ast_oscaddress_deserialize,
 				       sizeof(t_osc_expr_ast_oscaddress));
 		osc_expr_ast_oscaddress_setAddressExpr(v, address);
 	}

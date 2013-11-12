@@ -50,6 +50,8 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 long osc_expr_ast_value_format(char *buf, long n, t_osc_expr_ast_expr *v);
 t_osc_expr_ast_expr *osc_expr_ast_value_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_value_free(t_osc_expr_ast_expr *v);
+t_osc_err osc_expr_ast_value_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
+t_osc_err osc_expr_ast_value_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 t_osc_atom_u *osc_expr_ast_value_getValue(t_osc_expr_ast_value *v);
 int osc_expr_ast_value_getValueType(t_osc_expr_ast_value *v);
 void osc_expr_ast_value_setLiteral(t_osc_expr_ast_value *v, t_osc_atom_u *a);

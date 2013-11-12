@@ -110,6 +110,22 @@ void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e)
 	}
 }
 
+t_osc_err osc_expr_ast_funcall_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_funcall_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 t_osc_expr_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e)
 {
 	if(e){
@@ -175,6 +191,8 @@ t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_rec *rec, 
 				       osc_expr_ast_funcall_format, 
 				       osc_expr_ast_funcall_free, 
 				       osc_expr_ast_funcall_copy, 
+				       osc_expr_ast_funcall_serialize, 
+				       osc_expr_ast_funcall_deserialize, 
 				       sizeof(t_osc_expr_ast_funcall)); 
 		e->rec = rec;
 		e->argv = argv;

@@ -92,6 +92,22 @@ void osc_expr_ast_list_free(t_osc_expr_ast_expr *v)
 	}
 }
 
+t_osc_err osc_expr_ast_list_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_list_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 t_osc_atom_ar_u *osc_expr_ast_list_getList(t_osc_expr_ast_list *v)
 {
 	if(v){
@@ -127,7 +143,16 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_atom_ar_u *a)
 {
 	t_osc_expr_ast_list *v = osc_mem_alloc(sizeof(t_osc_expr_ast_list));
 	if(v){
-		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v, OSC_EXPR_AST_NODETYPE_LIST, NULL, osc_expr_ast_list_evalInLexEnv, osc_expr_ast_list_format, osc_expr_ast_list_free, osc_expr_ast_list_copy, sizeof(t_osc_expr_ast_list));
+		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v,
+				       OSC_EXPR_AST_NODETYPE_LIST,
+				       NULL,
+				       osc_expr_ast_list_evalInLexEnv,
+				       osc_expr_ast_list_format,
+				       osc_expr_ast_list_free,
+				       osc_expr_ast_list_copy,
+				       osc_expr_ast_list_serialize,
+				       osc_expr_ast_list_deserialize,
+				       sizeof(t_osc_expr_ast_list));
 		osc_expr_ast_list_setList(v, a);
 	}
 	return v;

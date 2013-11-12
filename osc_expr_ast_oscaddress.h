@@ -38,6 +38,8 @@ t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *os
 long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v);
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_oscaddress_free(t_osc_expr_ast_expr *v);
+t_osc_err osc_expr_ast_oscaddress_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
+t_osc_err osc_expr_ast_oscaddress_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_getAddressExpr(t_osc_expr_ast_oscaddress *v);
 void osc_expr_ast_oscaddress_setAddressExpr(t_osc_expr_ast_oscaddress *v, t_osc_expr_ast_expr *oscaddress);
 

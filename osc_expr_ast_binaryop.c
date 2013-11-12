@@ -89,6 +89,22 @@ void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e)
 	}
 }
 
+t_osc_err osc_expr_ast_binaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_binaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 t_osc_expr_funcptr osc_expr_ast_binaryop_getFunc(t_osc_expr_ast_binaryop *e)
 {
 	if(e){
@@ -169,6 +185,8 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_
 			       osc_expr_ast_binaryop_format,
 			       osc_expr_ast_binaryop_free,
 			       osc_expr_ast_binaryop_copy,
+			       osc_expr_ast_binaryop_serialize,
+			       osc_expr_ast_binaryop_deserialize,
 			       sizeof(t_osc_expr_ast_binaryop));
 	osc_expr_ast_binaryop_setRec(b, rec);
 	osc_expr_ast_binaryop_setLeftArg(b, left);

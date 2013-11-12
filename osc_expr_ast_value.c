@@ -80,6 +80,22 @@ void osc_expr_ast_value_free(t_osc_expr_ast_expr *v)
 	}
 }
 
+t_osc_err osc_expr_ast_value_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_value_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 int osc_expr_ast_value_getValueType(t_osc_expr_ast_value *v)
 {
 	if(v){
@@ -122,7 +138,16 @@ static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type)
 {
 	t_osc_expr_ast_value *v = osc_mem_alloc(sizeof(t_osc_expr_ast_value));
 	if(v){
-		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v, OSC_EXPR_AST_NODETYPE_VALUE, NULL, osc_expr_ast_value_evalInLexEnv, osc_expr_ast_value_format, osc_expr_ast_value_free, osc_expr_ast_value_copy, sizeof(t_osc_expr_ast_value));
+		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v,
+				       OSC_EXPR_AST_NODETYPE_VALUE,
+				       NULL,
+				       osc_expr_ast_value_evalInLexEnv,
+				       osc_expr_ast_value_format,
+				       osc_expr_ast_value_free,
+				       osc_expr_ast_value_copy,
+				       osc_expr_ast_value_serialize,
+				       osc_expr_ast_value_deserialize,
+				       sizeof(t_osc_expr_ast_value));
 		osc_expr_ast_value_setValue(v, a, type);
 		v->valuetype = type;
 	}

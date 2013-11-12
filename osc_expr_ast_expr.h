@@ -60,6 +60,8 @@ typedef int (*t_osc_expr_ast_evalfn)(t_osc_expr_ast_expr*,
 				     char**,
 				     t_osc_atom_ar_u**);
 typedef t_osc_expr_ast_expr *(*t_osc_expr_ast_copyfn)(t_osc_expr_ast_expr*);
+typedef t_osc_err (*t_osc_expr_ast_serializefn)(t_osc_expr_ast_expr*, long*, char**);
+typedef t_osc_err (*t_osc_expr_ast_deserializefn)(long, char*,t_osc_expr_ast_expr**);
 
 void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
@@ -68,6 +70,8 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_formatfn formatfn,
 			    t_osc_expr_ast_freefn freefn,
 			    t_osc_expr_ast_copyfn copyfn,
+			    t_osc_expr_ast_serializefn serializefn,
+			    t_osc_expr_ast_deserializefn deserializefn,
 			    size_t objsize);
 int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   t_osc_expr_lexenv *lexenv,
@@ -81,6 +85,8 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_next(t_osc_expr_ast_expr *e);
 void osc_expr_ast_expr_prepend(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_prepend);
 void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_append);
 long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e);
+t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
+t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void);
 

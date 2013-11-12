@@ -109,6 +109,22 @@ void osc_expr_ast_function_free(t_osc_expr_ast_expr *f)
 	}
 }
 
+t_osc_err osc_expr_ast_function_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_function_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
 char *osc_expr_ast_function_getName(t_osc_expr_ast_function *f)
 {
 	if(f){
@@ -146,7 +162,16 @@ t_osc_expr_ast_function *osc_expr_ast_function_alloc(int numparams, char **param
 	t_osc_expr_ast_function *f = osc_mem_alloc(sizeof(t_osc_expr_ast_function));
 	if(f){
 		memset(f, '\0', sizeof(t_osc_expr_ast_function));
-		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)f, OSC_EXPR_AST_NODETYPE_FUNCTION, NULL, osc_expr_ast_function_evalInLexEnv, osc_expr_ast_function_format, osc_expr_ast_function_free, osc_expr_ast_function_copy, sizeof(t_osc_expr_ast_function));
+		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)f,
+				       OSC_EXPR_AST_NODETYPE_FUNCTION,
+				       NULL,
+				       osc_expr_ast_function_evalInLexEnv,
+				       osc_expr_ast_function_format,
+				       osc_expr_ast_function_free,
+				       osc_expr_ast_function_copy,
+				       osc_expr_ast_function_serialize,
+				       osc_expr_ast_function_deserialize,
+				       sizeof(t_osc_expr_ast_function));
 		f->function = osc_expr_rec_alloc();
 		osc_expr_rec_setName(f->function, "lambda");
 		osc_expr_rec_setRequiredArgs(f->function, numparams, params, NULL);
