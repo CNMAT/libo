@@ -34,13 +34,12 @@ extern "C" {
 
 typedef struct _osc_expr_ast_oscaddress t_osc_expr_ast_oscaddress;
 
-t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(char *address);
+t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *oscaddress);
 long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v);
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_oscaddress_free(t_osc_expr_ast_expr *v);
-char *osc_expr_ast_oscaddress_getAddress(t_osc_expr_ast_oscaddress *v);
-char *osc_expr_ast_oscaddress_getAddressCopy(t_osc_expr_ast_oscaddress *v);
-void osc_expr_ast_oscaddress_setAddress(t_osc_expr_ast_oscaddress *v, char *s);
+t_osc_expr_ast_expr *osc_expr_ast_oscaddress_getAddressExpr(t_osc_expr_ast_oscaddress *v);
+void osc_expr_ast_oscaddress_setAddressExpr(t_osc_expr_ast_oscaddress *v, t_osc_expr_ast_expr *oscaddress);
 
 #ifdef __cplusplus
 }

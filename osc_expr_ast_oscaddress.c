@@ -40,62 +40,13 @@ int osc_expr_ast_oscaddress_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    char **oscbndl,
 				    t_osc_atom_ar_u **out)
 {
-	if(!ast){
-		return 1;
-	}
-	t_osc_expr_ast_oscaddress *a = (t_osc_expr_ast_oscaddress *)ast;
-	char *address = osc_expr_ast_oscaddress_getAddress(a);
-	*out = NULL;
-	if(!oscbndl || !len){
-		return OSC_ERR_EXPR_ADDRESSUNBOUND;
-	}
-	if(!(*oscbndl) || *len <= 16){
-		return OSC_ERR_EXPR_ADDRESSUNBOUND;
-	}
-	t_osc_rset *rset = NULL;
-	osc_query_select(1, &(address), *len, *oscbndl, 0, &rset);
-	t_osc_rset_result *res = osc_rset_select(rset, address);
-	if(rset){
-		t_osc_bndl_s *complete_matches = osc_rset_result_getCompleteMatches(res);
-		if(complete_matches){
-			t_osc_msg_s *m = osc_bundle_s_getFirstMsg(complete_matches);
-			if(m){
-				long arg_count = osc_message_s_getArgCount(m);
-				*out = osc_atom_array_u_alloc(arg_count);
-						
-				t_osc_atom_ar_u *atom_ar = *out;
-				osc_atom_array_u_clear(atom_ar);
-				int i = 0;
-				t_osc_msg_it_s *it = osc_msg_it_s_get(m);
-				while(osc_msg_it_s_hasNext(it)){
-					t_osc_atom_s *as = osc_msg_it_s_next(it);
-					t_osc_atom_u *au = osc_atom_array_u_get(atom_ar, i);
-					osc_atom_s_deserialize(as, &au);
-					i++;
-				}
-				osc_msg_it_s_destroy(it);
-				osc_rset_free(rset);
-				osc_message_s_free(m);
-				return 0;
-			}
-		}
-		osc_rset_free(rset);
-	}
-
-	//osc_error_handler(__FILE__,
-	//__func__,
-	//__LINE__,
-	//OSC_ERR_EXPR_ADDRESSUNBOUND,
-	//"address %s is unbound\n",
-	//arg->arg.osc_address);
-
-	return OSC_ERR_EXPR_ADDRESSUNBOUND;
+	return 1;
 }
 
 long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v)
 {
 	if(v){
-		return snprintf(buf, n, "%s", osc_expr_ast_oscaddress_getAddress((t_osc_expr_ast_oscaddress *)v));
+		return osc_expr_ast_expr_format(buf, n, osc_expr_ast_oscaddress_getAddressExpr((t_osc_expr_ast_oscaddress *)v));
 	}
 	return 0;
 }
@@ -103,7 +54,7 @@ long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v)
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
-		return (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_expr_ast_oscaddress_getAddress((t_osc_expr_ast_oscaddress *)ast));
+		return (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_expr_ast_expr_copy(osc_expr_ast_oscaddress_getAddressExpr((t_osc_expr_ast_oscaddress *)ast)));
 	}else{
 		return NULL;
 	}
@@ -112,12 +63,12 @@ t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_oscaddress_free(t_osc_expr_ast_expr *v)
 {
 	if(v){
-		osc_mem_free(osc_expr_ast_oscaddress_getAddress((t_osc_expr_ast_oscaddress *)v));
+		osc_expr_ast_expr_free(osc_expr_ast_oscaddress_getAddressExpr((t_osc_expr_ast_oscaddress *)v));
 		osc_mem_free(v);
 	}
 }
 
-char *osc_expr_ast_oscaddress_getAddress(t_osc_expr_ast_oscaddress *v)
+t_osc_expr_ast_expr *osc_expr_ast_oscaddress_getAddressExpr(t_osc_expr_ast_oscaddress *v)
 {
 	if(v){
 		return v->oscaddress;
@@ -125,34 +76,26 @@ char *osc_expr_ast_oscaddress_getAddress(t_osc_expr_ast_oscaddress *v)
 	return NULL;
 }
 
-char *osc_expr_ast_oscaddress_getAddressCopy(t_osc_expr_ast_oscaddress *v)
+void osc_expr_ast_oscaddress_setAddressExpr(t_osc_expr_ast_oscaddress *v, t_osc_expr_ast_expr *oscaddress)
 {
 	if(v){
-		char *s = v->oscaddress;
-		long len = strlen(s);
-		char *copy = osc_mem_alloc(len);
-		strncpy(copy, s, len);
-		return copy;
-	}
-	return NULL;
-}
-
-void osc_expr_ast_oscaddress_setAddress(t_osc_expr_ast_oscaddress *v, char *s)
-{
-	if(v){
-		long len = strlen(s);
-		char *copy = osc_mem_alloc(len);
-		strncpy(copy, s, len);
-		v->oscaddress = copy;
+		v->oscaddress = oscaddress;
 	}
 }
 
-t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(char *address)
+t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *address)
 {
 	t_osc_expr_ast_oscaddress *v = osc_mem_alloc(sizeof(t_osc_expr_ast_oscaddress));
 	if(v){
-		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v, OSC_EXPR_AST_NODETYPE_OSCADDRESS, NULL, osc_expr_ast_oscaddress_evalInLexEnv, osc_expr_ast_oscaddress_format, osc_expr_ast_oscaddress_free, osc_expr_ast_oscaddress_copy, sizeof(t_osc_expr_ast_oscaddress));
-		osc_expr_ast_oscaddress_setAddress(v, address);
+		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v,
+				       OSC_EXPR_AST_NODETYPE_OSCADDRESS,
+				       NULL,
+				       osc_expr_ast_oscaddress_evalInLexEnv,
+				       osc_expr_ast_oscaddress_format,
+				       osc_expr_ast_oscaddress_free,
+				       osc_expr_ast_oscaddress_copy,
+				       sizeof(t_osc_expr_ast_oscaddress));
+		osc_expr_ast_oscaddress_setAddressExpr(v, address);
 	}
 	return v;
 }
