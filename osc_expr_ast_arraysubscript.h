@@ -46,6 +46,7 @@ int osc_expr_ast_arraysubscript_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	char **oscbndl,
 	t_osc_atom_ar_u **out);
 long osc_expr_ast_arraysubscript_format(char *buf, long n, t_osc_expr_ast_expr *e);
+long osc_expr_ast_arraysubscript_formatLisp(char *buf, long n, t_osc_expr_ast_expr *ast);
 t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_arraysubscript_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_arraysubscript_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);

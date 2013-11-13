@@ -55,27 +55,36 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	}
         t_osc_expr_ast_expr *arg = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e);
 	long offset = 0;
-	if(!buf){
-		offset += snprintf(NULL, 0, "%s(", osc_expr_rec_getName(r));
-		while(arg){
-			offset += osc_expr_ast_expr_format(NULL, 0, arg);
-			arg = osc_expr_ast_expr_next(arg);
-			if(arg){
-				offset += snprintf(NULL, 0, ", ");
-			}
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s(", osc_expr_rec_getName(r));
+	while(arg){
+		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
+		arg = osc_expr_ast_expr_next(arg);
+		if(arg){
+			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
 		}
-		offset += snprintf(NULL, 0, ")");
-	}else{
-		offset += snprintf(buf + offset, n - offset, "%s(", osc_expr_rec_getName(r));
-		while(arg){
-			offset += osc_expr_ast_expr_format(buf + offset, n - offset, arg);
-			arg = osc_expr_ast_expr_next(arg);
-			if(arg){
-				offset += snprintf(buf + offset, n - offset, ", ");
-			}
-		}
-		offset += snprintf(buf + offset, n - offset, ")");
 	}
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
+	return offset;
+}
+
+long osc_expr_ast_funcall_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
+{
+	if(!e){
+		return 0;
+	}
+	t_osc_expr_rec *r = osc_expr_ast_funcall_getRec((t_osc_expr_ast_funcall *)e);
+	if(!r){
+		return 0;
+	}
+        t_osc_expr_ast_expr *arg = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e);
+	long offset = 0;
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(%s", osc_expr_rec_getName(r));
+	while(arg){
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
+		offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
+		arg = osc_expr_ast_expr_next(arg);
+	}
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
 	return offset;
 }
 
@@ -189,6 +198,7 @@ t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_rec *rec, 
 				       NULL, 
 				       osc_expr_ast_funcall_evalInLexEnv, 
 				       osc_expr_ast_funcall_format, 
+				       osc_expr_ast_funcall_formatLisp, 
 				       osc_expr_ast_funcall_free, 
 				       osc_expr_ast_funcall_copy, 
 				       osc_expr_ast_funcall_serialize, 

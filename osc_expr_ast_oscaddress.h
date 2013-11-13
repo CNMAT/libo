@@ -36,6 +36,7 @@ typedef struct _osc_expr_ast_oscaddress t_osc_expr_ast_oscaddress;
 
 t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *oscaddress);
 long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v);
+long osc_expr_ast_oscaddress_formatLisp(char *buf, long n, t_osc_expr_ast_expr *v);
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_oscaddress_free(t_osc_expr_ast_expr *v);
 t_osc_err osc_expr_ast_oscaddress_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);

@@ -37,7 +37,6 @@ struct _osc_expr_ast_oscaddress
 {
 	struct _osc_expr_ast_expr expr; // parent
 	t_osc_expr_ast_expr *oscaddress; // an OSC address can be an address, or an expression that resolves to one
-	int is_assignment_target; // is this OSC address (expr) the target of an assignment?
 };
 
 #ifdef __cplusplus

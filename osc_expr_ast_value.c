@@ -143,6 +143,7 @@ static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type)
 				       NULL,
 				       osc_expr_ast_value_evalInLexEnv,
 				       osc_expr_ast_value_format,
+				       osc_expr_ast_value_format,
 				       osc_expr_ast_value_free,
 				       osc_expr_ast_value_copy,
 				       osc_expr_ast_value_serialize,

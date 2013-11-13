@@ -56,15 +56,29 @@ long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
         t_osc_expr_ast_expr *left = osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e);
         t_osc_expr_ast_expr *right = osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e);
 	long offset = 0;
-	if(!buf){
-		offset += osc_expr_ast_expr_format(NULL, n, left);
-		offset += snprintf(NULL, n, "%s", osc_expr_rec_getName(r));
-		offset += osc_expr_ast_expr_format(NULL, n, right);
-	}else{
-		offset += osc_expr_ast_expr_format(buf + offset, n, left);
-		offset += snprintf(buf + offset, n, "%s", osc_expr_rec_getName(r));
-		offset += osc_expr_ast_expr_format(buf + offset, n, right);
+	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, left);
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " %s ", osc_expr_rec_getName(r));
+	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, right);
+	return offset;
+}
+
+long osc_expr_ast_binaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
+{
+	if(!e){
+		return 0;
 	}
+	t_osc_expr_rec *r = osc_expr_ast_binaryop_getRec((t_osc_expr_ast_binaryop *)e);
+	if(!r){
+		return 0;
+	}
+        t_osc_expr_ast_expr *left = osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e);
+        t_osc_expr_ast_expr *right = osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e);
+	long offset = 0;
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(%s ", osc_expr_rec_getName(r));
+	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, left);
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
+	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, right);
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
 	return offset;
 }
 
@@ -183,6 +197,7 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_
 			       NULL,
 			       osc_expr_ast_binaryop_evalInLexEnv,
 			       osc_expr_ast_binaryop_format,
+			       osc_expr_ast_binaryop_formatLisp,
 			       osc_expr_ast_binaryop_free,
 			       osc_expr_ast_binaryop_copy,
 			       osc_expr_ast_binaryop_serialize,

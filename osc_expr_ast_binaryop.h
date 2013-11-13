@@ -48,6 +48,7 @@ int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	char **oscbndl,
 	t_osc_atom_ar_u **out);
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
+long osc_expr_ast_binaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_binaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);

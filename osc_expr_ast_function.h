@@ -42,6 +42,7 @@ int osc_expr_ast_function_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				       char **oscbndl,
 				       t_osc_atom_ar_u **out);
 long osc_expr_ast_function_format(char *buf, long n, t_osc_expr_ast_expr *f);
+long osc_expr_ast_function_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f);
 void osc_expr_ast_function_free(t_osc_expr_ast_expr *f);
 t_osc_err osc_expr_ast_function_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_function_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);

@@ -35,9 +35,9 @@ extern "C" {
 #include "osc_atom_u.h"
 
 enum {
-	OSC_EXPR_AST_VALUE_TYPE_LITERAL = 1,
-	OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER,
-	OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS
+	OSC_EXPR_AST_VALUE_TYPE_LITERAL = 1, // the value of the atom
+	OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER, // this should be a string that represents a fun-bound variable
+	OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS // duh...
 };
 
 typedef struct _osc_expr_ast_value t_osc_expr_ast_value;

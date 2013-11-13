@@ -65,6 +65,21 @@ long osc_expr_ast_arraysubscript_format(char *buf, long n, t_osc_expr_ast_expr *
 	return offset;
 }
 
+long osc_expr_ast_arraysubscript_formatLisp(char *buf, long n, t_osc_expr_ast_expr *ast)
+{
+	if(!ast){
+		return 0;
+	}
+	long offset = 0;
+	t_osc_expr_ast_arraysubscript *a = (t_osc_expr_ast_arraysubscript *)ast;
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(nth ");
+	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_arraysubscript_getBase(a));
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
+	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_arraysubscript_getIndexList(a));
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
+	return offset;
+}
+
 t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
@@ -147,6 +162,7 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 			       NULL,
 			       osc_expr_ast_arraysubscript_evalInLexEnv,
 			       osc_expr_ast_arraysubscript_format,
+			       osc_expr_ast_arraysubscript_formatLisp,
 			       osc_expr_ast_arraysubscript_free,
 			       osc_expr_ast_arraysubscript_copy,
 			       osc_expr_ast_arraysubscript_serialize,

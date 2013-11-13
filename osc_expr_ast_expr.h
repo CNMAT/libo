@@ -68,6 +68,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_expr *next,
 			    t_osc_expr_ast_evalfn evalfn,
 			    t_osc_expr_ast_formatfn formatfn,
+			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
 			    t_osc_expr_ast_copyfn copyfn,
 			    t_osc_expr_ast_serializefn serializefn,
@@ -85,6 +86,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_next(t_osc_expr_ast_expr *e);
 void osc_expr_ast_expr_prepend(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_prepend);
 void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_append);
 long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e);
+long osc_expr_ast_expr_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e);

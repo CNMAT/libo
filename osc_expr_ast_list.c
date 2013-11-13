@@ -48,29 +48,35 @@ int osc_expr_ast_list_evalInLexEnv(t_osc_expr_ast_expr *ast,
 long osc_expr_ast_list_format(char *buf, long n, t_osc_expr_ast_expr *v)
 {
 	if(v){
-		long count = 0;
+		long offset = 0;
 		t_osc_atom_ar_u *ar = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
 		int arlen = osc_atom_array_u_getLen(ar);
-		if(!buf){
-			count += snprintf(NULL, 0, "[");
-			for(int i = 0; i < arlen; i++){
-				count += osc_atom_u_nformat(NULL, 0, osc_atom_array_u_get(ar, i), 0);
-				if(i < arlen - 1){
-					count += snprintf(NULL, 0, ", ");
-				}
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
+		for(int i = 0; i < arlen; i++){
+			offset += osc_atom_u_nformat(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_atom_array_u_get(ar, i), 0);
+			if(i < arlen - 1){
+				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
 			}
-			count += snprintf(NULL, 0, "]");
-		}else{
-			count += snprintf(buf + count, n - count, "[");
-			for(int i = 0; i < arlen; i++){
-				count += osc_atom_u_nformat(buf + count, n - count, osc_atom_array_u_get(ar, i), 0);
-				if(i < arlen - 1){
-					count += snprintf(buf + count, n - count, ", ");
-				}
-			}
-			count += snprintf(buf + count, n - count, "]");
 		}
-		return count;
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "]");
+		return offset;
+	}
+	return 0;
+}
+
+long osc_expr_ast_list_formatLisp(char *buf, long n, t_osc_expr_ast_expr *v)
+{
+	if(v){
+		long offset = 0;
+		t_osc_atom_ar_u *ar = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
+		int arlen = osc_atom_array_u_getLen(ar);
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(list");
+		for(int i = 0; i < arlen; i++){
+			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
+			offset += osc_atom_u_nformat(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_atom_array_u_get(ar, i), 0);
+		}
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
+		return offset;
 	}
 	return 0;
 }
@@ -148,6 +154,7 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_atom_ar_u *a)
 				       NULL,
 				       osc_expr_ast_list_evalInLexEnv,
 				       osc_expr_ast_list_format,
+				       osc_expr_ast_list_formatLisp,
 				       osc_expr_ast_list_free,
 				       osc_expr_ast_list_copy,
 				       osc_expr_ast_list_serialize,

@@ -39,6 +39,7 @@ struct _osc_expr_ast_expr
 	struct _osc_expr_ast_expr *next;
 	t_osc_expr_ast_evalfn eval;
 	t_osc_expr_ast_formatfn format;
+	t_osc_expr_ast_formatfn format_lisp;
 	t_osc_expr_ast_freefn free;
 	t_osc_expr_ast_copyfn copy;
 	t_osc_expr_ast_serializefn serialize;

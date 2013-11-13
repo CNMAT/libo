@@ -51,6 +51,14 @@ long osc_expr_ast_oscaddress_format(char *buf, long n, t_osc_expr_ast_expr *v)
 	return 0;
 }
 
+long osc_expr_ast_oscaddress_formatLisp(char *buf, long n, t_osc_expr_ast_expr *v)
+{
+	if(v){
+		return osc_expr_ast_expr_formatLisp(buf, n, osc_expr_ast_oscaddress_getAddressExpr((t_osc_expr_ast_oscaddress *)v));
+	}
+	return 0;
+}
+
 t_osc_expr_ast_expr *osc_expr_ast_oscaddress_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
@@ -108,6 +116,7 @@ t_osc_expr_ast_oscaddress *osc_expr_ast_oscaddress_alloc(t_osc_expr_ast_expr *ad
 				       NULL,
 				       osc_expr_ast_oscaddress_evalInLexEnv,
 				       osc_expr_ast_oscaddress_format,
+				       osc_expr_ast_oscaddress_formatLisp,
 				       osc_expr_ast_oscaddress_free,
 				       osc_expr_ast_oscaddress_copy,
 				       osc_expr_ast_oscaddress_serialize,
