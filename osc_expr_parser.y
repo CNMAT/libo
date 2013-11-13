@@ -627,6 +627,15 @@ arg:    OSC_EXPR_NUM {
 		$$ = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAtom($$, $1);
  	}
+	| OSC_EXPR_OSCADDRESS {
+		$$ = osc_expr_arg_alloc();
+		char *st = osc_atom_u_getStringPtr($1);
+		int len = strlen(st) + 1;
+		char *buf = osc_mem_alloc(len);
+		memcpy(buf, st, len);
+		osc_expr_arg_setOSCAddress($$, buf);
+		osc_atom_u_free($1);
+  	}
 	| expr {
 		t_osc_expr *e = $1;
 		//t_osc_expr_arg *a = osc_expr_getArgs(e);
