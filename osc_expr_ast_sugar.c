@@ -40,7 +40,7 @@ int osc_expr_ast_sugar_evalInLexEnv(t_osc_expr_ast_expr *ast,
 						      oscbndl,
 						      out);
 	}else{
-		return 0;
+		return 1;
 	}
 }
 
@@ -126,5 +126,7 @@ t_osc_expr_ast_sugar *osc_expr_ast_sugar_alloc(t_osc_expr_ast_expr *parsed_ast, 
 			       osc_expr_ast_sugar_serialize,
 			       osc_expr_ast_sugar_deserialize,
 			       sizeof(t_osc_expr_ast_sugar));
+	s->parsed_ast = parsed_ast;
+	s->functional_ast = functional_ast;
 	return s;
 }

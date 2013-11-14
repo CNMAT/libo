@@ -35,15 +35,6 @@
 #include "osc_expr_ast_arraysubscript.r"
 
 
-int osc_expr_ast_arraysubscript_evalInLexEnv(t_osc_expr_ast_expr *ast,
-				      t_osc_expr_lexenv *lexenv,
-				      long *len,
-				      char **oscbndl,
-				      t_osc_atom_ar_u **out)
-{
-	return 1;
-}
-
 long osc_expr_ast_arraysubscript_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 {
 	if(!ast){
@@ -160,7 +151,7 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)e,
 			       OSC_EXPR_AST_NODETYPE_ARRAYSUBSCRIPT,
 			       NULL,
-			       osc_expr_ast_arraysubscript_evalInLexEnv,
+			       NULL,
 			       osc_expr_ast_arraysubscript_format,
 			       osc_expr_ast_arraysubscript_formatLisp,
 			       osc_expr_ast_arraysubscript_free,

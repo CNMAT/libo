@@ -38,6 +38,7 @@ extern "C" {
 #include "osc_expr_rec.r"
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
+#include "osc_expr_parser.h"
 
 
 // don't fuck with these!
@@ -76,8 +77,8 @@ int osc_expr_or(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result);
 int osc_expr_mod(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result);
 
 int osc_expr_assign(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_plus1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_minus1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_add1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_subtract1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_assign_to_index(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_product(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -172,215 +173,415 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
+// records for operators
+#define OSC_EXPR_REC_ADD {"+",\
+	 "/result = $1 + $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/string/operator", NULL},\
+	 "Add",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_add,\
+	 '+'}
+#define OSC_EXPR_REC_SUB {"-",\
+	 "/result = $1 - $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/string/operator", NULL},\
+	 "Subtract",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_subtract,\
+	 '-'}
+#define OSC_EXPR_REC_MUL {"*",\
+	 "/result = $1 * $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", NULL},\
+	 "Multiply",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_multiply,\
+	 '*'}
+#define OSC_EXPR_REC_DIV {"/",\
+	 "/result = $1 / $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", NULL},\
+	 "Divide",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_divide,\
+	 '/'}
+#define OSC_EXPR_REC_LT {"<",\
+	 "/result = $1 < $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Less than",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_lt,\
+	 '<'}
+#define OSC_EXPR_REC_LE {"<=",\
+	 "/result = $1 <= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Less than or equal to",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_lte,\
+	 OSC_EXPR_LTE}
+#define OSC_EXPR_REC_GT {">",\
+	 "/result = $1 > $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Greater than",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_gt,\
+	 '>'}
+#define OSC_EXPR_REC_GE {">=",\
+	 "/result = $1 >= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Greater than or equal to",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_gte,\
+	 OSC_EXPR_GTE}
+#define OSC_EXPR_REC_EQ {"==",\
+	 "/result = $1 == $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Equal",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_eq,\
+	 OSC_EXPR_EQ}
+#define OSC_EXPR_REC_NEQ {"!=",\
+	 "/result = $1 != $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", "/string/operator", NULL},\
+	 "Not equal",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_neq,\
+	 OSC_EXPR_NEQ}
+#define OSC_EXPR_REC_AND {"&&",\
+	 "/result = $1 && $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/logical", NULL},\
+	 "Logical and",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_and,\
+	 OSC_EXPR_AND}
+#define OSC_EXPR_REC_OR {"||",\
+	 "/result = $1 || $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/logical", NULL},\
+	 "Logical or",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_or,\
+	 OSC_EXPR_OR}
+#define OSC_EXPR_REC_MOD {"%",\
+	 "/result = $1 % $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", NULL},\
+	 "Modulo",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_mod,\
+	 '%'}
+#define OSC_EXPR_REC_POW {"^",\
+	 "/result = $1 ^ $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", NULL},\
+	 "Power",\
+	 osc_expr_2arg_dbl_dbl,\
+	 (void *)pow,\
+	 '^'}
+#define OSC_EXPR_REC_ASSIGN {"=",\
+	 "/result = $1",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/assignment", NULL},\
+	 "Assignment",\
+	 osc_expr_assign,\
+	 NULL,\
+	 '='}
+#define OSC_EXPR_REC_NOT {"!",\
+	 "/result = !$1",\
+	 1,\
+	 0,\
+	 (char *[]){"argument"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/logical", NULL},\
+	 "Logical not",\
+	 osc_expr_not,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_ADD1 {"++",\
+	 "/result = $1++",\
+	 1,\
+	 0,\
+	 (char *[]){"argument to be incremented"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Increment",\
+	 osc_expr_add1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_SUBTRACT1 {"--",\
+	 "/result = $1--",\
+	 1,\
+	 0,\
+	 (char *[]){"argument to be decremented"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Decrement",\
+	 osc_expr_subtract1,\
+	 NULL,\
+	 0}
+
+// records for operators
+t_osc_expr_rec osc_expr_rec_add = OSC_EXPR_REC_ADD;
+t_osc_expr_rec osc_expr_rec_sub = OSC_EXPR_REC_SUB;
+t_osc_expr_rec osc_expr_rec_mul = OSC_EXPR_REC_MUL;
+t_osc_expr_rec osc_expr_rec_div = OSC_EXPR_REC_DIV;
+t_osc_expr_rec osc_expr_rec_lt = OSC_EXPR_REC_LT;
+t_osc_expr_rec osc_expr_rec_le = OSC_EXPR_REC_LE;
+t_osc_expr_rec osc_expr_rec_gt = OSC_EXPR_REC_GT;
+t_osc_expr_rec osc_expr_rec_ge = OSC_EXPR_REC_GE;
+t_osc_expr_rec osc_expr_rec_eq = OSC_EXPR_REC_EQ;
+t_osc_expr_rec osc_expr_rec_neq = OSC_EXPR_REC_NEQ;
+t_osc_expr_rec osc_expr_rec_and = OSC_EXPR_REC_AND;
+t_osc_expr_rec osc_expr_rec_or = OSC_EXPR_REC_OR;
+t_osc_expr_rec osc_expr_rec_mod = OSC_EXPR_REC_MOD;
+t_osc_expr_rec osc_expr_rec_pow = OSC_EXPR_REC_POW;
+t_osc_expr_rec osc_expr_rec_assign = OSC_EXPR_REC_ASSIGN;
+t_osc_expr_rec osc_expr_rec_not = OSC_EXPR_REC_NOT;
+t_osc_expr_rec osc_expr_rec_add1 = OSC_EXPR_REC_ADD1;
+t_osc_expr_rec osc_expr_rec_subtract1 = OSC_EXPR_REC_SUBTRACT1;
+
+// this array can be indexed by either the ascii char of an operator,
+// or in the case of multi character operators such as <=, by the 
+// token defined in osc_expr_parser.y
+t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
+	NULL	,
+	&osc_expr_rec_eq	,
+	&osc_expr_rec_neq	,
+	&osc_expr_rec_le	,
+	&osc_expr_rec_ge	,
+	&osc_expr_rec_add1	,
+	&osc_expr_rec_subtract1	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_not	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_mod	,
+	&osc_expr_rec_and	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_mul	,
+	&osc_expr_rec_add	,
+	NULL	,
+	&osc_expr_rec_sub	,
+	NULL	,
+	&osc_expr_rec_div	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_lt	,
+	&osc_expr_rec_assign	,
+	&osc_expr_rec_gt	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_pow	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	&osc_expr_rec_or	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+};
+
+// this is the full list of all builtin functions, in no particular order
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	// infix
-	{"+",
-	 "/result = $1 + $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/string/operator", NULL},
-	 "Add",
-	 osc_expr_2arg,
-	 (void *)osc_expr_add},
-	//////////////////////////////////////////////////
-	{"-",
-	 "/result = $1 - $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/string/operator", NULL},
-	 "Subtract",
-	 osc_expr_2arg,
-	 (void *)osc_expr_subtract},
-	//////////////////////////////////////////////////
-	{"*",
-	 "/result = $1 * $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", NULL},
-	 "Multiply",
-	 osc_expr_2arg,
-	 (void *)osc_expr_multiply},
-	//////////////////////////////////////////////////
-	{"/",
-	 "/result = $1 / $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", NULL},
-	 "Divide",
-	 osc_expr_2arg,
-	 (void *)osc_expr_divide},
-	//////////////////////////////////////////////////
-	{"<",
-	 "/result = $1 < $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Less than",
-	 osc_expr_2arg,
-	 (void *)osc_expr_lt},
-	//////////////////////////////////////////////////
-	{"<=",
-	 "/result = $1 <= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Less than or equal to",
-	 osc_expr_2arg,
-	 (void *)osc_expr_lte},
-	//////////////////////////////////////////////////
-	{">",
-	 "/result = $1 > $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Greater than",
-	 osc_expr_2arg,
-	 (void *)osc_expr_gt},
-	//////////////////////////////////////////////////
-	{">=",
-	 "/result = $1 >= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Greater than or equal to",
-	 osc_expr_2arg,
-	 (void *)osc_expr_gte},
-	//////////////////////////////////////////////////
-	{"==",
-	 "/result = $1 == $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Equal",
-	 osc_expr_2arg,
-	 (void *)osc_expr_eq},
-	//////////////////////////////////////////////////
-	{"!=",
-	 "/result = $1 != $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
-	 "Not equal",
-	 osc_expr_2arg,
-	 (void *)osc_expr_neq},
-	//////////////////////////////////////////////////
-	{"&&",
-	 "/result = $1 && $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/logical", NULL},
-	 "Logical and",
-	 osc_expr_2arg,
-	 (void *)osc_expr_and},
-	//////////////////////////////////////////////////
-	{"||",
-	 "/result = $1 || $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/logical", NULL},
-	 "Logical or",
-	 osc_expr_2arg,
-	 (void *)osc_expr_or},
-	//////////////////////////////////////////////////
-	{"%",
-	 "/result = $1 % $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", NULL},
-	 "Modulo",
-	 osc_expr_2arg,
-	 (void *)osc_expr_mod},
-	//////////////////////////////////////////////////
-	{"=",
-	 "/result = $1",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/assignment", NULL},
-	 "Assignment",
-	 osc_expr_assign,
-	 NULL},
-	//////////////////////////////////////////////////
-	{"++",
-	 "/result = $1++",
-	 1,
-	 0,
-	 (char *[]){"argument to be incremented"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Increment",
-	 osc_expr_plus1,
-	 NULL},
-	//////////////////////////////////////////////////
-	{"--",
-	 "/result = $1--",
-	 1,
-	 0,
-	 (char *[]){"argument to be decremented"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Decrement",
-	 osc_expr_minus1,
-	 NULL},
+	OSC_EXPR_REC_ADD,
+	OSC_EXPR_REC_SUB,
+	OSC_EXPR_REC_MUL,
+	OSC_EXPR_REC_DIV,
+	OSC_EXPR_REC_LT,
+	OSC_EXPR_REC_LE,
+	OSC_EXPR_REC_GT,
+	OSC_EXPR_REC_GE,
+	OSC_EXPR_REC_EQ,
+	OSC_EXPR_REC_NEQ,
+	OSC_EXPR_REC_AND,
+	OSC_EXPR_REC_OR,
+	OSC_EXPR_REC_MOD,
+	OSC_EXPR_REC_POW,
+	OSC_EXPR_REC_ASSIGN,
+	OSC_EXPR_REC_NOT,
 	//////////////////////////////////////////////////
 	{"+=",
 	 "/result = $1 += $2",
@@ -393,7 +594,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
 	 "Add and assign",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_add,
+	 0},
 	//////////////////////////////////////////////////
 	{"-=",
 	 "/result = $1 -= $2",
@@ -406,7 +608,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
 	 "Subtract and assign",
 	 osc_expr_2arg,
-	 (void *)osc_expr_subtract},
+	 (void *)osc_expr_subtract,
+	 0},
 	//////////////////////////////////////////////////
 	{"*=",
 	 "/result = $1 *= $2",
@@ -419,7 +622,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
 	 "Multiply and assign",
 	 osc_expr_2arg,
-	 (void *)osc_expr_multiply},
+	 (void *)osc_expr_multiply,
+	 0},
 	//////////////////////////////////////////////////
 	{"/=",
 	 "/result = $1 /= $2",
@@ -432,7 +636,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
 	 "Divide and assign",
 	 osc_expr_2arg,
-	 (void *)osc_expr_divide},
+	 (void *)osc_expr_divide,
+	 0},
 	//////////////////////////////////////////////////
 	{"%=",
 	 "/result = $1 %= $2",
@@ -445,7 +650,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
 	 "Modulo and assign",
 	 osc_expr_2arg,
-	 (void *)osc_expr_mod},
+	 (void *)osc_expr_mod,
+	 0},
 	//////////////////////////////////////////////////
 	{"??",
 	 "/result = $1 ?? $2",
@@ -458,7 +664,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/relational", NULL},
 	 "Null coalescing operator, returns the left operand if it exists, otherwise it returns the right.",
 	 NULL,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING,
 	 "/bundle"OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING"/member",
@@ -471,7 +678,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Extract a message from a nested bundle.",
 	 osc_expr_getbundlemember,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	// functional equivalents of operators
 	//////////////////////////////////////////////////
@@ -486,7 +694,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Add",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_add,
+	 0},
 	//////////////////////////////////////////////////
 	{"sub",
 	 "/result = sub($1, $2)",
@@ -499,7 +708,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Subtract",
 	 osc_expr_2arg,
-	 (void *)osc_expr_subtract},
+	 (void *)osc_expr_subtract,
+	 0},
 	//////////////////////////////////////////////////
 	{"mul",
 	 "/result = mul($1, $2)",
@@ -512,7 +722,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Multiply",
 	 osc_expr_2arg,
-	 (void *)osc_expr_multiply},
+	 (void *)osc_expr_multiply,
+	 0},
 	//////////////////////////////////////////////////
 	{"div",
 	 "/result = div($1, $2)",
@@ -525,7 +736,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Add",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_divide,
+	 0},
 	//////////////////////////////////////////////////
 	{"lt",
 	 "/result = lt($1, $2)",
@@ -538,10 +750,11 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Less than",
 	 osc_expr_2arg,
-	 (void *)osc_expr_lt},
+	 (void *)osc_expr_lt,
+	 0},
 	//////////////////////////////////////////////////
 	{"le",
-	 "/result = lte($1, $2)",
+	 "/result = le($1, $2)",
 	 2,
 	 0,
 	 (char *[]){"arg 1", "arg 2"},
@@ -551,7 +764,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Less than or equal",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_lte,
+	 0},
 	//////////////////////////////////////////////////
 	{"gt",
 	 "/result = gt($1, $2)",
@@ -564,7 +778,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Greater than",
 	 osc_expr_2arg,
-	 (void *)osc_expr_gt},
+	 (void *)osc_expr_gt,
+	 0},
 	//////////////////////////////////////////////////
 	{"ge",
 	 "/result = ge($1, $2)",
@@ -577,7 +792,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Greater than or equal",
 	 osc_expr_2arg,
-	 (void *)osc_expr_gte},
+	 (void *)osc_expr_gte,
+	 0},
 	//////////////////////////////////////////////////
 	{"eq",
 	 "/result = eq($1, $2)",
@@ -590,7 +806,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Equality",
 	 osc_expr_2arg,
-	 (void *)osc_expr_eq},
+	 (void *)osc_expr_eq,
+	 0},
 	//////////////////////////////////////////////////
 	{"ne",
 	 "/result = ne($1, $2)",
@@ -603,7 +820,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Not equal",
 	 osc_expr_2arg,
-	 (void *)osc_expr_neq},
+	 (void *)osc_expr_neq,
+	 0},
 	//////////////////////////////////////////////////
 	{"and",
 	 "/result = and($1, $2)",
@@ -616,7 +834,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Logical and",
 	 osc_expr_2arg,
-	 (void *)osc_expr_and},
+	 (void *)osc_expr_and,
+	 0},
 	//////////////////////////////////////////////////
 	{"or",
 	 "/result = or($1, $2)",
@@ -629,7 +848,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Logical or",
 	 osc_expr_2arg,
-	 (void *)osc_expr_or},
+	 (void *)osc_expr_or,
+	 0},
 	//////////////////////////////////////////////////
 	{"mod",
 	 "/result = mod($1, $2)",
@@ -642,7 +862,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Modulo",
 	 osc_expr_2arg,
-	 (void *)osc_expr_mod},
+	 (void *)osc_expr_mod,
+	 0},
 	//////////////////////////////////////////////////
 	{"assign",
 	 "assign(/result, $2)",
@@ -655,10 +876,11 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Assignment",
 	 osc_expr_assign,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
-	{"plus1",
-	 "/result = plus1($1)",
+	{"add1",
+	 "/result = add1($1)",
 	 1,
 	 0,
 	 (char *[]){"arg"},
@@ -667,11 +889,12 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Add one and return the result without altering the argument",
-	 osc_expr_plus1,
-	 NULL},
+	 osc_expr_add1,
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
-	{"minus1",
-	 "/result = minus1($1)",
+	{"subtract1",
+	 "/result = subtract1($1)",
 	 1,
 	 0,
 	 (char *[]){"arg"},
@@ -680,8 +903,9 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Subtract one and return the result without altering the argument.",
-	 osc_expr_minus1,
-	 NULL},
+	 osc_expr_subtract1,
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	// most of math.h
 	//////////////////////////////////////////////////
@@ -696,7 +920,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Absolute value",
 	 osc_expr_1arg_dbl,
-	 (void *)fabs},
+	 (void *)fabs,
+	 0},
 	//////////////////////////////////////////////////
 	{"acos",
 	 "/result = acos($1)",
@@ -709,7 +934,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Arc cosine",
 	 osc_expr_1arg_dbl,
-	 (void *)acos},
+	 (void *)acos,
+	 0},
 	//////////////////////////////////////////////////
 	{"asin",
 	 "/result = asin($1)",
@@ -722,7 +948,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Arc sine",
 	 osc_expr_1arg_dbl,
-	 (void *)asin},
+	 (void *)asin,
+	 0},
 	//////////////////////////////////////////////////
 	{"atan",
 	 "/result = atan($1)",
@@ -735,7 +962,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Arc tangent",
 	 osc_expr_1arg_dbl,
-	 (void *)atan},
+	 (void *)atan,
+	 0},
 	//////////////////////////////////////////////////
 	{"atan2",
 	 "/result = atan2($1, $2)",
@@ -748,7 +976,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Arc tangent of y/x (arg1/arg2)",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)atan2},
+	 (void *)atan2,
+	 0},
 	//////////////////////////////////////////////////
 	{"ceil",
 	 "/result = ceil($1)",
@@ -761,7 +990,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Ceiling--round up to the nearest integer",
 	 osc_expr_1arg_dbl,
-	 (void *)ceil},
+	 (void *)ceil,
+	 0},
 	//////////////////////////////////////////////////
 	{"cos",
 	 "/result = cos($1)",
@@ -774,7 +1004,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Cosine",
 	 osc_expr_1arg_dbl,
-	 (void *)cos},
+	 (void *)cos,
+	 0},
 	//////////////////////////////////////////////////
 	{"cosh",
 	 "/result = cosh($1)",
@@ -787,7 +1018,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Hyperbolic cosine",
 	 osc_expr_1arg_dbl,
-	 (void *)cosh},
+	 (void *)cosh,
+	 0},
 	//////////////////////////////////////////////////
 	{"exp",
 	 "/result = exp($1)",
@@ -800,7 +1032,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Exponential function",
 	 osc_expr_1arg_dbl,
-	 (void *)exp},
+	 (void *)exp,
+	 0},
 	//////////////////////////////////////////////////
 	{"floor",
 	 "/result = floor($1)",
@@ -813,7 +1046,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Round down to the nearest integer",
 	 osc_expr_1arg_dbl,
-	 (void *)floor},
+	 (void *)floor,
+	 0},
 	//////////////////////////////////////////////////
 	{"fmod",
 	 "/result = fmod($1, $2)",
@@ -826,7 +1060,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Floating-point remainder",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)fmod},
+	 (void *)fmod,
+	 0},
 	//////////////////////////////////////////////////
 	{"log",
 	 "/result = log($1)",
@@ -839,7 +1074,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Natural logarithm",
 	 osc_expr_1arg_dbl,
-	 (void *)log},
+	 (void *)log,
+	 0},
 	//////////////////////////////////////////////////
 	{"log10",
 	 "/result = log10($1)",
@@ -852,7 +1088,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Base 10 logarithm",
 	 osc_expr_1arg_dbl,
-	 (void *)log10},
+	 (void *)log10,
+	 0},
 	//////////////////////////////////////////////////
 	{"pow",
 	 "/result = pow($1, $2)",
@@ -865,7 +1102,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Power",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)pow},
+	 (void *)pow,
+	 0},
 	//////////////////////////////////////////////////
 	{"sin",
 	 "/result = sin($1)",
@@ -878,7 +1116,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Sine",
 	 osc_expr_1arg_dbl,
-	 (void *)sin},
+	 (void *)sin,
+	 0},
 	//////////////////////////////////////////////////
 	{"sinh",
 	 "/result = sinh($1)",
@@ -891,7 +1130,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Hyperbolic sine",
 	 osc_expr_1arg_dbl,
-	 (void *)sinh},
+	 (void *)sinh,
+	 0},
 	//////////////////////////////////////////////////
 	{"sqrt",
 	 "/result = sqrt($1)",
@@ -904,7 +1144,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Square root",
 	 osc_expr_1arg_dbl,
-	 (void *)sqrt},
+	 (void *)sqrt,
+	 0},
 	//////////////////////////////////////////////////
 	{"tan",
 	 "/result = tan($1)",
@@ -917,7 +1158,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Tangent",
 	 osc_expr_1arg_dbl,
-	 (void *)tan},
+	 (void *)tan,
+	 0},
 	//////////////////////////////////////////////////
 	{"tanh",
 	 "/result = tanh($1)",
@@ -930,7 +1172,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Hyperbolic tangent",
 	 osc_expr_1arg_dbl,
-	 (void *)tanh},
+	 (void *)tanh,
+	 0},
 	//////////////////////////////////////////////////
 	{"erf",
 	 "/result = erf($1)",
@@ -943,7 +1186,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Error function (see http://pubs.opengroup.org/onlinepubs/007908799/xsh/erf.html)",
 	 osc_expr_1arg_dbl,
-	 (void *)erf},
+	 (void *)erf,
+	 0},
 	//////////////////////////////////////////////////
 	{"erfc",
 	 "/result = erfc($1)",
@@ -956,7 +1200,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Complementary error function (see http://pubs.opengroup.org/onlinepubs/007908799/xsh/erf.html)",
 	 osc_expr_1arg_dbl,
-	 (void *)erfc},
+	 (void *)erfc,
+	 0},
 	//////////////////////////////////////////////////
 	{"gamma",
 	 "/result = gamma($1)",
@@ -969,7 +1214,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Log gamma function (same as \"lgamma\")", 
 	 osc_expr_1arg_dbl,
-	 (void *)lgamma},
+	 (void *)lgamma,
+	 0},
 	//////////////////////////////////////////////////
 	{"hypot",
 	 "/result = hypot($1, $2)",
@@ -982,7 +1228,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Euclidean distance",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)hypot},
+	 (void *)hypot,
+	 0},
 	//////////////////////////////////////////////////
 	{"j0",
 	 "/result = j0($1)",
@@ -995,7 +1242,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "0th Bessel function of the first kind",
 	 osc_expr_1arg_dbl,
-	 (void *)j0},
+	 (void *)j0,
+	 0},
 	//////////////////////////////////////////////////
 	{"j1",
 	 "/result = j1($1)",
@@ -1008,7 +1256,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "1st Bessel function of the first kind",
 	 osc_expr_1arg_dbl,
-	 (void *)j1},
+	 (void *)j1,
+	 0},
 	//////////////////////////////////////////////////
 	{"jn",
 	 "/result = jn($1, $2)",
@@ -1021,7 +1270,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "nth Bessel function of the first kind",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)jn},
+	 (void *)jn,
+	 0},
 	//////////////////////////////////////////////////
 	{"lgamma",
 	 "/result = lgamma($1)",
@@ -1034,7 +1284,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Log gamma function (same as \"gamma\")",
 	 osc_expr_1arg_dbl,
-	 (void *)lgamma},
+	 (void *)lgamma,
+	 0},
 	//////////////////////////////////////////////////
 	{"y0",
 	 "/result = y0($1)",
@@ -1047,7 +1298,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "0th Bessel function of the second kind",
 	 osc_expr_1arg_dbl,
-	 (void *)y0},
+	 (void *)y0,
+	 0},
 	//////////////////////////////////////////////////
 	{"y1",
 	 "/result = y1($1)",
@@ -1060,7 +1312,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "1st Bessel function of the second kind",
 	 osc_expr_1arg_dbl,
-	 (void *)y1},
+	 (void *)y1,
+	 0},
 	//////////////////////////////////////////////////
 	{"yn",
 	 "/result = yn($1, $2)",
@@ -1073,7 +1326,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "nth Bessel function of the second kind",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)yn},
+	 (void *)yn,
+	 0},
 	//////////////////////////////////////////////////
 	{"acosh",
 	 "/result = acosh($1)",
@@ -1086,7 +1340,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Inverse hyperbolic cosine",
 	 osc_expr_1arg_dbl,
-	 (void *)acosh},
+	 (void *)acosh,
+	 0},
 	//////////////////////////////////////////////////
 	{"asinh",
 	 "/result = asinh($1)",
@@ -1099,7 +1354,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Inverse hyperbolic sine",
 	 osc_expr_1arg_dbl,
-	 (void *)asinh},
+	 (void *)asinh,
+	 0},
 	//////////////////////////////////////////////////
 	{"atanh",
 	 "/result = atanh($1)",
@@ -1112,7 +1368,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/trigonometric", NULL},
 	 "Inverse hyperbolic tangent",
 	 osc_expr_1arg_dbl,
-	 (void *)atanh},
+	 (void *)atanh,
+	 0},
 	//////////////////////////////////////////////////
 	{"cbrt",
 	 "/result = cbrt($1)",
@@ -1125,7 +1382,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Cube root",
 	 osc_expr_1arg_dbl,
-	 (void *)cbrt},
+	 (void *)cbrt,
+	 0},
 	//////////////////////////////////////////////////
 	{"expm1",
 	 "/result = expm1($1)",
@@ -1138,7 +1396,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Exponential function (e^x - 1)",
 	 osc_expr_1arg_dbl,
-	 (void *)expm1},
+	 (void *)expm1,
+	 0},
 	//////////////////////////////////////////////////
 	{"ilogb",
 	 "/result = ilogb($1)",
@@ -1151,7 +1410,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Unbiased exponent",
 	 osc_expr_1arg_dbl,
-	 (void *)ilogb},
+	 (void *)ilogb,
+	 0},
 	//////////////////////////////////////////////////
 	{"logb",
 	 "/result = logb($1)",
@@ -1164,7 +1424,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/power", NULL},
 	 "Radix-independent exponent",
 	 osc_expr_1arg_dbl,
-	 (void *)logb},
+	 (void *)logb,
+	 0},
 	//////////////////////////////////////////////////
 	{"nextafter",
 	 "/result = nextafter($1)",
@@ -1177,7 +1438,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "Next representable double-precision floating-point number",
 	 osc_expr_1arg_dbl,
-	 (void *)nextafter},
+	 (void *)nextafter,
+	 0},
 	//////////////////////////////////////////////////
 	{"remainder",
 	 "/result = remainder($1, $2)",
@@ -1190,7 +1452,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Remainder function (r = x - ny where y is non-zero and n is the integral value nearest x/y)",
 	 osc_expr_2arg_dbl_dbl,
-	 (void *)remainder},
+	 (void *)remainder,
+	 0},
 	//////////////////////////////////////////////////
 	{"round",
 	 "/result = round($1)",
@@ -1203,7 +1466,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Round to nearest integral value",
 	 osc_expr_1arg_dbl,
-	 (void *)round},
+	 (void *)round,
+	 0},
 	//////////////////////////////////////////////////
 	{"mod",
 	 "/result = mod($1, $2)",
@@ -1216,7 +1480,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Modulo",
 	 osc_expr_2arg,
-	 (void *)osc_expr_mod},
+	 (void *)osc_expr_mod,
+	 0},
 	//////////////////////////////////////////////////
 	{"nth",
 	 "/result = nth($1, $2)",
@@ -1229,7 +1494,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Get an element of a list (same as [[ ]])",
 	 osc_expr_nth,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"assign_to_index",
 	 "/result = assign_to_index($1, $2, $3)",
@@ -1242,7 +1508,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Assign <arg3> to the indexes <arg2> of the address <arg1>",
 	 osc_expr_assign_to_index,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"product",
 	 "/result = product($1)",
@@ -1255,7 +1522,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Product of all the elements of a list",
 	 osc_expr_product,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"sum",
 	 "/result = sum($1)",
@@ -1268,7 +1536,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Sum all the elements of a list",
 	 osc_expr_sum,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"cumsum",
 	 "/result = cumsum($1)",
@@ -1281,7 +1550,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Cumulative sum",
 	 osc_expr_cumsum,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"length",
 	 "/result = length($1)",
@@ -1294,7 +1564,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Get the length of a list",
 	 osc_expr_length,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"avg",
 	 "/result = avg($1)",
@@ -1307,7 +1578,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "The average of a list (same as mean)",
 	 osc_expr_mean,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"mean",
 	 "/result = mean($1)",
@@ -1320,7 +1592,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "The average of a list (same as avg)",
 	 osc_expr_mean,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"median",
 	 "/result = median($1)",
@@ -1333,7 +1606,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Median of a list of values",
 	 osc_expr_median,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"reverse",
 	 "/result = reverse($1)",
@@ -1346,7 +1620,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Reverse the order of the elements of a list",
 	 osc_expr_reverse,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"rev",
 	 "/result = rev($1)",
@@ -1359,7 +1634,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Reverse the order of the elements of a list",
 	 osc_expr_reverse,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"sort",
 	 "/result = sort($1)",
@@ -1372,7 +1648,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Sort the elements of a list",
 	 osc_expr_sort,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"list",
 	 "/result = list($1, $2)",
@@ -1385,7 +1662,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Assemble the arguments into a list.",
 	 osc_expr_list,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"nfill",
 	 "/result = nfill($1, $2)",
@@ -1398,7 +1676,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Make a list of <arg1> copies of <arg2>.  <arg2> is optional and defaults to 0",
 	 osc_expr_nfill,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"aseq",
 	 "/result = aseq($1, $2, $3)",
@@ -1411,7 +1690,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Arithmetic progression from <arg1> to <arg2> in <arg3> steps.  <arg3> is optional and defaults to 1",
 	 osc_expr_aseq,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"interleave",
 	 "/result = interleave($1, $2)",
@@ -1424,7 +1704,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Interleave two or more lists",
 	 osc_expr_interleave,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"first",
 	 "/result = first($1)",
@@ -1437,7 +1718,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Get the first element of a list.",
 	 osc_expr_first,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"last",
 	 "/result = last($1)",
@@ -1450,7 +1732,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Get the last element of a list.",
 	 osc_expr_last,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"rest",
 	 "/result = rest($1)",
@@ -1463,7 +1746,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Get everything after the first element of a list.",
 	 osc_expr_rest,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"butlast",
 	 "/result = butlast($1)",
@@ -1476,20 +1760,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Get everything but the last element of a list.",
 	 osc_expr_butlast,
-	 NULL},
-	//////////////////////////////////////////////////
-	{"!",
-	 "/result = !$1",
-	 1,
-	 0,
-	 (char *[]){"argument"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/logical", NULL},
-	 "Logical not",
-	 osc_expr_not,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"dot",
 	 "/result = dot($1, $2)",
@@ -1502,7 +1774,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Dot product of arg1 and arg2",
 	 osc_expr_dot,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"cross",
 	 "/result = cross($1, $2)",
@@ -1515,7 +1788,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Cross product of arg1 and arg2",
 	 osc_expr_cross,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"det",
 	 "/result = det($1, $2)",
@@ -1528,7 +1802,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Determinant of a square matrix represented as a list of rows (det(row1, row2, ..., rowN))",
 	 osc_expr_det,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"l2norm",
 	 "/result = l2norm($1)",
@@ -1541,7 +1816,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Norm of the argument",
 	 osc_expr_l2norm,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"min",
 	 "/result = min($1)",
@@ -1554,7 +1830,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Minimum value of the arguments",
 	 osc_expr_min,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"max",
 	 "/result = max($1)",
@@ -1567,7 +1844,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Maximum value of the arguments",
 	 osc_expr_max,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"range",
 	 "/result = range($1)",
@@ -1580,7 +1858,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Range of the arguments",
 	 osc_expr_extrema,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"extrema",
 	 "/result = extrema($1)",
@@ -1593,7 +1872,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/statistics", NULL},
 	 "Min and max of the arguments",
 	 osc_expr_extrema,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"clip",
 	 "/result = clip($1, $2, $3)",
@@ -1606,7 +1886,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/conversion", NULL},
 	 "Clip the data between arg2 and arg3",
 	 osc_expr_clip,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"scale",
 	 "/result = scale($1, $2, $3, $4, $5)",
@@ -1619,7 +1900,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/conversion", NULL},
 	 "Scale arg1 from arg1:arg2 to arg3:arg4",
 	 osc_expr_scale,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"mtof",
 	 "/result = mtof($1)",
@@ -1632,7 +1914,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/conversion", NULL},
 	 "MIDI note number to frequency.  Optional arg2 sets base.",
 	 osc_expr_mtof,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"ftom",
 	 "/result = ftom($1)",
@@ -1645,7 +1928,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/conversion", NULL},
 	 "Frequency to MIDI. Optional arg2 sets base.",
 	 osc_expr_ftom,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"sign",
 	 "/result = sign($1)",
@@ -1658,7 +1942,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Sign function--returns -1 if <arg1> < 0, 0 if <arg1> == 0, and 1 if <arg1> > 1",
 	 osc_expr_sign,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"if",
 	 "/result = if($1, $2, $3)",
@@ -1671,7 +1956,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/conditional", NULL},
 	 "Conditionally execute <arg2> or optional <arg3> based on the result of <arg1>",
 	 osc_expr_if,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"strcmp",
 	 "/result = strcmp($1, $2)",
@@ -1684,7 +1970,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/string/function", NULL},
 	 "Compare two strings.",
 	 osc_expr_strcmp,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"split",
 	 "/result = split(\"/\", $1)",
@@ -1697,7 +1984,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/string/function", NULL},
 	 "Split a string at a separator.",
 	 osc_expr_split,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"join",
 	 "/result = join(\"/\", $1)",
@@ -1710,7 +1998,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/string/function", NULL},
 	 "Join multiple strings with a separator.",
 	 osc_expr_join,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"bound",
 	 "/result = bound($1)",
@@ -1723,7 +2012,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/predicate", NULL},
 	 "True if the address exists and has data bound to it, false otherwise.",
 	 osc_expr_bound,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"exists",
 	 "/result = exists($1)",
@@ -1736,7 +2026,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/predicate", NULL},
 	 "True if the address exists (regardless of whether it has data bound to it.",
 	 osc_expr_exists,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"emptybundle",
 	 "/result = emptybundle()",
@@ -1749,7 +2040,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/predicate", NULL},
 	 "True if the bundle is empty, false otherwise.",
 	 osc_expr_emptybundle,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"getaddresses",
 	 "/result = getaddresses()",
@@ -1762,7 +2054,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Returns a list of all addresses in the bundle.",
 	 osc_expr_getaddresses,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"delete",
 	 "/result = delete($1)",
@@ -1775,7 +2068,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Remove the message with the corresponding address from the bundle.",
 	 osc_expr_delete,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"getmsgcount",
 	 "/result = getmsgcount()",
@@ -1788,7 +2082,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Returns the number of messages in the bundle.",
 	 osc_expr_getmsgcount,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"identity",
 	 "/result = identity($1)",
@@ -1801,7 +2096,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Returns its argument",
 	 osc_expr_identity,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"eval",
 	 "/result = eval($1)",
@@ -1814,7 +2110,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Evaluate an expression bound to an OSC address.",
 	 osc_expr_eval_call,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"tokenize",
 	 "/result = tokenize($1)",
@@ -1827,7 +2124,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Tokenize an expression",
 	 osc_expr_tokenize,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"prog1",
 	 "/result = prog1($1)",
@@ -1840,7 +2138,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Execute a sequence of expressions and return the first one.",
 	 osc_expr_prog1,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"prog2",
 	 "/result = prog2($1)",
@@ -1853,7 +2152,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Execute a sequence of expressions and return the second one.",
 	 osc_expr_prog2,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"progn",
 	 "/result = progn($1)",
@@ -1866,7 +2166,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Execute a sequence of expressions and return the last one.",
 	 osc_expr_progn,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"apply",
 	 "/result = apply($1, $2)",
@@ -1879,7 +2180,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Apply a function to arguments.",
 	 osc_expr_apply,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"map",
 	 "/result = map($1, $2)",
@@ -1892,7 +2194,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Map arguments onto a function and return the result as a list.",
 	 osc_expr_map,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"lreduce",
 	 "/result = reduce($1, $2)",
@@ -1905,7 +2208,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Combine the elements of a list using a left-associative binary operation.",
 	 osc_expr_lreduce,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"rreduce",
 	 "/result = reduce($1, $2)",
@@ -1918,7 +2222,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Combine the elements of a list using a right-associative binary operation.",
 	 osc_expr_rreduce,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"quote",
 	 "/result = quote($1)",
@@ -1931,7 +2236,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Prevent the evaluation of <arg1>.",
 	 osc_expr_quote,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"value",
 	 "/result = value($1)",
@@ -1944,7 +2250,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Return the value associated with the argument.",
 	 osc_expr_value,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"lambda",
 	 "",
@@ -1957,7 +2264,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Anonymous function",
 	 osc_expr_lambda,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"gettimetag",
 	 "/timetag = gettimetag()",
@@ -1970,7 +2278,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Get the timetag from the OSC bundle header.",
 	 osc_expr_gettimetag,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"settimetag",
 	 "settimetag(/time)",
@@ -1983,7 +2292,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Put a timetag in the header of the OSC bundle.",
 	 osc_expr_settimetag,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"getbundlemember",
 	 "getbundlemember(/bundle, /member)",
@@ -1996,7 +2306,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Extract a message from a nested bundle.",
 	 osc_expr_getbundlemember,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"pi",
 	 "/result = pi()",
@@ -2009,7 +2320,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "pi: 3.14159...",
 	 osc_expr_pi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"twopi",
 	 "/result = twopi()",
@@ -2022,7 +2334,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "2 * pi: 6.28318...",
 	 osc_expr_twopi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"halfpi",
 	 "/result = halfpi()",
@@ -2035,7 +2348,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "pi / 2: 1.57079...",
 	 osc_expr_halfpi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"quarterpi",
 	 "/result = quarterpi()",
@@ -2048,7 +2362,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "pi / 4: 0.78539...",
 	 osc_expr_quarterpi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"oneoverpi",
 	 "/result = oneoverpi()",
@@ -2061,7 +2376,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "1 / pi: 0.31830...",
 	 osc_expr_oneoverpi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"twooverpi",
 	 "/result = twooverpi()",
@@ -2074,7 +2390,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "2 / pi: 0.63661...",
 	 osc_expr_twooverpi,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"degtorad",
 	 "/result = degtorad()",
@@ -2087,7 +2404,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "Multiply by angle to get radians (0.017453...)",
 	 osc_expr_degtorad,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"radtodeg",
 	 "/result = radtodeg()",
@@ -2100,7 +2418,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "Multiply by angle in radians to get degrees (57.29578...)",
 	 osc_expr_radtodeg,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"e",
 	 "/result = e()",
@@ -2113,7 +2432,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "e: 2.718282...",
 	 osc_expr_e,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"lntwo",
 	 "/result = lntwo()",
@@ -2126,7 +2446,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "ln 2: 0.69314...",
 	 osc_expr_lntwo,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"lnten",
 	 "/result = lnten()",
@@ -2139,7 +2460,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "ln 10: 2.30258...",
 	 osc_expr_lnten,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"logtwoe",
 	 "/result = logtwoe()",
@@ -2152,7 +2474,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "log(2 * e): 1.44269...",
 	 osc_expr_logtwoe,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"logtene",
 	 "/result = logtene()",
@@ -2165,7 +2488,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "log(10 * e): 0.43420...",
 	 osc_expr_logtene,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"sqrttwo",
 	 "/result = sqrttwo()",
@@ -2178,7 +2502,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "sqrt(2): 1.41421...",
 	 osc_expr_sqrttwo,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"sqrthalf",
 	 "/result = sqrthalf()",
@@ -2191,7 +2516,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/constant", NULL},
 	 "sqrt(0.5): 0.70710...",
 	 osc_expr_sqrthalf,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"float32",
 	 "/result = float32($1)",
@@ -2204,7 +2530,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to float32",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_float32},
+	 (void *)osc_expr_explicitCast_float32,
+	 0},
 	//////////////////////////////////////////////////
 	{"float64",
 	 "/result = float64($1)",
@@ -2217,7 +2544,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to float64",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_float64},
+	 (void *)osc_expr_explicitCast_float64,
+	 0},
 	//////////////////////////////////////////////////
 	{"int8",
 	 "/result = int8($1)",
@@ -2230,7 +2558,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to int8",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_int8},
+	 (void *)osc_expr_explicitCast_int8,
+	 0},
 	//////////////////////////////////////////////////
 	{"char",
 	 "/result = char($1)",
@@ -2243,7 +2572,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to char (int8)",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_int8},
+	 (void *)osc_expr_explicitCast_int8,
+	 0},
 	//////////////////////////////////////////////////
 	{"int16",
 	 "/result = int16($1)",
@@ -2256,7 +2586,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to int16",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_int16},
+	 (void *)osc_expr_explicitCast_int16,
+	 0},
 	//////////////////////////////////////////////////
 	{"int32",
 	 "/result = int32($1)",
@@ -2269,7 +2600,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to int32",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_int32},
+	 (void *)osc_expr_explicitCast_int32,
+	 0},
 	//////////////////////////////////////////////////
 	{"int64",
 	 "/result = int64($1)",
@@ -2282,7 +2614,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to int64",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_int64},
+	 (void *)osc_expr_explicitCast_int64,
+	 0},
 	//////////////////////////////////////////////////
 	{"uint8",
 	 "/result = uint8($1)",
@@ -2295,7 +2628,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to uint8",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_uint8},
+	 (void *)osc_expr_explicitCast_uint8,
+	 0},
 	//////////////////////////////////////////////////
 	{"uint16",
 	 "/result = uint16($1)",
@@ -2308,7 +2642,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to uint16",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_uint16},
+	 (void *)osc_expr_explicitCast_uint16,
+	 0},
 	//////////////////////////////////////////////////
 	{"uint32",
 	 "/result = uint32($1)",
@@ -2321,7 +2656,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to uint32",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_uint32},
+	 (void *)osc_expr_explicitCast_uint32,
+	 0},
 	//////////////////////////////////////////////////
 	{"uint64",
 	 "/result = uint64($1)",
@@ -2334,7 +2670,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to uint64",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_uint64},
+	 (void *)osc_expr_explicitCast_uint64,
+	 0},
 	//////////////////////////////////////////////////
 	{"bool",
 	 "/result = bool($1)",
@@ -2347,7 +2684,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to bool",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_bool},
+	 (void *)osc_expr_explicitCast_bool,
+	 0},
 	//////////////////////////////////////////////////
 	{"string",
 	 "/result = string($1)",
@@ -2360,7 +2698,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast to string",
 	 osc_expr_explicitCast,
-	 (void *)osc_expr_explicitCast_string},
+	 (void *)osc_expr_explicitCast_string,
+	 0},
 	//////////////////////////////////////////////////
 	{"cast",
 	 "/result = cast($1, $2)",
@@ -2373,7 +2712,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Cast",
 	 osc_expr_explicitCast_dynamic,
-	 NULL},
+	 NULL,
+	 0},
 	//////////////////////////////////////////////////
 	{"typetags",
 	 "/result = typetags($1)",
@@ -2386,7 +2726,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Get the typetags associated with <arg1> as a list of int8s",
 	 osc_expr_typetags,
-	 NULL}
+	 NULL,
+	 0}
 
 };
 

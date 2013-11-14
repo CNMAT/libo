@@ -50,6 +50,7 @@ struct _osc_expr_rec{
 	char *docstring;
 	t_osc_expr_funcptr func;//int (*func)(t_osc_expr*, int, t_osc_atom_ar_u**, t_osc_atom_ar_u**); /**< Function pointer */
 	void *extra; /**< Extra field that can contain anything. */
+	uint8_t opcode;
 };
 
 #ifdef _cplusplus

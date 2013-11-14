@@ -28,7 +28,7 @@
 #include "osc_mem.h"
 #include "osc_expr.h"
 #include "osc_expr_func.h"
-//#include "osc_expr_privatedecls.h"
+#include "osc_expr_privatedecls.h"
 #include "osc_expr_rec.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_funcall.h"
@@ -41,6 +41,97 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      char **oscbndl,
 				      t_osc_atom_ar_u **out)
 {
+	//////////////////////////////////////////////////
+	// Special functions
+	//////////////////////////////////////////////////
+	t_osc_expr_ast_funcall *f = (t_osc_expr_ast_funcall *)ast;
+	t_osc_expr_funcptr ff = osc_expr_ast_funcall_getFunc(f);
+	if(!ff){
+		// wha?
+		return 1;
+	}
+
+	if(ff == osc_expr_apply){
+		return osc_expr_specFunc_apply(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_map){
+		return osc_expr_specFunc_map(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_lreduce || ff == osc_expr_rreduce){
+		return osc_expr_specFunc_reduce(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_assign){
+		return osc_expr_specFunc_assign(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_assign_to_index){
+		return osc_expr_specFunc_assigntoindex(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_if){
+		return osc_expr_specFunc_if(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_emptybundle){
+		return osc_expr_specFunc_emptybundle(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_bound){
+		return osc_expr_specFunc_bound(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_exists){
+		return osc_expr_specFunc_exists(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_getaddresses){
+		return osc_expr_specFunc_getaddresses(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_delete){
+		return osc_expr_specFunc_delete(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_getmsgcount){
+		return osc_expr_specFunc_getmsgcount(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_value){
+		return osc_expr_specFunc_value(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_quote){
+		return osc_expr_specFunc_quote(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_eval_call){
+		return osc_expr_specFunc_eval(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_tokenize){
+		return osc_expr_specFunc_tokenize(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_compile){
+		return osc_expr_specFunc_compile(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_gettimetag){
+		return osc_expr_specFunc_gettimetag(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_settimetag){
+		return osc_expr_specFunc_settimetag(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_getbundlemember){
+		return osc_expr_specFunc_getBundleMember(ast, lexenv, len, oscbndl, out);
+	}else{
+		//////////////////////////////////////////////////
+		// Call normal function
+		//////////////////////////////////////////////////
+		int f_argc = osc_expr_ast_funcall_getNumArgs(f);
+		t_osc_expr_ast_expr *f_argv = osc_expr_ast_funcall_getArgs(f);
+		t_osc_atom_ar_u *argv[f_argc];
+		memset(argv, '\0', sizeof(argv));
+		int ret = 0;
+		int i = 0;
+		while(f_argv){
+			//int ret = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, argv + i);
+			int ret = osc_expr_ast_expr_evalInLexEnv(f_argv, lexenv, len, oscbndl, argv + i);
+			if(ret){
+				if(ret == OSC_ERR_EXPR_ADDRESSUNBOUND){
+					// if the type arg type is something else, it will be an expression which means an 
+					// error has already been posted
+					//if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
+					//osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), osc_expr_rec_getName(osc_expr_getRec(f)));
+					//}
+				}
+				int j;
+				for(j = 0; j < i; j++){
+					if(argv[j]){
+						osc_atom_array_u_free(argv[j]);
+					}
+				}
+				return ret;
+			}
+			f_argv = osc_expr_ast_expr_next(f_argv);
+			i++;
+		}
+		// call function
+	        ret = ff(f, f_argc, argv, out);
+		for(i = 0; i < f_argc; i++){
+			if(argv[i]){
+				osc_atom_array_u_free(argv[i]);
+			}
+		}
+		return ret;
+	}
 	return 1;
 }
 

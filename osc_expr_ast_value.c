@@ -28,6 +28,10 @@
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_value.r"
+#include "osc_rset.h"
+#include "osc_query.h"
+#include "osc_message_s.h"
+#include "osc_message_iterator_s.h"
 
 static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, t_osc_atom_u *a, int valuetype);
 static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type);
@@ -38,7 +42,71 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    char **oscbndl,
 				    t_osc_atom_ar_u **out)
 {
-	return 1;
+	t_osc_expr_ast_value *v = (t_osc_expr_ast_value *)ast;
+	if(v){
+		t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
+		switch(v->valuetype){
+		case OSC_EXPR_AST_VALUE_TYPE_LITERAL:
+			{
+				*out = osc_atom_array_u_alloc(1);
+				t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+				osc_atom_u_copy(&a, vv);
+			}
+			return 0;
+		case OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER:
+			{
+				t_osc_atom_ar_u *tmp = NULL;
+				if((tmp = osc_expr_lookupBindingInLexenv(lexenv, osc_atom_u_getStringPtr(vv)))){
+					*out = osc_atom_array_u_copy(tmp);
+				}
+				return 0;
+			}
+			return 0;
+		case OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS:
+			{
+				*out = NULL;
+				if(!oscbndl || !len){
+					return OSC_ERR_EXPR_ADDRESSUNBOUND;
+				}
+				if(!(*oscbndl) || *len <= 16){
+					return OSC_ERR_EXPR_ADDRESSUNBOUND;
+				}
+				char *oscaddress = osc_atom_u_getStringPtr(vv);
+				t_osc_rset *rset = NULL;
+				osc_query_select(1, &oscaddress, *len, *oscbndl, 0, &rset);
+				t_osc_rset_result *res = osc_rset_select(rset, oscaddress);
+				if(rset){
+					t_osc_bndl_s *complete_matches = osc_rset_result_getCompleteMatches(res);
+					if(complete_matches){
+						t_osc_msg_s *m = osc_bundle_s_getFirstMsg(complete_matches);
+						if(m){
+							long arg_count = osc_message_s_getArgCount(m);
+							*out = osc_atom_array_u_alloc(arg_count);
+						
+							t_osc_atom_ar_u *atom_ar = *out;
+							osc_atom_array_u_clear(atom_ar);
+							int i = 0;
+							t_osc_msg_it_s *it = osc_msg_it_s_get(m);
+							while(osc_msg_it_s_hasNext(it)){
+								t_osc_atom_s *as = osc_msg_it_s_next(it);
+								t_osc_atom_u *au = osc_atom_array_u_get(atom_ar, i);
+								osc_atom_s_deserialize(as, &au);
+								i++;
+							}
+							osc_msg_it_s_destroy(it);
+							osc_rset_free(rset);
+							osc_message_s_free(m);
+							return 0;
+						}
+					}
+					osc_rset_free(rset);
+				}
+				return OSC_ERR_EXPR_ADDRESSUNBOUND;
+			}
+			break;
+		}
+	}
+	return 0;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_value_copy(t_osc_expr_ast_expr *ast)

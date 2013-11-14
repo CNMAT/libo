@@ -49,6 +49,7 @@
 #include "osc_expr_ast_oscaddress.h"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_arraysubscript.h"
+#include "osc_expr_ast_sugar.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
 #include "osc_expr_scanner.h"
@@ -431,15 +432,19 @@ t_osc_expr *osc_expr_parser_reduce_PrefixFunction(YYLTYPE *llocp,
 t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
 						    char *input_string,
 						    t_osc_expr_ast_expr *left,
-						    char *function_name,
-						    t_osc_expr_ast_expr *right)
+						    char *op,
+						    t_osc_expr_ast_expr *right,
+						    char *functional_equivalent)
 {
-	t_osc_expr_rec *r = osc_expr_lookupFunction(function_name);
+	t_osc_expr_rec *r = osc_expr_lookupFunction(op);
 	if(!r){
-		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
+		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, op);
 		return NULL;
 	}
-	return (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
+	t_osc_expr_rec *fr = osc_expr_lookupFunction(functional_equivalent);
+	t_osc_expr_ast_binaryop *bo = osc_expr_ast_binaryop_alloc(r, left, right);
+	t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(fr, 2, left, right);
+	return (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)bo, (t_osc_expr_ast_expr *)fc);
 }
 
 t_osc_expr_ast_expr *osc_expr_parser_reduceCompoundAssign(YYLTYPE *llocp,
@@ -448,12 +453,15 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceCompoundAssign(YYLTYPE *llocp,
 							  char *function_name,
 							  t_osc_expr_ast_expr *right)
 {
+	/*
 	t_osc_expr_ast_expr *infix = osc_expr_parser_reduceBinaryOp(llocp, input_string, left, function_name, right);
 	if(!infix){
 		return NULL;
 	}
 	t_osc_expr_ast_expr *lval = osc_expr_ast_expr_copy(left);
 	return (t_osc_expr_ast_expr *)osc_expr_parser_reduceBinaryOp(llocp, input_string, lval, "=", infix);
+	*/
+	return NULL;
 }
 
 t_osc_expr *osc_expr_parser_reduce_InfixOperator(YYLTYPE *llocp,
@@ -656,16 +664,16 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %right OSC_EXPR_TERNARY_COND OSC_EXPR_DBLQMARK OSC_EXPR_DBLQMARKEQ '?' ':'
 
 // level 14
-%left OSC_EXPR_OR
+%left OSC_EXPR_OR 124
 
 // level 13
-%left OSC_EXPR_AND
+%left OSC_EXPR_AND 38
 
 // level 9
-%left OSC_EXPR_EQ OSC_EXPR_NEQ
+%left OSC_EXPR_EQ 1 OSC_EXPR_NEQ 2
 
 // level 8
-%left '<' '>' OSC_EXPR_LTE OSC_EXPR_GTE 
+%left '<' '>' OSC_EXPR_LTE 3 OSC_EXPR_GTE 4
 
 // level 6
 %left '+' '-'
@@ -675,7 +683,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %left '^' 
 
 // level 3
-%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!'
+%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC  '!'
 
 // level 2
 %left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS
@@ -889,49 +897,49 @@ unaryop:
 binaryop:
 	// Infix operators
 	oscaddress '=' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "=", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "=", $3, "assign");
  	}
 	| expr '+' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "+", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "+", $3, "add");
  	}
 	| expr '-' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "-", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "-", $3, "sub");
  	}
 	| expr '*' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "*", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "*", $3, "mul");
  	}
 	| expr '/' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "/", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "/", $3, "div");
  	}
 	| expr '%' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "%", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "%", $3, "mod");
  	}
 	| expr '^' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "^", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "^", $3, "pow");
  	}
 	| expr OSC_EXPR_EQ expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "==", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "==", $3, "eq");
  	}
 	| expr OSC_EXPR_NEQ expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "!=", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "!=", $3, "neq");
  	}
 	| expr '<' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "<", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "<", $3, "lt");
  	}
 	| expr OSC_EXPR_LTE expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "<=", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "<=", $3, "le");
  	}
 	| expr '>' expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ">", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ">", $3, "gt");
  	}
 	| expr OSC_EXPR_GTE expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ">=", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ">=", $3, "ge");
  	}
 	| expr OSC_EXPR_AND expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "&&", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "&&", $3, "and");
  	}
 	| expr OSC_EXPR_OR expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "||", $3);
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, "||", $3, "or");
  	}
 ;
 

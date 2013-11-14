@@ -26,131 +26,131 @@
 
 */
 
-static void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
-static void osc_expr_err_unbound(char *address, char *func); 
-static void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func);
+void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
+void osc_expr_err_unbound(char *address, char *func); 
+void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func);
 
-static t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
+t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 					  t_osc_expr_lexenv *lexenv,
 					  long *len,
 					  char **oscbndl,
 					  t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_apply(t_osc_expr *f,
+int osc_expr_specFunc_apply(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_map(t_osc_expr *f,
+int osc_expr_specFunc_map(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_reduce(t_osc_expr *f,
+int osc_expr_specFunc_reduce(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_assign(t_osc_expr *f,
+int osc_expr_specFunc_assign(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
+int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_if(t_osc_expr *f,
+int osc_expr_specFunc_if(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_emptybundle(t_osc_expr *f,
+int osc_expr_specFunc_emptybundle(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_bound(t_osc_expr *f,
+int osc_expr_specFunc_bound(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_exists(t_osc_expr *f,
+int osc_expr_specFunc_exists(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_getaddresses(t_osc_expr *f,
+int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_delete(t_osc_expr *f,
+int osc_expr_specFunc_delete(t_osc_expr *f,
 			    t_osc_expr_lexenv *lexenv,
 			    long *len,
 			    char **oscbndl,
 				    t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_getmsgcount(t_osc_expr *f,
+int osc_expr_specFunc_getmsgcount(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_value(t_osc_expr *f,
+int osc_expr_specFunc_value(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_quote(t_osc_expr *f,
+int osc_expr_specFunc_quote(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_eval(t_osc_expr *f,
+int osc_expr_specFunc_eval(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_tokenize(t_osc_expr *f,
+int osc_expr_specFunc_tokenize(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_compile(t_osc_expr *f,
+int osc_expr_specFunc_compile(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_gettimetag(t_osc_expr *f,
+int osc_expr_specFunc_gettimetag(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_settimetag(t_osc_expr *f,
+int osc_expr_specFunc_settimetag(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 
-static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
+int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,

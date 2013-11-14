@@ -41,7 +41,10 @@ int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      char **oscbndl,
 				      t_osc_atom_ar_u **out)
 {
-	return 1;
+	t_osc_expr_ast_funcall *fc = osc_expr_ast_binaryop_toFuncall((t_osc_expr_ast_binaryop *)ast);
+	osc_expr_ast_funcall_evalInLexEnv((t_osc_expr_ast_expr *)fc, lexenv, len, oscbndl, out);
+	osc_expr_ast_funcall_free((t_osc_expr_ast_expr *)fc);
+	return 0;
 }
 
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
@@ -181,6 +184,11 @@ void osc_expr_ast_binaryop_setRightArg(t_osc_expr_ast_binaryop *e, t_osc_expr_as
 	if(e){
 		e->right = right;
 	}
+}
+
+t_osc_expr_ast_funcall *osc_expr_ast_binaryop_toFuncall(t_osc_expr_ast_binaryop *ast)
+{
+	//t_osc_expr_rec *r = osc_expr_lookupFunctionForOperator
 }
 
 t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
