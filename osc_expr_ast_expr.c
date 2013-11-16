@@ -46,6 +46,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->format = formatfn;
 		e->format_lisp = format_lispfn;
 		e->free = freefn;
+		e->copy = copyfn;
 		e->serialize = serializefn;
 		e->deserialize = deserializefn;
 		e->objsize = sizeof(t_osc_expr_ast_expr);

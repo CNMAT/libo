@@ -64,6 +64,8 @@ char **osc_expr_rec_getCategories(t_osc_expr_rec *r);
 char *osc_expr_rec_getDocstring(t_osc_expr_rec *r);
 t_osc_expr_funcptr osc_expr_rec_getFunction(t_osc_expr_rec *r);
 void *osc_expr_rec_getExtra(t_osc_expr_rec *r);
+uint8_t osc_expr_rec_getOpcode(t_osc_expr_rec *r);
+void osc_expr_rec_setOpcode(t_osc_expr_rec *r, uint8_t opcode);
 
 #ifdef __cplusplus
 }

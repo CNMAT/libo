@@ -38,6 +38,7 @@ typedef struct _osc_expr_ast_fieldop t_osc_expr_ast_fieldop;
 
 #include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_funcall.h"
 #include "osc_expr_rec.h"
 
 int osc_expr_ast_fieldop_evalInLexEnv(t_osc_expr_ast_expr *ast,
@@ -55,6 +56,7 @@ t_osc_expr_ast_expr *osc_expr_ast_fieldop_getLeftArg(t_osc_expr_ast_fieldop *e);
 t_osc_expr_ast_expr *osc_expr_ast_fieldop_getRightArg(t_osc_expr_ast_fieldop *e);
 void osc_expr_ast_fieldop_setLeftArg(t_osc_expr_ast_fieldop *e, t_osc_expr_ast_expr *left);
 void osc_expr_ast_fieldop_setRightArg(t_osc_expr_ast_fieldop *e, t_osc_expr_ast_expr *right);
+t_osc_expr_ast_funcall *osc_expr_ast_fieldop_toFuncall(t_osc_expr_ast_fieldop *ast);
 t_osc_expr_ast_fieldop *osc_expr_ast_fieldop_alloc(t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right);
 
 #ifdef __cplusplus

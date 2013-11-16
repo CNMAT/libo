@@ -310,3 +310,18 @@ void *osc_expr_rec_getExtra(t_osc_expr_rec *r)
 	}
 	return NULL;
 }
+
+uint8_t osc_expr_rec_getOpcode(t_osc_expr_rec *r)
+{
+	if(r){
+		return r->opcode;
+	}
+	return 0;
+}
+
+void osc_expr_rec_setOpcode(t_osc_expr_rec *r, uint8_t opcode)
+{
+	if(r){
+		r->opcode = opcode;
+	}
+}

@@ -184,6 +184,7 @@ static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, t_osc_atom_u *a
 {
 	if(v){
 		v->value = a;
+		v->valuetype = valuetype;
 	}
 }
 
@@ -218,7 +219,6 @@ static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type)
 				       osc_expr_ast_value_deserialize,
 				       sizeof(t_osc_expr_ast_value));
 		osc_expr_ast_value_setValue(v, a, type);
-		v->valuetype = type;
 	}
 	return v;
 }

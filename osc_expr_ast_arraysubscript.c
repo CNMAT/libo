@@ -34,6 +34,18 @@
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_expr_ast_arraysubscript.r"
 
+int osc_expr_ast_arraysubscript_evalInLexEnv(t_osc_expr_ast_expr *ast,
+					     t_osc_expr_lexenv *lexenv,
+					     long *len,
+					     char **oscbndl,
+					     t_osc_atom_ar_u **out)
+{
+	t_osc_expr_ast_arraysubscript *a = (t_osc_expr_ast_arraysubscript *)ast;
+	t_osc_expr_ast_funcall *fc = osc_expr_ast_arraysubscript_toFuncall(osc_expr_ast_arraysubscript_getBase(a), osc_expr_ast_arraysubscript_getIndexList(a));
+	int ret = osc_expr_ast_funcall_evalInLexEnv((t_osc_expr_ast_expr *)fc, lexenv, len, oscbndl, out);
+	osc_expr_ast_funcall_free((t_osc_expr_ast_expr *)fc);
+	return ret;
+}
 
 long osc_expr_ast_arraysubscript_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 {
@@ -137,6 +149,11 @@ void osc_expr_ast_arraysubscript_setIndexList(t_osc_expr_ast_arraysubscript *e, 
 	if(e){
 		e->index_list = index_list;
 	}
+}
+
+t_osc_expr_ast_funcall *osc_expr_ast_arraysubscript_toFuncall(t_osc_expr_ast_expr *base, t_osc_expr_ast_expr *index)
+{
+	return osc_expr_ast_funcall_alloc(&osc_expr_rec_nth, 2, base, index);
 }
 
 t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_expr *base, t_osc_expr_ast_expr *index_list)

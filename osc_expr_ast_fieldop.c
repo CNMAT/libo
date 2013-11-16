@@ -140,6 +140,11 @@ void osc_expr_ast_fieldop_setRightArg(t_osc_expr_ast_fieldop *e, t_osc_expr_ast_
 	}
 }
 
+t_osc_expr_ast_funcall *osc_expr_ast_fieldop_toFuncall(t_osc_expr_ast_fieldop *ast)
+{
+	return NULL;
+}
+
 t_osc_expr_ast_fieldop *osc_expr_ast_fieldop_alloc(t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
 {
 	if(!left || !right){

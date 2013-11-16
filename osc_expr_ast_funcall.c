@@ -298,6 +298,7 @@ t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_rec *rec, 
 		e->rec = rec;
 		e->argv = argv;
 		t_osc_expr_ast_expr *a = argv;
+		e->argc = 0;
 		while(a){
 			e->argc++;
 			a = a->next;

@@ -57,8 +57,12 @@ t_osc_expr_ast_expr *osc_expr_ast_sugar_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_sugar_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
-		osc_expr_ast_expr_free(osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
+		// we assume that the arguments to the function are the same as those of the
+		// parsed ast, so we free the function which will free the args, and then just free the
+		// parsed ast node struct without calling its free function
+		//osc_expr_ast_expr_free(osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
 		osc_expr_ast_expr_free(osc_expr_ast_sugar_getFunctionalAST((t_osc_expr_ast_sugar *)e));
+		osc_mem_free(osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
 	}
 }
 
@@ -74,7 +78,7 @@ long osc_expr_ast_sugar_format(char *buf, long n, t_osc_expr_ast_expr *e)
 long osc_expr_ast_sugar_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(e){
-		return osc_expr_ast_expr_formatLisp(buf, n, osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
+		return osc_expr_ast_expr_formatLisp(buf, n, osc_expr_ast_sugar_getFunctionalAST((t_osc_expr_ast_sugar *)e));
 	}else{
 		return 0;
 	}
