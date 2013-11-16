@@ -206,6 +206,7 @@ t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
+		osc_expr_ast_expr_free(osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e));
 		osc_mem_free(e);
 	}
 }

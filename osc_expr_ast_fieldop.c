@@ -90,6 +90,8 @@ t_osc_expr_ast_expr *osc_expr_ast_fieldop_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_fieldop_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
+		osc_expr_ast_expr_free(osc_expr_ast_fieldop_getLeftArg((t_osc_expr_ast_fieldop *)e));
+		osc_expr_ast_expr_free(osc_expr_ast_fieldop_getRightArg((t_osc_expr_ast_fieldop *)e));
 		osc_mem_free(e);
 	}
 }

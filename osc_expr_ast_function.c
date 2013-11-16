@@ -117,6 +117,9 @@ t_osc_expr_ast_expr *osc_expr_ast_function_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_function_free(t_osc_expr_ast_expr *f)
 {
 	if(f){
+		void *extra = NULL;
+		osc_expr_rec_free(((t_osc_expr_ast_function *)f)->function, &extra);
+		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)extra);
 		osc_mem_free(f);
 	}
 }

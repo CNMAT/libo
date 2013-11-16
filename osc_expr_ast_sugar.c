@@ -63,6 +63,7 @@ void osc_expr_ast_sugar_free(t_osc_expr_ast_expr *e)
 		//osc_expr_ast_expr_free(osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
 		osc_expr_ast_expr_free(osc_expr_ast_sugar_getFunctionalAST((t_osc_expr_ast_sugar *)e));
 		osc_mem_free(osc_expr_ast_sugar_getParsedAST((t_osc_expr_ast_sugar *)e));
+		osc_mem_free(e);
 	}
 }
 
