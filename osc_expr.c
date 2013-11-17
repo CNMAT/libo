@@ -57,6 +57,8 @@
 #include "osc_expr_scanner.h"
 #include "osc_expr_privatedecls.h"
 
+#include "osc_expr_ast_expr.h"
+
 //#define __OSC_PROFILE__
 #include "osc_profile.h"
 
@@ -155,8 +157,6 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_gettimetag(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_settimetag){
 		return osc_expr_specFunc_settimetag(f, lexenv, len, oscbndl, out);
-	}else if(f->rec->func == osc_expr_getbundlemember){
-		return osc_expr_specFunc_getBundleMember(f, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -1134,10 +1134,10 @@ int osc_expr_specFunc_delete(t_osc_expr *f,
 }
 
 int osc_expr_specFunc_getmsgcount(t_osc_expr *f,
-			    t_osc_expr_lexenv *lexenv,
-			    long *len,
-			    char **oscbndl,
-			    t_osc_atom_ar_u **out)
+				  t_osc_expr_lexenv *lexenv,
+				  long *len,
+				  char **oscbndl,
+				  t_osc_atom_ar_u **out)
 {
 	if(!len || !oscbndl){
 		return 1;
@@ -1446,15 +1446,15 @@ int osc_expr_specFunc_settimetag(t_osc_expr *f,
 	return 1;
 }
 
-int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
-					     t_osc_expr_lexenv *lexenv,
-					     long *len,
-					     char **oscbndl,
-					     t_osc_atom_ar_u **out)
+int osc_expr_specFunc_lookup(t_osc_expr_ast_expr *f,
+				      t_osc_expr_lexenv *lexenv,
+				      long *len,
+				      char **oscbndl,
+				      t_osc_atom_ar_u **out)
 {
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
-	osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1);
+	osc_expr_ast_expr_evalInLexEnv(f_argv, lexenv, len, oscbndl, &arg1);
 	if(!arg1){
 		return 1;
 	}
@@ -1465,7 +1465,7 @@ int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 			char *p = NULL;
 			osc_bundle_u_serialize(b, &l, &p);
 			if(p){
-				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &l, &p, out);
+				osc_expr_ast_expr_evalInLexEnv(f_argv->next, lexenv, &l, &p, out);
 				osc_mem_free(p);
 				return 0;
 			}
@@ -1510,28 +1510,28 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		case OSC_EXPR_LAMBDA:
 			st = "lambda";
 			break;
-		case OSC_EXPR_POWEQ:
+		case OSC_EXPR_POWASSIGN:
 			st = "^=";
 			break;
-		case OSC_EXPR_MODEQ:
+		case OSC_EXPR_MODASSIGN:
 			st = "%=";
 			break;
-		case OSC_EXPR_DIVEQ:
+		case OSC_EXPR_DIVASSIGN:
 			st = "/=";
 			break;
-		case OSC_EXPR_MULTEQ:
+		case OSC_EXPR_MULASSIGN:
 			st = "*=";
 			break;
-		case OSC_EXPR_MINUSEQ:
+		case OSC_EXPR_SUBASSIGN:
 			st = "-=";
 			break;
-		case OSC_EXPR_PLUSEQ:
+		case OSC_EXPR_ADDASSIGN:
 			st = "+=";
 			break;
-		case OSC_EXPR_DBLQMARKEQ:
+		case OSC_EXPR_NULLCOALESCEASSIGN:
 			st = "??=";
 			break;
-		case OSC_EXPR_DBLQMARK:
+		case OSC_EXPR_NULLCOALESCE:
 			st = "??";
 			break;
 		case OSC_EXPR_OR:
@@ -2302,7 +2302,7 @@ int osc_expr_add1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	return 0;
 }
 
-int osc_expr_subtract1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+int osc_expr_sub1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	int i;
 	long len = osc_atom_array_u_getLen(*argv);
@@ -3780,7 +3780,7 @@ int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 	return 0;
 }
 
-int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+int osc_expr_lookup(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	// dummy
 	return 0;

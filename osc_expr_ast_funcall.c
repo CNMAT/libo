@@ -89,8 +89,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		return osc_expr_specFunc_gettimetag(ast, lexenv, len, oscbndl, out);
 	}else if(ff == osc_expr_settimetag){
 		return osc_expr_specFunc_settimetag(ast, lexenv, len, oscbndl, out);
-	}else if(ff == osc_expr_getbundlemember){
-		return osc_expr_specFunc_getBundleMember(ast, lexenv, len, oscbndl, out);
+	}else if(ff == osc_expr_lookup){
+		return osc_expr_specFunc_lookup(ast, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function

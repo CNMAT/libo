@@ -76,6 +76,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	//}
 	//%}
 
+
 \+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\. {
 	return *yytext;
 }
@@ -104,28 +105,28 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	return OSC_EXPR_DEC;
 }
 \+= {
-	return OSC_EXPR_PLUSEQ;
+	return OSC_EXPR_ADDASSIGN;
 }
 \-= {
-	return OSC_EXPR_MINUSEQ;
+	return OSC_EXPR_SUBASSIGN;
 }
 \*= {
-	return OSC_EXPR_MULTEQ;
+	return OSC_EXPR_MULASSIGN;
 }
 \/= {
-	return OSC_EXPR_DIVEQ;
+	return OSC_EXPR_DIVASSIGN;
 }
 %= {
-	return OSC_EXPR_MODEQ;
+	return OSC_EXPR_MODASSIGN;
 }
 \^= {
-	return OSC_EXPR_POWEQ;
+	return OSC_EXPR_POWASSIGN;
 }
 \?\? {
-	return OSC_EXPR_DBLQMARK;
+	return OSC_EXPR_NULLCOALESCE;
 }
 \?\?= {
-	return OSC_EXPR_DBLQMARKEQ;
+	return OSC_EXPR_NULLCOALESCEASSIGN;
 }
 
 ,|;|\(|\)|\{|\}				{

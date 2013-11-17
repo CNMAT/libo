@@ -99,8 +99,8 @@ t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_arraysubscript_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
-		osc_expr_ast_expr_free(osc_expr_ast_arraysubscript_getBase((t_osc_expr_ast_expr *)e));
-		osc_expr_ast_expr_free(osc_expr_ast_arraysubscript_getIndexList((t_osc_expr_ast_expr *)e));
+		osc_expr_ast_expr_free(osc_expr_ast_arraysubscript_getBase((t_osc_expr_ast_arraysubscript *)e));
+		osc_expr_ast_expr_free(osc_expr_ast_arraysubscript_getIndexList((t_osc_expr_ast_arraysubscript *)e));
 		osc_mem_free(e);
 	}
 }

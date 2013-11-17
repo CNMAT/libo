@@ -78,7 +78,7 @@ int osc_expr_mod(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result);
 
 int osc_expr_assign(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_add1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_subtract1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_sub1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_assign_to_index(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_product(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -137,7 +137,7 @@ int osc_expr_value(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_lookup(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 // constants
 int osc_expr_pi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -173,7 +173,9 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
+//////////////////////////////////////////////////
 // records for simple operators
+//////////////////////////////////////////////////
 #define OSC_EXPR_REC_OP_ADD {"+",\
 	 "/result = $1 + $2",\
 	 2,\
@@ -382,26 +384,37 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	 osc_expr_not,\
 	 NULL,\
 	 '!'}
+#define OSC_EXPR_REC_OP_LOOKUP {".",\
+	 "/result = /foo./bar",\
+	 2,\
+	 0,\
+	 (char *[]){"address of message containing a subbundle", "address to lookup in subbundle"}, \
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_OSCADDRESS},	\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/core", NULL},\
+	 "Lookup addresses in subbundles",\
+	 osc_expr_lookup,\
+	 NULL,\
+	 '.'}
+#define OSC_EXPR_REC_OP_NULLCOALESCE {"??",\
+	 "/result = $1 ?? $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", NULL},\
+	 "Null coalescing operator, returns the left operand if it exists, otherwise it returns the right.",\
+	 NULL,\
+	 NULL,\
+	 0}
 
-// records for simple operators
-static t_osc_expr_rec osc_expr_rec_op_add = OSC_EXPR_REC_OP_ADD;
-static t_osc_expr_rec osc_expr_rec_op_sub = OSC_EXPR_REC_OP_SUB;
-static t_osc_expr_rec osc_expr_rec_op_mul = OSC_EXPR_REC_OP_MUL;
-static t_osc_expr_rec osc_expr_rec_op_div = OSC_EXPR_REC_OP_DIV;
-static t_osc_expr_rec osc_expr_rec_op_lt = OSC_EXPR_REC_OP_LT;
-static t_osc_expr_rec osc_expr_rec_op_le = OSC_EXPR_REC_OP_LE;
-static t_osc_expr_rec osc_expr_rec_op_gt = OSC_EXPR_REC_OP_GT;
-static t_osc_expr_rec osc_expr_rec_op_ge = OSC_EXPR_REC_OP_GE;
-static t_osc_expr_rec osc_expr_rec_op_eq = OSC_EXPR_REC_OP_EQ;
-static t_osc_expr_rec osc_expr_rec_op_neq = OSC_EXPR_REC_OP_NEQ;
-static t_osc_expr_rec osc_expr_rec_op_and = OSC_EXPR_REC_OP_AND;
-static t_osc_expr_rec osc_expr_rec_op_or = OSC_EXPR_REC_OP_OR;
-static t_osc_expr_rec osc_expr_rec_op_mod = OSC_EXPR_REC_OP_MOD;
-static t_osc_expr_rec osc_expr_rec_op_pow = OSC_EXPR_REC_OP_POW;
-static t_osc_expr_rec osc_expr_rec_op_assign = OSC_EXPR_REC_OP_ASSIGN;
-static t_osc_expr_rec osc_expr_rec_op_not = OSC_EXPR_REC_OP_NOT;
-
-// records for functional equivalents of simple operators
+//////////////////////////////////////////////////
+// records for functional equivalents of simple 
+// unary and binary operators
+//////////////////////////////////////////////////
 #define OSC_EXPR_REC_ADD {"add",\
 	 "/result = add($1, $2)",\
 	 2,\
@@ -610,26 +623,158 @@ static t_osc_expr_rec osc_expr_rec_op_not = OSC_EXPR_REC_OP_NOT;
 	 osc_expr_not,\
 	 NULL,\
 	 '!'}
+#define OSC_EXPR_REC_LOOKUP {"lookup",\
+	 "/result = lookup(/address1, /address2)",\
+	 2,\
+	 0,\
+	 (char *[]){"address of message containing a subbundle", "address to lookup in subbundle"}, \
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_OSCADDRESS},	\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/core", NULL},\
+	 "Lookup addresses in subbundles",\
+	 osc_expr_lookup,\
+	 NULL,\
+	 '.'}
+#define OSC_EXPR_REC_NULLCOALESCE {"nullcoalesce",\
+	 "/result = nullcoalesce($1, $2)",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", NULL},\
+	 "Null coalescing function, returns the first argument if it exists, otherwise it returns the second.",\
+	 NULL,\
+	 NULL,\
+	 0}
 
-// functional equivalents for simple operators
-static t_osc_expr_rec osc_expr_rec_add = OSC_EXPR_REC_ADD;
-static t_osc_expr_rec osc_expr_rec_sub = OSC_EXPR_REC_SUB;
-static t_osc_expr_rec osc_expr_rec_mul = OSC_EXPR_REC_MUL;
-static t_osc_expr_rec osc_expr_rec_div = OSC_EXPR_REC_DIV;
-static t_osc_expr_rec osc_expr_rec_lt = OSC_EXPR_REC_LT;
-static t_osc_expr_rec osc_expr_rec_le = OSC_EXPR_REC_LE;
-static t_osc_expr_rec osc_expr_rec_gt = OSC_EXPR_REC_GT;
-static t_osc_expr_rec osc_expr_rec_ge = OSC_EXPR_REC_GE;
-static t_osc_expr_rec osc_expr_rec_eq = OSC_EXPR_REC_EQ;
-static t_osc_expr_rec osc_expr_rec_neq = OSC_EXPR_REC_NEQ;
-static t_osc_expr_rec osc_expr_rec_and = OSC_EXPR_REC_AND;
-static t_osc_expr_rec osc_expr_rec_or = OSC_EXPR_REC_OR;
-static t_osc_expr_rec osc_expr_rec_mod = OSC_EXPR_REC_MOD;
-static t_osc_expr_rec osc_expr_rec_pow = OSC_EXPR_REC_POW;
-static t_osc_expr_rec osc_expr_rec_assign = OSC_EXPR_REC_ASSIGN;
-static t_osc_expr_rec osc_expr_rec_not = OSC_EXPR_REC_NOT;
+//////////////////////////////////////////////////
+// records for unary and binary compound assignment operators
+//////////////////////////////////////////////////
+#define OSC_EXPR_REC_OP_ADD1 {"++",\
+	 "/result = $1++",\
+	 1,\
+	 0,\
+	 (char *[]){"argument to be incremented"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Increment",\
+	 osc_expr_add1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_OP_SUB1 {"--",\
+	 "/result = $1--",\
+	 1,\
+	 0,\
+	 (char *[]){"argument to be decremented"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Decrement",\
+	 osc_expr_sub1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_OP_ADDASSIGN {"+=",\
+	 "/result = $1 += $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Add and assign",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_add,\
+	 0}
+#define OSC_EXPR_REC_OP_SUBASSIGN {"-=",\
+	 "/result = $1 -= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Subtract and assign",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_subtract,\
+	 0}
+#define OSC_EXPR_REC_OP_MULASSIGN {"*=",\
+	 "/result = $1 *= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Multiply and assign",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_multiply,\
+	 0}
+#define OSC_EXPR_REC_OP_DIVASSIGN {"/=",\
+	 "/result = $1 /= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Divide and assign",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_divide,\
+	 0}
+#define OSC_EXPR_REC_OP_MODASSIGN {"%=",\
+	 "/result = $1 %= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Modulo and assign",\
+	 osc_expr_2arg,\
+	 (void *)osc_expr_mod,\
+	 0}
+#define OSC_EXPR_REC_OP_POWASSIGN {"^=",\
+	 "/result = $1 ^= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},\
+	 "Power and assign",\
+	 osc_expr_2arg,\
+	 (void *)pow,\
+	 0}
+#define OSC_EXPR_REC_OP_NULLCOALESCEASSIGN {"??=",\
+	 "/result = $1 ??= $2",\
+	 2,\
+	 0,\
+	 (char *[]){"left operand", "right operand"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/operator/relational", NULL},\
+	 "Null coalescing operator, returns the left operand if it exists, otherwise it returns the right.",\
+	 NULL,\
+	 NULL,\
+	 0}
 
-// other functions that have syntactic sugar and need to be referenced without looking them up
+//////////////////////////////////////////////////
+// other functions that have syntactic sugar and 
+// need to be referenced without looking them up
+//////////////////////////////////////////////////
 #define OSC_EXPR_REC_NTH {"nth",\
 	 "/result = nth($1, $2)",\
 	 2,\
@@ -657,6 +802,67 @@ static t_osc_expr_rec osc_expr_rec_not = OSC_EXPR_REC_NOT;
 	 NULL,\
 	 0}
 
+//////////////////////////////////////////////////
+// records for simple binary and unary operators
+//////////////////////////////////////////////////
+static t_osc_expr_rec osc_expr_rec_op_add = OSC_EXPR_REC_OP_ADD;
+static t_osc_expr_rec osc_expr_rec_op_sub = OSC_EXPR_REC_OP_SUB;
+static t_osc_expr_rec osc_expr_rec_op_mul = OSC_EXPR_REC_OP_MUL;
+static t_osc_expr_rec osc_expr_rec_op_div = OSC_EXPR_REC_OP_DIV;
+static t_osc_expr_rec osc_expr_rec_op_lt = OSC_EXPR_REC_OP_LT;
+static t_osc_expr_rec osc_expr_rec_op_le = OSC_EXPR_REC_OP_LE;
+static t_osc_expr_rec osc_expr_rec_op_gt = OSC_EXPR_REC_OP_GT;
+static t_osc_expr_rec osc_expr_rec_op_ge = OSC_EXPR_REC_OP_GE;
+static t_osc_expr_rec osc_expr_rec_op_eq = OSC_EXPR_REC_OP_EQ;
+static t_osc_expr_rec osc_expr_rec_op_neq = OSC_EXPR_REC_OP_NEQ;
+static t_osc_expr_rec osc_expr_rec_op_and = OSC_EXPR_REC_OP_AND;
+static t_osc_expr_rec osc_expr_rec_op_or = OSC_EXPR_REC_OP_OR;
+static t_osc_expr_rec osc_expr_rec_op_mod = OSC_EXPR_REC_OP_MOD;
+static t_osc_expr_rec osc_expr_rec_op_pow = OSC_EXPR_REC_OP_POW;
+static t_osc_expr_rec osc_expr_rec_op_assign = OSC_EXPR_REC_OP_ASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_not = OSC_EXPR_REC_OP_NOT;
+static t_osc_expr_rec osc_expr_rec_op_lookup = OSC_EXPR_REC_OP_LOOKUP;
+static t_osc_expr_rec osc_expr_rec_op_nullcoalesce = OSC_EXPR_REC_OP_NULLCOALESCE;
+
+//////////////////////////////////////////////////
+// functional equivalents for simple operators
+//////////////////////////////////////////////////
+static t_osc_expr_rec osc_expr_rec_add = OSC_EXPR_REC_ADD;
+static t_osc_expr_rec osc_expr_rec_sub = OSC_EXPR_REC_SUB;
+static t_osc_expr_rec osc_expr_rec_mul = OSC_EXPR_REC_MUL;
+static t_osc_expr_rec osc_expr_rec_div = OSC_EXPR_REC_DIV;
+static t_osc_expr_rec osc_expr_rec_lt = OSC_EXPR_REC_LT;
+static t_osc_expr_rec osc_expr_rec_le = OSC_EXPR_REC_LE;
+static t_osc_expr_rec osc_expr_rec_gt = OSC_EXPR_REC_GT;
+static t_osc_expr_rec osc_expr_rec_ge = OSC_EXPR_REC_GE;
+static t_osc_expr_rec osc_expr_rec_eq = OSC_EXPR_REC_EQ;
+static t_osc_expr_rec osc_expr_rec_neq = OSC_EXPR_REC_NEQ;
+static t_osc_expr_rec osc_expr_rec_and = OSC_EXPR_REC_AND;
+static t_osc_expr_rec osc_expr_rec_or = OSC_EXPR_REC_OR;
+static t_osc_expr_rec osc_expr_rec_mod = OSC_EXPR_REC_MOD;
+static t_osc_expr_rec osc_expr_rec_pow = OSC_EXPR_REC_POW;
+static t_osc_expr_rec osc_expr_rec_assign = OSC_EXPR_REC_ASSIGN;
+static t_osc_expr_rec osc_expr_rec_not = OSC_EXPR_REC_NOT;
+static t_osc_expr_rec osc_expr_rec_lookup = OSC_EXPR_REC_LOOKUP;
+static t_osc_expr_rec osc_expr_rec_nullcoalesce = OSC_EXPR_REC_NULLCOALESCE;
+
+//////////////////////////////////////////////////
+// records for unary and binary compound assignment operators
+//////////////////////////////////////////////////
+static t_osc_expr_rec osc_expr_rec_op_add1 = OSC_EXPR_REC_OP_ADD1;
+static t_osc_expr_rec osc_expr_rec_op_sub1 = OSC_EXPR_REC_OP_SUB1;
+static t_osc_expr_rec osc_expr_rec_op_addassign = OSC_EXPR_REC_OP_ADDASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_subassign = OSC_EXPR_REC_OP_SUBASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_mulassign = OSC_EXPR_REC_OP_MULASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_divassign = OSC_EXPR_REC_OP_DIVASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_modassign = OSC_EXPR_REC_OP_MODASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_powassign = OSC_EXPR_REC_OP_POWASSIGN;
+static t_osc_expr_rec osc_expr_rec_op_nullcoalesceassign = OSC_EXPR_REC_OP_NULLCOALESCEASSIGN;
+
+//////////////////////////////////////////////////
+// other functions that have syntactic sugar and 
+// need to be referred to without doing a lookup
+//////////////////////////////////////////////////
 static t_osc_expr_rec osc_expr_rec_nth = OSC_EXPR_REC_NTH;
 static t_osc_expr_rec osc_expr_rec_assign_to_index = OSC_EXPR_REC_ASSIGN_TO_INDEX;
 
@@ -664,14 +870,28 @@ static t_osc_expr_rec osc_expr_rec_assign_to_index = OSC_EXPR_REC_ASSIGN_TO_INDE
 // this array can be indexed by either the ascii char of an operator,
 // or in the case of multi character operators such as <=, by the 
 // token defined in osc_expr_parser.y
-static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
-	NULL	,
+static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[128] = {
+	NULL	,// 0
 	&osc_expr_rec_op_eq	,
 	&osc_expr_rec_op_neq	,
 	&osc_expr_rec_op_le	,
 	&osc_expr_rec_op_ge	,
-	NULL    ,
-	NULL    ,
+	&osc_expr_rec_op_nullcoalesce,
+	&osc_expr_rec_op_add1,
+	&osc_expr_rec_op_sub1,
+	&osc_expr_rec_op_addassign,
+	&osc_expr_rec_op_subassign,
+	&osc_expr_rec_op_mulassign, // 10
+	&osc_expr_rec_op_divassign, 
+	&osc_expr_rec_op_modassign,
+	&osc_expr_rec_op_powassign,
+	&osc_expr_rec_op_nullcoalesceassign,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,// 20
 	NULL	,
 	NULL	,
 	NULL	,
@@ -681,21 +901,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 30
 	NULL	,
 	NULL	,
 	&osc_expr_rec_op_not	,
@@ -705,16 +911,17 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	&osc_expr_rec_op_mod	,
 	&osc_expr_rec_op_and	,
 	NULL	,
-	NULL	,
+	NULL	,// 40
 	NULL	,
 	&osc_expr_rec_op_mul	,
 	&osc_expr_rec_op_add	,
 	NULL	,
 	&osc_expr_rec_op_sub	,
-	NULL	,
+	&osc_expr_rec_op_lookup,
 	&osc_expr_rec_op_div	,
 	NULL	,
 	NULL	,
+	NULL	,// 50
 	NULL	,
 	NULL	,
 	NULL	,
@@ -724,10 +931,17 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	&osc_expr_rec_op_lt	,
+	&osc_expr_rec_op_lt	,// 60
 	&osc_expr_rec_op_assign	,
 	&osc_expr_rec_op_gt	,
+	NULL,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,// 70
 	NULL	,
 	NULL	,
 	NULL	,
@@ -737,6 +951,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+		NULL	,// 80
 	NULL	,
 	NULL	,
 	NULL	,
@@ -746,16 +961,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 90
 	NULL	,
 	NULL	,
 	NULL	,
@@ -765,6 +971,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+		NULL	,// 100
 	NULL	,
 	NULL	,
 	NULL	,
@@ -774,6 +981,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+		NULL	,// 110
 	NULL	,
 	NULL	,
 	NULL	,
@@ -783,9 +991,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 120
 	NULL	,
 	NULL	,
 	&osc_expr_rec_op_or	,
@@ -795,8 +1001,8 @@ static t_osc_expr_rec *osc_expr_func_opcodeToOpRec[] = {
 	NULL	,
 };
 
-static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
-	NULL	,
+static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[128] = {
+	NULL	,// 0
 	&osc_expr_rec_eq	,
 	&osc_expr_rec_neq	,
 	&osc_expr_rec_le	,
@@ -806,6 +1012,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+	NULL	,// 10
 	NULL	,
 	NULL	,
 	NULL	,
@@ -815,6 +1022,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+	NULL	,// 20
 	NULL	,
 	NULL	,
 	NULL	,
@@ -824,9 +1032,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 30
 	NULL	,
 	NULL	,
 	&osc_expr_rec_not	,
@@ -836,16 +1042,17 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	&osc_expr_rec_mod	,
 	&osc_expr_rec_and	,
 	NULL	,
-	NULL	,
+	NULL	,// 40
 	NULL	,
 	&osc_expr_rec_mul	,
 	&osc_expr_rec_add	,
 	NULL	,
 	&osc_expr_rec_sub	,
-	NULL	,
+	&osc_expr_rec_lookup,
 	&osc_expr_rec_div	,
 	NULL	,
 	NULL	,
+	NULL	,// 50
 	NULL	,
 	NULL	,
 	NULL	,
@@ -855,10 +1062,17 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	&osc_expr_rec_lt	,
+	&osc_expr_rec_lt	, // 60
 	&osc_expr_rec_assign	,
 	&osc_expr_rec_gt	,
+	&osc_expr_rec_nullcoalesce,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,
+	NULL	,// 70
 	NULL	,
 	NULL	,
 	NULL	,
@@ -868,6 +1082,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+	NULL	,// 80
 	NULL	,
 	NULL	,
 	NULL	,
@@ -877,16 +1092,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 90
 	NULL	,
 	NULL	,
 	NULL	,
@@ -896,6 +1102,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+	NULL	,// 100
 	NULL	,
 	NULL	,
 	NULL	,
@@ -905,6 +1112,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
+	NULL	,// 110
 	NULL	,
 	NULL	,
 	NULL	,
@@ -914,9 +1122,7 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	NULL	,
-	NULL	,
-	NULL	,
+	NULL	,// 120
 	NULL	,
 	NULL	,
 	&osc_expr_rec_or	,
@@ -928,7 +1134,9 @@ static t_osc_expr_rec *osc_expr_func_opcodeToFunctionRec[] = {
 
 // this is the full list of all builtin functions, in no particular order
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
-	// infix operators
+	//////////////////////////////////////////////////
+	// simple unary and binary operators
+	//////////////////////////////////////////////////
 	OSC_EXPR_REC_OP_ADD,
 	OSC_EXPR_REC_OP_SUB,
 	OSC_EXPR_REC_OP_MUL,
@@ -945,136 +1153,10 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	OSC_EXPR_REC_OP_POW,
 	OSC_EXPR_REC_OP_ASSIGN,
 	OSC_EXPR_REC_OP_NOT,
+	OSC_EXPR_REC_OP_LOOKUP,
+	OSC_EXPR_REC_OP_NULLCOALESCE,
 	//////////////////////////////////////////////////
-	// compound assignment
-	//////////////////////////////////////////////////
-	{"++",
-	 "/result = $1++",
-	 1,
-	 0,
-	 (char *[]){"argument to be incremented"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Increment",
-	 osc_expr_add1,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"--",
-	 "/result = $1--",
-	 1,
-	 0,
-	 (char *[]){"argument to be decremented"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Decrement",
-	 osc_expr_subtract1,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"+=",
-	 "/result = $1 += $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Add and assign",
-	 osc_expr_2arg,
-	 (void *)osc_expr_add,
-	 0},
-	//////////////////////////////////////////////////
-	{"-=",
-	 "/result = $1 -= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Subtract and assign",
-	 osc_expr_2arg,
-	 (void *)osc_expr_subtract,
-	 0},
-	//////////////////////////////////////////////////
-	{"*=",
-	 "/result = $1 *= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Multiply and assign",
-	 osc_expr_2arg,
-	 (void *)osc_expr_multiply,
-	 0},
-	//////////////////////////////////////////////////
-	{"/=",
-	 "/result = $1 /= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Divide and assign",
-	 osc_expr_2arg,
-	 (void *)osc_expr_divide,
-	 0},
-	//////////////////////////////////////////////////
-	{"%=",
-	 "/result = $1 %= $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/arithmetic", "/math/operator/assignment", NULL},
-	 "Modulo and assign",
-	 osc_expr_2arg,
-	 (void *)osc_expr_mod,
-	 0},
-	//////////////////////////////////////////////////
-	{"??",
-	 "/result = $1 ?? $2",
-	 2,
-	 0,
-	 (char *[]){"left operand", "right operand"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/operator/relational", NULL},
-	 "Null coalescing operator, returns the left operand if it exists, otherwise it returns the right.",
-	 NULL,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING,
-	 "/bundle"OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING"/member",
-	 2,
-	 0,
-	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle."},
-	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Extract a message from a nested bundle.",
-	 osc_expr_getbundlemember,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	// functional equivalents of operators
+	// functional equivalents of simple unary and binary operators
 	//////////////////////////////////////////////////
 	OSC_EXPR_REC_ADD,
 	OSC_EXPR_REC_SUB,
@@ -1092,9 +1174,29 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	OSC_EXPR_REC_POW,
 	OSC_EXPR_REC_ASSIGN,
 	OSC_EXPR_REC_NOT,
+	OSC_EXPR_REC_LOOKUP,
+	OSC_EXPR_REC_NULLCOALESCE,
 	//////////////////////////////////////////////////
-	{"add1",
-	 "/result = add1($1)",
+	// unary and binary compound assignment operators
+	//////////////////////////////////////////////////
+	OSC_EXPR_REC_OP_ADD1,
+	OSC_EXPR_REC_OP_SUB1,
+	OSC_EXPR_REC_OP_ADDASSIGN,
+	OSC_EXPR_REC_OP_SUBASSIGN,
+	OSC_EXPR_REC_OP_MULASSIGN,
+	OSC_EXPR_REC_OP_DIVASSIGN,
+	OSC_EXPR_REC_OP_MODASSIGN,
+	OSC_EXPR_REC_OP_POWASSIGN,
+	OSC_EXPR_REC_OP_NULLCOALESCEASSIGN,
+	//////////////////////////////////////////////////
+	// other functions
+	//////////////////////////////////////////////////
+	OSC_EXPR_REC_NTH,
+	OSC_EXPR_REC_ASSIGN_TO_INDEX,
+
+	//////////////////////////////////////////////////
+	{"plus1",
+	 "/result = plus1($1)",
 	 1,
 	 0,
 	 (char *[]){"arg"},
@@ -1107,8 +1209,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////
-	{"subtract1",
-	 "/result = subtract1($1)",
+	{"minus1",
+	 "/result = minus1($1)",
 	 1,
 	 0,
 	 (char *[]){"arg"},
@@ -1117,15 +1219,9 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Subtract one and return the result without altering the argument.",
-	 osc_expr_subtract1,
+	 osc_expr_sub1,
 	 NULL,
 	 0},
-
-	//////////////////////////////////////////////////
-	// other functions
-	//////////////////////////////////////////////////
-	OSC_EXPR_REC_NTH,
-	OSC_EXPR_REC_ASSIGN_TO_INDEX,
 	//////////////////////////////////////////////////
 	// most of math.h
 	//////////////////////////////////////////////////
@@ -2456,20 +2552,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Put a timetag in the header of the OSC bundle.",
 	 osc_expr_settimetag,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"getbundlemember",
-	 "getbundlemember(/bundle, /member)",
-	 2,
-	 0,
-	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle."},
-	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Extract a message from a nested bundle.",
-	 osc_expr_getbundlemember,
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////
