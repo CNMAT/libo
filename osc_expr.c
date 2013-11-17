@@ -1552,12 +1552,6 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		case OSC_EXPR_LTE:
 			st = "<=";
 			break;
-		case CLOSE_DBL_BRKTS:
-			st = "]]";
-			break;
-		case OPEN_DBL_BRKTS:
-			st = "[[";
-			break;
 		case OSC_EXPR_DEC:
 			st = "--";
 			break;

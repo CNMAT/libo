@@ -71,21 +71,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast)
 	if(ast){
 		if(ast->copy){
 			t_osc_expr_ast_expr *copy = ast->copy(ast);
-			copy->next = osc_expr_ast_expr_copy(ast->next);
-			return copy;
-		}else{
-			return osc_expr_ast_expr_alloc();
-		}
-	}else{
-		return NULL;
-	}
-}
-
-t_osc_expr_ast_expr *osc_expr_ast_expr_copy1(t_osc_expr_ast_expr *ast)
-{
-	if(ast){
-		if(ast->copy){
-			t_osc_expr_ast_expr *copy = ast->copy(ast);
+			//copy->next = osc_expr_ast_expr_copy(ast->next);
 			return copy;
 		}else{
 			return osc_expr_ast_expr_alloc();

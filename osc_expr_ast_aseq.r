@@ -20,12 +20,12 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_unaryop.r
+/** 	\file osc_expr_ast_aseq.r
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_AST_UNARYOP_R__
-#define __OSC_EXPR_AST_UNARYOP_R__
+#ifndef __OSC_EXPR_AST_ASEQ_R__
+#define __OSC_EXPR_AST_ASEQ_R__
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,12 +33,10 @@ extern "C" {
 
 #include "osc_expr_ast_expr.r"
 
-struct _osc_expr_ast_unaryop
+struct _osc_expr_ast_aseq
 {
 	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_rec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *arg; // left argument to function
-	int side;
+	t_osc_expr_ast_expr *min, *max, *step;
 };
 
 #ifdef __cplusplus

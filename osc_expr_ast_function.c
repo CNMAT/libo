@@ -108,6 +108,11 @@ t_osc_expr_ast_expr *osc_expr_ast_function_copy(t_osc_expr_ast_expr *ast)
 		char **params = osc_expr_ast_function_getParams(f);
 		t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprList(f);
 		t_osc_expr_ast_expr *copy = osc_expr_ast_expr_copy(exprlist);
+		exprlist = osc_expr_ast_expr_next(exprlist);
+		while(exprlist){
+			osc_expr_ast_expr_append(copy, exprlist);
+			exprlist = osc_expr_ast_expr_next(exprlist);
+		}
 		return (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(nparams, params, copy);
 	}else{
 		return NULL;

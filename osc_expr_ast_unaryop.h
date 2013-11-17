@@ -20,13 +20,13 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_binaryop.h
+/** 	\file osc_expr_ast_unaryop.h
 	\author John MacCallum
 
 */
 
-#ifndef __OSC_EXPR_AST_BINARYOP_H__
-#define __OSC_EXPR_AST_BINARYOP_H__
+#ifndef __OSC_EXPR_AST_UNARYOP_H__
+#define __OSC_EXPR_AST_UNARYOP_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,31 +34,39 @@ extern "C" {
 
 #include "osc_atom_array_u.h"
 
-typedef struct _osc_expr_ast_binaryop t_osc_expr_ast_binaryop;
+typedef struct _osc_expr_ast_unaryop t_osc_expr_ast_unaryop;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_binaryop *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_unaryop *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 #include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_rec.h"
 
-int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
+#define OSC_EXPR_AST_UNARYOP_LEFT 1
+#define OSC_EXPR_AST_UNARYOP_RIGHT 2
+
+int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	t_osc_expr_lexenv *lexenv,
 	long *len,
 	char **oscbndl,
 	t_osc_atom_ar_u **out);
-long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast);
-void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e);
-t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e);
-void osc_expr_ast_binaryop_setRec(t_osc_expr_ast_binaryop *e, t_osc_expr_rec *r);
-t_osc_expr_rec *osc_expr_ast_binaryop_getRecCopy(t_osc_expr_ast_binaryop *e);
-t_osc_expr_funcptr osc_expr_ast_binaryop_getFunc(t_osc_expr_ast_binaryop *e);
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_getLeftArg(t_osc_expr_ast_binaryop *e);
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_getRightArg(t_osc_expr_ast_binaryop *e);
-void osc_expr_ast_binaryop_setLeftArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *left);
-void osc_expr_ast_binaryop_setRightArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *right);
-t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right);
+long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
+long osc_expr_ast_unaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
+t_osc_expr_ast_expr *osc_expr_ast_unaryop_copy(t_osc_expr_ast_expr *ast);
+void osc_expr_ast_unaryop_free(t_osc_expr_ast_expr *e);
+t_osc_err osc_expr_ast_unaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
+t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
+t_osc_expr_rec *osc_expr_ast_unaryop_getRec(t_osc_expr_ast_unaryop *e);
+void osc_expr_ast_unaryop_setRec(t_osc_expr_ast_unaryop *e, t_osc_expr_rec *r);
+t_osc_expr_rec *osc_expr_ast_unaryop_getRecCopy(t_osc_expr_ast_unaryop *e);
+t_osc_expr_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e);
+t_osc_expr_ast_expr *osc_expr_ast_unaryop_getArg(t_osc_expr_ast_unaryop *e);
+void osc_expr_ast_unaryop_setArg(t_osc_expr_ast_unaryop *e, t_osc_expr_ast_expr *left);
+int osc_expr_ast_unaryop_getSide(t_osc_expr_ast_unaryop *e);
+void osc_expr_ast_unaryop_setSide(t_osc_expr_ast_unaryop *e, int side);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg, int side);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg);
 
 #ifdef __cplusplus
 }

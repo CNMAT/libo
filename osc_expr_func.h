@@ -397,8 +397,8 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	 osc_expr_lookup,\
 	 NULL,\
 	 '.'}
-#define OSC_EXPR_REC_OP_NULLCOALESCE {"??",\
-	 "/result = $1 ?? $2",\
+#define OSC_EXPR_REC_OP_NULLCOALESCE {"?\?",\
+	 "/result = $1 ?\? $2",\
 	 2,\
 	 0,\
 	 (char *[]){"left operand", "right operand"},\
@@ -757,8 +757,8 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	 osc_expr_2arg,\
 	 (void *)pow,\
 	 0}
-#define OSC_EXPR_REC_OP_NULLCOALESCEASSIGN {"??=",\
-	 "/result = $1 ??= $2",\
+#define OSC_EXPR_REC_OP_NULLCOALESCEASSIGN {"?\?=",\
+	 "/result = $1 ?\?= $2",\
 	 2,\
 	 0,\
 	 (char *[]){"left operand", "right operand"},\
@@ -801,6 +801,215 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	 osc_expr_assign_to_index,\
 	 NULL,\
 	 0}
+#define OSC_EXPR_REC_ADD1 {"add1",\
+	 "/result = plus1($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"arg"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/arithmetic", NULL},\
+	 "Add one and return the result without altering the argument",\
+	 osc_expr_add1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_SUB1 {"sub1",\
+	 "/result = sub1($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"arg"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/math/arithmetic", NULL},\
+	 "Subtract one and return the result without altering the argument.",\
+	 osc_expr_sub1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_PROG1 {"prog1",\
+	 "/result = prog1($1)",\
+	 1,\
+	 -1,\
+	 (char *[]){"expression to be evaluated"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"additional expressions"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/core", NULL},\
+	 "Execute a sequence of expressions and return the first one.",\
+	 osc_expr_prog1,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_PROG2 {"prog2",\
+	 "/result = prog2($1)",\
+	 1,\
+	 -1,\
+	 (char *[]){"expression to be evaluated"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"additional expressions"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/core", NULL},\
+	 "Execute a sequence of expressions and return the second one.",\
+	 osc_expr_prog2,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_PROGN {"progn",\
+	 "/result = progn($1)",\
+	 1,\
+	 -1,\
+	 (char *[]){"expression to be evaluated"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"additional expressions"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/core", NULL},\
+	 "Execute a sequence of expressions and return the last one.",\
+	 osc_expr_progn,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_APPLY {"apply",\
+	 "/result = apply($1, $2)",\
+	 2,\
+	 -1,\
+	 (char *[]){"Function or function name", "Argument"},\
+	 (int []){OSC_EXPR_ARG_TYPE_FUNCTION | OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"Additional argument(s)"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/core", NULL},\
+	 "Apply a function to arguments.",\
+	 osc_expr_apply,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_MAP {"map",\
+	 "/result = map($1, $2)",\
+	 2,\
+	 -1,\
+	 (char *[]){"Function or function name", "OSC address or list"},\
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"Additional lists"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/vector", NULL},\
+	 "Map arguments onto a function and return the result as a list.",\
+	 osc_expr_map,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_LREDUCE {"lreduce",\
+	 "/result = reduce($1, $2)",\
+	 2,\
+	 1,\
+	 (char *[]){"Function or function name", "OSC address or list to reduce"},\
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"Start value"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/vector", NULL},\
+	 "Combine the elements of a list using a left-associative binary operation.",\
+	 osc_expr_lreduce,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_RREDUCE {"rreduce",\
+	 "/result = reduce($1, $2)",\
+	 2,\
+	 1,\
+	 (char *[]){"Function or function name", "OSC address or list to reduce"},\
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"Start value"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/vector", NULL},\
+	 "Combine the elements of a list using a right-associative binary operation.",\
+	 osc_expr_rreduce,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_QUOTE {"quote",\
+	 "/result = quote($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"argument"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/core", NULL},\
+	 "Prevent the evaluation of <arg1>.",\
+	 osc_expr_quote,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_VALUE {"value",\
+	 "/result = value($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"argument"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/core", NULL},\
+	 "Return the value associated with the argument.",\
+	 osc_expr_value,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_LAMBDA {"lambda",\
+	 "",\
+	 0,\
+	 0,\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/core", NULL},\
+	 "Anonymous function",\
+	 osc_expr_lambda,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_IF {"if",\
+	 "/result = if($1, $2, $3)",\
+	 2,\
+	 1,\
+	 (char *[]){"test", "then"},\
+	 (int []){OSC_EXPR_ARG_TYPE_BOOLEAN | OSC_EXPR_ARG_TYPE_NUMBER, OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"else"},\
+	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},\
+	 (char *[]){"/conditional", NULL},\
+	 "Conditionally execute <arg2> or optional <arg3> based on the result of <arg1>",\
+	 osc_expr_if,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_BOUND {"bound",\
+	 "/result = bound($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"OSC address"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/predicate", NULL},\
+	 "True if the address exists and has data bound to it, false otherwise.",\
+	 osc_expr_bound,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_EXISTS {"exists",\
+	 "/result = exists($1)",\
+	 1,\
+	 0,\
+	 (char *[]){"OSC address"},\
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"/predicate", NULL},\
+	 "True if the address exists (regardless of whether it has data bound to it.",\
+	 osc_expr_exists,\
+	 NULL,\
+	 0}
+#define OSC_EXPR_REC_ASEQ {"aseq",\
+	 "/result = aseq($1, $2, $3)",\
+	 2,\
+	 1,\
+	 (char *[]){"min", "max"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){"step (default = 1)"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},\
+	 (char *[]){"/vector", NULL},\
+	 "Arithmetic progression from <arg1> to <arg2> in <arg3> steps.  <arg3> is optional and defaults to 1",\
+	 osc_expr_aseq,\
+	 NULL,\
+	 0}
+
 
 //////////////////////////////////////////////////
 // records for simple binary and unary operators
@@ -865,6 +1074,22 @@ static t_osc_expr_rec osc_expr_rec_op_nullcoalesceassign = OSC_EXPR_REC_OP_NULLC
 //////////////////////////////////////////////////
 static t_osc_expr_rec osc_expr_rec_nth = OSC_EXPR_REC_NTH;
 static t_osc_expr_rec osc_expr_rec_assign_to_index = OSC_EXPR_REC_ASSIGN_TO_INDEX;
+static t_osc_expr_rec osc_expr_rec_add1 = OSC_EXPR_REC_ADD1;
+static t_osc_expr_rec osc_expr_rec_sub1 = OSC_EXPR_REC_SUB1;
+static t_osc_expr_rec osc_expr_rec_prog1 = OSC_EXPR_REC_PROG1;
+static t_osc_expr_rec osc_expr_rec_prog2 = OSC_EXPR_REC_PROG2;
+static t_osc_expr_rec osc_expr_rec_progn = OSC_EXPR_REC_PROGN;
+static t_osc_expr_rec osc_expr_rec_apply = OSC_EXPR_REC_APPLY;
+static t_osc_expr_rec osc_expr_rec_map = OSC_EXPR_REC_MAP;
+static t_osc_expr_rec osc_expr_rec_lreduce = OSC_EXPR_REC_LREDUCE;
+static t_osc_expr_rec osc_expr_rec_rreduce = OSC_EXPR_REC_RREDUCE;
+static t_osc_expr_rec osc_expr_rec_quote = OSC_EXPR_REC_QUOTE;
+static t_osc_expr_rec osc_expr_rec_value = OSC_EXPR_REC_VALUE;
+static t_osc_expr_rec osc_expr_rec_lambda = OSC_EXPR_REC_LAMBDA;
+static t_osc_expr_rec osc_expr_rec_if = OSC_EXPR_REC_IF;
+static t_osc_expr_rec osc_expr_rec_bound = OSC_EXPR_REC_BOUND;
+static t_osc_expr_rec osc_expr_rec_exists = OSC_EXPR_REC_EXISTS;
+static t_osc_expr_rec osc_expr_rec_aseq = OSC_EXPR_REC_ASEQ;
 
 
 // this array can be indexed by either the ascii char of an operator,
@@ -1193,35 +1418,21 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	//////////////////////////////////////////////////
 	OSC_EXPR_REC_NTH,
 	OSC_EXPR_REC_ASSIGN_TO_INDEX,
+	OSC_EXPR_REC_ADD1,
+	OSC_EXPR_REC_SUB1,
+	OSC_EXPR_REC_PROG1,
+	OSC_EXPR_REC_PROG2,
+	OSC_EXPR_REC_PROGN,
+	OSC_EXPR_REC_APPLY,
+	OSC_EXPR_REC_MAP,
+	OSC_EXPR_REC_LREDUCE,
+	OSC_EXPR_REC_RREDUCE,
+	OSC_EXPR_REC_QUOTE,
+	OSC_EXPR_REC_VALUE,
+	OSC_EXPR_REC_LAMBDA,
+	OSC_EXPR_REC_IF,
 
 	//////////////////////////////////////////////////
-	{"plus1",
-	 "/result = plus1($1)",
-	 1,
-	 0,
-	 (char *[]){"arg"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/arithmetic", NULL},
-	 "Add one and return the result without altering the argument",
-	 osc_expr_add1,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"minus1",
-	 "/result = minus1($1)",
-	 1,
-	 0,
-	 (char *[]){"arg"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/arithmetic", NULL},
-	 "Subtract one and return the result without altering the argument.",
-	 osc_expr_sub1,
-	 NULL,
-	 0},
 	//////////////////////////////////////////////////
 	// most of math.h
 	//////////////////////////////////////////////////
@@ -1939,20 +2150,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////
-	{"aseq",
-	 "/result = aseq($1, $2, $3)",
-	 2,
-	 1,
-	 (char *[]){"min", "max"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){"step (default = 1)"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){"/vector", NULL},
-	 "Arithmetic progression from <arg1> to <arg2> in <arg3> steps.  <arg3> is optional and defaults to 1",
-	 osc_expr_aseq,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
 	{"interleave",
 	 "/result = interleave($1, $2)",
 	 2,
@@ -2205,20 +2402,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////
-	{"if",
-	 "/result = if($1, $2, $3)",
-	 2,
-	 1,
-	 (char *[]){"test", "then"},
-	 (int []){OSC_EXPR_ARG_TYPE_BOOLEAN | OSC_EXPR_ARG_TYPE_NUMBER, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"else"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/conditional", NULL},
-	 "Conditionally execute <arg2> or optional <arg3> based on the result of <arg1>",
-	 osc_expr_if,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
 	{"strcmp",
 	 "/result = strcmp($1, $2)",
 	 2,
@@ -2258,34 +2441,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/string/function", NULL},
 	 "Join multiple strings with a separator.",
 	 osc_expr_join,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"bound",
-	 "/result = bound($1)",
-	 1,
-	 0,
-	 (char *[]){"OSC address"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/predicate", NULL},
-	 "True if the address exists and has data bound to it, false otherwise.",
-	 osc_expr_bound,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"exists",
-	 "/result = exists($1)",
-	 1,
-	 0,
-	 (char *[]){"OSC address"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/predicate", NULL},
-	 "True if the address exists (regardless of whether it has data bound to it.",
-	 osc_expr_exists,
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////
@@ -2384,146 +2539,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Tokenize an expression",
 	 osc_expr_tokenize,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"prog1",
-	 "/result = prog1($1)",
-	 1,
-	 -1,
-	 (char *[]){"expression to be evaluated"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"additional expressions"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/core", NULL},
-	 "Execute a sequence of expressions and return the first one.",
-	 osc_expr_prog1,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"prog2",
-	 "/result = prog2($1)",
-	 1,
-	 -1,
-	 (char *[]){"expression to be evaluated"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"additional expressions"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/core", NULL},
-	 "Execute a sequence of expressions and return the second one.",
-	 osc_expr_prog2,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"progn",
-	 "/result = progn($1)",
-	 1,
-	 -1,
-	 (char *[]){"expression to be evaluated"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"additional expressions"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/core", NULL},
-	 "Execute a sequence of expressions and return the last one.",
-	 osc_expr_progn,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"apply",
-	 "/result = apply($1, $2)",
-	 2,
-	 -1,
-	 (char *[]){"Function or function name", "Argument"},
-	 (int []){OSC_EXPR_ARG_TYPE_FUNCTION | OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"Additional argument(s)"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/core", NULL},
-	 "Apply a function to arguments.",
-	 osc_expr_apply,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"map",
-	 "/result = map($1, $2)",
-	 2,
-	 -1,
-	 (char *[]){"Function or function name", "OSC address or list"},
-	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"Additional lists"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/vector", NULL},
-	 "Map arguments onto a function and return the result as a list.",
-	 osc_expr_map,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"lreduce",
-	 "/result = reduce($1, $2)",
-	 2,
-	 1,
-	 (char *[]){"Function or function name", "OSC address or list to reduce"},
-	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"Start value"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/vector", NULL},
-	 "Combine the elements of a list using a left-associative binary operation.",
-	 osc_expr_lreduce,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"rreduce",
-	 "/result = reduce($1, $2)",
-	 2,
-	 1,
-	 (char *[]){"Function or function name", "OSC address or list to reduce"},
-	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_FUNCTION, OSC_EXPR_ARG_TYPE_ANYTHING, OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"Start value"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){"/vector", NULL},
-	 "Combine the elements of a list using a right-associative binary operation.",
-	 osc_expr_rreduce,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"quote",
-	 "/result = quote($1)",
-	 1,
-	 0,
-	 (char *[]){"argument"},
-	 (int []){OSC_EXPR_ARG_TYPE_ANYTHING},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Prevent the evaluation of <arg1>.",
-	 osc_expr_quote,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"value",
-	 "/result = value($1)",
-	 1,
-	 0,
-	 (char *[]){"argument"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Return the value associated with the argument.",
-	 osc_expr_value,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"lambda",
-	 "",
-	 0,
-	 0,
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Anonymous function",
-	 osc_expr_lambda,
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////

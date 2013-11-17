@@ -1,4 +1,4 @@
-LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial osc_expr_ast_expr osc_expr_ast_funcall osc_expr_ast_value osc_expr_ast_list osc_expr_ast_function osc_expr_ast_binaryop osc_expr_ast_arraysubscript osc_expr_ast_sugar
+LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial osc_expr_ast_expr osc_expr_ast_funcall osc_expr_ast_value osc_expr_ast_list osc_expr_ast_function osc_expr_ast_binaryop osc_expr_ast_arraysubscript osc_expr_ast_sugar osc_expr_ast_unaryop osc_expr_ast_aseq
 
 LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
@@ -21,7 +21,7 @@ LIBO_OBJECTS = $(LIBO_OFILES) $(LIBO_SCANNER_OBJECTS) $(LIBO_PARSER_OBJECTS)
 RELEASE-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O3 -funroll-loops -std=c99
 DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
-MAC-CFLAGS = -arch i386 -arch x86_64
+MAC-CFLAGS = -arch i386 -arch x86_64 -Wno-unused-variable -Wno-deprecated-declarations
 ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 

@@ -31,11 +31,11 @@
 //#include "osc_expr_privatedecls.h"
 #include "osc_expr_rec.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_ast_binaryop.h"
-#include "osc_expr_ast_binaryop.r"
+#include "osc_expr_ast_unaryop.h"
+#include "osc_expr_ast_unaryop.r"
 
 
-int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
+int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_expr_lexenv *lexenv,
 				      long *len,
 				      char **oscbndl,
@@ -44,62 +44,83 @@ int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	return 1;
 }
 
-long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
+long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(!e){
 		return 0;
 	}
-	t_osc_expr_rec *r = osc_expr_ast_binaryop_getRec((t_osc_expr_ast_binaryop *)e);
+	t_osc_expr_rec *r = osc_expr_ast_unaryop_getRec((t_osc_expr_ast_unaryop *)e);
 	if(!r){
 		return 0;
 	}
-        t_osc_expr_ast_expr *left = osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e);
-        t_osc_expr_ast_expr *right = osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e);
+        t_osc_expr_ast_expr *arg = osc_expr_ast_unaryop_getArg((t_osc_expr_ast_unaryop *)e);
+	int side = osc_expr_ast_unaryop_getSide((t_osc_expr_ast_unaryop *)e);
 	long offset = 0;
-	if(!buf){
-		offset += osc_expr_ast_expr_format(NULL, n, left);
-		offset += snprintf(NULL, n, "%s", osc_expr_rec_getName(r));
-		offset += osc_expr_ast_expr_format(NULL, n, right);
+	if(side == OSC_EXPR_AST_UNARYOP_LEFT){
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_rec_getName(r));
+		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
+	}else if(side == OSC_EXPR_AST_UNARYOP_RIGHT){
+		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_rec_getName(r));
 	}else{
-		offset += osc_expr_ast_expr_format(buf + offset, n, left);
-		offset += snprintf(buf + offset, n, "%s", osc_expr_rec_getName(r));
-		offset += osc_expr_ast_expr_format(buf + offset, n, right);
+		//wtf?
 	}
 	return offset;
 }
 
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
+// this shouldn't actually ever get called
+long osc_expr_ast_unaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
+{
+	return 0;
+}
+
+t_osc_expr_ast_expr *osc_expr_ast_unaryop_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
-		t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)ast;
-		t_osc_expr_rec *r = osc_expr_ast_binaryop_getRecCopy(b);
-		t_osc_expr_ast_expr *left = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
-		t_osc_expr_ast_expr *right = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
-		t_osc_expr_ast_binaryop *copy = osc_expr_ast_binaryop_alloc(r, left, right);
-		osc_expr_ast_binaryop_setLeftArg(copy, left);
-		osc_expr_ast_binaryop_setRightArg(copy, right);
+		t_osc_expr_ast_unaryop *u = (t_osc_expr_ast_unaryop *)ast;
+		t_osc_expr_rec *r = osc_expr_ast_unaryop_getRecCopy(u);
+		t_osc_expr_ast_expr *arg = osc_expr_ast_expr_copy(osc_expr_ast_unaryop_getArg(u));
+		int side = osc_expr_ast_unaryop_getSide(u);
+		t_osc_expr_ast_unaryop *copy = osc_expr_ast_unaryop_alloc(r, arg, side);
 		return (t_osc_expr_ast_expr *)copy;
 	}else{
 		return NULL;
 	}
 }
 
-void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e)
+void osc_expr_ast_unaryop_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
+		osc_expr_ast_expr_free(osc_expr_ast_unaryop_getArg((t_osc_expr_ast_unaryop *)e));
 		osc_mem_free(e);
 	}
 }
 
-t_osc_expr_funcptr osc_expr_ast_binaryop_getFunc(t_osc_expr_ast_binaryop *e)
+t_osc_err osc_expr_ast_unaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+{
+	if(!e){
+		return OSC_ERR_NULLPTR;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+{
+	if(!len || !ptr){
+		return OSC_ERR_NOBUNDLE;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_expr_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
-		return osc_expr_rec_getFunction(osc_expr_ast_binaryop_getRec(e));
+		return osc_expr_rec_getFunction(osc_expr_ast_unaryop_getRec(e));
 	}
 	return NULL;
 }
 
-t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e)
+t_osc_expr_rec *osc_expr_ast_unaryop_getRec(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
 		return e->rec;
@@ -107,14 +128,14 @@ t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e)
 	return NULL;
 }
 
-void osc_expr_ast_binaryop_setRec(t_osc_expr_ast_binaryop *e, t_osc_expr_rec *r)
+void osc_expr_ast_unaryop_setRec(t_osc_expr_ast_unaryop *e, t_osc_expr_rec *r)
 {
 	if(e && r){
 		e->rec = r;
 	}
 }
 
-t_osc_expr_rec *osc_expr_ast_binaryop_getRecCopy(t_osc_expr_ast_binaryop *e)
+t_osc_expr_rec *osc_expr_ast_unaryop_getRecCopy(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
 		t_osc_expr_rec *r = e->rec;
@@ -125,55 +146,72 @@ t_osc_expr_rec *osc_expr_ast_binaryop_getRecCopy(t_osc_expr_ast_binaryop *e)
 	return NULL;
 }
 
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_getLeftArg(t_osc_expr_ast_binaryop *e)
+t_osc_expr_ast_expr *osc_expr_ast_unaryop_getArg(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
-		return e->left;
+		return e->arg;
 	}
 	return NULL;
 }
 
-t_osc_expr_ast_expr *osc_expr_ast_binaryop_getRightArg(t_osc_expr_ast_binaryop *e)
+void osc_expr_ast_unaryop_setArg(t_osc_expr_ast_unaryop *e, t_osc_expr_ast_expr *arg)
 {
 	if(e){
-		return e->right;
-	}
-	return NULL;
-}
-
-void osc_expr_ast_binaryop_setLeftArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *left)
-{
-	if(e){
-		e->left = left;
+		e->arg = arg;
 	}
 }
 
-void osc_expr_ast_binaryop_setRightArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *right)
+int osc_expr_ast_unaryop_getSide(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
-		e->right = right;
+		return e->side;
 	}
+	return -1;
 }
 
-t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
+void osc_expr_ast_unaryop_setSide(t_osc_expr_ast_unaryop *e, int side)
 {
-	if(!rec || !left || !right){
+	if(side == OSC_EXPR_AST_UNARYOP_LEFT || side == OSC_EXPR_AST_UNARYOP_RIGHT){
+		if(e){
+			e->side = side;
+			return;
+		}
+	}
+	printf("%s:%d: side is not left or right!\n", __func__, __LINE__);
+}
+
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg, int side)
+{
+	if(!rec || !arg || (side != OSC_EXPR_AST_UNARYOP_LEFT && side != OSC_EXPR_AST_UNARYOP_RIGHT)){
 		return NULL;
 	}
-	t_osc_expr_ast_binaryop *b = osc_mem_alloc(sizeof(t_osc_expr_ast_binaryop));
+	t_osc_expr_ast_unaryop *b = osc_mem_alloc(sizeof(t_osc_expr_ast_unaryop));
 	if(!b){
 		return NULL;
 	}
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)b,
-			       OSC_EXPR_AST_NODETYPE_BINARYOP,
+			       OSC_EXPR_AST_NODETYPE_UNARYOP,
 			       NULL,
-			       osc_expr_ast_binaryop_evalInLexEnv,
-			       osc_expr_ast_binaryop_format,
-			       osc_expr_ast_binaryop_free,
-			       osc_expr_ast_binaryop_copy,
-			       sizeof(t_osc_expr_ast_binaryop));
-	osc_expr_ast_binaryop_setRec(b, rec);
-	osc_expr_ast_binaryop_setLeftArg(b, left);
-	osc_expr_ast_binaryop_setRightArg(b, right);
+			       osc_expr_ast_unaryop_evalInLexEnv,
+			       osc_expr_ast_unaryop_format,
+			       osc_expr_ast_unaryop_formatLisp,
+			       osc_expr_ast_unaryop_free,
+			       osc_expr_ast_unaryop_copy,
+			       osc_expr_ast_unaryop_serialize,
+			       osc_expr_ast_unaryop_deserialize,
+			       sizeof(t_osc_expr_ast_unaryop));
+	osc_expr_ast_unaryop_setRec(b, rec);
+	osc_expr_ast_unaryop_setArg(b, arg);
+	osc_expr_ast_unaryop_setSide(b, side);
 	return b;
+}
+
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg)
+{
+	return osc_expr_ast_unaryop_alloc(rec, arg, OSC_EXPR_AST_UNARYOP_LEFT);
+}
+
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg)
+{
+	return osc_expr_ast_unaryop_alloc(rec, arg, OSC_EXPR_AST_UNARYOP_RIGHT);
 }

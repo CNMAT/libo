@@ -129,17 +129,20 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	return OSC_EXPR_NULLCOALESCEASSIGN;
 }
 
-,|;|\(|\)|\{|\}				{
+
+,|;|\(|\)|\{|\}|\[|\]				{
 						return *yytext;
 					}
-\[\[					{
+	/*
+	\[\[					{
 						//printf("open double brackets\n");
 						return OPEN_DBL_BRKTS;
 					}
-\]\]					{
+	\]\]					{
 						//printf("close double brackets\n");
 						return CLOSE_DBL_BRKTS;
 					}
+	*/
 
 quote[[:space:]]*\( {
 	BEGIN(quote_function);

@@ -49,6 +49,7 @@ enum{
 	OSC_EXPR_AST_NODETYPE_LIST,
 	OSC_EXPR_AST_NODETYPE_OSCADDRESS,
 	OSC_EXPR_AST_NODETYPE_FUNCTION,
+	OSC_EXPR_AST_NODETYPE_ASEQ,
 	OSC_EXPR_AST_NODETYPE_SUGAR
 };
 
@@ -81,7 +82,6 @@ int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast);
-t_osc_expr_ast_expr *osc_expr_ast_expr_copy1(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e);
 int osc_expr_ast_expr_getNodetype(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_next(t_osc_expr_ast_expr *e);
