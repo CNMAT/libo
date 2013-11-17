@@ -221,6 +221,7 @@ t_osc_err osc_expr_parser_parseExpr_new(char *ptr, t_osc_expr_ast_expr **ast)
 	// expressions really have to end with a semicolon, but it's nice to write single
 	// expressions without one (or to leave it off the last one), so we add one to the
 	// end of the string here just in case.
+	/*
 	if(ptr[len - 1] != ';'){
 		char *tmp = osc_mem_alloc(len + 2);
 		memcpy(tmp, ptr, len + 1);
@@ -229,7 +230,7 @@ t_osc_err osc_expr_parser_parseExpr_new(char *ptr, t_osc_expr_ast_expr **ast)
 		ptr = tmp;
 		alloc = 1;
 	}
-
+	*/
 	yyscan_t scanner;
 	osc_expr_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
@@ -645,7 +646,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 	t_osc_atom_u *atom;
 }
 
-%type <expr>expr function funcall oscaddress literal aseq unaryop binaryop commaseparatedexprs 
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop commaseparatedexprs 
 %type <atom> lambdalist
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA
@@ -688,29 +689,79 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC  '!'
 
 // level 2
-%left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL OSC_EXPR_QUOTED_EXPR '[' ']' //OPEN_DBL_BRKTS CLOSE_DBL_BRKTS
+%left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL OSC_EXPR_QUOTED_EXPR '(' ')' '[' ']' //OPEN_DBL_BRKTS CLOSE_DBL_BRKTS
 
 %start expns
 
 %%
 
-expns:  {
+ /*
+parsing expression: "apply(lambda(a, b, c){/foo = a + b * c; apply(lambda(x, y, z){/bar = /foo + x;}, /x, /y, /z);}, /a, /b, /c)" ...
+
+expns 1: don't have tmp_exprstack, not doing anything
+expns 1: don't have tmp_exprstack, not doing anything
+expns 2
+expns 2: don't have tmp_exprstack
+expns 1: don't have exprstack
+expns 2
+expns 2: don't have tmp_exprstack
+expns 2
+expns 2: don't have tmp_exprstack
+expns 2
+expns 2: don't have tmp_exprstack
+
+... done
+
+parsing expression: "apply(lambda(a, b, c){/foo = a + b; /bar = b - c;}, /a, /b, /c)" ...
+
+expns 1: don't have tmp_exprstack, not doing anything
+expns 1: don't have tmp_exprstack, not doing anything
+expns 2
+expns 2: don't have tmp_exprstack
+expns 2
+expns 2: have tmp_exprstack
+expns 2
+expns 2: don't have tmp_exprstack
+
+... done
+  */
+ /*
+expns:  expr ';' {
 		if(*tmp_exprstack){
 			if(*exprstack){
+				printf("expns 1: have exprstack\n");
 				osc_expr_ast_expr_append(*exprstack, *tmp_exprstack);
 			}else{
+				printf("expns 1: don't have exprstack\n");
 				*exprstack = *tmp_exprstack;
 			}
 			*tmp_exprstack = NULL;
+		}else{
+			printf("expns 1: don't have tmp_exprstack, not doing anything\n");
 		}
  	}
-//| expns ';' {;}// can this really ever happen?
 	| expns expr ';' {
+		printf("expns 2\n");
 		if(*tmp_exprstack){
+			printf("expns 2: have tmp_exprstack\n");
 			osc_expr_ast_expr_append(*tmp_exprstack, $2);
 		}else{
+			printf("expns 2: don't have tmp_exprstack\n");
 			*tmp_exprstack = $2;
 		}
+ 	}
+;
+ */
+
+expns: 
+	expr {
+		$$ = $1;
+		*exprstack = $1;
+	}
+	| expns expr {
+		osc_expr_ast_expr_append($1, $2);
+		*exprstack = $1;
+		$$ = $1;
  	}
 ;
 
@@ -733,13 +784,14 @@ function:
 			a = a->next;
 			osc_atom_u_free(killme);
 		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, *tmp_exprstack);
+		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, *tmp_exprstack);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, $6);
 		for(int i = 0; i < n; i++){
 			if(params[i]){
 				osc_mem_free(params[i]);
 			}
 		}
-		*tmp_exprstack = NULL;
+//*tmp_exprstack = NULL;
 	}
 ;
 
@@ -950,14 +1002,18 @@ funcall:
 ;
 
 expr:
-	oscaddress
+	';' {
+		printf("semicolon\n");
+		$$ = osc_expr_ast_expr_alloc();
+	}
+	| oscaddress %prec oscaddress_prec
 	| function
 	| funcall
 	| unaryop 
 	| binaryop
 	| literal
 	| aseq %prec oscaddress_prec
-	| OSC_EXPR_IDENTIFIER {
+	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
 	| '(' expr ')' {
@@ -1003,36 +1059,18 @@ expr:
 		*/
 	}
 // invalid constructs that result in errors
+/*
 	| OSC_EXPR_STRING OSC_EXPR_INC '=' expr {
-		/*
-		char buf[strlen(osc_atom_u_getStringPtr($1)) + 3];
-		sprintf(buf, "%s++", osc_atom_u_getStringPtr($1));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		*/
 		return 1;
 	}
 	| OSC_EXPR_STRING OSC_EXPR_DEC '=' expr {
-		/*
-		char buf[strlen(osc_atom_u_getStringPtr($1)) + 3];
-		sprintf(buf, "%s--", osc_atom_u_getStringPtr($1));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		*/
 		return 1;
 	}
 	| OSC_EXPR_INC OSC_EXPR_STRING '=' expr %prec OSC_EXPR_PREFIX_INC {
-		/*
-		char buf[strlen(osc_atom_u_getStringPtr($2)) + 3];
-		sprintf(buf, "++%s", osc_atom_u_getStringPtr($2));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		*/
 		return 1;
 	}
 	| OSC_EXPR_DEC OSC_EXPR_STRING '=' expr %prec OSC_EXPR_PREFIX_DEC {
-		/*
-		char buf[strlen(osc_atom_u_getStringPtr($2)) + 3];
-		sprintf(buf, "--%s", osc_atom_u_getStringPtr($2));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		*/
 		return 1;
 	}
+*/
 ;

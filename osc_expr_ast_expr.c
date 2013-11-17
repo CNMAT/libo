@@ -138,8 +138,30 @@ void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_
 
 long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
-	if(e && e->format){
-		return e->format(buf, n, e);
+	if(e){
+		if(e->format){
+			long l = e->format(buf, n, e);
+			return l;
+		}else{
+			return snprintf(buf, n, "; ");
+		}
+	}else{
+		return 0;
+	}
+}
+
+long osc_expr_ast_expr_formatAllLinked(char *buf, long n, t_osc_expr_ast_expr *e)
+{
+	if(e){
+		if(e->format){
+			long l = e->format(buf, n, e);
+			l += snprintf(buf ? buf + l : NULL, buf ? n - 1 : 0, " ");
+			l += osc_expr_ast_expr_formatAllLinked(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
+			return l;
+		}else{
+			long l = snprintf(buf, n, "; ");
+			return l + osc_expr_ast_expr_formatAllLinked(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
+		}
 	}else{
 		return 0;
 	}
@@ -148,7 +170,21 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 long osc_expr_ast_expr_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(e && e->format_lisp){
-		return e->format_lisp(buf, n, e);
+		long l = 0;
+		l += e->format_lisp(buf ? buf + l : NULL, buf ? n - l : 0, e);
+		return l;
+	}else{
+		return 0;
+	}
+}
+
+long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_expr *e)
+{
+	if(e && e->format_lisp){
+		long l = 0;
+		l += e->format_lisp(buf ? buf + l : NULL, buf ? n - l : 0, e);
+		l += osc_expr_ast_expr_formatAllLinkedLisp(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
+		return l;
 	}else{
 		return 0;
 	}
@@ -181,6 +217,16 @@ size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void)
 {
 	t_osc_expr_ast_expr *e = (t_osc_expr_ast_expr *)osc_mem_alloc(sizeof(t_osc_expr_ast_expr));
-	osc_expr_ast_expr_init(e, OSC_EXPR_AST_NODETYPE_EXPR, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sizeof(t_osc_expr_ast_expr));
+	osc_expr_ast_expr_init(e,
+			       OSC_EXPR_AST_NODETYPE_EXPR,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       sizeof(t_osc_expr_ast_expr));
 	return e;
 }
