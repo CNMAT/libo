@@ -734,25 +734,12 @@ function:
 			osc_atom_u_free(killme);
 		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, *tmp_exprstack);
-		//t_osc_expr_rec *func = osc_expr_rec_alloc();
-		//osc_expr_rec_setName(func, "lambda");
-		//osc_expr_rec_setRequiredArgs(func, n, params, NULL);
 		for(int i = 0; i < n; i++){
 			if(params[i]){
 				osc_mem_free(params[i]);
 			}
 		}
 		*tmp_exprstack = NULL;
-		//osc_expr_rec_setFunction(func, osc_expr_lambda);
-		//osc_expr_rec_setExtra(func, *tmp_exprstack);
-		//$$ = func;
-		/*
-		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
-		}else if(startcond == START_FUNCTION){
-			*rec = func;
-		}
-		*/
 	}
 ;
 
@@ -983,148 +970,12 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "quote", arg);
 		*/
 	}
-// assignment
-//| oscaddress OPEN_DBL_BRKTS list CLOSE_DBL_BRKTS '=' expr {
-		/*
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		t_osc_expr_arg *indexes = $3;
-		if(osc_expr_arg_next($3)){
-			// /foo[[1, 2, 3]] = ...
-			t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", $3);
-			indexes = NULL;
-			indexes = osc_expr_arg_alloc();
-			osc_expr_arg_setExpr(indexes, e);
-		}
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $6);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
-		*/
-//}
-//| oscaddress OPEN_DBL_BRKTS expr ':' expr CLOSE_DBL_BRKTS '=' expr {
-		/*
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-
-		osc_expr_arg_append($3, $5);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $3);
-		t_osc_expr_arg *indexes = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(indexes, e);
-
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $8);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
-		*/
-//}
-//| oscaddress OPEN_DBL_BRKTS expr ':' expr ':' expr CLOSE_DBL_BRKTS '=' expr {
-		/*
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-
-		osc_expr_arg_append($3, $7);
-		osc_expr_arg_append($3, $5);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $3);
-		t_osc_expr_arg *indexes = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(indexes, e);
-
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $10);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
-		*/
-//}
-// shorthand constructions
-//| '[' expr ':' expr ']' %prec OSC_EXPR_FUNCALL {
-		/*
-		// matlab-style range
-		osc_expr_arg_append($2, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $2);
-		*/
-//}
-//| '[' expr ':' expr ':' expr ']' %prec OSC_EXPR_FUNCALL {
-		/*
-		// matlab-style range
-		osc_expr_arg_append($2, $6);
-		osc_expr_arg_append($2, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $2);
-		*/
-//}
 //| expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
 		/*
 		// ternary conditional
 		osc_expr_arg_append($1, $3);
 		osc_expr_arg_append($1, $5);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
-		*/
-//}
-//	| oscaddress OSC_EXPR_NULLCOALESCE expr {
-		/*
-		// null coalescing operator from C#.  
-		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
-		$$ = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
-		osc_atom_u_free($1); // the above function will copy that
-		*/
-//}
-//	| oscaddress OSC_EXPR_NULLCOALESCEASSIGN expr {
-		/*
-		// null coalescing operator from C#.  
-		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
-		t_osc_expr *if_expr = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
-		if(!if_expr){
-			return 1;
-		}
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		t_osc_expr_arg *arg2 = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(arg2, if_expr);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "=", arg, arg2);
-		osc_atom_u_free($1);
-		*/
-//	}
-//| '[' list ']' %prec OSC_EXPR_FUNCALL {
-		//$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", $2);
-//}
-// array lookup
-//| expr OPEN_DBL_BRKTS expns CLOSE_DBL_BRKTS {
-		/*
-		osc_expr_arg_setNext($1, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "nth", $1);
-		*/
-//}
-//| expr OPEN_DBL_BRKTS commaseparatedexprs CLOSE_DBL_BRKTS {
-		/*
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_setNext(arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "nth", arg);
-		osc_atom_u_free($1);
 		*/
 //}
 // shorthand apply
