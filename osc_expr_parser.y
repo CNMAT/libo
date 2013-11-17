@@ -45,8 +45,6 @@
 #include "osc_expr_ast_funcall.h"
 #include "osc_expr_ast_function.h"
 #include "osc_expr_ast_binaryop.h"
-#include "osc_expr_ast_fieldop.h"
-#include "osc_expr_ast_oscaddress.h"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_expr_ast_sugar.h"
@@ -778,11 +776,12 @@ varlist: {$$ = NULL;}
 // these are the only allowable lvalues 
 oscaddress:
 	OSC_EXPR_OSCADDRESS {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
 	}
 	| oscaddress '.' OSC_EXPR_OSCADDRESS {
 		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc(osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, ".", (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3))));
 		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_fieldop_alloc($1, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3)));
+/*
 		t_osc_expr_ast_expr *left = (t_osc_expr_ast_expr *)$1;
 		t_osc_expr_ast_expr *right = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3);
 		t_osc_expr_rec *rb = osc_expr_func_opcodeToOpRec['.'];
@@ -790,6 +789,8 @@ oscaddress:
 		t_osc_expr_ast_expr *parsed = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(rb, left, right);
 		t_osc_expr_ast_expr *fc = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(rf, 2, left, right);
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc(parsed, fc);
+*/
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '.', osc_expr_ast_value_allocOSCAddress($3));
   	}
 	| oscaddress OPEN_DBL_BRKTS commaseparatedexprs CLOSE_DBL_BRKTS {
 		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_oscaddress_alloc((t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3));
