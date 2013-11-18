@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#include "osc_expr_rec.h"
+#include "osc_expr_ast_value.h"
 
 typedef struct _osc_expr_ast_function t_osc_expr_ast_function;
 
@@ -46,12 +46,11 @@ long osc_expr_ast_function_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f)
 void osc_expr_ast_function_free(t_osc_expr_ast_expr *f);
 t_osc_err osc_expr_ast_function_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_function_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
-t_osc_expr_rec *osc_expr_ast_function_getFunction(t_osc_expr_ast_function *f);
-char *osc_expr_ast_function_getName(t_osc_expr_ast_function *f);
-int osc_expr_ast_function_getNumParams(t_osc_expr_ast_function *f);
-char **osc_expr_ast_function_getParams(t_osc_expr_ast_function *f);
-t_osc_expr_ast_expr *osc_expr_ast_function_getExprList(t_osc_expr_ast_function *f);
-t_osc_expr_ast_function *osc_expr_ast_function_alloc(int numparams, char **params, t_osc_expr_ast_expr *exprs);
+void osc_expr_ast_function_setLambdaList(t_osc_expr_ast_function *f, t_osc_expr_ast_value *lambdalist);
+void osc_expr_ast_function_setExprs(t_osc_expr_ast_function *f, t_osc_expr_ast_expr *exprs);
+t_osc_expr_ast_value *osc_expr_ast_function_getLambdaList(t_osc_expr_ast_function *f);
+t_osc_expr_ast_expr *osc_expr_ast_function_getExprs(t_osc_expr_ast_function *f);
+t_osc_expr_ast_function *osc_expr_ast_function_alloc(t_osc_expr_ast_value *lambdalist, t_osc_expr_ast_expr *exprs);
 
 #ifdef __cplusplus
 }

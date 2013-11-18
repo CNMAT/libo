@@ -47,18 +47,19 @@ long osc_expr_ast_function_format(char *buf, long n, t_osc_expr_ast_expr *f)
 {
 	if(f){
 		t_osc_expr_ast_function *ff = (t_osc_expr_ast_function *)f;
-		char *name = osc_expr_ast_function_getName(ff);
-		int nparams = osc_expr_ast_function_getNumParams(ff);
-		char **params = osc_expr_ast_function_getParams(ff);
-		t_osc_expr_ast_expr *e = osc_expr_ast_function_getExprList(ff);
+		char *name = "lambda";
+		t_osc_expr_ast_value *lambdalist = osc_expr_ast_function_getLambdaList(ff);
+		t_osc_expr_ast_expr *e = osc_expr_ast_function_getExprs(ff);
 		long offset = 0;
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s(", name);
-		for(int i = 0; i < nparams; i++){
-			if(i < nparams - 1){
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s, ", params[i]);
+		while(lambdalist){
+			offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, (t_osc_expr_ast_expr *)lambdalist);
+			if(osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist)){
+				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
 			}else{
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s){", params[i]);
+				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "){");
 			}
+			lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 		}
 		offset += osc_expr_ast_expr_formatAllLinked(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "}");
@@ -71,19 +72,19 @@ long osc_expr_ast_function_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f)
 {
 	if(f){
 		t_osc_expr_ast_function *ff = (t_osc_expr_ast_function *)f;
-		char *name = osc_expr_ast_function_getName(ff);
-		int nparams = osc_expr_ast_function_getNumParams(ff);
-		char **params = osc_expr_ast_function_getParams(ff);
-		t_osc_expr_ast_expr *e = osc_expr_ast_function_getExprList(ff);
+		char *name = "lambda";
+		t_osc_expr_ast_value *lambdalist = osc_expr_ast_function_getLambdaList(ff);
+		t_osc_expr_ast_expr *e = osc_expr_ast_function_getExprs(ff);
 		long offset = 0;
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(%s (", name);
-		for(int i = 0; i < nparams; i++){
-			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", params[i]);
-			if(i < nparams - 1){
+		while(lambdalist){
+			offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, (t_osc_expr_ast_expr *)lambdalist);
+			if(osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist)){
 				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
 			}
+			lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 		}
-		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ") ");
 		offset += osc_expr_ast_expr_formatAllLinkedLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
 		return offset;
@@ -95,16 +96,21 @@ t_osc_expr_ast_expr *osc_expr_ast_function_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
 		t_osc_expr_ast_function *f = (t_osc_expr_ast_function *)ast;
-		int nparams = osc_expr_ast_function_getNumParams(f);
-		char **params = osc_expr_ast_function_getParams(f);
-		t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprList(f);
-		t_osc_expr_ast_expr *copy = osc_expr_ast_expr_copy(exprlist);
+		t_osc_expr_ast_value *lambdalist = osc_expr_ast_function_getLambdaList(f);
+		t_osc_expr_ast_value *lambdalistcopy = (t_osc_expr_ast_value *)osc_expr_ast_value_copy((t_osc_expr_ast_expr *)lambdalist);
+		lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		while(lambdalist){
+			osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalistcopy, (t_osc_expr_ast_expr *)lambdalist);
+			lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		}
+		t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprs(f);
+		t_osc_expr_ast_expr *exprlistcopy = osc_expr_ast_expr_copy(exprlist);
 		exprlist = osc_expr_ast_expr_next(exprlist);
 		while(exprlist){
-			osc_expr_ast_expr_append(copy, exprlist);
+			osc_expr_ast_expr_append(exprlistcopy, exprlist);
 			exprlist = osc_expr_ast_expr_next(exprlist);
 		}
-		return (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(nparams, params, copy);
+		return (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(lambdalistcopy, exprlistcopy);
 	}else{
 		return NULL;
 	}
@@ -113,9 +119,8 @@ t_osc_expr_ast_expr *osc_expr_ast_function_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_function_free(t_osc_expr_ast_expr *f)
 {
 	if(f){
-		void *extra = NULL;
-		osc_expr_rec_free(((t_osc_expr_ast_function *)f)->function, &extra);
-		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)extra);
+		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)osc_expr_ast_function_getLambdaList((t_osc_expr_ast_function *)f));
+		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)osc_expr_ast_function_getExprs((t_osc_expr_ast_function *)f));
 		osc_mem_free(f);
 	}
 }
@@ -136,39 +141,37 @@ t_osc_err osc_expr_ast_function_deserialize(long len, char *ptr, t_osc_expr_ast_
 	return OSC_ERR_NONE;
 }
 
-char *osc_expr_ast_function_getName(t_osc_expr_ast_function *f)
+void osc_expr_ast_function_setLambdaList(t_osc_expr_ast_function *f, t_osc_expr_ast_value *lambdalist)
 {
 	if(f){
-		return osc_expr_rec_getName(f->function);
+		f->lambdalist = lambdalist;
 	}
-	return NULL;
 }
 
-int osc_expr_ast_function_getNumParams(t_osc_expr_ast_function *f)
+void osc_expr_ast_function_setExprs(t_osc_expr_ast_function *f, t_osc_expr_ast_expr *exprs)
 {
 	if(f){
-		return osc_expr_rec_getNumRequiredArgs(f->function);
+		f->exprs = exprs;
 	}
-	return 0;
 }
 
-char **osc_expr_ast_function_getParams(t_osc_expr_ast_function *f)
+t_osc_expr_ast_value *osc_expr_ast_function_getLambdaList(t_osc_expr_ast_function *f)
 {
 	if(f){
-		return osc_expr_rec_getRequiredArgsNames(f->function);
+		return f->lambdalist;
 	}
 	return 0;
 }
 
-t_osc_expr_ast_expr *osc_expr_ast_function_getExprList(t_osc_expr_ast_function *f)
+t_osc_expr_ast_expr *osc_expr_ast_function_getExprs(t_osc_expr_ast_function *f)
 {
 	if(f){
-		return osc_expr_rec_getExtra(f->function);
+		return f->exprs;
 	}
 	return 0;
 }
 
-t_osc_expr_ast_function *osc_expr_ast_function_alloc(int numparams, char **params, t_osc_expr_ast_expr *exprs)
+t_osc_expr_ast_function *osc_expr_ast_function_alloc(t_osc_expr_ast_value *lambdalist, t_osc_expr_ast_expr *exprs)
 {
 	t_osc_expr_ast_function *f = osc_mem_alloc(sizeof(t_osc_expr_ast_function));
 	if(f){
@@ -184,11 +187,8 @@ t_osc_expr_ast_function *osc_expr_ast_function_alloc(int numparams, char **param
 				       osc_expr_ast_function_serialize,
 				       osc_expr_ast_function_deserialize,
 				       sizeof(t_osc_expr_ast_function));
-		f->function = osc_expr_rec_alloc();
-		osc_expr_rec_setName(f->function, "lambda");
-		osc_expr_rec_setRequiredArgs(f->function, numparams, params, NULL);
-		osc_expr_rec_setFunction(f->function, osc_expr_lambda);
-		osc_expr_rec_setExtra(f->function, exprs);
+		osc_expr_ast_function_setLambdaList(f, lambdalist);
+		osc_expr_ast_function_setExprs(f, exprs);
 	}
 	return f;
 }

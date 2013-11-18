@@ -56,6 +56,7 @@
 #include "osc_expr_scanner.h"
 #include "osc_util.h"
 #include "osc_atom_u.r"
+#include "osc_hashtab.h"
 
 	//#define OSC_EXPR_PARSER_DEBUG
 #ifdef OSC_EXPR_PARSER_DEBUG
@@ -104,70 +105,9 @@ t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
 // value of 1 to osc_expr_scanner_lex() inside of osc_expr_parser_lex() down below.
 int alloc_atom = 1;
 
-
 int osc_expr_parser_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf){
 	return osc_expr_scanner_lex(yylval_param, llocp, yyscanner, 1, buflen, buf);
 }
-
-/*
-static t_osc_atom_ar_u *osc_expr_parser_foldConstants_impl(t_osc_expr *expr, t_osc_expr_lexenv *lexenv)
-{
-	printf("%s: %s\n", __func__, osc_expr_rec_getName(osc_expr_getRec(expr)));
-	t_osc_expr *e = expr;
-	while(e){
-		t_osc_expr_arg *a = osc_expr_getArgs(e);
-		int eval = 1;
-		while(a){
-			int type = osc_expr_arg_getType(a);
-			switch(type){
-			case OSC_EXPR_ARG_TYPE_OSCADDRESS:
-				// we can't eval this expression, but we want to continue to see if we can 
-				// reduce any of the other args
-				printf("address\n");
-				eval = 0;
-				break;
-			case OSC_EXPR_ARG_TYPE_EXPR:
-				printf("expr\n");
-				{
-					t_osc_expr *ee = osc_expr_arg_getExpr(a);
-					t_osc_atom_ar_u *ar = osc_expr_parser_foldConstants_impl(ee,
-												 lexenv);
-					if(ar){
-						osc_expr_free(ee);
-						printf("reduced\n");
-						if(osc_atom_array_u_getLen(ar) == 1){
-							osc_expr_arg_setOSCAtom(a, osc_atom_array_u_get(ar, 0));
-						}else{
-							osc_expr_arg_setList(a, ar);
-						}
-					}
-				}
-			default:
-				printf("default\n");
-			}
-			a = osc_expr_arg_next(a);
-		}
-		if(eval > 0){
-			printf("eval = %d\n", eval);
-			t_osc_atom_ar_u *res = NULL;
-			int ret = osc_expr_eval(e, NULL, NULL, &res);
-			if(ret){
-				return NULL;
-			}else{
-				return res;
-			}
-		}else{
-			return NULL;
-		}
-		e = osc_expr_next(e);
-	}
-}
-
-static void osc_expr_parser_foldConstants(t_osc_expr *expr)
-{
-	osc_expr_parser_foldConstants_impl(expr, NULL);
-}
-*/
 
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 {
@@ -195,7 +135,7 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 	t_osc_expr *tmp_exprstack = NULL;
 	long buflen = 0;
 	char *buf = NULL;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, NULL, scanner, ptr, &buflen, &buf);
+	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, scanner, ptr, &buflen, &buf);
 	osc_expr_scanner__delete_buffer(buf_state, scanner);
 	osc_expr_scanner_lex_destroy(scanner);
 	if(tmp_exprstack){
@@ -215,72 +155,21 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 
 t_osc_err osc_expr_parser_parseExpr_new(char *ptr, t_osc_expr_ast_expr **ast)
 {
-	//printf("parsing %s\n", ptr);
-	int len = strlen(ptr);
-	int alloc = 0;
-
-	// expressions really have to end with a semicolon, but it's nice to write single
-	// expressions without one (or to leave it off the last one), so we add one to the
-	// end of the string here just in case.
-	/*
-	if(ptr[len - 1] != ';'){
-		char *tmp = osc_mem_alloc(len + 2);
-		memcpy(tmp, ptr, len + 1);
-		tmp[len] = ';';
-		tmp[len + 1] = '\0';
-		ptr = tmp;
-		alloc = 1;
-	}
-	*/
 	yyscan_t scanner;
 	osc_expr_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
 	osc_expr_scanner_set_out(NULL, scanner);
 	t_osc_expr_ast_expr *exprstack = NULL;
-	t_osc_expr_ast_expr *tmp_exprstack = NULL;
+	t_osc_hashtab *lexenv = osc_hashtab_new(0, NULL);
 	long buflen = 0;
 	char *buf = NULL;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, NULL, scanner, ptr, &buflen, &buf);
+	t_osc_err ret = osc_expr_parser_parse(&exprstack, lexenv, scanner, ptr, &buflen, &buf);
 	osc_expr_scanner__delete_buffer(buf_state, scanner);
 	osc_expr_scanner_lex_destroy(scanner);
-	if(tmp_exprstack){
-		if(exprstack){
-			osc_expr_ast_expr_append(exprstack, tmp_exprstack);
-		}else{
-			exprstack = tmp_exprstack;
-		}
-	}
-	//osc_expr_parser_foldConstants(exprstack);
 	*ast = exprstack;
-	if(alloc){
-		osc_mem_free(ptr);
-	}
 	return ret;
 }
 
-t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f)
-{
-	yyscan_t scanner;
-	osc_expr_scanner_lex_init(&scanner);
-	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
-	osc_expr_scanner_set_out(NULL, scanner);
-	t_osc_expr *exprstack = NULL;
-	t_osc_expr *tmp_exprstack = NULL;
-	long buflen = 0;
-	char *buf = NULL;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, f, scanner, ptr, &buflen, &buf);
-
-	osc_expr_scanner__delete_buffer(buf_state, scanner);
-	osc_expr_scanner_lex_destroy(scanner);
-	return ret;
-}
-
-/*
-t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f)
-{
-	return osc_expr_parser_parseExpr(ptr, f);
-}
-*/
 void osc_expr_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
 {
 	int len = strlen(input_string);
@@ -399,7 +288,7 @@ int osc_expr_parser_checkArity(YYLTYPE *llocp, char *input_string, t_osc_expr_re
 	return 0;
 }
 
- void yyerror(YYLTYPE *llocp, t_osc_expr_ast_expr **exprstack, t_osc_expr_ast_expr **tmp_exprstack, t_osc_expr_rec **rec, void *scanner, char *input_string, long *buflen, char **buf, char const *e)
+void yyerror(YYLTYPE *llocp, t_osc_expr_ast_expr **exprstack, t_osc_hashtab *lexenv, void *scanner, char *input_string, long *buflen, char **buf, char const *e)
 {
 	osc_expr_error(llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
@@ -622,6 +511,44 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 	return osc_expr_parser_reduce_PrefixFunction(llocp, input_string, "if", arg1);
 }
 
+void osc_expr_parser_printlexenv(char *key, void *val, void *context)
+{
+	printf("%s: %d\n", key, (int)val);
+}
+
+void osc_expr_parser_changeCountForVarInLexEnv(t_osc_hashtab *lexenv, char *var, int incdec)
+{
+	int varlen = strlen(var);
+	void *count = osc_hashtab_lookup(lexenv, varlen, var);
+	if(count){
+		osc_hashtab_store(lexenv, varlen, var, (void *)(((int)count) + incdec));
+	}else{
+		if(incdec < 0){
+			printf("%s:%d: just tried to unbind a lexical var that doesn't exist!\n", __func__, __LINE__);
+		}else{
+			osc_hashtab_store(lexenv, varlen, var, (void *)1);
+		}
+	}
+}
+
+void osc_expr_parser_addVarToLexEnv(t_osc_hashtab *lexenv, char *var)
+{
+	osc_expr_parser_changeCountForVarInLexEnv(lexenv, var, 1);
+}
+
+void osc_expr_parser_removeVarFromLexEnv(t_osc_hashtab *lexenv, char *var)
+{
+	osc_expr_parser_changeCountForVarInLexEnv(lexenv, var, -1);
+}
+
+int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
+{
+	int varlen = strlen(var);
+	void *count = osc_hashtab_lookup(lexenv, varlen, var);
+	printf("%s: %d\n", var, (int)count);
+	return (int)count;
+}
+
 %}
 
 %define "api.pure"
@@ -630,8 +557,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 
 // replace this bullshit with a struct...
 %parse-param{t_osc_expr_ast_expr **exprstack}
-%parse-param{t_osc_expr_ast_expr **tmp_exprstack}
-%parse-param{t_osc_expr_rec **rec}
+%parse-param{t_osc_hashtab *lexenv}
 %parse-param{void *scanner}
 %parse-param{char *input_string}
 %parse-param{long *buflen}
@@ -647,8 +573,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 	t_osc_atom_u *atom;
 }
 
-%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop exprlist value
-%type <atom> lambdalist
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist value lambdalist
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA
  //%type <func>function
@@ -728,7 +653,14 @@ oscaddress:
 value:
 	literal
 	| oscaddress %prec oscaddress_prec
-	;
+	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
+		if(!osc_expr_parser_varIsBoundInLexEnv(lexenv, osc_atom_u_getStringPtr($1))){
+			printf("undefined variable %s\n", osc_atom_u_getStringPtr($1));
+			return 1;
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	}
+;
 
 aseq:
 	'[' expr ':' expr ']' {
@@ -745,37 +677,25 @@ aseq:
 
 function: 
 	OSC_EXPR_LAMBDA '(' lambdalist ')' '{' expns '}' {
-		int n = 0;
-		t_osc_atom_u *a = $3;
-		while(a){
-			n++;
-			a = a->next;
+		//osc_hashtab_foreach(lexenv, osc_expr_parser_printlexenv, NULL);
+		t_osc_expr_ast_expr *v = $3;
+		while(v){
+			osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)v)));
+			v = osc_expr_ast_expr_next(v);
 		}
-		char *params[n];
-		a = $3;
-		for(int i = n - 1; i >= 0; i--){
-			char *st = osc_atom_u_getStringPtr(a);
-			int len = strlen(st) + 1;
-			params[i] = (char *)osc_mem_alloc(len);
-			strncpy(params[i], st, len);
-			t_osc_atom_u *killme = a;
-			a = a->next;
-			osc_atom_u_free(killme);
-		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, $6);
-		for(int i = 0; i < n; i++){
-			if(params[i]){
-				osc_mem_free(params[i]);
-			}
-		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$3, $6);
 	}
 ;
 
 lambdalist: {$$ = NULL;}
-	| OSC_EXPR_IDENTIFIER
+	| OSC_EXPR_IDENTIFIER {
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($1));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	}
 	| lambdalist ',' OSC_EXPR_IDENTIFIER {
-		$3->next = $1;
-		$$ = $3;
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($3));
+		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3));
+		$$ = $1;
 	}
 ;
 
@@ -896,6 +816,20 @@ binaryop:
  	}
 ;
 
+ternarycond:
+	expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
+		t_osc_expr_ast_ternarycond *parsed = osc_expr_ast_ternarycond_alloc($1, $3, $5);
+		t_osc_expr_ast_funcall *funcall = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, $1, $3, $5);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)funcall);
+		/*
+		// ternary conditional
+		osc_expr_arg_append($1, $3);
+		osc_expr_arg_append($1, $5);
+		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
+		*/
+	}
+;
+
 funcall:
 // prefix function call
 	OSC_EXPR_IDENTIFIER '(' exprlist ')' %prec OSC_EXPR_FUNCALL {
@@ -921,24 +855,14 @@ expr:
 	| funcall
 	| unaryop 
 	| binaryop
+	| ternarycond
 	| aseq %prec oscaddress_prec
-	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	| '[' exprlist ']' {
+		$$ = $2;
 	}
 	| '(' expr ')' {
 		$$ = $2;
   	}
-	| expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
-		t_osc_expr_ast_ternarycond *parsed = osc_expr_ast_ternarycond_alloc($1, $3, $5);
-		t_osc_expr_ast_funcall *funcall = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, $1, $3, $5);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)funcall);
-		/*
-		// ternary conditional
-		osc_expr_arg_append($1, $3);
-		osc_expr_arg_append($1, $5);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
-		*/
-	}
 ;
 
 exprlist:

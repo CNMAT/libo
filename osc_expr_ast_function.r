@@ -37,7 +37,8 @@ extern "C" {
 struct _osc_expr_ast_function
 {
 	struct _osc_expr_ast_expr expr; // parent
-	t_osc_expr_rec *function;
+	t_osc_expr_ast_value *lambdalist; // these will be strings identified as identifiers by the parser
+	t_osc_expr_ast_expr *exprs;
 };
 
 #ifdef __cplusplus
