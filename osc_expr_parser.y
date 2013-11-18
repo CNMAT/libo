@@ -646,7 +646,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 	t_osc_atom_u *atom;
 }
 
-%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop commaseparatedexprs 
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop exprlist value
 %type <atom> lambdalist
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA
@@ -689,80 +689,57 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC  '!'
 
 // level 2
-%left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL OSC_EXPR_QUOTED_EXPR '(' ')' '[' ']' //OPEN_DBL_BRKTS CLOSE_DBL_BRKTS
+%left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL '(' ')' '[' ']' 
 
 %start expns
 
 %%
 
- /*
-parsing expression: "apply(lambda(a, b, c){/foo = a + b * c; apply(lambda(x, y, z){/bar = /foo + x;}, /x, /y, /z);}, /a, /b, /c)" ...
-
-expns 1: don't have tmp_exprstack, not doing anything
-expns 1: don't have tmp_exprstack, not doing anything
-expns 2
-expns 2: don't have tmp_exprstack
-expns 1: don't have exprstack
-expns 2
-expns 2: don't have tmp_exprstack
-expns 2
-expns 2: don't have tmp_exprstack
-expns 2
-expns 2: don't have tmp_exprstack
-
-... done
-
-parsing expression: "apply(lambda(a, b, c){/foo = a + b; /bar = b - c;}, /a, /b, /c)" ...
-
-expns 1: don't have tmp_exprstack, not doing anything
-expns 1: don't have tmp_exprstack, not doing anything
-expns 2
-expns 2: don't have tmp_exprstack
-expns 2
-expns 2: have tmp_exprstack
-expns 2
-expns 2: don't have tmp_exprstack
-
-... done
-  */
- /*
-expns:  expr ';' {
-		if(*tmp_exprstack){
-			if(*exprstack){
-				printf("expns 1: have exprstack\n");
-				osc_expr_ast_expr_append(*exprstack, *tmp_exprstack);
-			}else{
-				printf("expns 1: don't have exprstack\n");
-				*exprstack = *tmp_exprstack;
-			}
-			*tmp_exprstack = NULL;
-		}else{
-			printf("expns 1: don't have tmp_exprstack, not doing anything\n");
-		}
- 	}
-	| expns expr ';' {
-		printf("expns 2\n");
-		if(*tmp_exprstack){
-			printf("expns 2: have tmp_exprstack\n");
-			osc_expr_ast_expr_append(*tmp_exprstack, $2);
-		}else{
-			printf("expns 2: don't have tmp_exprstack\n");
-			*tmp_exprstack = $2;
-		}
- 	}
-;
- */
-
-expns: 
-	expr {
-		$$ = $1;
-		*exprstack = $1;
+literal:    
+	OSC_EXPR_NUM {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
 	}
-	| expns expr {
-		osc_expr_ast_expr_append($1, $2);
-		*exprstack = $1;
-		$$ = $1;
- 	}
+	| OSC_EXPR_STRING {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
+	}
+;
+
+// these are the only allowable lvalues 
+oscaddress:
+	OSC_EXPR_OSCADDRESS {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
+	}
+	| oscaddress '.' OSC_EXPR_OSCADDRESS {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '.', (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3));
+  	}
+	| oscaddress '[' '[' exprlist ']' ']' {
+		t_osc_expr_ast_arraysubscript *as = osc_expr_ast_arraysubscript_alloc($1, $4);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_arraysubscript_toFuncall($1, $4);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)as, (t_osc_expr_ast_expr *)fc);
+	}
+	| oscaddress '[' '[' aseq ']' ']' {
+		t_osc_expr_ast_arraysubscript *as = osc_expr_ast_arraysubscript_alloc($1, $4);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_arraysubscript_toFuncall($1, $4);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)as, (t_osc_expr_ast_expr *)fc);
+	}
+;
+
+value:
+	literal
+	| oscaddress %prec oscaddress_prec
+	;
+
+aseq:
+	'[' expr ':' expr ']' {
+		t_osc_expr_ast_aseq *parsed = (t_osc_expr_ast_aseq *)osc_expr_ast_aseq_alloc($2, $4, NULL);
+		t_osc_expr_ast_funcall *f = osc_expr_ast_aseq_toFuncall($2, $4, NULL);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)f);
+	}
+	| '[' expr ':' expr ':' expr ']' {
+		t_osc_expr_ast_aseq *parsed = (t_osc_expr_ast_aseq *)osc_expr_ast_aseq_alloc($2, $6, $4);
+		t_osc_expr_ast_funcall *f = osc_expr_ast_aseq_toFuncall($2, $6, $4);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)f);
+	}
 ;
 
 function: 
@@ -784,14 +761,12 @@ function:
 			a = a->next;
 			osc_atom_u_free(killme);
 		}
-		//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, *tmp_exprstack);
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(n, params, $6);
 		for(int i = 0; i < n; i++){
 			if(params[i]){
 				osc_mem_free(params[i]);
 			}
 		}
-//*tmp_exprstack = NULL;
 	}
 ;
 
@@ -800,71 +775,6 @@ lambdalist: {$$ = NULL;}
 	| lambdalist ',' OSC_EXPR_IDENTIFIER {
 		$3->next = $1;
 		$$ = $3;
-	}
-;
-
-/*
-varlist: {$$ = NULL;}
-	| OSC_EXPR_IDENTIFIER '=' = expr {
-
-	}
-	| varlist ',' OSC_EXPR_IDENTIFIER '=' expr {
-
-  	}
-;
-*/
-
-// these are the only allowable lvalues 
-oscaddress:
-	OSC_EXPR_OSCADDRESS {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
-	}
-	| oscaddress '.' OSC_EXPR_OSCADDRESS {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '.', (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3));
-  	}
-	| oscaddress '[' '[' commaseparatedexprs ']' ']' {
-		t_osc_expr_ast_arraysubscript *as = osc_expr_ast_arraysubscript_alloc($1, $4);
-		t_osc_expr_ast_funcall *fc = osc_expr_ast_arraysubscript_toFuncall($1, $4);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)as, (t_osc_expr_ast_expr *)fc);
-	}
-	| oscaddress '[' '[' aseq ']' ']' {
-		t_osc_expr_ast_arraysubscript *as = osc_expr_ast_arraysubscript_alloc($1, $4);
-		t_osc_expr_ast_funcall *fc = osc_expr_ast_arraysubscript_toFuncall($1, $4);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)as, (t_osc_expr_ast_expr *)fc);
-	}
-;
-
-//let:
-//OSC_EXPR_LET '(' lambdalist
-
-literal:    
-	OSC_EXPR_NUM {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
-	}
-	| OSC_EXPR_STRING {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
-	}
-;
-
-aseq:
-	'[' expr ':' expr ']' {
-		t_osc_expr_ast_aseq *parsed = (t_osc_expr_ast_aseq *)osc_expr_ast_aseq_alloc($2, $4, NULL);
-		t_osc_expr_ast_funcall *f = osc_expr_ast_aseq_toFuncall($2, $4, NULL);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)f);
-	}
-	| '[' expr ':' expr ':' expr ']' {
-		t_osc_expr_ast_aseq *parsed = (t_osc_expr_ast_aseq *)osc_expr_ast_aseq_alloc($2, $6, $4);
-		t_osc_expr_ast_funcall *f = osc_expr_ast_aseq_toFuncall($2, $6, $4);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)f);
-	}
-;
- 
-commaseparatedexprs:
-	{ $$ = NULL;}
-	| expr
-	| commaseparatedexprs ',' expr {
-		osc_expr_ast_expr_append($1, $3);
-		$$ = $1;
 	}
 ;
 
@@ -987,7 +897,7 @@ binaryop:
 
 funcall:
 // prefix function call
-	OSC_EXPR_IDENTIFIER '(' commaseparatedexprs ')' %prec OSC_EXPR_FUNCALL {
+	OSC_EXPR_IDENTIFIER '(' exprlist ')' %prec OSC_EXPR_FUNCALL {
 		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
 							  input_string,
 							  osc_atom_u_getStringPtr($1),
@@ -1003,15 +913,13 @@ funcall:
 
 expr:
 	';' {
-		printf("semicolon\n");
 		$$ = osc_expr_ast_expr_alloc();
 	}
-	| oscaddress %prec oscaddress_prec
+	| value
 	| function
 	| funcall
 	| unaryop 
 	| binaryop
-	| literal
 	| aseq %prec oscaddress_prec
 	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
@@ -1019,13 +927,6 @@ expr:
 	| '(' expr ')' {
 		$$ = $2;
   	}
-	| OSC_EXPR_QUOTED_EXPR {
-		/*
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(arg, $1);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "quote", arg);
-		*/
-	}
 //| expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
 		/*
 		// ternary conditional
@@ -1034,43 +935,26 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
 		*/
 //}
-// shorthand apply
-//| '(' function ',' commaseparatedexprs ')' {
-		/*
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setFunction(arg, $2);
-		osc_expr_arg_append(arg, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "apply", arg);
-		*/
-//}
-// shorthand value()
-	| '`' OSC_EXPR_STRING '`' {
-		/*
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(arg, $2);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
-		*/
-	}
-	| '`' oscaddress '`' {
-		/*
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr($2));
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
-		*/
-	}
-// invalid constructs that result in errors
-/*
-	| OSC_EXPR_STRING OSC_EXPR_INC '=' expr {
-		return 1;
-	}
-	| OSC_EXPR_STRING OSC_EXPR_DEC '=' expr {
-		return 1;
-	}
-	| OSC_EXPR_INC OSC_EXPR_STRING '=' expr %prec OSC_EXPR_PREFIX_INC {
-		return 1;
-	}
-	| OSC_EXPR_DEC OSC_EXPR_STRING '=' expr %prec OSC_EXPR_PREFIX_DEC {
-		return 1;
-	}
-*/
 ;
+
+exprlist:
+	{ $$ = NULL;}
+	| expr
+	| exprlist ',' expr {
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
+	}
+;
+
+expns: 
+	expr {
+		$$ = $1;
+		*exprstack = $1;
+	}
+	| expns expr {
+		osc_expr_ast_expr_append($1, $2);
+		*exprstack = $1;
+		$$ = $1;
+ 	}
+;
+

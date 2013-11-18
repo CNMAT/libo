@@ -144,11 +144,12 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 					}
 	*/
 
-quote[[:space:]]*\( {
+	/*
+	quote[[:space:]]*\( {
 	BEGIN(quote_function);
 	}
 
-<quote_function>.* {
+	<quote_function>.* {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
@@ -170,6 +171,7 @@ quote[[:space:]]*\( {
 	BEGIN(0);
 	return OSC_EXPR_QUOTED_EXPR;
 	}
+	*/
 
 \" {
 	BEGIN(quote);

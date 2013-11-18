@@ -60,13 +60,6 @@ long osc_expr_ast_function_format(char *buf, long n, t_osc_expr_ast_expr *f)
 				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s){", params[i]);
 			}
 		}
-		/*
-		while(e){
-			offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
-			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
-			e = e->next;
-		}
-		*/
 		offset += osc_expr_ast_expr_formatAllLinked(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "}");
 		return offset;
@@ -91,16 +84,6 @@ long osc_expr_ast_function_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f)
 			}
 		}
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
-		/*
-		while(e){
-			if(osc_expr_ast_expr_getNodetype(e) != OSC_EXPR_AST_NODETYPE_EXPR){
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " (");
-				offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
-			}
-			e = e->next;
-		}
-		*/
 		offset += osc_expr_ast_expr_formatAllLinkedLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
 		return offset;
