@@ -49,6 +49,7 @@
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_expr_ast_aseq.h"
+#include "osc_expr_ast_ternarycond.h"
 #include "osc_expr_ast_sugar.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
@@ -927,14 +928,17 @@ expr:
 	| '(' expr ')' {
 		$$ = $2;
   	}
-//| expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
+	| expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
+		t_osc_expr_ast_ternarycond *parsed = osc_expr_ast_ternarycond_alloc($1, $3, $5);
+		t_osc_expr_ast_funcall *funcall = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, $1, $3, $5);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)funcall);
 		/*
 		// ternary conditional
 		osc_expr_arg_append($1, $3);
 		osc_expr_arg_append($1, $5);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
 		*/
-//}
+	}
 ;
 
 exprlist:
