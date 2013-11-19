@@ -50,6 +50,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->serialize = serializefn;
 		e->deserialize = deserializefn;
 		e->objsize = sizeof(t_osc_expr_ast_expr);
+		e->parens = 0;
 	}
 }
 
@@ -140,10 +141,17 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(e){
 		if(e->format){
-			long l = e->format(buf, n, e);
+			long l = 0;
+			if(osc_expr_ast_expr_getParens(e)){
+				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, "(");
+				l += e->format(buf ? buf + l : NULL, buf ? n - l : 0, e);
+				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, ")");
+			}else{
+				l += e->format(buf ? buf + l : NULL, buf ? n - l : 0, e);
+			}
 			return l;
 		}else{
-			return snprintf(buf, n, "; ");
+			return snprintf(buf, n, ";");
 		}
 	}else{
 		return 0;
@@ -153,15 +161,11 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 long osc_expr_ast_expr_formatAllLinked(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(e){
-		if(e->format){
-			long l = e->format(buf, n, e);
-			l += snprintf(buf ? buf + l : NULL, buf ? n - 1 : 0, " ");
-			l += osc_expr_ast_expr_formatAllLinked(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
-			return l;
-		}else{
-			long l = snprintf(buf, n, "; ");
-			return l + osc_expr_ast_expr_formatAllLinked(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
-		}
+		long l = 0;
+		l += osc_expr_ast_expr_format(buf ? buf + l : NULL, buf ? n - l : 0, e);
+		l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, " ");
+		l += osc_expr_ast_expr_formatAllLinked(buf ? buf + l : NULL, buf ? n - l : 0, osc_expr_ast_expr_next(e));
+		return l;
 	}else{
 		return 0;
 	}
@@ -212,6 +216,21 @@ size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)
 	}else{
 		return 0;
 	}
+}
+
+void osc_expr_ast_expr_setParens(t_osc_expr_ast_expr *e, int b)
+{
+	if(e){
+		e->parens = b;
+	}
+}
+
+int osc_expr_ast_expr_getParens(t_osc_expr_ast_expr *e)
+{
+	if(e){
+		return e->parens;
+	}
+	return 0;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void)

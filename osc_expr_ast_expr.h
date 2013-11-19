@@ -95,6 +95,8 @@ long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_exp
 t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e);
+void osc_expr_ast_expr_setParens(t_osc_expr_ast_expr *e, int b);
+int osc_expr_ast_expr_getParens(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void);
 
 #ifdef __cplusplus

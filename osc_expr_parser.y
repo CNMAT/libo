@@ -862,6 +862,7 @@ expr:
 	}
 	| '(' expr ')' {
 		$$ = $2;
+		osc_expr_ast_expr_setParens($$, 1);
   	}
 ;
 
