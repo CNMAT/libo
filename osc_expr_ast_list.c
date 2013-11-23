@@ -40,8 +40,8 @@ int osc_expr_ast_list_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	if(!ast){
 		return 1;
 	}
-	t_osc_expr_ast_list *l = (t_osc_expr_ast_list *)ast;
-	*out = osc_expr_ast_list_getListCopy(l);
+	//t_osc_expr_ast_list *l = (t_osc_expr_ast_list *)ast;
+	//*out = osc_expr_ast_list_getListCopy(l);
 	return 0;
 }
 
@@ -49,16 +49,16 @@ long osc_expr_ast_list_format(char *buf, long n, t_osc_expr_ast_expr *v)
 {
 	if(v){
 		long offset = 0;
-		t_osc_atom_ar_u *ar = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
-		int arlen = osc_atom_array_u_getLen(ar);
-		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
-		for(int i = 0; i < arlen; i++){
-			offset += osc_atom_u_nformat(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_atom_array_u_get(ar, i), 0);
-			if(i < arlen - 1){
+		t_osc_expr_ast_expr *l = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
+		//offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
+		while(l){
+			offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, l);
+			l = osc_expr_ast_expr_next(l);
+			if(l){
 				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
 			}
 		}
-		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "]");
+		//offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "]");
 		return offset;
 	}
 	return 0;
@@ -68,12 +68,12 @@ long osc_expr_ast_list_formatLisp(char *buf, long n, t_osc_expr_ast_expr *v)
 {
 	if(v){
 		long offset = 0;
-		t_osc_atom_ar_u *ar = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
-		int arlen = osc_atom_array_u_getLen(ar);
+		t_osc_expr_ast_expr *l = osc_expr_ast_list_getList((t_osc_expr_ast_list *)v);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(list");
-		for(int i = 0; i < arlen; i++){
+		while(l){
 			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
-			offset += osc_atom_u_nformat(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_atom_array_u_get(ar, i), 0);
+			offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, l);
+			l = osc_expr_ast_expr_next(l);
 		}
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ")");
 		return offset;
@@ -93,7 +93,7 @@ t_osc_expr_ast_expr *osc_expr_ast_list_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_list_free(t_osc_expr_ast_expr *v)
 {
 	if(v){
-		osc_atom_array_u_free(osc_expr_ast_list_getList((t_osc_expr_ast_list *)v));
+		osc_expr_ast_expr_free(osc_expr_ast_list_getList((t_osc_expr_ast_list *)v));
 		osc_mem_free(v);
 	}
 }
@@ -114,7 +114,7 @@ t_osc_err osc_expr_ast_list_deserialize(long len, char *ptr, t_osc_expr_ast_expr
 	return OSC_ERR_NONE;
 }
 
-t_osc_atom_ar_u *osc_expr_ast_list_getList(t_osc_expr_ast_list *v)
+t_osc_expr_ast_expr *osc_expr_ast_list_getList(t_osc_expr_ast_list *v)
 {
 	if(v){
 		return v->list;
@@ -122,30 +122,55 @@ t_osc_atom_ar_u *osc_expr_ast_list_getList(t_osc_expr_ast_list *v)
 	return NULL;
 }
 
-t_osc_atom_ar_u *osc_expr_ast_list_getListCopy(t_osc_expr_ast_list *v)
+t_osc_expr_ast_expr *osc_expr_ast_list_getListCopy(t_osc_expr_ast_list *v)
 {
 	if(v && v->list){
-		return osc_atom_array_u_copy(v->list);
+		return osc_expr_ast_expr_copyAllLinked((t_osc_expr_ast_expr *)v);
 	}
 	return NULL;
 }
 
-void osc_expr_ast_list_setList(t_osc_expr_ast_list *v, t_osc_atom_ar_u *a)
+void osc_expr_ast_list_setListWithLen(t_osc_expr_ast_list *v, t_osc_expr_ast_expr *list, long len)
 {
 	if(v){
-		v->list = a;
+		v->list = list;
+		v->len = len;
 	}
 }
 
-int osc_expr_ast_list_getLen(t_osc_expr_ast_list *v)
+void osc_expr_ast_list_setList(t_osc_expr_ast_list *v, t_osc_expr_ast_expr *list)
 {
 	if(v){
-		return osc_atom_array_u_getLen(osc_expr_ast_list_getList(v));
+		long len = 0;
+		t_osc_expr_ast_expr *l = list;
+		while(l){
+			len++;
+			l = osc_expr_ast_expr_next(l);
+		}
+		osc_expr_ast_list_setListWithLen(v, list, len);
+	}
+}
+
+long osc_expr_ast_list_getLen(t_osc_expr_ast_list *v)
+{
+	if(v){
+		if(v->len >= 0){
+			return v->len;
+		}else{
+			t_osc_expr_ast_expr *l = osc_expr_ast_list_getList(v);
+			long len = 0;
+			while(v){
+				len++;
+				l = osc_expr_ast_expr_next(l);
+			}
+			v->len = len;
+			return len;
+		}
 	}
 	return 0;
 }
 
-t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_atom_ar_u *a)
+t_osc_expr_ast_list *osc_expr_ast_list_allocWithLen(t_osc_expr_ast_expr *list, long len)
 {
 	t_osc_expr_ast_list *v = osc_mem_alloc(sizeof(t_osc_expr_ast_list));
 	if(v){
@@ -160,7 +185,27 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_atom_ar_u *a)
 				       osc_expr_ast_list_serialize,
 				       osc_expr_ast_list_deserialize,
 				       sizeof(t_osc_expr_ast_list));
-		osc_expr_ast_list_setList(v, a);
+		osc_expr_ast_list_setListWithLen(v, list, len);
+	}
+	return v;
+}
+
+t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_expr_ast_expr *list)
+{
+	t_osc_expr_ast_list *v = osc_mem_alloc(sizeof(t_osc_expr_ast_list));
+	if(v){
+		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v,
+				       OSC_EXPR_AST_NODETYPE_LIST,
+				       NULL,
+				       osc_expr_ast_list_evalInLexEnv,
+				       osc_expr_ast_list_format,
+				       osc_expr_ast_list_formatLisp,
+				       osc_expr_ast_list_free,
+				       osc_expr_ast_list_copy,
+				       osc_expr_ast_list_serialize,
+				       osc_expr_ast_list_deserialize,
+				       sizeof(t_osc_expr_ast_list));
+		osc_expr_ast_list_setList(v, list);
 	}
 	return v;
 }

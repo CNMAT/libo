@@ -47,11 +47,11 @@ t_osc_expr_ast_expr *osc_expr_ast_list_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_list_free(t_osc_expr_ast_expr *v);
 t_osc_err osc_expr_ast_list_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_list_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
-t_osc_atom_ar_u *osc_expr_ast_list_getList(t_osc_expr_ast_list *v);
-t_osc_atom_ar_u *osc_expr_ast_list_getListCopy(t_osc_expr_ast_list *v);
-void osc_expr_ast_list_setList(t_osc_expr_ast_list *v, t_osc_atom_ar_u *a);
-int osc_expr_ast_list_getLen(t_osc_expr_ast_list *v);
-t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_atom_ar_u *a);
+t_osc_expr_ast_expr *osc_expr_ast_list_getList(t_osc_expr_ast_list *v);
+t_osc_expr_ast_expr *osc_expr_ast_list_getListCopy(t_osc_expr_ast_list *v);
+void osc_expr_ast_list_setList(t_osc_expr_ast_list *v, t_osc_expr_ast_expr *list);
+long osc_expr_ast_list_getLen(t_osc_expr_ast_list *v);
+t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_expr_ast_expr *list);
 
 #ifdef __cplusplus
 }

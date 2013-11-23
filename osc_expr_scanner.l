@@ -269,6 +269,10 @@ lambda				{
 						return OSC_EXPR_LAMBDA;
 					}
 
+let				{
+						return OSC_EXPR_LET;
+					}
+
 \/[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();

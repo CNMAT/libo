@@ -51,7 +51,8 @@ enum{
 	OSC_EXPR_AST_NODETYPE_FUNCTION,
 	OSC_EXPR_AST_NODETYPE_ASEQ,
 	OSC_EXPR_AST_NODETYPE_TERNARYCOND,
-	OSC_EXPR_AST_NODETYPE_SUGAR
+	OSC_EXPR_AST_NODETYPE_SUGAR,
+	OSC_EXPR_AST_NODETYPE_LET,
 };
 
 
@@ -83,6 +84,7 @@ int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast);
+t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e);
 int osc_expr_ast_expr_getNodetype(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_next(t_osc_expr_ast_expr *e);
@@ -95,8 +97,9 @@ long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_exp
 t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e);
-void osc_expr_ast_expr_setParens(t_osc_expr_ast_expr *e, int b);
-int osc_expr_ast_expr_getParens(t_osc_expr_ast_expr *e);
+void osc_expr_ast_expr_setBrackets(t_osc_expr_ast_expr *e, char leftbracket, char rightbracket);
+char osc_expr_ast_expr_getLeftBracket(t_osc_expr_ast_expr *e);
+char osc_expr_ast_expr_getRightBracket(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void);
 
 #ifdef __cplusplus

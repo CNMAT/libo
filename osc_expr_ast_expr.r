@@ -45,7 +45,7 @@ struct _osc_expr_ast_expr
 	t_osc_expr_ast_serializefn serialize;
 	t_osc_expr_ast_deserializefn deserialize;
 	size_t objsize;
-	int parens;
+	char leftbracket, rightbracket;
 };
 
 #ifdef __cplusplus

@@ -32,12 +32,12 @@ extern "C" {
 #endif
 
 #include "osc_expr_ast_expr.r"
-#include "osc_atom_u.h"
 
 struct _osc_expr_ast_list
 {
 	struct _osc_expr_ast_expr expr; // parent
-	t_osc_atom_ar_u *list;
+	t_osc_expr_ast_expr *list;
+	long len;
 };
 
 #ifdef __cplusplus

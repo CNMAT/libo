@@ -54,7 +54,7 @@ long osc_expr_ast_aseq_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 	}
 	long offset = 0;
 	t_osc_expr_ast_aseq *a = (t_osc_expr_ast_aseq *)ast;
-	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
+	//offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
 	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getMin(a));
 	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ":");
 	t_osc_expr_ast_expr *step = osc_expr_ast_aseq_getStep(a);
@@ -63,7 +63,7 @@ long osc_expr_ast_aseq_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ":");
 	}
 	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getMax(a));
-	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "]");
+	//offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "]");
 	return offset;
 }
 
@@ -175,7 +175,6 @@ void osc_expr_ast_aseq_setStep(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *step
 		e->step = step;
 	}
 }
-
 
 t_osc_expr_ast_funcall *osc_expr_ast_aseq_toFuncall(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step)
 {

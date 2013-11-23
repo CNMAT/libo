@@ -1009,6 +1009,19 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	 osc_expr_aseq,\
 	 NULL,\
 	 0}
+#define OSC_EXPR_REC_LIST {"list",\
+	 "/result = list($1, $2)",\
+	 0,\
+	 -1,\
+	 (char *[]){NULL},\
+	 (int []){},\
+	 (char *[]){"elements to be gathered into a list"},\
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},\
+	 (char *[]){"/vector", NULL},\
+	 "Assemble the arguments into a list.",\
+	 osc_expr_list,\
+	 NULL,\
+	 0}
 
 
 //////////////////////////////////////////////////
@@ -1090,6 +1103,7 @@ static t_osc_expr_rec osc_expr_rec_if = OSC_EXPR_REC_IF;
 static t_osc_expr_rec osc_expr_rec_bound = OSC_EXPR_REC_BOUND;
 static t_osc_expr_rec osc_expr_rec_exists = OSC_EXPR_REC_EXISTS;
 static t_osc_expr_rec osc_expr_rec_aseq = OSC_EXPR_REC_ASEQ;
+static t_osc_expr_rec osc_expr_rec_list = OSC_EXPR_REC_LIST;
 
 
 // this array can be indexed by either the ascii char of an operator,
@@ -1431,6 +1445,10 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	OSC_EXPR_REC_VALUE,
 	OSC_EXPR_REC_LAMBDA,
 	OSC_EXPR_REC_IF,
+	OSC_EXPR_REC_BOUND,
+	OSC_EXPR_REC_EXISTS,
+	OSC_EXPR_REC_ASEQ,
+	OSC_EXPR_REC_LIST,
 
 	//////////////////////////////////////////////////
 	//////////////////////////////////////////////////
@@ -2119,20 +2137,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/vector", NULL},
 	 "Sort the elements of a list",
 	 osc_expr_sort,
-	 NULL,
-	 0},
-	//////////////////////////////////////////////////
-	{"list",
-	 "/result = list($1, $2)",
-	 0,
-	 -1,
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"elements to be gathered into a list"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR_STR},
-	 (char *[]){"/vector", NULL},
-	 "Assemble the arguments into a list.",
-	 osc_expr_list,
 	 NULL,
 	 0},
 	//////////////////////////////////////////////////

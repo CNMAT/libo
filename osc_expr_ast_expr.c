@@ -50,7 +50,8 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->serialize = serializefn;
 		e->deserialize = deserializefn;
 		e->objsize = sizeof(t_osc_expr_ast_expr);
-		e->parens = 0;
+		e->leftbracket = 0;
+		e->rightbracket = 0;
 	}
 }
 
@@ -73,6 +74,23 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast)
 		if(ast->copy){
 			t_osc_expr_ast_expr *copy = ast->copy(ast);
 			//copy->next = osc_expr_ast_expr_copy(ast->next);
+			return copy;
+		}else{
+			t_osc_expr_ast_expr *e = osc_expr_ast_expr_alloc();
+			osc_expr_ast_expr_setBrackets(e, osc_expr_ast_expr_getLeftBracket(ast), osc_expr_ast_expr_getRightBracket(ast));
+			return e;
+		}
+	}else{
+		return NULL;
+	}
+}
+
+t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast)
+{
+	if(ast){
+		if(ast->copy){
+			t_osc_expr_ast_expr *copy = ast->copy(ast);
+			copy->next = osc_expr_ast_expr_copy(ast->next);
 			return copy;
 		}else{
 			return osc_expr_ast_expr_alloc();
@@ -142,12 +160,12 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	if(e){
 		if(e->format){
 			long l = 0;
-			if(osc_expr_ast_expr_getParens(e)){
-				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, "(");
-				l += e->format(buf ? buf + l : NULL, buf ? n - l : 0, e);
-				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, ")");
-			}else{
-				l += e->format(buf ? buf + l : NULL, buf ? n - l : 0, e);
+			if(osc_expr_ast_expr_getLeftBracket(e)){
+				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, "%c", osc_expr_ast_expr_getLeftBracket(e));
+			}
+			l += e->format(buf ? buf + l : NULL, buf ? n - l : 0, e);
+			if(osc_expr_ast_expr_getRightBracket(e)){
+				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, "%c", osc_expr_ast_expr_getRightBracket(e));
 			}
 			return l;
 		}else{
@@ -218,17 +236,26 @@ size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)
 	}
 }
 
-void osc_expr_ast_expr_setParens(t_osc_expr_ast_expr *e, int b)
+void osc_expr_ast_expr_setBrackets(t_osc_expr_ast_expr *e, char leftbracket, char rightbracket)
 {
 	if(e){
-		e->parens = b;
+		e->leftbracket = leftbracket;
+		e->rightbracket = rightbracket;
 	}
 }
 
-int osc_expr_ast_expr_getParens(t_osc_expr_ast_expr *e)
+char osc_expr_ast_expr_getLeftBracket(t_osc_expr_ast_expr *e)
 {
 	if(e){
-		return e->parens;
+		return e->leftbracket;
+	}
+	return 0;
+}
+
+char osc_expr_ast_expr_getRightBracket(t_osc_expr_ast_expr *e)
+{
+	if(e){
+		return e->rightbracket;
 	}
 	return 0;
 }
