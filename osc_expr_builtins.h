@@ -20,27 +20,33 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_func.h
+/** 	\file osc_expr_builtins.h
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_FUNC_H__
-#define __OSC_EXPR_FUNC_H__
+#ifndef __OSC_EXPR_BUILTINS_H__
+#define __OSC_EXPR_BUILTINS_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "osc_atom_array_u.h"
+struct _osc_expr_ast_funcall;
+typedef int (*t_osc_expr_builtins_funcptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+
+#define OSC_EXPR_BUILTIN_DECL(name) int osc_expr_builtin_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+
 #include <inttypes.h>
 #include <math.h>
 #include "osc.h"
-#include "osc_expr_rec.h"
-#include "osc_expr_rec.r"
+#include "osc_expr_oprec.h"
 #include "osc_atom_u.h"
-#include "osc_atom_array_u.h"
 #include "osc_expr_parser.h"
+#include "osc_expr_funcrec.h"
+#include "osc_expr_ast_funcall.h"
 
-
+/*
 // don't fuck with these!
 #define OSC_EXPR_ARG_TYPE_NUMBER 0x1
 #define OSC_EXPR_ARG_TYPE_LIST 0x2
@@ -2995,9 +3001,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 0}
 
 };
+*/
+//////////////////////////////////////////////////
+// new stuff
+//////////////////////////////////////////////////
+
+t_osc_expr_funcrec *osc_expr_builtins_lookupFunction(char *name);
+t_osc_expr_oprec *osc_expr_builtins_lookupOperator(char *op);
+t_osc_expr_oprec *osc_expr_builtins_lookupOperatorForOpcode(char op);
+t_osc_expr_funcrec *osc_expr_builtins_lookupFunctionForOperator(t_osc_expr_oprec *op);
+t_osc_expr_funcrec *osc_expr_builtins_lookupFunctionForOpcode(char op);
 
 #ifdef _cplusplus
 }
 #endif
 
-#endif // __OSC_EXPR_FUNC_H__
+#endif // __OSC_EXPR_BUILTINS_H__

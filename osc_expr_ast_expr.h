@@ -34,7 +34,7 @@ extern "C" {
 
 typedef struct _osc_expr_ast_expr t_osc_expr_ast_expr;
 
-#include "osc_expr.h"
+#include "osc_expr_lexenv.h"
 #include "osc_atom_array_u.h"
 
 enum{

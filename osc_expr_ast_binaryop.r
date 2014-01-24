@@ -31,14 +31,14 @@
 extern "C" {
 #endif
 
-#include "osc_expr_ast_expr.r"
+#include "osc_expr_ast_funcall.r"
 
 struct _osc_expr_ast_binaryop
 {
-	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_rec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *left; // left argument to function
-	struct _osc_expr_ast_expr *right; // right argument to function
+	struct _osc_expr_ast_funcall funcall; // parent
+	struct _osc_expr_oprec *rec; // pointer to operator record
+	struct _osc_expr_ast_expr *left; // left argument 
+	struct _osc_expr_ast_expr *right; // right argument 
 };
 
 #ifdef __cplusplus

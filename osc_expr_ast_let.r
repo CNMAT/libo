@@ -20,12 +20,12 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_funcall.r
+/** 	\file osc_expr_ast_let.r
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_AST_FUNCALL_R__
-#define __OSC_EXPR_AST_FUNCALL_R__
+#ifndef __OSC_EXPR_AST_LET_R__
+#define __OSC_EXPR_AST_LET_R__
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,12 +33,11 @@ extern "C" {
 
 #include "osc_expr_ast_expr.r"
 
-struct _osc_expr_ast_funcall
+struct _osc_expr_ast_let
 {
 	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_funcrec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *argv; // arguments to function
-	int argc;
+	t_osc_expr_ast_value *varlist; // these will be strings identified as identifiers by the parser
+	t_osc_expr_ast_expr *exprs;
 };
 
 #ifdef __cplusplus

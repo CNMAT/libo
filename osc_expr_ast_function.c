@@ -26,8 +26,7 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr.h"
-#include "osc_expr_func.h"
+#include "osc_expr_builtins.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_function.h"
 #include "osc_expr_ast_function.r"

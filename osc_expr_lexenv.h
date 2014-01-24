@@ -1,6 +1,6 @@
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
-  University of California, Berkeley.  Copyright (c) 2013, The Regents of
+  University of California, Berkeley.  Copyright (c) 2011, The Regents of
   the University of California (Regents). 
   Permission to use, copy, modify, distribute, and distribute modified versions
   of this software and its documentation without fee and without a signed
@@ -20,29 +20,20 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_funcall.r
+/** 	\file osc_expr_lexenv.h
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_AST_FUNCALL_R__
-#define __OSC_EXPR_AST_FUNCALL_R__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "osc_hashtab.h"
+#include "osc_atom_array_u.h"
 
-#include "osc_expr_ast_expr.r"
+typedef t_osc_hashtab t_osc_expr_lexenv;
 
-struct _osc_expr_ast_funcall
-{
-	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_funcrec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *argv; // arguments to function
-	int argc;
-};
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+void osc_expr_lexenv_dtor(char *key, void *val);
+t_osc_expr_lexenv *osc_expr_lexenv_alloc(void);
+void osc_expr_lexenv_free(t_osc_expr_lexenv *lexenv);
+void osc_expr_lexenv_copy_cb(char *key, void *val, void *context);
+void osc_expr_lexenv_copy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src);
+void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_atom_ar_u *val);
+t_osc_atom_ar_u *osc_expr_lexenv_lookup(t_osc_expr_lexenv *lexenv, char *varname);

@@ -26,10 +26,8 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr.h"
-#include "osc_expr_func.h"
-//#include "osc_expr_privatedecls.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_builtins.h"
+#include "osc_expr_oprec.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_unaryop.h"
 #include "osc_expr_ast_unaryop.r"
@@ -49,7 +47,7 @@ long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	if(!e){
 		return 0;
 	}
-	t_osc_expr_rec *r = osc_expr_ast_unaryop_getRec((t_osc_expr_ast_unaryop *)e);
+	t_osc_expr_oprec *r = osc_expr_ast_unaryop_getOpRec((t_osc_expr_ast_unaryop *)e);
 	if(!r){
 		return 0;
 	}
@@ -57,11 +55,11 @@ long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	int side = osc_expr_ast_unaryop_getSide((t_osc_expr_ast_unaryop *)e);
 	long offset = 0;
 	if(side == OSC_EXPR_AST_UNARYOP_LEFT){
-		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_rec_getName(r));
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_oprec_getName(r));
 		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
 	}else if(side == OSC_EXPR_AST_UNARYOP_RIGHT){
 		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
-		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_rec_getName(r));
+		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s", osc_expr_oprec_getName(r));
 	}else{
 		//wtf?
 	}
@@ -78,7 +76,7 @@ t_osc_expr_ast_expr *osc_expr_ast_unaryop_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
 		t_osc_expr_ast_unaryop *u = (t_osc_expr_ast_unaryop *)ast;
-		t_osc_expr_rec *r = osc_expr_ast_unaryop_getRecCopy(u);
+		t_osc_expr_oprec *r = osc_expr_ast_unaryop_getOpRec(u);
 		t_osc_expr_ast_expr *arg = osc_expr_ast_expr_copy(osc_expr_ast_unaryop_getArg(u));
 		int side = osc_expr_ast_unaryop_getSide(u);
 		t_osc_expr_ast_unaryop *copy = osc_expr_ast_unaryop_alloc(r, arg, side);
@@ -112,15 +110,7 @@ t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_e
 	return OSC_ERR_NONE;
 }
 
-t_osc_expr_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e)
-{
-	if(e){
-		return osc_expr_rec_getFunction(osc_expr_ast_unaryop_getRec(e));
-	}
-	return NULL;
-}
-
-t_osc_expr_rec *osc_expr_ast_unaryop_getRec(t_osc_expr_ast_unaryop *e)
+t_osc_expr_oprec *osc_expr_ast_unaryop_getOpRec(t_osc_expr_ast_unaryop *e)
 {
 	if(e){
 		return e->rec;
@@ -128,22 +118,11 @@ t_osc_expr_rec *osc_expr_ast_unaryop_getRec(t_osc_expr_ast_unaryop *e)
 	return NULL;
 }
 
-void osc_expr_ast_unaryop_setRec(t_osc_expr_ast_unaryop *e, t_osc_expr_rec *r)
+void osc_expr_ast_unaryop_setOpRec(t_osc_expr_ast_unaryop *e, t_osc_expr_oprec *r)
 {
 	if(e && r){
 		e->rec = r;
 	}
-}
-
-t_osc_expr_rec *osc_expr_ast_unaryop_getRecCopy(t_osc_expr_ast_unaryop *e)
-{
-	if(e){
-		t_osc_expr_rec *r = e->rec;
-		t_osc_expr_rec *copy = NULL;
-		osc_expr_rec_copy(&copy, r, NULL);
-		return copy;
-	}
-	return NULL;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_unaryop_getArg(t_osc_expr_ast_unaryop *e)
@@ -180,7 +159,7 @@ void osc_expr_ast_unaryop_setSide(t_osc_expr_ast_unaryop *e, int side)
 	printf("%s:%d: side is not left or right!\n", __func__, __LINE__);
 }
 
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg, int side)
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg, int side)
 {
 	if(!rec || !arg || (side != OSC_EXPR_AST_UNARYOP_LEFT && side != OSC_EXPR_AST_UNARYOP_RIGHT)){
 		return NULL;
@@ -200,18 +179,18 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_rec *rec, t_osc_ex
 			       osc_expr_ast_unaryop_serialize,
 			       osc_expr_ast_unaryop_deserialize,
 			       sizeof(t_osc_expr_ast_unaryop));
-	osc_expr_ast_unaryop_setRec(b, rec);
+	osc_expr_ast_unaryop_setOpRec(b, rec);
 	osc_expr_ast_unaryop_setArg(b, arg);
 	osc_expr_ast_unaryop_setSide(b, side);
 	return b;
 }
 
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg)
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg)
 {
 	return osc_expr_ast_unaryop_alloc(rec, arg, OSC_EXPR_AST_UNARYOP_LEFT);
 }
 
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg)
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg)
 {
 	return osc_expr_ast_unaryop_alloc(rec, arg, OSC_EXPR_AST_UNARYOP_RIGHT);
 }

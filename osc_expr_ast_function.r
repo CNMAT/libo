@@ -32,7 +32,6 @@ extern "C" {
 #endif
 
 #include "osc_expr_ast_expr.r"
-#include "osc_expr_rec.h"
 
 struct _osc_expr_ast_function
 {

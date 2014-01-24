@@ -26,10 +26,7 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr.h"
-#include "osc_expr_func.h"
-//#include "osc_expr_privatedecls.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_builtins.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_aseq.h"
 #include "osc_expr_ast_aseq.r"
@@ -40,11 +37,7 @@ int osc_expr_ast_aseq_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out)
 {
-	t_osc_expr_ast_aseq *a = (t_osc_expr_ast_aseq *)ast;
-	t_osc_expr_ast_funcall *fc = osc_expr_ast_aseq_toFuncall(osc_expr_ast_aseq_getMin(a), osc_expr_ast_aseq_getMax(a), osc_expr_ast_aseq_getStep(a));
-	int ret = osc_expr_ast_funcall_evalInLexEnv((t_osc_expr_ast_expr *)fc, lexenv, len, oscbndl, out);
-	osc_expr_ast_funcall_free((t_osc_expr_ast_expr *)fc);
-	return ret;
+	return 0;
 }
 
 long osc_expr_ast_aseq_format(char *buf, long n, t_osc_expr_ast_expr *ast)
@@ -174,17 +167,6 @@ void osc_expr_ast_aseq_setStep(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *step
 	if(e){
 		e->step = step;
 	}
-}
-
-t_osc_expr_ast_funcall *osc_expr_ast_aseq_toFuncall(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step)
-{
-	t_osc_expr_ast_funcall *fc = NULL;
-	if(step){
-		fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_aseq, 3, min, max, step);
-	}else{
-		fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_aseq, 2, min, max);
-	}
-	return fc;
 }
 
 t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step)

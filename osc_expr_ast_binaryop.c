@@ -26,34 +26,19 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr.h"
-#include "osc_expr_func.h"
-//#include "osc_expr_privatedecls.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_builtins.h"
+#include "osc_expr_oprec.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_binaryop.r"
 
-
-int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
-				      t_osc_expr_lexenv *lexenv,
-				      long *len,
-				      char **oscbndl,
-				      t_osc_atom_ar_u **out)
-{
-	t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)ast;
-	t_osc_expr_ast_funcall *fc = osc_expr_ast_binaryop_toFuncall(osc_expr_ast_binaryop_getRec(b), osc_expr_ast_binaryop_getLeftArg(b), osc_expr_ast_binaryop_getRightArg(b));
-	int ret = osc_expr_ast_funcall_evalInLexEnv((t_osc_expr_ast_expr *)fc, lexenv, len, oscbndl, out);
-	osc_expr_ast_funcall_free((t_osc_expr_ast_expr *)fc);
-	return ret;
-}
 
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(!e){
 		return 0;
 	}
-	t_osc_expr_rec *r = osc_expr_ast_binaryop_getRec((t_osc_expr_ast_binaryop *)e);
+	t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec((t_osc_expr_ast_binaryop *)e);
 	if(!r){
 		return 0;
 	}
@@ -61,7 +46,7 @@ long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
         t_osc_expr_ast_expr *right = osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e);
 	long offset = 0;
 	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, left);
-	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " %s ", osc_expr_rec_getName(r));
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " %s ", osc_expr_oprec_getName(r));
 	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, right);
 	return offset;
 }
@@ -71,14 +56,14 @@ long osc_expr_ast_binaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e)
 	if(!e){
 		return 0;
 	}
-	t_osc_expr_rec *r = osc_expr_ast_binaryop_getRec((t_osc_expr_ast_binaryop *)e);
+	t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec((t_osc_expr_ast_binaryop *)e);
 	if(!r){
 		return 0;
 	}
         t_osc_expr_ast_expr *left = osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e);
         t_osc_expr_ast_expr *right = osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e);
 	long offset = 0;
-	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(%s ", osc_expr_rec_getName(r));
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(%s ", osc_expr_oprec_getName(r));
 	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, left);
 	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
 	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, right);
@@ -90,7 +75,7 @@ t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
 		t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)ast;
-		t_osc_expr_rec *r = osc_expr_ast_binaryop_getRecCopy(b);
+		t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec(b);
 		t_osc_expr_ast_expr *left = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
 		t_osc_expr_ast_expr *right = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
 		t_osc_expr_ast_binaryop *copy = osc_expr_ast_binaryop_alloc(r, left, right);
@@ -103,9 +88,13 @@ t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
+		printf("%s:%d\n", __func__, __LINE__);
 		osc_expr_ast_expr_free(osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e));
+		printf("%s:%d\n", __func__, __LINE__);
 		osc_expr_ast_expr_free(osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e));
+		printf("%s:%d\n", __func__, __LINE__);
 		osc_mem_free(e);
+		printf("%s:%d\n", __func__, __LINE__);
 	}
 }
 
@@ -125,15 +114,7 @@ t_osc_err osc_expr_ast_binaryop_deserialize(long len, char *ptr, t_osc_expr_ast_
 	return OSC_ERR_NONE;
 }
 
-t_osc_expr_funcptr osc_expr_ast_binaryop_getFunc(t_osc_expr_ast_binaryop *e)
-{
-	if(e){
-		return osc_expr_rec_getFunction(osc_expr_ast_binaryop_getRec(e));
-	}
-	return NULL;
-}
-
-t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e)
+t_osc_expr_oprec *osc_expr_ast_binaryop_getOpRec(t_osc_expr_ast_binaryop *e)
 {
 	if(e){
 		return e->rec;
@@ -141,22 +122,11 @@ t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e)
 	return NULL;
 }
 
-void osc_expr_ast_binaryop_setRec(t_osc_expr_ast_binaryop *e, t_osc_expr_rec *r)
+void osc_expr_ast_binaryop_setOpRec(t_osc_expr_ast_binaryop *e, t_osc_expr_oprec *r)
 {
 	if(e && r){
 		e->rec = r;
 	}
-}
-
-t_osc_expr_rec *osc_expr_ast_binaryop_getRecCopy(t_osc_expr_ast_binaryop *e)
-{
-	if(e){
-		t_osc_expr_rec *r = e->rec;
-		t_osc_expr_rec *copy = NULL;
-		osc_expr_rec_copy(&copy, r, NULL);
-		return copy;
-	}
-	return NULL;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_getLeftArg(t_osc_expr_ast_binaryop *e)
@@ -189,16 +159,7 @@ void osc_expr_ast_binaryop_setRightArg(t_osc_expr_ast_binaryop *e, t_osc_expr_as
 	}
 }
 
-t_osc_expr_ast_funcall *osc_expr_ast_binaryop_toFuncall(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
-{
-	if(!rec || !left || !right){
-		return NULL;
-	}
-	t_osc_expr_rec *fr = osc_expr_lookupFunctionForOperator(osc_expr_rec_getOpcode(rec));
-	return osc_expr_ast_funcall_alloc(fr, 2, left, right);
-}
-
-t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
+t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right)
 {
 	if(!rec || !left || !right){
 		return NULL;
@@ -207,6 +168,7 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_
 	if(!b){
 		return NULL;
 	}
+	/*
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)b,
 			       OSC_EXPR_AST_NODETYPE_BINARYOP,
 			       NULL,
@@ -218,7 +180,27 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_
 			       osc_expr_ast_binaryop_serialize,
 			       osc_expr_ast_binaryop_deserialize,
 			       sizeof(t_osc_expr_ast_binaryop));
-	osc_expr_ast_binaryop_setRec(b, rec);
+	*/
+	t_osc_expr_funcrec *funcrec = osc_expr_builtins_lookupFunctionForOperator(rec);
+	if(!funcrec){
+		return NULL;
+	}
+	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)b,
+					  OSC_EXPR_AST_NODETYPE_BINARYOP,
+					  NULL,
+					  NULL,
+					  osc_expr_ast_binaryop_format,
+					  NULL,
+				  NULL,//osc_expr_ast_binaryop_free,
+					  osc_expr_ast_binaryop_copy,
+					  osc_expr_ast_binaryop_serialize,
+					  osc_expr_ast_binaryop_deserialize,
+					  sizeof(t_osc_expr_ast_binaryop),
+					  funcrec,
+					  2,
+					  left,
+					  right);
+	osc_expr_ast_binaryop_setOpRec(b, rec);
 	osc_expr_ast_binaryop_setLeftArg(b, left);
 	osc_expr_ast_binaryop_setRightArg(b, right);
 	return b;

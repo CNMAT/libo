@@ -34,11 +34,7 @@ extern "C" {
 
 typedef struct _osc_expr_ast_ternarycond t_osc_expr_ast_ternarycond;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_ternarycond *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-
-#include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_rec.h"
 #include "osc_expr_ast_funcall.h"
 
 int osc_expr_ast_ternarycond_evalInLexEnv(t_osc_expr_ast_expr *ast,
@@ -58,7 +54,6 @@ t_osc_expr_ast_expr *osc_expr_ast_ternarycond_getRightbranch(t_osc_expr_ast_tern
 void osc_expr_ast_ternarycond_setTest(t_osc_expr_ast_ternarycond *e, t_osc_expr_ast_expr *test);
 void osc_expr_ast_ternarycond_setLeftbranch(t_osc_expr_ast_ternarycond *e, t_osc_expr_ast_expr *leftbranch);
 void osc_expr_ast_ternarycond_setRightbranch(t_osc_expr_ast_ternarycond *e, t_osc_expr_ast_expr *rightbranch);
-t_osc_expr_ast_funcall *osc_expr_ast_ternarycond_toFuncall(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step);
 t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step);
 
 #ifdef __cplusplus

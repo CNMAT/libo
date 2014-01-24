@@ -26,10 +26,7 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr.h"
-#include "osc_expr_func.h"
-//#include "osc_expr_privatedecls.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_builtins.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_ternarycond.h"
 #include "osc_expr_ast_ternarycond.r"
@@ -40,11 +37,7 @@ int osc_expr_ast_ternarycond_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out)
 {
-	t_osc_expr_ast_ternarycond *a = (t_osc_expr_ast_ternarycond *)ast;
-	t_osc_expr_ast_funcall *fc = osc_expr_ast_ternarycond_toFuncall(osc_expr_ast_ternarycond_getTest(a), osc_expr_ast_ternarycond_getLeftbranch(a), osc_expr_ast_ternarycond_getRightbranch(a));
-	int ret = osc_expr_ast_funcall_evalInLexEnv((t_osc_expr_ast_expr *)fc, lexenv, len, oscbndl, out);
-	osc_expr_ast_funcall_free((t_osc_expr_ast_expr *)fc);
-	return ret;
+	return 0;
 }
 
 long osc_expr_ast_ternarycond_format(char *buf, long n, t_osc_expr_ast_expr *ast)
@@ -165,13 +158,6 @@ void osc_expr_ast_ternarycond_setRightbranch(t_osc_expr_ast_ternarycond *e, t_os
 	}
 }
 
-
-t_osc_expr_ast_funcall *osc_expr_ast_ternarycond_toFuncall(t_osc_expr_ast_expr *test, t_osc_expr_ast_expr *leftbranch, t_osc_expr_ast_expr *rightbranch)
-{
-	t_osc_expr_ast_funcall *fc = NULL;
-	fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, test, leftbranch, rightbranch);
-	return fc;
-}
 
 t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *test, t_osc_expr_ast_expr *leftbranch, t_osc_expr_ast_expr *rightbranch)
 {

@@ -32,11 +32,12 @@ extern "C" {
 #endif
 
 #include "osc_expr_ast_expr.r"
+#include "osc_expr_oprec.h"
 
 struct _osc_expr_ast_unaryop
 {
 	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_rec *rec; // pointer to function record
+	struct _osc_expr_oprec *rec; // pointer to function record
 	struct _osc_expr_ast_expr *arg; // left argument to function
 	int side;
 };

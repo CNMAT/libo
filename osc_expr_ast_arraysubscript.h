@@ -34,11 +34,7 @@ extern "C" {
 
 typedef struct _osc_expr_ast_arraysubscript t_osc_expr_ast_arraysubscript;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_arraysubscript *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-
-#include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_rec.h"
 #include "osc_expr_ast_funcall.h"
 
 int osc_expr_ast_arraysubscript_evalInLexEnv(t_osc_expr_ast_expr *ast,
@@ -56,7 +52,6 @@ t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_getBase(t_osc_expr_ast_arraysub
 t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_getIndexList(t_osc_expr_ast_arraysubscript *e);
 void osc_expr_ast_arraysubscript_setBase(t_osc_expr_ast_arraysubscript *e, t_osc_expr_ast_expr *base);
 void osc_expr_ast_arraysubscript_setIndexList(t_osc_expr_ast_arraysubscript *e, t_osc_expr_ast_expr *index_list);
-t_osc_expr_ast_funcall *osc_expr_ast_arraysubscript_toFuncall(t_osc_expr_ast_expr *base, t_osc_expr_ast_expr *index);
 t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_expr *base, t_osc_expr_ast_expr *index_list);
 
 #ifdef __cplusplus

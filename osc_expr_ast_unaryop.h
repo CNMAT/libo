@@ -36,11 +36,8 @@ extern "C" {
 
 typedef struct _osc_expr_ast_unaryop t_osc_expr_ast_unaryop;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_unaryop *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-
-#include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_oprec.h"
 
 #define OSC_EXPR_AST_UNARYOP_LEFT 1
 #define OSC_EXPR_AST_UNARYOP_RIGHT 2
@@ -56,17 +53,16 @@ t_osc_expr_ast_expr *osc_expr_ast_unaryop_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_unaryop_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_unaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
-t_osc_expr_rec *osc_expr_ast_unaryop_getRec(t_osc_expr_ast_unaryop *e);
-void osc_expr_ast_unaryop_setRec(t_osc_expr_ast_unaryop *e, t_osc_expr_rec *r);
-t_osc_expr_rec *osc_expr_ast_unaryop_getRecCopy(t_osc_expr_ast_unaryop *e);
-t_osc_expr_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e);
+t_osc_expr_oprec *osc_expr_ast_unaryop_getOpRec(t_osc_expr_ast_unaryop *e);
+void osc_expr_ast_unaryop_setOpRec(t_osc_expr_ast_unaryop *e, t_osc_expr_oprec *r);
+t_osc_expr_builtins_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e);
 t_osc_expr_ast_expr *osc_expr_ast_unaryop_getArg(t_osc_expr_ast_unaryop *e);
 void osc_expr_ast_unaryop_setArg(t_osc_expr_ast_unaryop *e, t_osc_expr_ast_expr *left);
 int osc_expr_ast_unaryop_getSide(t_osc_expr_ast_unaryop *e);
 void osc_expr_ast_unaryop_setSide(t_osc_expr_ast_unaryop *e, int side);
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg, int side);
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg);
-t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_rec *rec, t_osc_expr_ast_expr *arg);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg, int side);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocLeft(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg);
+t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *arg);
 
 #ifdef __cplusplus
 }

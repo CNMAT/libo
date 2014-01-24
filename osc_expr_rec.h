@@ -20,7 +20,7 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_func.h
+/** 	\file osc_expr_rec.h
 	\author John MacCallum
 
 */

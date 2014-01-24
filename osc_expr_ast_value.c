@@ -56,7 +56,7 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		case OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER:
 			{
 				t_osc_atom_ar_u *tmp = NULL;
-				if((tmp = osc_expr_lookupBindingInLexenv(lexenv, osc_atom_u_getStringPtr(vv)))){
+				if((tmp = osc_expr_lexenv_lookup(lexenv, osc_atom_u_getStringPtr(vv)))){
 					*out = osc_atom_array_u_copy(tmp);
 				}
 				return 0;

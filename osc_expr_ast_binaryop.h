@@ -36,34 +36,22 @@ extern "C" {
 
 typedef struct _osc_expr_ast_binaryop t_osc_expr_ast_binaryop;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_binaryop *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-
-#include "osc_expr.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_funcall.h"
-#include "osc_expr_rec.h"
 
-int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
-	t_osc_expr_lexenv *lexenv,
-	long *len,
-	char **oscbndl,
-	t_osc_atom_ar_u **out);
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_binaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_binaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_binaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
-t_osc_expr_rec *osc_expr_ast_binaryop_getRec(t_osc_expr_ast_binaryop *e);
-void osc_expr_ast_binaryop_setRec(t_osc_expr_ast_binaryop *e, t_osc_expr_rec *r);
-t_osc_expr_rec *osc_expr_ast_binaryop_getRecCopy(t_osc_expr_ast_binaryop *e);
-t_osc_expr_funcptr osc_expr_ast_binaryop_getFunc(t_osc_expr_ast_binaryop *e);
+t_osc_expr_oprec *osc_expr_ast_binaryop_getOpRec(t_osc_expr_ast_binaryop *e);
+void osc_expr_ast_binaryop_setOpRec(t_osc_expr_ast_binaryop *e, t_osc_expr_oprec *r);
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_getLeftArg(t_osc_expr_ast_binaryop *e);
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_getRightArg(t_osc_expr_ast_binaryop *e);
 void osc_expr_ast_binaryop_setLeftArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *left);
 void osc_expr_ast_binaryop_setRightArg(t_osc_expr_ast_binaryop *e, t_osc_expr_ast_expr *right);
-t_osc_expr_ast_funcall *osc_expr_ast_binaryop_toFuncall(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right);
-t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_rec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right);
+t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_osc_expr_ast_expr *left, t_osc_expr_ast_expr *right);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
-  University of California, Berkeley.  Copyright (c) 2013, The Regents of
+  University of California, Berkeley.  Copyright (c) 2011, The Regents of
   the University of California (Regents). 
   Permission to use, copy, modify, distribute, and distribute modified versions
   of this software and its documentation without fee and without a signed
@@ -20,28 +20,42 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_ast_funcall.r
+/** 	\file osc_expr_oprec.r
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_AST_FUNCALL_R__
-#define __OSC_EXPR_AST_FUNCALL_R__
+#ifndef __OSC_EXPR_OPREC_R__
+#define __OSC_EXPR_OPREC_R__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "osc_expr_ast_expr.r"
+#pragma pack(push)
+#pragma pack(4)
 
-struct _osc_expr_ast_funcall
+/** \struct t_osc_expr_oprec
+    A record that associates a function name (string) with a function pointer.
+*/
+struct _osc_expr_oprec
 {
-	struct _osc_expr_ast_expr expr; // parent
-	struct _osc_expr_funcrec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *argv; // arguments to function
-	int argc;
+	char *name; /**< Name of the operator as a C string. */
+	int input_arity;
+	char **param_names;
+	int *param_types;
+	int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
+	char **output_names; /**< Plural for possible future support of multiple return values. */
+	int *output_types; /**< Plural for possible future support of multiple return values. */
+	char *docstring;
+	int associativity;
+	int precedence;
+	int fixity;
+	char bytecode;
 };
+#pragma pack(pop)
 
-#ifdef __cplusplus
+
+#ifdef _cplusplus
 }
 #endif
 

@@ -52,7 +52,7 @@
 #include "osc_expr.r"
 #include "osc_expr_rec.h"
 #include "osc_expr_rec.r"
-#include "osc_expr_func.h"
+#include "osc_expr_builtins.h"
 #include "osc_expr_parser.h"
 #include "osc_expr_scanner.h"
 #include "osc_expr_privatedecls.h"
@@ -1751,11 +1751,10 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	}
 	int i;
 	int (*func)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**) = (int (*)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**))(f->rec->extra);
+	osc_atom_array_u_clear(*out);
 	int ret = 0;
 	if(argc0 == 1){
 		*out = osc_atom_array_u_alloc(max_argc);
-			
-		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
 			ret = func(osc_atom_array_u_get(argv[0], 0), osc_atom_array_u_get(argv[1], i), &a);
@@ -1766,8 +1765,6 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		return 0;
 	}else if(argc1 == 1){
 		*out = osc_atom_array_u_alloc(max_argc);
-			
-		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
 			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], 0), &a);
@@ -1778,8 +1775,6 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		return 0;
 	}else{
 		*out = osc_atom_array_u_alloc(min_argc);
-			
-		osc_atom_array_u_clear(*out);
 		for(i = 0; i < min_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
 			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], i), &a);
@@ -1794,7 +1789,6 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 // wrappers for infix ops
 int osc_expr_add(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 {
-	printf("%s\n", __func__);
 	if(!f1){
 		osc_atom_u_copy(result, f2);
 		return 0;
@@ -4968,4 +4962,48 @@ void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int
 		errstr = "%s: expected %d arguments but found %d\n";
 	}
 	osc_error(OSC_ERR_EXPR_ARGCHK, errstr, func, expected, found);
+}
+
+//////////////////////////////////////////////////
+// new stuff 
+//////////////////////////////////////////////////
+
+void osc_expr_expandScalars(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote)
+{
+	int havescalar = 0;
+	int havelist = 0;
+	uint64_t length_of_shortest_list = ~0ull;
+	for(int i = 0; i < argc; i++){
+		int l = osc_atom_array_u_getLen(argv[i]);
+		if(l <= 0){
+			// weird
+		}else if(l == 1){
+			havescalar = 1;
+		}else{
+			havelist = 1;
+			if(l < length_of_shortest_list){
+				length_of_shortest_list = l;
+			}
+		}
+	}
+	if(havelist && havescalar){
+		for(int i = 0; i < argc; i++){
+			int l = osc_atom_array_u_getLen(argv[i]);
+			if(l <= 0){
+				// still weird
+			}else if(l == 1){
+				osc_array_resize(argv[i], length_of_shortest_list);
+				t_osc_atom_u *a = osc_atom_array_u_get(argv[i], 0);
+				for(int j = 1; j < length_of_shortest_list - 1; j++){
+					t_osc_atom_u *aa = osc_atom_array_u_get(argv[i], j);
+					osc_atom_u_copy(&aa, a);
+				}
+			}
+		}
+	}
+}
+
+void osc_expr_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote)
+{
+
 }

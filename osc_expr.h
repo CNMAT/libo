@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+/*
 typedef struct _osc_expr t_osc_expr;
 typedef struct _osc_expr_arg t_osc_expr_arg;
 
@@ -40,13 +41,12 @@ typedef t_osc_hashtab t_osc_expr_lexenv;
 
 #include "osc_atom_array_u.h"
 
-typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+//typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 #include <math.h>
 #include "osc_message_s.h"
 #include "osc_atom_u.h"
 #include "osc_expr_rec.h"
-
 
 int osc_expr_evalInLexEnv(t_osc_expr *f,
 			  t_osc_expr_lexenv *lexenv,
@@ -112,6 +112,13 @@ int osc_expr_getAssignResultToAddress(t_osc_expr *e);
 
 void osc_expr_format(t_osc_expr *fg, long *buflen, char **fmt);
 void osc_expr_formatFunctionTable(long *buflen, char **buf);
+*/
+//////////////////////////////////////////////////
+// new stuff 
+//////////////////////////////////////////////////
+
+void osc_expr_expandScalars(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote);
+void osc_expr_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote);
 
 
 #ifdef _cplusplus

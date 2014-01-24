@@ -36,11 +36,9 @@ extern "C" {
 
 typedef struct _osc_expr_ast_funcall t_osc_expr_ast_funcall;
 
-//typedef int (*t_osc_expr_funcptr)(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-
-#include "osc_expr.h"
+#include "osc_expr_funcrec.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_rec.h"
+#include "osc_expr_builtins.h"
 
 int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	t_osc_expr_lexenv *lexenv,
@@ -53,15 +51,41 @@ t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_funcall_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_funcall_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
-t_osc_expr_rec *osc_expr_ast_funcall_getRec(t_osc_expr_ast_funcall *e);
-t_osc_expr_rec *osc_expr_ast_funcall_getRecCopy(t_osc_expr_ast_funcall *e);
-t_osc_expr_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
+t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
+t_osc_expr_builtins_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);
 int osc_expr_ast_funcall_getNumArgs(t_osc_expr_ast_funcall *e);
 void osc_expr_ast_funcall_prependArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);
 void osc_expr_ast_funcall_appendArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_rec *rec, t_osc_expr_ast_expr *argv);
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_rec *rec, int argc, ...);
+void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
+				       int nodetype,
+				       t_osc_expr_ast_expr *next,
+				       t_osc_expr_ast_evalfn evalfn,
+				       t_osc_expr_ast_formatfn formatfn,
+				       t_osc_expr_ast_formatfn format_lispfn,
+				       t_osc_expr_ast_freefn freefn,
+				       t_osc_expr_ast_copyfn copyfn,
+				       t_osc_expr_ast_serializefn serializefn,
+				       t_osc_expr_ast_deserializefn deserializefn,
+				       size_t objsize,
+				       t_osc_expr_funcrec *rec,
+				       t_osc_expr_ast_expr *argv);
+void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
+			       int nodetype,
+			       t_osc_expr_ast_expr *next,
+			       t_osc_expr_ast_evalfn evalfn,
+			       t_osc_expr_ast_formatfn formatfn,
+			       t_osc_expr_ast_formatfn format_lispfn,
+			       t_osc_expr_ast_freefn freefn,
+			       t_osc_expr_ast_copyfn copyfn,
+			       t_osc_expr_ast_serializefn serializefn,
+			       t_osc_expr_ast_deserializefn deserializefn,
+			       size_t objsize,
+			       t_osc_expr_funcrec *rec,
+			       int argc,
+			       ...);
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *rec, t_osc_expr_ast_expr *argv);
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, int argc, ...);
 
 #ifdef __cplusplus
 }
