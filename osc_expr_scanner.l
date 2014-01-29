@@ -76,13 +76,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	}
 %}
 
-#.*$ {
-	if(alloc_atom){
-		yylval->atom = osc_atom_u_alloc();
-	}
-	osc_atom_u_setString(yylval->atom, yytext);
-	return OSC_EXPR_COMMENT;	
-}
+#.*$ 
 
 \+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\. {
 	return *yytext;
