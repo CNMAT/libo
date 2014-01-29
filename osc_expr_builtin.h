@@ -20,12 +20,12 @@
   MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-/** 	\file osc_expr_builtins.h
+/** 	\file osc_expr_builtin.h
 	\author John MacCallum
 
 */
-#ifndef __OSC_EXPR_BUILTINS_H__
-#define __OSC_EXPR_BUILTINS_H__
+#ifndef __OSC_EXPR_BUILTIN_H__
+#define __OSC_EXPR_BUILTIN_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +33,7 @@ extern "C" {
 
 #include "osc_atom_array_u.h"
 struct _osc_expr_ast_funcall;
-typedef int (*t_osc_expr_builtins_funcptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+typedef int (*t_osc_expr_builtin_funcptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 #define OSC_EXPR_BUILTIN_DECL(name) int osc_expr_builtin_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 
@@ -3006,14 +3006,27 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 // new stuff
 //////////////////////////////////////////////////
 
-t_osc_expr_funcrec *osc_expr_builtins_lookupFunction(char *name);
-t_osc_expr_oprec *osc_expr_builtins_lookupOperator(char *op);
-t_osc_expr_oprec *osc_expr_builtins_lookupOperatorForOpcode(char op);
-t_osc_expr_funcrec *osc_expr_builtins_lookupFunctionForOperator(t_osc_expr_oprec *op);
-t_osc_expr_funcrec *osc_expr_builtins_lookupFunctionForOpcode(char op);
+// built-in operators
+extern t_osc_expr_oprec *osc_expr_builtin_op_add;
+extern t_osc_expr_oprec *osc_expr_builtin_op_assign;
+
+// built-in functions
+extern t_osc_expr_funcrec *osc_expr_builtin_func_add;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_assign;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_apply;;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_nth;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_list;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_aseq;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_if;
+
+t_osc_expr_funcrec *osc_expr_builtin_lookupFunction(char *name);
+t_osc_expr_oprec *osc_expr_builtin_lookupOperator(char *op);
+t_osc_expr_oprec *osc_expr_builtin_lookupOperatorForOpcode(char op);
+t_osc_expr_funcrec *osc_expr_builtin_lookupFunctionForOperator(t_osc_expr_oprec *op);
+t_osc_expr_funcrec *osc_expr_builtin_lookupFunctionForOpcode(char op);
 
 #ifdef _cplusplus
 }
 #endif
 
-#endif // __OSC_EXPR_BUILTINS_H__
+#endif // __OSC_EXPR_BUILTIN_H__

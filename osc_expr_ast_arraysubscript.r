@@ -31,11 +31,11 @@
 extern "C" {
 #endif
 
-#include "osc_expr_ast_expr.r"
+#include "osc_expr_ast_funcall.r"
 
 struct _osc_expr_ast_arraysubscript
 {
-	struct _osc_expr_ast_expr expr; // parent
+	struct _osc_expr_ast_funcall funcall; // parent
 	struct _osc_expr_ast_expr *base; // address is possibly an expression like /foo./bar
 	struct _osc_expr_ast_expr *index_list; // subscripts can be lists: /foo[[1, 2, 3]]
 };

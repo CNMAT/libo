@@ -26,15 +26,14 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_aseq.h"
 #include "osc_expr_ast_aseq.r"
 
 int osc_expr_ast_aseq_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   t_osc_expr_lexenv *lexenv,
-				   long *len,
-				   char **oscbndl,
+				   t_osc_bndl_u *oscbndl,
 				   t_osc_atom_ar_u **out)
 {
 	return 0;
@@ -171,13 +170,14 @@ void osc_expr_ast_aseq_setStep(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *step
 
 t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step)
 {
-	if(!min || !max){
+	if(!min || !max || !step){
 		return NULL;
 	}
 	t_osc_expr_ast_aseq *e = osc_mem_alloc(sizeof(t_osc_expr_ast_aseq));
 	if(!e){
 		return NULL;
 	}
+	/*
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)e,
 			       OSC_EXPR_AST_NODETYPE_ASEQ,
 			       NULL,
@@ -189,6 +189,24 @@ t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_exp
 			       osc_expr_ast_aseq_serialize,
 			       osc_expr_ast_aseq_deserialize,
 			       sizeof(t_osc_expr_ast_aseq));
+	*/
+	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_aseq;
+	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)e,
+				  OSC_EXPR_AST_NODETYPE_ASEQ,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_aseq_format,
+				  NULL,
+				  NULL,//osc_expr_ast_aseq_free,
+				  osc_expr_ast_aseq_copy,
+				  osc_expr_ast_aseq_serialize,
+				  osc_expr_ast_aseq_deserialize,
+				  sizeof(t_osc_expr_ast_aseq),
+				  funcrec,
+				  3,
+				  min,
+				  max,
+				  step);
 	osc_expr_ast_aseq_setMin(e, min);
 	osc_expr_ast_aseq_setMax(e, max);
 	osc_expr_ast_aseq_setStep(e, step);

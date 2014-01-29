@@ -31,11 +31,11 @@
 extern "C" {
 #endif
 
-#include "osc_expr_ast_expr.r"
+#include "osc_expr_ast_funcall.r"
 
 struct _osc_expr_ast_ternarycond
 {
-	struct _osc_expr_ast_expr expr; // parent
+	struct _osc_expr_ast_funcall funcall; // parent
 	t_osc_expr_ast_expr *test, *leftbranch, *rightbranch;
 };
 

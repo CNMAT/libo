@@ -116,8 +116,9 @@ void osc_expr_formatFunctionTable(long *buflen, char **buf);
 //////////////////////////////////////////////////
 // new stuff 
 //////////////////////////////////////////////////
+#include "osc_atom_array_u.h"
 
-void osc_expr_expandScalars(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote);
+void osc_expr_expandScalars(int argc, t_osc_atom_ar_u **argv, int scalar_expansion_index_count, unsigned int *scalar_expansion_indexes);
 void osc_expr_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote);
 
 

@@ -26,12 +26,20 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_oprec.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_binaryop.r"
+#include "osc_expr_ast_value.h"
 
+int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
+				       t_osc_expr_lexenv *lexenv,
+				       t_osc_bndl_u *oscbndl,
+				       t_osc_atom_ar_u **out)
+{
+	return 0;
+}
 
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
@@ -88,13 +96,9 @@ t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
-		printf("%s:%d\n", __func__, __LINE__);
 		osc_expr_ast_expr_free(osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)e));
-		printf("%s:%d\n", __func__, __LINE__);
 		osc_expr_ast_expr_free(osc_expr_ast_binaryop_getRightArg((t_osc_expr_ast_binaryop *)e));
-		printf("%s:%d\n", __func__, __LINE__);
 		osc_mem_free(e);
-		printf("%s:%d\n", __func__, __LINE__);
 	}
 }
 
@@ -181,27 +185,29 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_os
 			       osc_expr_ast_binaryop_deserialize,
 			       sizeof(t_osc_expr_ast_binaryop));
 	*/
-	t_osc_expr_funcrec *funcrec = osc_expr_builtins_lookupFunctionForOperator(rec);
+	t_osc_expr_funcrec *funcrec = osc_expr_builtin_lookupFunctionForOperator(rec);
 	if(!funcrec){
 		return NULL;
 	}
 	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)b,
-					  OSC_EXPR_AST_NODETYPE_BINARYOP,
-					  NULL,
-					  NULL,
-					  osc_expr_ast_binaryop_format,
-					  NULL,
+				  OSC_EXPR_AST_NODETYPE_BINARYOP,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_binaryop_format,
+				  NULL,
 				  NULL,//osc_expr_ast_binaryop_free,
-					  osc_expr_ast_binaryop_copy,
-					  osc_expr_ast_binaryop_serialize,
-					  osc_expr_ast_binaryop_deserialize,
-					  sizeof(t_osc_expr_ast_binaryop),
-					  funcrec,
-					  2,
-					  left,
-					  right);
+				  osc_expr_ast_binaryop_copy,
+				  osc_expr_ast_binaryop_serialize,
+				  osc_expr_ast_binaryop_deserialize,
+				  sizeof(t_osc_expr_ast_binaryop),
+				  funcrec,
+				  2,
+				  left,
+				  right);
 	osc_expr_ast_binaryop_setOpRec(b, rec);
 	osc_expr_ast_binaryop_setLeftArg(b, left);
 	osc_expr_ast_binaryop_setRightArg(b, right);
+	t_osc_expr_ast_expr *args = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)b);
+
 	return b;
 }

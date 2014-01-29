@@ -26,16 +26,18 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_binaryop.h"
+#include "osc_expr_ast_function.h"
+#include "osc_expr_ast_funcall.h"
 #include "osc_expr_ast_let.h"
 #include "osc_expr_ast_let.r"
 
 int osc_expr_ast_let_evalInLexEnv(t_osc_expr_ast_expr *ast,
-				       t_osc_expr_lexenv *lexenv,
-				       long *len,
-				       char **oscbndl,
-				       t_osc_atom_ar_u **out)
+				  t_osc_expr_lexenv *lexenv,
+				  t_osc_bndl_u *oscbndl,
+				  t_osc_atom_ar_u **out)
 {
 	return 1;
 }
@@ -116,9 +118,9 @@ t_osc_expr_ast_expr *osc_expr_ast_let_copy(t_osc_expr_ast_expr *ast)
 void osc_expr_ast_let_free(t_osc_expr_ast_expr *f)
 {
 	if(f){
-		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)osc_expr_ast_let_getVarlist((t_osc_expr_ast_let *)f));
-		osc_expr_ast_expr_free((t_osc_expr_ast_expr *)osc_expr_ast_let_getExprs((t_osc_expr_ast_let *)f));
-		osc_mem_free(f);
+		// free the varlist because it's a copy
+	        osc_expr_ast_expr_free((t_osc_expr_ast_expr *)osc_expr_ast_let_getVarlist((t_osc_expr_ast_let *)f));
+		osc_expr_ast_funcall_free(f);
 	}
 }
 
@@ -173,17 +175,47 @@ t_osc_expr_ast_let *osc_expr_ast_let_alloc(t_osc_expr_ast_expr *varlist, t_osc_e
 	t_osc_expr_ast_let *f = osc_mem_alloc(sizeof(t_osc_expr_ast_let));
 	if(f){
 		memset(f, '\0', sizeof(t_osc_expr_ast_let));
-		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)f,
-				       OSC_EXPR_AST_NODETYPE_LET,
-				       NULL,
-				       osc_expr_ast_let_evalInLexEnv,
-				       osc_expr_ast_let_format,
-				       osc_expr_ast_let_formatLisp,
-				       osc_expr_ast_let_free,
-				       osc_expr_ast_let_copy,
-				       osc_expr_ast_let_serialize,
-				       osc_expr_ast_let_deserialize,
-				       sizeof(t_osc_expr_ast_let));
+
+		// convert let(a = 10, b = /b){a + b;} to apply(lambda(a, b){a + b;}, 10, /b)
+		t_osc_expr_ast_expr *v = varlist;
+		t_osc_expr_ast_value *lambdalist = NULL;
+		t_osc_expr_ast_expr *rval = NULL;
+		while(v){
+			t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)v;
+			if(!lambdalist){
+				lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
+				//lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg(b);
+			}else{
+				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalist, osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b)));
+				//osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalist, osc_expr_ast_binaryop_getLeftArg(b));
+			}
+			if(!rval){
+				rval = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getRightArg(b));
+				//rval = osc_expr_ast_binaryop_getRightArg(b);
+			}else{
+				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)rval, osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getRightArg(b)));
+				//osc_expr_ast_expr_append((t_osc_expr_ast_expr *)rval, osc_expr_ast_binaryop_getRightArg(b));
+			}
+			v = osc_expr_ast_expr_next(v);
+		}
+		t_osc_expr_ast_function *lambda = osc_expr_ast_function_alloc(lambdalist, exprs);
+		osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambda, rval);
+
+		t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_apply;
+		osc_expr_ast_funcall_initWithList((t_osc_expr_ast_funcall *)f,
+						  OSC_EXPR_AST_NODETYPE_LET,
+						  NULL,
+						  NULL,
+						  osc_expr_ast_let_format,
+						  NULL,
+						  osc_expr_ast_let_free,
+						  osc_expr_ast_let_copy,
+						  osc_expr_ast_let_serialize,
+						  osc_expr_ast_let_deserialize,
+						  sizeof(t_osc_expr_ast_let),
+						  funcrec,
+						  (t_osc_expr_ast_expr *)lambda);
+
 		osc_expr_ast_let_setVarlist(f, varlist);
 		osc_expr_ast_let_setExprs(f, exprs);
 	}

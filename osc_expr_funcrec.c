@@ -97,7 +97,7 @@ char *osc_expr_funcrec_getDocstring(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
-t_osc_expr_builtins_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r)
+t_osc_expr_builtin_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r)
 {
 	if(r){
 		return r->func;
@@ -105,10 +105,18 @@ t_osc_expr_builtins_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
-unsigned int *osc_expr_funcrec_getScalarExpansionArgs(t_osc_expr_funcrec *r)
+int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r)
 {
 	if(r){
-		return r->scalar_expansion_args;
+		return r->scalar_expansion_argc;
+	}
+	return 0;
+}
+
+unsigned int *osc_expr_funcrec_getScalarExpansionArgv(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->scalar_expansion_argv;
 	}
 	return NULL;
 }
@@ -121,10 +129,18 @@ uint32_t osc_expr_funcrec_getScalarExpansionFlags(t_osc_expr_funcrec *r)
 	return 0;
 }
 
-unsigned int *osc_expr_funcrec_getTypePromotionArgs(t_osc_expr_funcrec *r)
+int osc_expr_funcrec_getTypePromotionArgc(t_osc_expr_funcrec *r)
 {
 	if(r){
-		return r->type_promotion_args;
+		return r->type_promotion_argc;
+	}
+	return 0;
+}
+
+unsigned int *osc_expr_funcrec_getTypePromotionArgv(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->type_promotion_argv;
 	}
 	return NULL;
 }

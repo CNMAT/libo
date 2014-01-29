@@ -38,15 +38,15 @@ typedef struct _osc_expr_ast_unaryop t_osc_expr_ast_unaryop;
 
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_oprec.h"
+#include "osc_bundle_u.h"
 
 #define OSC_EXPR_AST_UNARYOP_LEFT 1
 #define OSC_EXPR_AST_UNARYOP_RIGHT 2
 
 int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
-	t_osc_expr_lexenv *lexenv,
-	long *len,
-	char **oscbndl,
-	t_osc_atom_ar_u **out);
+				      t_osc_expr_lexenv *lexenv,
+				      t_osc_bndl_u *oscbndl,
+				      t_osc_atom_ar_u **out);
 long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_unaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_unaryop_copy(t_osc_expr_ast_expr *ast);
@@ -55,7 +55,7 @@ t_osc_err osc_expr_ast_unaryop_serialize(t_osc_expr_ast_expr *e, long *len, char
 t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 t_osc_expr_oprec *osc_expr_ast_unaryop_getOpRec(t_osc_expr_ast_unaryop *e);
 void osc_expr_ast_unaryop_setOpRec(t_osc_expr_ast_unaryop *e, t_osc_expr_oprec *r);
-t_osc_expr_builtins_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e);
+t_osc_expr_builtin_funcptr osc_expr_ast_unaryop_getFunc(t_osc_expr_ast_unaryop *e);
 t_osc_expr_ast_expr *osc_expr_ast_unaryop_getArg(t_osc_expr_ast_unaryop *e);
 void osc_expr_ast_unaryop_setArg(t_osc_expr_ast_unaryop *e, t_osc_expr_ast_expr *left);
 int osc_expr_ast_unaryop_getSide(t_osc_expr_ast_unaryop *e);

@@ -28,26 +28,25 @@
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_value.r"
-#include "osc_rset.h"
-#include "osc_query.h"
+//#include "osc_rset.h"
+//#include "osc_query.h"
 #include "osc_message_s.h"
 #include "osc_message_iterator_s.h"
 
-static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, t_osc_atom_u *a, int valuetype);
-static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type);
+static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype);
+static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type);
 
 int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    t_osc_expr_lexenv *lexenv,
-				    long *len,
-				    char **oscbndl,
+				    t_osc_bndl_u *oscbndl,
 				    t_osc_atom_ar_u **out)
 {
 	t_osc_expr_ast_value *v = (t_osc_expr_ast_value *)ast;
 	if(v){
-		t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
 		switch(v->valuetype){
 		case OSC_EXPR_AST_VALUE_TYPE_LITERAL:
 			{
+				t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
 				*out = osc_atom_array_u_alloc(1);
 				t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
 				osc_atom_u_copy(&a, vv);
@@ -55,6 +54,7 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			return 0;
 		case OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER:
 			{
+				t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
 				t_osc_atom_ar_u *tmp = NULL;
 				if((tmp = osc_expr_lexenv_lookup(lexenv, osc_atom_u_getStringPtr(vv)))){
 					*out = osc_atom_array_u_copy(tmp);
@@ -64,46 +64,54 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			return 0;
 		case OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS:
 			{
+				t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
 				*out = NULL;
-				if(!oscbndl || !len){
-					return OSC_ERR_EXPR_ADDRESSUNBOUND;
-				}
-				if(!(*oscbndl) || *len <= 16){
+				if(!oscbndl){
 					return OSC_ERR_EXPR_ADDRESSUNBOUND;
 				}
 				char *oscaddress = osc_atom_u_getStringPtr(vv);
-				t_osc_rset *rset = NULL;
-				osc_query_select(1, &oscaddress, *len, *oscbndl, 0, &rset);
-				t_osc_rset_result *res = osc_rset_select(rset, oscaddress);
-				if(rset){
-					t_osc_bndl_s *complete_matches = osc_rset_result_getCompleteMatches(res);
-					if(complete_matches){
-						t_osc_msg_s *m = osc_bundle_s_getFirstMsg(complete_matches);
-						if(m){
-							long arg_count = osc_message_s_getArgCount(m);
-							*out = osc_atom_array_u_alloc(arg_count);
-						
-							t_osc_atom_ar_u *atom_ar = *out;
-							osc_atom_array_u_clear(atom_ar);
-							int i = 0;
-							t_osc_msg_it_s *it = osc_msg_it_s_get(m);
-							while(osc_msg_it_s_hasNext(it)){
-								t_osc_atom_s *as = osc_msg_it_s_next(it);
-								t_osc_atom_u *au = osc_atom_array_u_get(atom_ar, i);
-								osc_atom_s_deserialize(as, &au);
-								i++;
-							}
-							osc_msg_it_s_destroy(it);
-							osc_rset_free(rset);
-							osc_message_s_free(m);
-							return 0;
+				//t_osc_rset *rset = NULL;
+				//osc_query_select(1, &oscaddress, *len, *oscbndl, 0, &rset);
+				//t_osc_rset_result *res = osc_rset_select(rset, oscaddress);
+				t_osc_msg_ar_u *msgar = NULL;
+				osc_bundle_u_lookupAddress(oscbndl, oscaddress, &msgar, 1);
+				if(msgar){
+					//t_osc_bndl_s *complete_matches = osc_rset_result_getCompleteMatches(res);
+					//if(complete_matches){
+					//t_osc_msg_s *m = osc_bundle_s_getFirstMsg(complete_matches);
+					t_osc_msg_u *m = osc_message_array_u_get(msgar, 0);
+					if(m){
+						*out = osc_message_u_getArgArrayCopy(m);
+						/*
+						long arg_count = osc_message_u_getArgCount(m);
+						*out = osc_atom_array_u_alloc(arg_count);
+						t_osc_atom_ar_u *atom_ar = *out;
+						osc_atom_array_u_clear(atom_ar);
+						int i = 0;
+						t_osc_msg_it_s *it = osc_msg_it_s_get(m);
+						while(osc_msg_it_s_hasNext(it)){
+							t_osc_atom_s *as = osc_msg_it_s_next(it);
+							t_osc_atom_u *au = osc_atom_array_u_get(atom_ar, i);
+							osc_atom_s_deserialize(as, &au);
+							i++;
 						}
+						osc_msg_it_s_destroy(it);
+						osc_rset_free(rset);
+						osc_message_s_free(m);
+						*/
+						return 0;
 					}
-					osc_rset_free(rset);
+					//}
+					//osc_rset_free(rset);
 				}
 				return OSC_ERR_EXPR_ADDRESSUNBOUND;
 			}
 			break;
+		case OSC_EXPR_AST_VALUE_TYPE_LIST:
+			{
+				*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)osc_expr_ast_value_getList(v));
+			}
+			return 0;
 		}
 	}
 	return 0;
@@ -172,7 +180,7 @@ int osc_expr_ast_value_getValueType(t_osc_expr_ast_value *v)
 	return -1;
 }
 
-t_osc_atom_u *osc_expr_ast_value_getValue(t_osc_expr_ast_value *v)
+void *osc_expr_ast_value_getValue(t_osc_expr_ast_value *v)
 {
 	if(v){
 		return v->value;
@@ -180,7 +188,27 @@ t_osc_atom_u *osc_expr_ast_value_getValue(t_osc_expr_ast_value *v)
 	return NULL;
 }
 
-static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, t_osc_atom_u *a, int valuetype)
+t_osc_atom_u *osc_expr_ast_value_getLiteral(t_osc_expr_ast_value *v)
+{
+	return (t_osc_atom_u *)osc_expr_ast_value_getValue(v);
+}
+
+t_osc_atom_u *osc_expr_ast_value_getIdentifier(t_osc_expr_ast_value *v)
+{
+	return (t_osc_atom_u *)osc_expr_ast_value_getValue(v);
+}
+
+t_osc_atom_u *osc_expr_ast_value_getOSCAddress(t_osc_expr_ast_value *v)
+{
+	return (t_osc_atom_u *)osc_expr_ast_value_getValue(v);
+}
+
+t_osc_atom_ar_u *osc_expr_ast_value_getList(t_osc_expr_ast_value *v)
+{
+	return (t_osc_atom_ar_u *)osc_expr_ast_value_getValue(v);
+}
+
+static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype)
 {
 	if(v){
 		v->value = a;
@@ -203,7 +231,12 @@ void osc_expr_ast_value_setOSCAddress(t_osc_expr_ast_value *v, t_osc_atom_u *a)
 	osc_expr_ast_value_setValue(v, a, OSC_EXPR_AST_VALUE_TYPE_LITERAL);
 }
 
-static t_osc_expr_ast_value *osc_expr_ast_value_alloc(t_osc_atom_u *a, int type)
+void osc_expr_ast_value_setList(t_osc_expr_ast_value *v, t_osc_atom_ar_u *a)
+{
+	osc_expr_ast_value_setValue(v, a, OSC_EXPR_AST_VALUE_TYPE_LIST);
+}
+
+static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type)
 {
 	t_osc_expr_ast_value *v = osc_mem_alloc(sizeof(t_osc_expr_ast_value));
 	if(v){
@@ -236,5 +269,10 @@ t_osc_expr_ast_value *osc_expr_ast_value_allocIdentifier(t_osc_atom_u *a)
 t_osc_expr_ast_value *osc_expr_ast_value_allocOSCAddress(t_osc_atom_u *a)
 {
 	return osc_expr_ast_value_alloc(a, OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS);
+}
+
+t_osc_expr_ast_value *osc_expr_ast_value_allocList(t_osc_atom_ar_u *a)
+{
+	return osc_expr_ast_value_alloc(a, OSC_EXPR_AST_VALUE_TYPE_LIST);
 }
 

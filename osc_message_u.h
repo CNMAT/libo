@@ -36,15 +36,17 @@ extern "C" {
 
 typedef struct _osc_message_u t_osc_message_u, t_osc_msg_u;
 
+#include "osc_array.h"
+typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+
 #include <stdint.h>
 #include "osc_bundle_u.h"
 #include "osc_bundle_s.h"
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
-#include "osc_array.h"
 #include "osc_timetag.h"
 
-typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+//typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
 
 t_osc_msg_u *osc_message_u_alloc(void);
 size_t osc_message_u_getStructSize(void);

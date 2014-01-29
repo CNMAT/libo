@@ -34,7 +34,7 @@ extern "C" {
 
 typedef struct _osc_expr_funcrec t_osc_expr_funcrec;
 
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 
 char *osc_expr_funcrec_getName(t_osc_expr_funcrec *r);
 int osc_expr_funcrec_getInputArity(t_osc_expr_funcrec *r);
@@ -45,10 +45,12 @@ int osc_expr_funcrec_getOutputArity(t_osc_expr_funcrec *r);
 char **osc_expr_funcrec_getOutputNames(t_osc_expr_funcrec *r);
 int *osc_expr_funcrec_getOutputTypes(t_osc_expr_funcrec *r);
 char *osc_expr_funcrec_getDocstring(t_osc_expr_funcrec *r);
-t_osc_expr_builtins_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r);
-unsigned int *osc_expr_funcrec_getScalarExpansionArgs(t_osc_expr_funcrec *r);
+t_osc_expr_builtin_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r);
+int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r);
+unsigned int *osc_expr_funcrec_getScalarExpansionArgv(t_osc_expr_funcrec *r);
 uint32_t osc_expr_funcrec_getScalarExpansionFlags(t_osc_expr_funcrec *r);
-unsigned int *osc_expr_funcrec_getTypePromotionArgs(t_osc_expr_funcrec *r);
+int osc_expr_funcrec_getTypePromotionArgc(t_osc_expr_funcrec *r);
+unsigned int *osc_expr_funcrec_getTypePromotionArgv(t_osc_expr_funcrec *r);
 uint32_t osc_expr_funcrec_getTypePromotionFlags(t_osc_expr_funcrec *r);
 
 #ifdef __cplusplus

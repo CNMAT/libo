@@ -36,6 +36,7 @@ typedef struct _osc_expr_ast_expr t_osc_expr_ast_expr;
 
 #include "osc_expr_lexenv.h"
 #include "osc_atom_array_u.h"
+#include "osc_bundle_u.h"
 
 enum{
 	OSC_EXPR_AST_NODETYPE_EXPR = 1,
@@ -43,15 +44,11 @@ enum{
 	OSC_EXPR_AST_NODETYPE_UNARYOP,
 	OSC_EXPR_AST_NODETYPE_BINARYOP,
 	OSC_EXPR_AST_NODETYPE_ARRAYSUBSCRIPT,
-	OSC_EXPR_AST_NODETYPE_FIELDOP,
-	OSC_EXPR_AST_NODETYPE_COMPOUNDASSIGN,
 	OSC_EXPR_AST_NODETYPE_VALUE,
 	OSC_EXPR_AST_NODETYPE_LIST,
-	OSC_EXPR_AST_NODETYPE_OSCADDRESS,
 	OSC_EXPR_AST_NODETYPE_FUNCTION,
 	OSC_EXPR_AST_NODETYPE_ASEQ,
 	OSC_EXPR_AST_NODETYPE_TERNARYCOND,
-	OSC_EXPR_AST_NODETYPE_SUGAR,
 	OSC_EXPR_AST_NODETYPE_LET,
 };
 
@@ -60,8 +57,7 @@ typedef long (*t_osc_expr_ast_formatfn)(char*, long, t_osc_expr_ast_expr*);
 typedef void (*t_osc_expr_ast_freefn)(t_osc_expr_ast_expr*);
 typedef int (*t_osc_expr_ast_evalfn)(t_osc_expr_ast_expr*,
 				     t_osc_expr_lexenv*,
-				     long*,
-				     char**,
+				     t_osc_bndl_u*,
 				     t_osc_atom_ar_u**);
 typedef t_osc_expr_ast_expr *(*t_osc_expr_ast_copyfn)(t_osc_expr_ast_expr*);
 typedef t_osc_err (*t_osc_expr_ast_serializefn)(t_osc_expr_ast_expr*, long*, char**);
@@ -78,10 +74,13 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_serializefn serializefn,
 			    t_osc_expr_ast_deserializefn deserializefn,
 			    size_t objsize);
+int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
+			   long *len,
+			   char **oscbndl,
+			   t_osc_atom_ar_u **out);
 int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   t_osc_expr_lexenv *lexenv,
-				   long *len,
-				   char **oscbndl,
+				   t_osc_bndl_u *oscbndl,
 				   t_osc_atom_ar_u **out);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast);

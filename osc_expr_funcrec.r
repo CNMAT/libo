@@ -50,10 +50,12 @@ struct _osc_expr_funcrec
 	char **output_names; /**< Plural for possible future support of multiple return values. */
 	int *output_types; /**< Plural for possible future support of multiple return values. */
 	char *docstring;
-	t_osc_expr_builtins_funcptr func;
-	unsigned int *scalar_expansion_args;
+	t_osc_expr_builtin_funcptr func;
+	int scalar_expansion_argc;
+	unsigned int *scalar_expansion_argv;
 	uint32_t scalar_expansion_flags;
-	unsigned int *type_promotion_args;
+	int type_promotion_argc;
+	unsigned int *type_promotion_argv;
 	uint32_t type_promotion_flags;
 };
 #pragma pack(pop)

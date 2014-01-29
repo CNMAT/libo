@@ -55,14 +55,34 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 	}
 }
 
+int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
+			   long *len,
+			   char **oscbndl,
+			   t_osc_atom_ar_u **out)
+{
+	t_osc_bndl_u *bndlu = NULL;
+	osc_bundle_s_deserialize(*len, *oscbndl, &bndlu);
+	int ret = 0;
+	if(bndlu){
+		ret = osc_expr_ast_expr_evalInLexEnv(ast, NULL, bndlu, out);
+		if(ret){
+			osc_bundle_u_free(bndlu);
+			return ret;
+		}
+		osc_bundle_u_serialize(bndlu, len, oscbndl);
+		osc_bundle_u_free(bndlu);
+		return 0;
+	}
+	return 1;
+}
+
 int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   t_osc_expr_lexenv *lexenv,
-				   long *len,
-				   char **oscbndl,
+				   t_osc_bndl_u *oscbndl,
 				   t_osc_atom_ar_u **out)
 {
 	if(ast && ast->eval){
-		return ast->eval(ast, lexenv, len, oscbndl, out);
+		return ast->eval(ast, lexenv, oscbndl, out);
 	}else{
 		return 0;
 	}
@@ -148,6 +168,7 @@ void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_
 	if(!ll){
 		e->next = expr_to_append;
 	}else{
+		int i = 0;
 		while(ll->next){
 			ll = ll->next;
 		}

@@ -26,7 +26,7 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_oprec.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_unaryop.h"
@@ -35,8 +35,7 @@
 
 int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_expr_lexenv *lexenv,
-				      long *len,
-				      char **oscbndl,
+				      t_osc_bndl_u *oscbndl,
 				      t_osc_atom_ar_u **out)
 {
 	return 1;
@@ -168,6 +167,7 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_
 	if(!b){
 		return NULL;
 	}
+	/*
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)b,
 			       OSC_EXPR_AST_NODETYPE_UNARYOP,
 			       NULL,
@@ -179,6 +179,24 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_
 			       osc_expr_ast_unaryop_serialize,
 			       osc_expr_ast_unaryop_deserialize,
 			       sizeof(t_osc_expr_ast_unaryop));
+	*/
+	t_osc_expr_funcrec *funcrec = osc_expr_builtin_lookupFunctionForOperator(rec);
+	if(!funcrec){
+		return NULL;
+	}
+	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)b,
+				  OSC_EXPR_AST_NODETYPE_UNARYOP,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_unaryop_format,
+				  NULL,
+				  NULL,//osc_expr_ast_unaryop_free,
+				  osc_expr_ast_unaryop_copy,
+				  osc_expr_ast_unaryop_serialize,
+				  osc_expr_ast_unaryop_deserialize,
+				  sizeof(t_osc_expr_ast_unaryop),
+				  funcrec,
+				  0);
 	osc_expr_ast_unaryop_setOpRec(b, rec);
 	osc_expr_ast_unaryop_setArg(b, arg);
 	osc_expr_ast_unaryop_setSide(b, side);
@@ -194,3 +212,4 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_allocRight(t_osc_expr_oprec *rec, t
 {
 	return osc_expr_ast_unaryop_alloc(rec, arg, OSC_EXPR_AST_UNARYOP_RIGHT);
 }
+

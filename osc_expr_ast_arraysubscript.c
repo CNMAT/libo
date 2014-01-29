@@ -26,15 +26,14 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_expr_ast_arraysubscript.r"
 
 int osc_expr_ast_arraysubscript_evalInLexEnv(t_osc_expr_ast_expr *ast,
 					     t_osc_expr_lexenv *lexenv,
-					     long *len,
-					     char **oscbndl,
+					     t_osc_bndl_u *oscbndl,
 					     t_osc_atom_ar_u **out)
 {
 	return 0;
@@ -153,6 +152,7 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 	if(!e){
 		return NULL;
 	}
+	/*
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)e,
 			       OSC_EXPR_AST_NODETYPE_ARRAYSUBSCRIPT,
 			       NULL,
@@ -164,6 +164,23 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 			       osc_expr_ast_arraysubscript_serialize,
 			       osc_expr_ast_arraysubscript_deserialize,
 			       sizeof(t_osc_expr_ast_arraysubscript));
+	*/
+	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_nth;
+	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)e,
+				  OSC_EXPR_AST_NODETYPE_ARRAYSUBSCRIPT,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_arraysubscript_format,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_arraysubscript_copy,
+				  osc_expr_ast_arraysubscript_serialize,
+				  osc_expr_ast_arraysubscript_deserialize,
+				  sizeof(t_osc_expr_ast_arraysubscript),
+				  funcrec,
+				  2,
+				  base,
+				  index_list);
 	osc_expr_ast_arraysubscript_setBase(e, base);
 	osc_expr_ast_arraysubscript_setIndexList(e, index_list);
 	return e;

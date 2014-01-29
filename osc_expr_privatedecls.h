@@ -27,7 +27,7 @@
 
 #include "osc_atom_u.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 
 void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
 void osc_expr_err_unbound(char *address, char *func); 
@@ -56,8 +56,7 @@ OSC_EXPR_BUILTIN_DECL(lookup);
 
 #define OSC_EXPR_SPECFUNC_DECL(name) int osc_expr_specFunc_##name(t_osc_expr_ast_expr *f, \
 								  t_osc_expr_lexenv *lexenv, \
-								  long *len, \
-								  char **oscbndl, \
+								  t_osc_bndl_u *oscbndl, \
 								  t_osc_atom_ar_u **out)
 
 OSC_EXPR_SPECFUNC_DECL(apply);

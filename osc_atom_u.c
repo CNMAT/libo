@@ -1245,3 +1245,11 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 	}
 }
 
+t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt32(a, i);
+	}
+	return a;
+}

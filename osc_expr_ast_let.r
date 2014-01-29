@@ -31,11 +31,11 @@
 extern "C" {
 #endif
 
-#include "osc_expr_ast_expr.r"
+#include "osc_expr_ast_funcall.r"
 
 struct _osc_expr_ast_let
 {
-	struct _osc_expr_ast_expr expr; // parent
+	struct _osc_expr_ast_funcall funcall ; // parent
 	t_osc_expr_ast_value *varlist; // these will be strings identified as identifiers by the parser
 	t_osc_expr_ast_expr *exprs;
 };

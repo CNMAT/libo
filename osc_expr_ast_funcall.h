@@ -38,13 +38,13 @@ typedef struct _osc_expr_ast_funcall t_osc_expr_ast_funcall;
 
 #include "osc_expr_funcrec.h"
 #include "osc_expr_ast_expr.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
+#include "osc_bundle_u.h"
 
 int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
-	t_osc_expr_lexenv *lexenv,
-	long *len,
-	char **oscbndl,
-	t_osc_atom_ar_u **out);
+				      t_osc_expr_lexenv *lexenv,
+				      t_osc_bndl_u *oscbndl,
+				      t_osc_atom_ar_u **out);
 long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_funcall_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast);
@@ -52,7 +52,7 @@ void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e);
 t_osc_err osc_expr_ast_funcall_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
 t_osc_err osc_expr_ast_funcall_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
-t_osc_expr_builtins_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
+t_osc_expr_builtin_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);
 int osc_expr_ast_funcall_getNumArgs(t_osc_expr_ast_funcall *e);
 void osc_expr_ast_funcall_prependArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);

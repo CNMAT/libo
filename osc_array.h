@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include "osc_error.h"
 typedef struct _osc_array t_osc_array, t_osc_ar;
 
 #define osc_array_alloc(len, type) osc_array_allocWithSize(len, sizeof(type))

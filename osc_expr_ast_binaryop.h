@@ -38,7 +38,12 @@ typedef struct _osc_expr_ast_binaryop t_osc_expr_ast_binaryop;
 
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_funcall.h"
+#include "osc_bundle_u.h"
 
+int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
+				       t_osc_expr_lexenv *lexenv,
+				       t_osc_bndl_u *oscbndl,
+				       t_osc_atom_ar_u **out);
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_binaryop_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast);

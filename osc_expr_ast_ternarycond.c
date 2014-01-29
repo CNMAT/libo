@@ -26,16 +26,15 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_ternarycond.h"
 #include "osc_expr_ast_ternarycond.r"
 
 int osc_expr_ast_ternarycond_evalInLexEnv(t_osc_expr_ast_expr *ast,
-				   t_osc_expr_lexenv *lexenv,
-				   long *len,
-				   char **oscbndl,
-				   t_osc_atom_ar_u **out)
+					  t_osc_expr_lexenv *lexenv,
+					  t_osc_bndl_u *oscbndl,
+					  t_osc_atom_ar_u **out)
 {
 	return 0;
 }
@@ -168,6 +167,7 @@ t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *
 	if(!e){
 		return NULL;
 	}
+	/*
 	osc_expr_ast_expr_init((t_osc_expr_ast_expr *)e,
 			       OSC_EXPR_AST_NODETYPE_TERNARYCOND,
 			       NULL,
@@ -179,6 +179,24 @@ t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *
 			       osc_expr_ast_ternarycond_serialize,
 			       osc_expr_ast_ternarycond_deserialize,
 			       sizeof(t_osc_expr_ast_ternarycond));
+	*/
+	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_if;
+	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)e,
+				  OSC_EXPR_AST_NODETYPE_TERNARYCOND,
+				  NULL,
+				  NULL,
+				  osc_expr_ast_ternarycond_format,
+				  NULL,
+				  NULL,//osc_expr_ast_ternarycond_free,
+				  osc_expr_ast_ternarycond_copy,
+				  osc_expr_ast_ternarycond_serialize,
+				  osc_expr_ast_ternarycond_deserialize,
+				  sizeof(t_osc_expr_ast_ternarycond),
+				  funcrec,
+				  3,
+				  test,
+				  leftbranch,
+				  rightbranch);
 	osc_expr_ast_ternarycond_setTest(e, test);
 	osc_expr_ast_ternarycond_setLeftbranch(e, leftbranch);
 	osc_expr_ast_ternarycond_setRightbranch(e, rightbranch);

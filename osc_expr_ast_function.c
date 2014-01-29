@@ -26,19 +26,16 @@
 
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_expr_builtins.h"
+#include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_function.h"
 #include "osc_expr_ast_function.r"
 
 int osc_expr_ast_function_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				       t_osc_expr_lexenv *lexenv,
-				       long *len,
-				       char **oscbndl,
+				       t_osc_bndl_u *oscbndl,
 				       t_osc_atom_ar_u **out)
 {
-	// this shouldn't happen
-	// if it does, the cute thing would be to put it in a bundle and stick it in an atom
 	return 1;
 }
 

@@ -37,8 +37,8 @@ extern "C" {
 struct _osc_expr_ast_value
 {
 	struct _osc_expr_ast_expr expr; // parent
-	t_osc_atom_u *value;
-	int valuetype; // literal, identifier, oscaddress
+	void *value; // will be t_osc_atom_u* or t_osc_atom_ar_u*
+	int valuetype; // literal, identifier, oscaddress, list
 };
 
 #ifdef __cplusplus
