@@ -71,17 +71,6 @@ int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yysca
 #define YY_DECL int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
 #endif
 
-#ifndef __HAVE_OSC_PARSER_SUBST__
-#define __HAVE_OSC_PARSER_SUBST__
-typedef struct _osc_parser_subst{
-	struct _osc_message_u *msg;
-	int listitem;
-	struct _osc_atom_u *osc_atom;
-	int item_to_replace;
-	struct _osc_parser_subst *next;
-} t_osc_parser_subst;
-#endif
-
 #ifndef __HAVE_OSC_BNDL_LIST__
 #define __HAVE_OSC_BNDL_LIST__
 typedef struct _osc_parser_bndl_list{
@@ -95,7 +84,7 @@ typedef struct _osc_parser_bndl_list{
 #ifdef __cplusplus
 extern "C"{
 #endif
-t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl, long *nsubs, t_osc_parser_subst **subs);
+t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl);
 #ifdef __cplusplus
 }
 #endif
@@ -108,10 +97,7 @@ int osc_parser_lex(YYSTYPE * yylval_param,YYLTYPE * yylloc_param ,yyscan_t yysca
 	return osc_scanner_lex(yylval_param, yylloc_param, yyscanner, buflen, buf);
 }
 
-//int yyparse (t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg, long *nsubs, t_osc_parser_subst **subs, void *scanner);
-
-
-t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl, long *nsubs, t_osc_parser_subst **subs){
+t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl){
 	yyscan_t scanner;
 	osc_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_scanner__scan_string(ptr, scanner);
@@ -120,7 +106,7 @@ t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl, long 
 	t_osc_parser_bndl_list *bl = NULL;
 	long buflen = 0;
 	char *buf = NULL;
-	int ret = osc_parser_parse(&bl, &msg, nsubs, subs, scanner, &buflen, &buf);
+	int ret = osc_parser_parse(&bl, &msg, scanner, &buflen, &buf);
 	osc_scanner__delete_buffer(buf_state, scanner);
 	osc_scanner_lex_destroy(scanner);
 	if(!ret){
@@ -135,20 +121,9 @@ t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl, long 
 	return OSC_ERR_NONE;
 }
 
-void yyerror (YYLTYPE *yylloc, t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg, long *nsubs, t_osc_parser_subst **subs, void *scanner, long *buflen, char **buf, char const *e){
+void yyerror (YYLTYPE *yylloc, t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg, void *scanner, long *buflen, char **buf, char const *e){
 	printf("osc_parser: error: %s\n", e);
 	//printf("%d: %s at %s\n", yylineno, e, yytext);
-}
-
-void osc_parser_substitution(t_osc_parser_subst **subs_list, t_osc_msg_u *msg, int listitem, t_osc_atom_u *osc_atom, int item_to_replace){
-	return;
-	t_osc_parser_subst *s = (t_osc_parser_subst *)osc_mem_alloc(sizeof(t_osc_parser_subst));
-	s->msg = msg;
-	s->listitem = listitem;
-	s->osc_atom = osc_atom;
-	s->item_to_replace = item_to_replace;
-	s->next = *subs_list;
-	*subs_list = s;
 }
 
 %}
@@ -160,8 +135,6 @@ void osc_parser_substitution(t_osc_parser_subst **subs_list, t_osc_msg_u *msg, i
 
 %parse-param{t_osc_parser_bndl_list **bndl}
 %parse-param{t_osc_msg_u **msg}
-%parse-param{long *nsubs}
-%parse-param{t_osc_parser_subst **subs}
 %parse-param{void *scanner}
 %parse-param{long *buflen}
 %parse-param{char **buf}
@@ -304,18 +277,6 @@ arglist:
 		*msg = m;
 		osc_message_u_appendTimetag(*msg, $1);
 	  }
-	| DOLLARSUB {
-		t_osc_msg_u *m = osc_message_u_alloc();
-		PP("push MSG %p->%p\n", m, *msg);
-		PP("add DOLLARSUB to MSG %p := %d\n", m, $1);
-		m->next = *msg;
-		*msg = m;
-		char buf[8];
-		sprintf(buf, "$%d", $1);
-		t_osc_atom_u *a = osc_message_u_appendString(*msg, buf);
-		osc_parser_substitution(subs, *msg, $1, a, (*msg)->argc);
-		(*nsubs)++;
-	}
 	| arglist STRING {
 		PP("add STRING to MSG %p := %s\n", *msg, $2);
 		osc_message_u_appendStringPtr(*msg, $2);
@@ -355,14 +316,6 @@ arglist:
 	| arglist OSCTIMETAG {
 		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
 		osc_message_u_appendTimetag(*msg, $2);
- 	}
-	| arglist DOLLARSUB {
-		PP("add DOLLARSUB to MSG %p := %d\n", *msg, $2);
-		char buf[8];
-		sprintf(buf, "$%d", $2);
-		t_osc_atom_u *a = osc_message_u_appendString(*msg, buf);
-		osc_parser_substitution(subs, *msg, $2, a, (*msg)->argc);
-		(*nsubs)++;
  	}
 	| '[' bundle ']' {
 		//if(!(*msg)){
@@ -463,13 +416,5 @@ msg:
 		m->next = *msg;
 		*msg = m;
 		osc_message_u_setAddressPtr(*msg, $1, NULL);
- 	}
-	| OSCADDRESS_DOLLARSUB arglist '\n' {
-		char buf[8];
-		sprintf(buf, "/$%d", $1);
-		PP("set ADDRESS %p := %s\n", *msg, buf);
-		osc_message_u_setAddressPtr(*msg, buf, NULL);
-		osc_parser_substitution(subs, *msg, $1, NULL, 0);
-		(*nsubs)++;
  	}
 ;
