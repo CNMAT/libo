@@ -55,6 +55,8 @@ int osc_strfmt_null(char *buf, size_t n);
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t);
 
+int osc_strfmt_blob(char *buf, size_t n, char *blob);
+
 int osc_strfmt_quotedString(char *buf, size_t n, char *str);
 int osc_strfmt_stringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_quotedStringWithQuotedMeta(char *buf, size_t n, char *str);

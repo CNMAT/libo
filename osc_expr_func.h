@@ -168,7 +168,13 @@ int osc_expr_explicitCast_uint32(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_uint64(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_bool(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src);
+int osc_expr_explicitCast_blob(t_osc_atom_u *dest, t_osc_atom_u *src);
 int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+
+int osc_expr_hton32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_ntoh32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -2362,6 +2368,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_explicitCast,
 	 (void *)osc_expr_explicitCast_string},
 	//////////////////////////////////////////////////
+	{"blob",
+	 "/result = blob($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Cast to blob",
+	 osc_expr_explicitCast,
+	 (void *)osc_expr_explicitCast_blob},
+	//////////////////////////////////////////////////
 	{"cast",
 	 "/result = cast($1, $2)",
 	 2,
@@ -2379,15 +2398,64 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "/result = typetags($1)",
 	 1,
 	 0,
-	 (char *[]){"argument to be converted"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){"address of message to get typetags from"},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
 	 (char *[]){NULL},
 	 (int []){},
 	 (char *[]){"/core", NULL},
 	 "Get the typetags associated with <arg1> as a list of int8s",
 	 osc_expr_typetags,
-	 NULL}
-
+	 NULL},
+	//////////////////////////////////////////////////
+	{"hton32",
+	 "/result = hton32($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "convert a 32-bit integer from host to network byte order.",
+	 osc_expr_hton32,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"ntoh32",
+	 "/result = ntoh32($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "convert a 32-bit integer from network to host byte order.",
+	 osc_expr_ntoh32,
+	 NULL},	//////////////////////////////////////////////////
+	{"hton64",
+	 "/result = hton64($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "convert a 64-bit integer from host to network byte order.",
+	 osc_expr_hton64,
+	 NULL},	//////////////////////////////////////////////////
+	{"ntoh64",
+	 "/result = ntoh64($1)",
+	 1,
+	 0,
+	 (char *[]){"argument to be converted"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "convert a 64-bit integer from network to host byte order.",
+	 osc_expr_ntoh64,
+	 NULL},
 };
 
 #ifdef _cplusplus
