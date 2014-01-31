@@ -153,6 +153,11 @@ void osc_expr_funcall_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int
 	}
 }
 
+#define __OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(funcname)if(ff == osc_expr_builtin_##funcname) return osc_expr_specFunc_##funcname(ast, lexenv, oscbndl, out);
+
+#define OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(funcname) __OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(funcname)
+#define OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(funcname) __OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lval_##funcname)
+
 int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_expr_lexenv *lexenv,
 				      t_osc_bndl_u *oscbndl,
@@ -168,45 +173,26 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	//////////////////////////////////////////////////
 	// Special functions
 	//////////////////////////////////////////////////
-	if(ff == osc_expr_builtin_apply){
-		return osc_expr_specFunc_apply(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_map){
-		return osc_expr_specFunc_map(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_lreduce || ff == osc_expr_builtin_rreduce){
-		return osc_expr_specFunc_reduce(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_assign){
-		return osc_expr_specFunc_assign(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_assigntoindex){
-		return osc_expr_specFunc_assigntoindex(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_if){
-		return osc_expr_specFunc_if(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_emptybundle){
-		return osc_expr_specFunc_emptybundle(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_bound){
-		return osc_expr_specFunc_bound(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_exists){
-		return osc_expr_specFunc_exists(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_getaddresses){
-		return osc_expr_specFunc_getaddresses(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_delete){
-		return osc_expr_specFunc_delete(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_getmsgcount){
-		return osc_expr_specFunc_getmsgcount(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_value){
-		return osc_expr_specFunc_value(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_quote){
-		return osc_expr_specFunc_quote(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_eval){
-		return osc_expr_specFunc_eval(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_tokenize){
-		return osc_expr_specFunc_tokenize(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_gettimetag){
-		return osc_expr_specFunc_gettimetag(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_settimetag){
-		return osc_expr_specFunc_settimetag(ast, lexenv, oscbndl, out);
-	}else if(ff == osc_expr_builtin_lookup){
-		return osc_expr_specFunc_lookup(ast, lexenv, oscbndl, out);
-	}else{
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(apply);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(map);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lreduce);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(rreduce);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(assign);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(if);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(emptybundle);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(bound);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(exists);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(getaddresses);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(delete);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(getmsgcount);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(value);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(quote);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(eval);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(tokenize);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(gettimetag);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(settimetag);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lookup);
+	{
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
@@ -244,7 +230,91 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		// type promotion
 		osc_expr_funcall_promoteToLargestType(f_argc, argv, osc_expr_funcrec_getTypePromotionArgc(funcrec), osc_expr_funcrec_getTypePromotionArgv(funcrec));
 		// call function
-	        ret = ff(f, f_argc, argv, out);
+		ret = ff(f, f_argc, argv, out);
+		for(i = 0; i < f_argc; i++){
+			if(argv[i]){
+				osc_atom_array_u_free(argv[i]);
+			}
+		}
+		return ret;
+	}
+	return 1;
+}
+
+int osc_expr_ast_funcall_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					  t_osc_expr_lexenv *lexenv,
+					  t_osc_bndl_u *oscbndl,
+					  t_osc_atom_ar_u **out)
+{
+	t_osc_expr_ast_funcall *f = (t_osc_expr_ast_funcall *)ast;
+	t_osc_expr_builtin_funcptr ff = osc_expr_ast_funcall_getFunc(f);
+	t_osc_expr_funcrec *funcrec = osc_expr_ast_funcall_getFuncRec(f);
+	if(!ff){
+		// wha?
+		return 1;
+	}
+	//////////////////////////////////////////////////
+	// Special functions
+	//////////////////////////////////////////////////
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(apply);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(map);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(lreduce);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(rreduce);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(assign);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(if);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(emptybundle);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(bound);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(exists);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(getaddresses);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(delete);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(getmsgcount);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(value);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(quote);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(eval);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(tokenize);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(gettimetag);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(settimetag);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(lookup);
+	{
+		//////////////////////////////////////////////////
+		// Call normal function
+		//////////////////////////////////////////////////
+		int f_argc = osc_expr_ast_funcall_getNumArgs(f);
+		t_osc_expr_ast_expr *f_argv = osc_expr_ast_funcall_getArgs(f);
+		t_osc_atom_ar_u *argv[f_argc];
+		memset(argv, '\0', sizeof(argv));
+		int ret = 0;
+		int i = 0;
+		while(f_argv){
+			//int ret = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, argv + i);
+			int ret = osc_expr_ast_expr_evalInLexEnv(f_argv, lexenv, oscbndl, argv + i);
+			if(ret){
+				if(ret == OSC_ERR_EXPR_ADDRESSUNBOUND){
+					// if the type arg type is something else, it will be an expression which means an 
+					// error has already been posted
+					//if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
+					//osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), osc_expr_rec_getName(osc_expr_getRec(f)));
+					//}
+				}
+				int j;
+				for(j = 0; j < i; j++){
+					if(argv[j]){
+						osc_atom_array_u_free(argv[j]);
+					}
+				}
+				return ret;
+			}
+			f_argv = osc_expr_ast_expr_next(f_argv);
+			i++;
+		}
+		// arity check and possible partial application
+		// scalar expansion
+		osc_expr_funcall_expandScalars(f_argc, argv, osc_expr_funcrec_getScalarExpansionArgc(funcrec), osc_expr_funcrec_getScalarExpansionArgv(funcrec));
+		// type promotion
+		osc_expr_funcall_promoteToLargestType(f_argc, argv, osc_expr_funcrec_getTypePromotionArgc(funcrec), osc_expr_funcrec_getTypePromotionArgv(funcrec));
+		// call function
+		t_osc_expr_builtin_funcptr fflval = osc_expr_ast_funcall_getLvalFunc(f);
+		ret = fflval(f, f_argc, argv, out);
 		for(i = 0; i < f_argc; i++){
 			if(argv[i]){
 				osc_atom_array_u_free(argv[i]);
@@ -394,6 +464,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       int nodetype,
 				       t_osc_expr_ast_expr *next,
 				       t_osc_expr_ast_evalfn evalfn,
+				       t_osc_expr_ast_evalfn evallvalfn,
 				       t_osc_expr_ast_formatfn formatfn,
 				       t_osc_expr_ast_formatfn format_lispfn,
 				       t_osc_expr_ast_freefn freefn,
@@ -409,6 +480,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       nodetype,
 				       next,
 				       evalfn ? evalfn : osc_expr_ast_funcall_evalInLexEnv,
+				       evalfn ? evalfn : osc_expr_ast_funcall_evalLvalInLexEnv,
 				       formatfn ? formatfn : osc_expr_ast_funcall_format,
 				       format_lispfn ? format_lispfn : osc_expr_ast_funcall_formatLisp,
 				       freefn ? freefn : osc_expr_ast_funcall_free,
@@ -431,6 +503,7 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 				       int nodetype,
 				       t_osc_expr_ast_expr *next,
 				       t_osc_expr_ast_evalfn evalfn,
+				       t_osc_expr_ast_evalfn evallvalfn,
 				       t_osc_expr_ast_formatfn formatfn,
 				       t_osc_expr_ast_formatfn format_lispfn,
 				       t_osc_expr_ast_freefn freefn,
@@ -456,6 +529,7 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 					  nodetype,
 					  next,
 					  evalfn,
+					  evallvalfn,
 					  formatfn,
 					  format_lispfn,
 					  freefn,
@@ -475,6 +549,7 @@ t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *r
 					  OSC_EXPR_AST_NODETYPE_FUNCALL, 
 					  NULL, 
 					  osc_expr_ast_funcall_evalInLexEnv, 
+					  osc_expr_ast_funcall_evalLvalInLexEnv, 
 					  osc_expr_ast_funcall_format, 
 					  osc_expr_ast_funcall_formatLisp, 
 					  osc_expr_ast_funcall_free, 

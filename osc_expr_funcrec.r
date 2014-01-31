@@ -51,6 +51,7 @@ struct _osc_expr_funcrec
 	int *output_types; /**< Plural for possible future support of multiple return values. */
 	char *docstring;
 	t_osc_expr_builtin_funcptr func;
+	t_osc_expr_builtin_funcptr lval_func;
 	int scalar_expansion_argc;
 	unsigned int *scalar_expansion_argv;
 	uint32_t scalar_expansion_flags;

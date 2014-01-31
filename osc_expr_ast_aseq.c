@@ -39,6 +39,14 @@ int osc_expr_ast_aseq_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	return 0;
 }
 
+int osc_expr_ast_aseq_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+				       t_osc_expr_lexenv *lexenv,
+				       t_osc_bndl_u *oscbndl,
+				       t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
 long osc_expr_ast_aseq_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 {
 	if(!ast){
@@ -193,6 +201,7 @@ t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_exp
 	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_aseq;
 	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)e,
 				  OSC_EXPR_AST_NODETYPE_ASEQ,
+				  NULL,
 				  NULL,
 				  NULL,
 				  osc_expr_ast_aseq_format,

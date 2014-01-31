@@ -39,7 +39,15 @@ int osc_expr_ast_let_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				  t_osc_bndl_u *oscbndl,
 				  t_osc_atom_ar_u **out)
 {
-	return 1;
+	return 0;
+}
+
+int osc_expr_ast_let_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+				      t_osc_expr_lexenv *lexenv,
+				      t_osc_bndl_u *oscbndl,
+				      t_osc_atom_ar_u **out)
+{
+	return 0;
 }
 
 long osc_expr_ast_let_format(char *buf, long n, t_osc_expr_ast_expr *f)
@@ -204,6 +212,7 @@ t_osc_expr_ast_let *osc_expr_ast_let_alloc(t_osc_expr_ast_expr *varlist, t_osc_e
 		t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_apply;
 		osc_expr_ast_funcall_initWithList((t_osc_expr_ast_funcall *)f,
 						  OSC_EXPR_AST_NODETYPE_LET,
+						  NULL,
 						  NULL,
 						  NULL,
 						  osc_expr_ast_let_format,

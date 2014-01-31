@@ -753,7 +753,7 @@ int osc_expr_specFunc_assign(t_osc_expr *f,
 	if((err = osc_error_validateAddress(address))){
 		return err;
 	}
-	osc_bundle_s_lookupAddress(*len, *oscbndl, address, &msg_ar, 1);
+	osc_bundle_s_lookupAddress_copy(*len, *oscbndl, address, &msg_ar, 1);
 
 	t_osc_msg_u *mm = osc_message_u_alloc();
 	osc_message_u_setAddress(mm, address);

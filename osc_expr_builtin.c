@@ -73,6 +73,8 @@ OSC_EXPR_BUILTIN_DECL(settimetag)
 {return 0;}
 OSC_EXPR_BUILTIN_DECL(lookup)
 {return 0;}
+OSC_EXPR_BUILTIN_DECL(lval_lookup)
+{return 0;}
 
 int osc_expr_builtin_add(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_sub(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -85,10 +87,12 @@ int osc_expr_builtin_gt(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u *
 int osc_expr_builtin_le(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_ge(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_nth(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_builtin_lval_nth(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
-#define OSC_EXPR_BUILTIN_DEFOP(op, opcode, func, lhs, rhs, return, assoc, prec, docstring) \
+#define osc_expr_builtin_lval_NULL NULL
+#define OSC_EXPR_BUILTIN_DEFOP(op, opcode, func, lvalfunc, lhs, rhs, return, assoc, prec, docstring) \
 t_osc_expr_oprec _osc_expr_builtin_op_##func = {\
 	#op,\
 	2,\
@@ -114,6 +118,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 	NULL,\
 	docstring,\
 	osc_expr_builtin_##func,\
+	osc_expr_builtin_lval_##lvalfunc,\
 	2,\
 	(unsigned int []){0, 1},\
 	0,\
@@ -122,18 +127,18 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 	0\
 };
 
-OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
-OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or false otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or false otherwise");
-OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or false otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or false otherwise");
-OSC_EXPR_BUILTIN_DEFOP(+, '+', add, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the sum of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(-, '-', sub, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the difference of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the product of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(/, '/', div, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the quotient of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(%, '%', mod, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the remainder of _a divided by _b");
-OSC_EXPR_BUILTIN_DEFOP(^, '^', pow, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 4, "Returns _a raised to the power of _b");
-OSC_EXPR_BUILTIN_DEFOP(., '.', lookup, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 2, "Returns the value bound to _b in a subbundle associated with _a");
+OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, NULL, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
+OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(+, '+', add, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the sum of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(-, '-', sub, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the difference of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the product of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(/, '/', div, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the quotient of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(%, '%', mod, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the remainder of _a divided by _b");
+OSC_EXPR_BUILTIN_DEFOP(^, '^', pow, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 4, "Returns _a raised to the power of _b");
+OSC_EXPR_BUILTIN_DEFOP(., '.', lookup, lookup, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 2, "Returns the value bound to _b in a subbundle associated with _a");
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	"apply",
@@ -146,6 +151,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	NULL,
 	"Applies _function to _args and returns the result",
 	osc_expr_builtin_apply,
+	NULL,
 	0,
 	NULL,
 	0,
@@ -165,6 +171,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_nth = {
 	NULL,
 	"Returns the nth item in a list (counting from 0)",
 	osc_expr_builtin_nth,
+	osc_expr_builtin_lval_nth,
 	0,
 	NULL,
 	0,
@@ -184,6 +191,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_list = {
 	NULL,
 	"Returns a list containing all elements passed as arguments",
 	osc_expr_builtin_list,
+	NULL,
 	0,
 	NULL,
 	0,
@@ -203,6 +211,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_aseq = {
 	NULL,
 	"Returns an arithmetic sequence counting from min to max.",
 	osc_expr_builtin_aseq,
+	NULL,
 	0,
 	NULL,
 	0,
@@ -222,6 +231,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_if = {
 	NULL,
 	"Evaluates _then if _test is true, and _else if it is false. Returns the result of the evaluated expression(s).",
 	osc_expr_builtin_if,
+	NULL,
 	0,
 	NULL,
 	0,
@@ -1018,6 +1028,12 @@ int osc_expr_builtin_nth(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u 
 	return 0;
 }
 
+int osc_expr_builtin_lval_nth(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	printf("%s would be evaluated if it were implemented...\n", __func__);
+	return 0;
+}
+
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	int outlen = 0;
@@ -1232,6 +1248,14 @@ int osc_expr_specFunc_lookup(t_osc_expr_ast_expr *f,
 	osc_message_array_u_free(msgar);
  out:
 	// cleanup
+	return 0;
+}
+
+int osc_expr_specFunc_lval_lookup(t_osc_expr_ast_expr *f, 
+				  t_osc_expr_lexenv *lexenv, 
+				  t_osc_bndl_u *oscbndl,
+				  t_osc_atom_ar_u **out)
+{
 	return 0;
 }
 

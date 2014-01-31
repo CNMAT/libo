@@ -41,6 +41,14 @@ int osc_expr_ast_binaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	return 0;
 }
 
+int osc_expr_ast_binaryop_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					   t_osc_expr_lexenv *lexenv,
+					   t_osc_bndl_u *oscbndl,
+					   t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
 long osc_expr_ast_binaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(!e){
@@ -191,6 +199,7 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_os
 	}
 	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)b,
 				  OSC_EXPR_AST_NODETYPE_BINARYOP,
+				  NULL,
 				  NULL,
 				  NULL,
 				  osc_expr_ast_binaryop_format,

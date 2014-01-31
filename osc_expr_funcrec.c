@@ -105,6 +105,14 @@ t_osc_expr_builtin_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
+t_osc_expr_builtin_funcptr osc_expr_funcrec_getLvalFunc(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->lval_func;
+	}
+	return NULL;
+}
+
 int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r)
 {
 	if(r){

@@ -138,7 +138,8 @@ t_osc_err osc_message_u_formatArgs(t_osc_msg_u *m, long *buflen, char **buf) __a
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 
 t_osc_message_array_u *osc_message_array_u_alloc(long len);
-void osc_message_array_u_free(t_osc_msg_ar_u *ar);//#define osc_message_array_u_free(ar) osc_array_free((ar))
+void osc_message_array_u_deepFree(t_osc_msg_ar_u *ar);
+void osc_message_array_u_free(t_osc_msg_ar_u *ar);
 #define osc_message_array_u_clear(ar) osc_array_clear((ar))
 #define osc_message_array_u_get(ar, idx) osc_array_get((ar), (idx))
 #define osc_message_array_u_getLen(ar) osc_array_getLen((ar))

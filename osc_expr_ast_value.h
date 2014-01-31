@@ -48,6 +48,10 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    t_osc_expr_lexenv *lexenv,
 				    t_osc_bndl_u *oscbndl,
 				    t_osc_atom_ar_u **out);
+int osc_expr_ast_value_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					t_osc_expr_lexenv *lexenv,
+					t_osc_bndl_u *oscbndl,
+					t_osc_atom_ar_u **out);
 long osc_expr_ast_value_format(char *buf, long n, t_osc_expr_ast_expr *v);
 t_osc_expr_ast_expr *osc_expr_ast_value_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_value_free(t_osc_expr_ast_expr *v);

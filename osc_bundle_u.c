@@ -177,14 +177,11 @@ t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int full
 t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_osc_msg_ar_u **osc_msg_u_array, int fullmatch)
 {
 	int matchbuflen = 16, n = 0;
-	//t_osc_msg_u **matches = osc_mem_alloc(matchbuflen * sizeof(t_osc_msg_u *));
 	t_osc_msg_ar_u *ar = osc_message_array_u_alloc(matchbuflen);
 	osc_array_clear(ar);
-	//memset(matches, '\0', matchbuflen * sizeof(t_osc_msg_u *));
 	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
 	while(osc_bndl_it_u_hasNext(it)){
 		if(n >= matchbuflen){
-			//matches = osc_mem_resize(matches, (matchbuflen + 16) * sizeof(t_osc_msg_u *));
 			t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
 			if(e){
 				return e;
@@ -203,7 +200,41 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 				continue;
 			}
 		}
-		//osc_message_u_copy(matches + n++, current_message);
+		t_osc_msg_u *p = osc_array_get(ar, n++);
+		osc_message_u_copy(&p, current_message);
+	}
+	osc_bndl_it_u_destroy(it);
+	osc_array_resize(ar, n);
+	*osc_msg_u_array = ar;
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_lookupAddress_copy(t_osc_bndl_u *bndl, const char *address, t_osc_msg_ar_u **osc_msg_u_array, int fullmatch)
+{
+	int matchbuflen = 16, n = 0;
+	t_osc_msg_ar_u *ar = osc_message_array_u_alloc(matchbuflen);
+	osc_array_clear(ar);
+	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
+	while(osc_bndl_it_u_hasNext(it)){
+		if(n >= matchbuflen){
+			t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
+			if(e){
+				return e;
+			}
+			matchbuflen += 16;
+		}
+		t_osc_msg_u *current_message = osc_bndl_it_u_next(it);
+		int po, ao;
+		int r = osc_match(address, osc_message_u_getAddress(current_message), &po, &ao);
+		if(fullmatch){
+			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+				continue;
+			}
+		}else{
+			if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
+				continue;
+			}
+		}
 		t_osc_msg_u *p = osc_array_get(ar, n++);
 		osc_message_u_deepCopy(&p, current_message);
 	}

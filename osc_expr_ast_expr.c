@@ -31,6 +31,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
 			    t_osc_expr_ast_expr *next,
 			    t_osc_expr_ast_evalfn evalfn,
+			    t_osc_expr_ast_evalfn evallvalfn,
 			    t_osc_expr_ast_formatfn formatfn,
 			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
@@ -43,6 +44,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->nodetype = nodetype;
 		e->next = next;
 		e->eval = evalfn;
+		e->evallval = evallvalfn;
 		e->format = formatfn;
 		e->format_lisp = format_lispfn;
 		e->free = freefn;
@@ -83,6 +85,18 @@ int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 {
 	if(ast && ast->eval){
 		return ast->eval(ast, lexenv, oscbndl, out);
+	}else{
+		return 0;
+	}
+}
+
+int osc_expr_ast_expr_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+				       t_osc_expr_lexenv *lexenv,
+				       t_osc_bndl_u *oscbndl,
+				       t_osc_atom_ar_u **out)
+{
+	if(ast && ast->evallval){
+		return ast->evallval(ast, lexenv, oscbndl, out);
 	}else{
 		return 0;
 	}
@@ -286,6 +300,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void)
 	t_osc_expr_ast_expr *e = (t_osc_expr_ast_expr *)osc_mem_alloc(sizeof(t_osc_expr_ast_expr));
 	osc_expr_ast_expr_init(e,
 			       OSC_EXPR_AST_NODETYPE_EXPR,
+			       NULL,
 			       NULL,
 			       NULL,
 			       NULL,

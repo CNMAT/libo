@@ -37,7 +37,15 @@ int osc_expr_ast_list_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				   t_osc_bndl_u *oscbndl,
 				   t_osc_atom_ar_u **out)
 {
-	return 1;
+	return 0;
+}
+
+int osc_expr_ast_list_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+				       t_osc_expr_lexenv *lexenv,
+				       t_osc_bndl_u *oscbndl,
+				       t_osc_atom_ar_u **out)
+{
+	return 0;
 }
 
 long osc_expr_ast_list_format(char *buf, long n, t_osc_expr_ast_expr *v)
@@ -169,6 +177,7 @@ t_osc_expr_ast_list *osc_expr_ast_list_allocWithLen(t_osc_expr_ast_expr *list, l
 {
 	t_osc_expr_ast_list *v = osc_mem_alloc(sizeof(t_osc_expr_ast_list));
 	if(v){
+		/*
 		osc_expr_ast_expr_init((t_osc_expr_ast_expr *)v,
 				       OSC_EXPR_AST_NODETYPE_LIST,
 				       NULL,
@@ -181,6 +190,22 @@ t_osc_expr_ast_list *osc_expr_ast_list_allocWithLen(t_osc_expr_ast_expr *list, l
 				       osc_expr_ast_list_deserialize,
 				       sizeof(t_osc_expr_ast_list));
 		osc_expr_ast_list_setListWithLen(v, list, len);
+		*/
+		t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_list;
+		osc_expr_ast_funcall_initWithList((t_osc_expr_ast_funcall *)v,
+						  OSC_EXPR_AST_NODETYPE_LIST,
+						  NULL,
+						  NULL,
+						  NULL,
+						  osc_expr_ast_list_format,
+						  NULL,
+						  NULL,//osc_expr_ast_list_free,
+						  osc_expr_ast_list_copy,
+						  osc_expr_ast_list_serialize,
+						  osc_expr_ast_list_deserialize,
+						  sizeof(t_osc_expr_ast_list),
+						  funcrec,
+						  list);
 	}
 	return v;
 }
@@ -204,18 +229,19 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_expr_ast_expr *list)
 		*/
 		t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_list;
 		osc_expr_ast_funcall_initWithList((t_osc_expr_ast_funcall *)v,
-					  OSC_EXPR_AST_NODETYPE_LIST,
-					  NULL,
-					  NULL,
-					  osc_expr_ast_list_format,
-					  NULL,
-					  NULL,//osc_expr_ast_list_free,
-					  osc_expr_ast_list_copy,
-					  osc_expr_ast_list_serialize,
-					  osc_expr_ast_list_deserialize,
-					  sizeof(t_osc_expr_ast_list),
-					  funcrec,
-					  list);
+						  OSC_EXPR_AST_NODETYPE_LIST,
+						  NULL,
+						  NULL,
+						  NULL,
+						  osc_expr_ast_list_format,
+						  NULL,
+						  NULL,//osc_expr_ast_list_free,
+						  osc_expr_ast_list_copy,
+						  osc_expr_ast_list_serialize,
+						  osc_expr_ast_list_deserialize,
+						  sizeof(t_osc_expr_ast_list),
+						  funcrec,
+						  list);
 		osc_expr_ast_list_setList(v, list);
 	}
 	return v;

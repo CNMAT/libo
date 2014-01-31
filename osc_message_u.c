@@ -1,4 +1,4 @@
-	/*
+/*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
 University of California, Berkeley.  Copyright (c) 2009-ll, The Regents of
 the University of California (Regents). 
@@ -1088,7 +1088,7 @@ t_osc_array *osc_message_array_u_alloc(long len)
 	return ar;
 }
 
-void osc_message_array_u_free(t_osc_msg_ar_u *ar)
+void osc_message_array_u_deepFree(t_osc_msg_ar_u *ar)
 {
 	if(ar){
 		int i;
@@ -1102,6 +1102,13 @@ void osc_message_array_u_free(t_osc_msg_ar_u *ar)
 				}
 			}
 		}
+		osc_array_free((t_osc_array *)ar);
+	}
+}
+
+void osc_message_array_u_free(t_osc_msg_ar_u *ar)
+{
+	if(ar){
 		osc_array_free((t_osc_array *)ar);
 	}
 }

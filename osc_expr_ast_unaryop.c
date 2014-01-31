@@ -38,7 +38,15 @@ int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_bndl_u *oscbndl,
 				      t_osc_atom_ar_u **out)
 {
-	return 1;
+	return 0;
+}
+
+int osc_expr_ast_unaryop_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					  t_osc_expr_lexenv *lexenv,
+					  t_osc_bndl_u *oscbndl,
+					  t_osc_atom_ar_u **out)
+{
+	return 0;
 }
 
 long osc_expr_ast_unaryop_format(char *buf, long n, t_osc_expr_ast_expr *e)
@@ -186,6 +194,7 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_
 	}
 	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)b,
 				  OSC_EXPR_AST_NODETYPE_UNARYOP,
+				  NULL,
 				  NULL,
 				  NULL,
 				  osc_expr_ast_unaryop_format,

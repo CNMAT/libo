@@ -39,6 +39,14 @@ int osc_expr_ast_ternarycond_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	return 0;
 }
 
+int osc_expr_ast_ternarycond_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					      t_osc_expr_lexenv *lexenv,
+					      t_osc_bndl_u *oscbndl,
+					      t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
 long osc_expr_ast_ternarycond_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 {
 	if(!ast){
@@ -183,6 +191,7 @@ t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *
 	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_if;
 	osc_expr_ast_funcall_init((t_osc_expr_ast_funcall *)e,
 				  OSC_EXPR_AST_NODETYPE_TERNARYCOND,
+				  NULL,
 				  NULL,
 				  NULL,
 				  osc_expr_ast_ternarycond_format,
