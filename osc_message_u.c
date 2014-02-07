@@ -462,10 +462,10 @@ t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b)
+t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
 	osc_message_u_appendAtom(m, a);
 	return a;
 }
@@ -623,10 +623,10 @@ t_osc_atom_u *osc_message_u_prependBndl_s(t_osc_msg_u *m, long len, char *bndl)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b)
+t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
 	osc_message_u_prependAtom(m, a);
 	return a;
 }
@@ -784,11 +784,12 @@ t_osc_atom_u *osc_message_u_insertBndl_s(t_osc_msg_u *m, long len, char *bndl, i
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos)
+t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
 	osc_message_u_insertAtom(m, a, pos);
+	osc_atom_u_setShouldFreePtr(a, alloc);
 	return a;
 }
 
@@ -831,7 +832,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			return OSC_ERR_NONE;
 		}else{
 			t_osc_msg_ar_u *ar = NULL;
-			osc_bundle_u_lookupAddress(dest, a1, &ar, 1);
+			osc_bundle_u_lookupAddress_copy(dest, a1, &ar, 1);
 			t_osc_msg_u *m = NULL;
 			t_osc_bndl_u *b = NULL;
 			osc_message_u_deepCopy(&m, osc_message_array_u_get(ar, 0));
@@ -883,7 +884,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			osc_bundle_u_serialize(b, &len, &b_s);
 			if(b_s){
 */
-				osc_message_u_appendBndl_u(m, b);
+			osc_message_u_appendBndl_u(m, b, 1);
 				osc_bundle_u_addMsgWithoutDups(dest, m);
 //osc_mem_free(b_s);
 //}
@@ -918,7 +919,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			osc_bundle_u_serialize(b, &len, &b_s);
 			if(b_s){
 			*/
-				osc_message_u_appendBndl_u(m, b);
+			osc_message_u_appendBndl_u(m, b, 1);
 				osc_bundle_u_addMsgWithoutDups(dest, m);
 				//osc_mem_free(b_s);
 				//}

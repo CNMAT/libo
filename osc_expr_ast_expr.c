@@ -31,7 +31,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
 			    t_osc_expr_ast_expr *next,
 			    t_osc_expr_ast_evalfn evalfn,
-			    t_osc_expr_ast_evalfn evallvalfn,
+			    t_osc_expr_ast_evallvalfn evallvalfn,
 			    t_osc_expr_ast_formatfn formatfn,
 			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
@@ -93,10 +93,12 @@ int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 int osc_expr_ast_expr_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 				       t_osc_expr_lexenv *lexenv,
 				       t_osc_bndl_u *oscbndl,
-				       t_osc_atom_ar_u **out)
+				       t_osc_msg_u **assign_target,
+				       long *nlvals,
+				       t_osc_atom_u ***lvals)
 {
 	if(ast && ast->evallval){
-		return ast->evallval(ast, lexenv, oscbndl, out);
+		return ast->evallval(ast, lexenv, oscbndl, assign_target, nlvals, lvals);
 	}else{
 		return 0;
 	}

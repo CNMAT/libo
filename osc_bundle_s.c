@@ -519,7 +519,10 @@ t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxle
 
 t_osc_err osc_bundle_s_deserialize(long len, char *ptr, t_osc_bndl_u **bndl)
 {
-	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	t_osc_bndl_u *b = *bndl;
+	if(!b){
+		b = osc_bundle_u_alloc();
+	}
 	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, ptr);
 	while(osc_bndl_it_s_hasNext(it)){
 		t_osc_msg_s *m = osc_bndl_it_s_next(it);

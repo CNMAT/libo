@@ -174,17 +174,18 @@ t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int full
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_osc_msg_ar_u **osc_msg_u_array, int fullmatch)
+t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, long *nmsgs, t_osc_msg_u ***msgs, int fullmatch)
 {
 	int matchbuflen = 16, n = 0;
-	t_osc_msg_ar_u *ar = osc_message_array_u_alloc(matchbuflen);
-	osc_array_clear(ar);
+	t_osc_msg_u **ar = (t_osc_msg_u **)osc_mem_alloc(matchbuflen * sizeof(t_osc_msg_u*));
+	memset(ar, '\0', matchbuflen * sizeof(t_osc_msg_u *));
 	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
 	while(osc_bndl_it_u_hasNext(it)){
 		if(n >= matchbuflen){
-			t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
-			if(e){
-				return e;
+			//t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
+			ar = osc_mem_resize(ar, (matchbuflen + 16) * sizeof(t_osc_msg_u*));
+			if(!ar){
+				return OSC_ERR_OUTOFMEM;
 			}
 			matchbuflen += 16;
 		}
@@ -200,12 +201,17 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 				continue;
 			}
 		}
-		t_osc_msg_u *p = osc_array_get(ar, n++);
-		osc_message_u_copy(&p, current_message);
+		//t_osc_msg_u *p = osc_array_get(ar, n++);
+		//osc_message_u_copy(&p, current_message);
+		ar[n++] = current_message;
 	}
 	osc_bndl_it_u_destroy(it);
-	osc_array_resize(ar, n);
-	*osc_msg_u_array = ar;
+	*nmsgs = n;
+	if(n == 0){
+		osc_mem_free(ar);
+	}else{
+		*msgs = ar;
+	}
 	return OSC_ERR_NONE;
 }
 

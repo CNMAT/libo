@@ -230,7 +230,6 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
 						    t_osc_expr_ast_expr *right)
 {
 	t_osc_expr_oprec *r = osc_expr_builtin_lookupOperatorForOpcode(opcode);
-	printf("opcode = %d\n", (int)opcode);
 	if(!r){
 		return NULL;
 	}
@@ -405,9 +404,15 @@ oscaddress:
 		//$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1), '.', $3);
   	}
 	| oscaddress '[' '[' exprlist ']' ']' {
+		if(osc_expr_ast_expr_next($4)){
+			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
 	}
 	| oscaddress '[' '[' aseq ']' ']' {
+		if(osc_expr_ast_expr_next($4)){
+			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
 	}
 ;

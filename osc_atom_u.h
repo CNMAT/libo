@@ -129,6 +129,8 @@ size_t osc_atom_u_getStructSize(void);
 */
 void osc_atom_u_free(t_osc_atom_u *a);
 
+void osc_atom_u_copyValue(t_osc_atom_u *dest, t_osc_atom_u *src);
+
 /** \brief Copy a #t_osc_atom_u
 
 \param dest Destination #t_osc_atom_u
@@ -477,7 +479,7 @@ The #t_osc_bndl_s that bndl points to will be copied and freed when the
 */
 void osc_atom_u_setBndl(t_osc_atom_u *a, long len, char *ptr);
 void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr);
-void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b);
+void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b, int alloc);
 
 /** \brief Set the #t_osc_atom_u to point to a(n unserialized) #t_osc_bndl_u.
 

@@ -29,16 +29,15 @@
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_builtin.h"
 
-void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
-void osc_expr_err_unbound(char *address, char *func); 
-void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func);
+//void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
+//void osc_expr_err_unbound(char *address, char *func); 
+//void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func);
 
 OSC_EXPR_BUILTIN_DECL(apply);
 OSC_EXPR_BUILTIN_DECL(map);
 OSC_EXPR_BUILTIN_DECL(lreduce);
 OSC_EXPR_BUILTIN_DECL(rreduce);
 OSC_EXPR_BUILTIN_DECL(assign);
-OSC_EXPR_BUILTIN_DECL(assigntoindex);
 OSC_EXPR_BUILTIN_DECL(if);
 OSC_EXPR_BUILTIN_DECL(emptybundle);
 OSC_EXPR_BUILTIN_DECL(bound);
@@ -53,17 +52,27 @@ OSC_EXPR_BUILTIN_DECL(tokenize);
 OSC_EXPR_BUILTIN_DECL(gettimetag);
 OSC_EXPR_BUILTIN_DECL(settimetag);
 OSC_EXPR_BUILTIN_DECL(lookup);
+OSC_EXPR_BUILTIN_LVAL_DECL(lookup);
+OSC_EXPR_BUILTIN_DECL(nth);
+OSC_EXPR_BUILTIN_LVAL_DECL(nth);
 
-#define OSC_EXPR_SPECFUNC_DECL(name) int osc_expr_specFunc_##name(t_osc_expr_ast_expr *f, \
+#define OSC_EXPR_SPECFUNC_DECL(name) int osc_expr_specFunc_##name(t_osc_expr_ast_funcall *f, \
 								  t_osc_expr_lexenv *lexenv, \
 								  t_osc_bndl_u *oscbndl, \
 								  t_osc_atom_ar_u **out)
+
+#define OSC_EXPR_SPECFUNC_LVAL_DECL(name) int osc_expr_specFunc_lval_##name(t_osc_expr_ast_funcall *f, \
+									    t_osc_expr_lexenv *lexenv, \
+									    t_osc_bndl_u *oscbndl, \
+	     								    t_osc_msg_u **assign_target,\
+									    long *outlen, \
+									    t_osc_atom_u ***out)
 
 OSC_EXPR_SPECFUNC_DECL(apply);
 OSC_EXPR_SPECFUNC_DECL(map);
 OSC_EXPR_SPECFUNC_DECL(reduce);
 OSC_EXPR_SPECFUNC_DECL(assign);
-OSC_EXPR_SPECFUNC_DECL(assigntoindex);
+OSC_EXPR_SPECFUNC_DECL(lval_assign);
 OSC_EXPR_SPECFUNC_DECL(if);
 OSC_EXPR_SPECFUNC_DECL(emptybundle);
 OSC_EXPR_SPECFUNC_DECL(bound);
@@ -78,5 +87,7 @@ OSC_EXPR_SPECFUNC_DECL(tokenize);
 OSC_EXPR_SPECFUNC_DECL(gettimetag);
 OSC_EXPR_SPECFUNC_DECL(settimetag);
 OSC_EXPR_SPECFUNC_DECL(lookup);
-OSC_EXPR_SPECFUNC_DECL(lval_lookup);
+OSC_EXPR_SPECFUNC_LVAL_DECL(lookup);
+OSC_EXPR_SPECFUNC_DECL(nth);
+OSC_EXPR_SPECFUNC_LVAL_DECL(nth);
 

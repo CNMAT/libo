@@ -34,8 +34,10 @@ extern "C" {
 #include "osc_atom_array_u.h"
 struct _osc_expr_ast_funcall;
 typedef int (*t_osc_expr_builtin_funcptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+typedef int (*t_osc_expr_builtin_lvalfuncptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_msg_u **assign_target, long *nlvals, t_osc_atom_u ***lvals);
 
 #define OSC_EXPR_BUILTIN_DECL(name) int osc_expr_builtin_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+#define OSC_EXPR_BUILTIN_LVAL_DECL(name) int osc_expr_builtin_lval_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_msg_u **assign_target, long *nlvals, t_osc_atom_u ***lvals)
 
 #include <inttypes.h>
 #include <math.h>
@@ -3018,6 +3020,7 @@ extern t_osc_expr_funcrec *osc_expr_builtin_func_nth;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_list;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_aseq;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_if;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_lookup;
 
 t_osc_expr_funcrec *osc_expr_builtin_lookupFunction(char *name);
 t_osc_expr_oprec *osc_expr_builtin_lookupOperator(char *op);

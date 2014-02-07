@@ -44,7 +44,9 @@ int osc_expr_ast_unaryop_evalInLexEnv(t_osc_expr_ast_expr *ast,
 int osc_expr_ast_unaryop_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 					  t_osc_expr_lexenv *lexenv,
 					  t_osc_bndl_u *oscbndl,
-					  t_osc_atom_ar_u **out)
+					  t_osc_msg_u **assign_target,
+					  long *nlvals,
+					  t_osc_atom_u ***lvals)
 {
 	return 0;
 }

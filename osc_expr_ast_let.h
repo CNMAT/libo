@@ -44,7 +44,9 @@ int osc_expr_ast_let_evalInLexEnv(t_osc_expr_ast_expr *ast,
 int osc_expr_ast_let_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_expr_lexenv *lexenv,
 				      t_osc_bndl_u *oscbndl,
-				      t_osc_atom_ar_u **out);
+				      t_osc_msg_u **assign_target,
+				      long *nlvals,
+				      t_osc_atom_u ***lvals);
 long osc_expr_ast_let_format(char *buf, long n, t_osc_expr_ast_expr *f);
 long osc_expr_ast_let_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f);
 void osc_expr_ast_let_free(t_osc_expr_ast_expr *f);

@@ -64,6 +64,28 @@ void osc_atom_u_free(t_osc_atom_u *a)
 	osc_mem_free(a);
 }
 
+void osc_atom_u_copyValue(t_osc_atom_u *dest, t_osc_atom_u *src)
+{
+	dest->typetag = src->typetag;
+	dest->alloc = src->alloc;
+	switch(dest->typetag){
+	case 's':
+		{
+			dest->w.s = osc_mem_alloc(strlen(src->w.s) + 1);
+			strcpy(dest->w.s, src->w.s);
+		}
+		break;
+	case OSC_BUNDLE_TYPETAG:
+		{
+			dest->w.bndl = NULL;
+			osc_bundle_u_copy(&(dest->w.bndl), src->w.bndl);
+		}
+		break;
+	default:
+		dest->w = src->w;
+	}
+}
+
 void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src)
 {
 	if(!src){
@@ -73,25 +95,8 @@ void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src)
 	if(!aa){
 		aa = osc_mem_alloc(sizeof(t_osc_atom_u));
 	}
+	osc_atom_u_copyValue(aa, src);
 	aa->next = aa->prev = NULL;
-	aa->typetag = src->typetag;
-	aa->alloc = src->alloc;
-	switch(aa->typetag){
-	case 's':
-		{
-			aa->w.s = osc_mem_alloc(strlen(src->w.s) + 1);
-			strcpy(aa->w.s, src->w.s);
-		}
-		break;
-	case OSC_BUNDLE_TYPETAG:
-		{
-			aa->w.bndl = NULL;
-			osc_bundle_u_copy(&(aa->w.bndl), src->w.bndl);
-		}
-		break;
-	default:
-		aa->w = src->w;
-	}
 	*dest = aa;
 }
 
@@ -951,7 +956,7 @@ void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr)
 	osc_atom_u_clear(a);
 	t_osc_bndl_u *b = NULL;
 	osc_bundle_s_deserialize(len, ptr, &b);
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, 1);
 /*
 	char *copy = osc_mem_alloc(len);
 	memcpy(copy, ptr, len);
@@ -962,10 +967,11 @@ void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr)
 */
 }
 
-void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b)
+void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b, int alloc)
 {
 	a->w.bndl = b;
 	a->typetag = OSC_BUNDLE_TYPETAG;
+	a->alloc = alloc;
 }
 
 void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)

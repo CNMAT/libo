@@ -38,7 +38,7 @@ struct _osc_expr_ast_expr
 	int nodetype;
 	struct _osc_expr_ast_expr *next;
 	t_osc_expr_ast_evalfn eval;
-	t_osc_expr_ast_evalfn evallval;
+	t_osc_expr_ast_evallvalfn evallval;
 	t_osc_expr_ast_formatfn format;
 	t_osc_expr_ast_formatfn format_lisp;
 	t_osc_expr_ast_freefn free;

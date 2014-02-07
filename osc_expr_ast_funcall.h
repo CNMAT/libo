@@ -45,6 +45,12 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_expr_lexenv *lexenv,
 				      t_osc_bndl_u *oscbndl,
 				      t_osc_atom_ar_u **out);
+int osc_expr_ast_funcall_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
+					  t_osc_expr_lexenv *lexenv,
+					  t_osc_bndl_u *oscbndl,
+					  t_osc_msg_u **assign_target,
+					  long *nlvals,
+					  t_osc_atom_u ***lvals);
 long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_funcall_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast);
@@ -53,6 +59,7 @@ t_osc_err osc_expr_ast_funcall_serialize(t_osc_expr_ast_expr *e, long *len, char
 t_osc_err osc_expr_ast_funcall_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
 t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
+t_osc_expr_builtin_lvalfuncptr osc_expr_ast_funcall_getLvalFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);
 int osc_expr_ast_funcall_getNumArgs(t_osc_expr_ast_funcall *e);
 void osc_expr_ast_funcall_prependArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);
@@ -61,7 +68,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       int nodetype,
 				       t_osc_expr_ast_expr *next,
 				       t_osc_expr_ast_evalfn evalfn,
-				       t_osc_expr_ast_evalfn evallvalfn,
+				       t_osc_expr_ast_evallvalfn evallvalfn,
 				       t_osc_expr_ast_formatfn formatfn,
 				       t_osc_expr_ast_formatfn format_lispfn,
 				       t_osc_expr_ast_freefn freefn,
@@ -75,7 +82,7 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 			       int nodetype,
 			       t_osc_expr_ast_expr *next,
 			       t_osc_expr_ast_evalfn evalfn,
-			       t_osc_expr_ast_evalfn evallvalfn,
+			       t_osc_expr_ast_evallvalfn evallvalfn,
 			       t_osc_expr_ast_formatfn formatfn,
 			       t_osc_expr_ast_formatfn format_lispfn,
 			       t_osc_expr_ast_freefn freefn,

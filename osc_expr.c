@@ -4746,13 +4746,14 @@ t_osc_err osc_expr_getFunctionsForCategory(char *cat, long *len, char **ptr)
 		sprintf(buf, "%s", cat);
 	}
 	t_osc_msg_ar_u *ar = NULL;
-	osc_bundle_u_lookupAddress(osc_expr_functionBundle, buf, &ar, 0);
+	osc_bundle_u_lookupAddress_copy(osc_expr_functionBundle, buf, &ar, 0);
 	if(ar){
 		t_osc_bndl_u *bndl = osc_bundle_u_alloc();
 		osc_bundle_u_addMsgArrayCopy(bndl, ar);
 		osc_message_array_u_free(ar);
 		osc_bundle_u_serialize(bndl, len, ptr);
 		osc_bundle_u_free(bndl);
+		osc_message_array_u_free(ar);
 	}
 	return OSC_ERR_NONE;
 }

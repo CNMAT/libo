@@ -59,6 +59,12 @@ typedef int (*t_osc_expr_ast_evalfn)(t_osc_expr_ast_expr*,
 				     t_osc_expr_lexenv*,
 				     t_osc_bndl_u*,
 				     t_osc_atom_ar_u**);
+typedef int (*t_osc_expr_ast_evallvalfn)(t_osc_expr_ast_expr*,
+					 t_osc_expr_lexenv*,
+					 t_osc_bndl_u*,
+					 t_osc_msg_u **,
+					 long *,
+					 t_osc_atom_u***);
 typedef t_osc_expr_ast_expr *(*t_osc_expr_ast_copyfn)(t_osc_expr_ast_expr*);
 typedef t_osc_err (*t_osc_expr_ast_serializefn)(t_osc_expr_ast_expr*, long*, char**);
 typedef t_osc_err (*t_osc_expr_ast_deserializefn)(long, char*,t_osc_expr_ast_expr**);
@@ -67,7 +73,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
 			    t_osc_expr_ast_expr *next,
 			    t_osc_expr_ast_evalfn evalfn,
-			    t_osc_expr_ast_evalfn evallvalfn,
+			    t_osc_expr_ast_evallvalfn evallvalfn,
 			    t_osc_expr_ast_formatfn formatfn,
 			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
@@ -86,7 +92,9 @@ int osc_expr_ast_expr_evalInLexEnv(t_osc_expr_ast_expr *ast,
 int osc_expr_ast_expr_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 				       t_osc_expr_lexenv *lexenv,
 				       t_osc_bndl_u *oscbndl,
-				       t_osc_atom_ar_u **out);
+				       t_osc_msg_u **assign_target,
+				       long *nlvals,
+				       t_osc_atom_u ***lvals);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e);

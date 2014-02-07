@@ -51,6 +51,7 @@ debug: CC = clang
 debug: I = $(MAC-INCLUDES)
 debug: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 debug: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
+debug: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
 win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
