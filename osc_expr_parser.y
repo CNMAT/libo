@@ -428,14 +428,14 @@ arraysubscript:
 		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
 	}
-/*
 	| expr '[' '[' aseq ']' ']' {
+		/*
 		if(osc_expr_ast_expr_next($4)){
 			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
 		}
+		*/
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
 	}
-*/
 ;
 
 // these are the only allowable lvalues 
@@ -481,6 +481,7 @@ value:
 aseq:
 	expr ':' expr {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_aseq_alloc($1, $3, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral(osc_atom_u_allocWithInt32(1)));
+		osc_expr_ast_aseq_setStepIsImplicit((t_osc_expr_ast_aseq *)$$, 1);
 	}
 	| expr ':' expr ':' expr {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_aseq_alloc($1, $5, $3);

@@ -57,9 +57,11 @@ t_osc_err osc_expr_ast_aseq_deserialize(long len, char *ptr, t_osc_expr_ast_expr
 t_osc_expr_ast_expr *osc_expr_ast_aseq_getMin(t_osc_expr_ast_aseq *e);
 t_osc_expr_ast_expr *osc_expr_ast_aseq_getMax(t_osc_expr_ast_aseq *e);
 t_osc_expr_ast_expr *osc_expr_ast_aseq_getStep(t_osc_expr_ast_aseq *e);
+int osc_expr_ast_aseq_getStepIsImplicit(t_osc_expr_ast_aseq *e);
 void osc_expr_ast_aseq_setMin(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *min);
 void osc_expr_ast_aseq_setMax(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *max);
 void osc_expr_ast_aseq_setStep(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *step);
+void osc_expr_ast_aseq_setStepIsImplicit(t_osc_expr_ast_aseq *e, int step_is_implicit);
 t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_expr_ast_expr *max, t_osc_expr_ast_expr *step);
 
 #ifdef __cplusplus

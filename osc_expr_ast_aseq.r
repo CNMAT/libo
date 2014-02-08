@@ -37,6 +37,7 @@ struct _osc_expr_ast_aseq
 {
 	struct _osc_expr_ast_funcall funcall; // parent
 	t_osc_expr_ast_expr *min, *max, *step;
+	int step_is_implicit;
 };
 
 #ifdef __cplusplus

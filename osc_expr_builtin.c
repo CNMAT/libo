@@ -988,10 +988,10 @@ int osc_expr_specFunc_lval_nth(t_osc_expr_ast_funcall *f,
 			       long *nlvals,
 			       t_osc_atom_u ***lvals)
 {
-	t_osc_expr_ast_expr *lst_expr = osc_expr_ast_funcall_getArgs(f);
-	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(lst_expr);
+	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
 	long nlvals_tmp = 0;
-	int ret = osc_expr_ast_expr_evalLvalInLexEnv(lst_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
+	int ret = osc_expr_ast_expr_evalLvalInLexEnv(vals_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
 	if(ret){
 		return ret;
 	}
@@ -1012,6 +1012,10 @@ int osc_expr_specFunc_lval_nth(t_osc_expr_ast_funcall *f,
 	memset(*lvals, '\0', nlvals_tmp * sizeof(t_osc_atom_u*));
 	for(int i = 0; i < nidxs; i++){
 		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
+		if(idx >= nlvals_tmp){
+			// index out of bounds error
+			return 1;
+		}
 		(*lvals)[i] = lvals_tmp[idx];
 	}
 	osc_atom_array_u_free(idxs);
@@ -1023,6 +1027,34 @@ int osc_expr_specFunc_nth(t_osc_expr_ast_funcall *f,
 			     t_osc_bndl_u *oscbndl,
 			     t_osc_atom_ar_u **out)
 {
+	// can't just call osc_expr_specFunc_lval_nth() because this may be a list literal or something
+	// that's not part of the bundle
+	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
+	t_osc_atom_ar_u *vals = NULL;
+	osc_expr_ast_expr_evalInLexEnv(vals_expr, lexenv, oscbndl, &vals);
+	if(!vals){
+		// error 
+		return 1;
+	}
+	t_osc_atom_ar_u *idxs = NULL;
+	osc_expr_ast_expr_evalInLexEnv(idxs_expr, lexenv, oscbndl, &idxs);
+	if(!idxs){
+		// error 
+		return 1;
+	}
+	int nvals = osc_atom_array_u_getLen(vals);
+	int n = osc_atom_array_u_getLen(idxs);
+	*out = osc_atom_array_u_alloc(n);
+	for(int i = 0; i < n; i++){
+		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
+		if(idx >= nvals){
+			// index out of bounds error
+			return 1;
+		}
+		t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
+		osc_atom_u_copyValue(a, osc_atom_array_u_get(vals, idx));
+	}
 	return 0;
 }
 
@@ -1047,7 +1079,7 @@ int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u
 
 int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
-	printf("%s would be evaluated if it were implemented...\n", __func__);
+
 	return 0;
 }
 

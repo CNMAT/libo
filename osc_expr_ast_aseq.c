@@ -59,8 +59,8 @@ long osc_expr_ast_aseq_format(char *buf, long n, t_osc_expr_ast_expr *ast)
 	//offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "[");
 	offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getMin(a));
 	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ":");
-	t_osc_expr_ast_expr *step = osc_expr_ast_aseq_getStep(a);
-	if(step){
+	if(osc_expr_ast_aseq_getStepIsImplicit(a) == 0){
+		t_osc_expr_ast_expr *step = osc_expr_ast_aseq_getStep(a);
 		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, step);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ":");
 	}
@@ -80,8 +80,8 @@ long osc_expr_ast_aseq_formatLisp(char *buf, long n, t_osc_expr_ast_expr *ast)
 	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getMin(a));
 	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
 	offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getMax(a));
-	t_osc_expr_ast_expr *step = osc_expr_ast_aseq_getStep(a);
-	if(step){
+	if(osc_expr_ast_aseq_getStepIsImplicit(a) == 0){
+		t_osc_expr_ast_expr *step = osc_expr_ast_aseq_getStep(a);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, " ");
 		offset += osc_expr_ast_expr_formatLisp(buf ? buf + offset : NULL, buf ? n - offset : 0, osc_expr_ast_aseq_getStep(a));
 	}
@@ -157,6 +157,14 @@ t_osc_expr_ast_expr *osc_expr_ast_aseq_getStep(t_osc_expr_ast_aseq *e)
 	return NULL;
 }
 
+int osc_expr_ast_aseq_getStepIsImplicit(t_osc_expr_ast_aseq *e)
+{
+	if(e){
+		return e->step_is_implicit;
+	}
+	return 0;
+}
+
 void osc_expr_ast_aseq_setMin(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *min)
 {
 	if(e){
@@ -175,6 +183,13 @@ void osc_expr_ast_aseq_setStep(t_osc_expr_ast_aseq *e, t_osc_expr_ast_expr *step
 {
 	if(e){
 		e->step = step;
+	}
+}
+
+void osc_expr_ast_aseq_setStepIsImplicit(t_osc_expr_ast_aseq *e, int step_is_implicit)
+{
+	if(e){
+		e->step_is_implicit = step_is_implicit;
 	}
 }
 
@@ -221,5 +236,6 @@ t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_exp
 	osc_expr_ast_aseq_setMin(e, min);
 	osc_expr_ast_aseq_setMax(e, max);
 	osc_expr_ast_aseq_setStep(e, step);
+	osc_expr_ast_aseq_setStepIsImplicit(e, 0);
 	return e;
 }

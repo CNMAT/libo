@@ -203,6 +203,7 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(settimetag);
 	*/
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(assign);
+	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(nth);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lookup);
 	{
 		//////////////////////////////////////////////////
