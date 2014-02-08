@@ -334,7 +334,9 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 	t_osc_bndl_u *bndl;
 }
 
-%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist value lambdalist let varlist
+%precedence lowest
+
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list
 %type <msg>message messages
 %type <bndl>bundle
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
@@ -347,7 +349,7 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
 
-%precedence oscaddress_prec
+%precedence oscaddress_prec 
 
 // level 16
 %right '=' OSC_EXPR_ADDASSIGN 8 OSC_EXPR_SUBASSIGN 9 OSC_EXPR_MULASSIGN 10 OSC_EXPR_DIVASSIGN 11 OSC_EXPR_MODASSIGN 12 OSC_EXPR_POWASSIGN 13
@@ -380,6 +382,8 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 // level 2
 %left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL '(' ')' '[' ']' '.'
 
+//%precedence highest
+
 %start expns
 
 %%
@@ -393,6 +397,47 @@ literal:
 	}
 ;
 
+list:
+/*
+	'[' expr ']' {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
+	}
+	| */'[' exprlist_one_or_more ']'  {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
+		osc_expr_ast_expr_setBrackets($$, '[', ']');
+	}
+	| '[' aseq ']'  {// %prec oscaddress_prec //{
+		$$ = $2;
+		osc_expr_ast_expr_setBrackets($$, '[', ']');
+	}
+;
+
+arraysubscript:
+/*
+	expr '[' expr ']' %prec OSC_EXPR_FUNCALL{
+		printf("expr\n");
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3);
+	}
+	| expr '[' '[' expr ']' ']' %prec OSC_EXPR_FUNCALL{
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+	}
+	| */expr '[' '[' exprlist_one_or_more ']' ']' %prec OSC_EXPR_FUNCALL{
+		t_osc_expr_ast_expr *tmp = $4;
+		if(osc_expr_ast_expr_next(tmp)){
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
+	}
+/*
+	| expr '[' '[' aseq ']' ']' {
+		if(osc_expr_ast_expr_next($4)){
+			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+	}
+*/
+;
+
 // these are the only allowable lvalues 
 oscaddress:
 	OSC_EXPR_OSCADDRESS {
@@ -403,17 +448,19 @@ oscaddress:
 		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '.', (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3));
 		//$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1), '.', $3);
   	}
-	| oscaddress '[' '[' exprlist ']' ']' {
+	| oscaddress '[' '[' exprlist_one_or_more ']' ']' {
+		t_osc_expr_ast_expr *tmp = $4;
 		if(osc_expr_ast_expr_next($4)){
-			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
 		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
 	}
 	| oscaddress '[' '[' aseq ']' ']' {
+		t_osc_expr_ast_expr *tmp = $4;
 		if(osc_expr_ast_expr_next($4)){
-			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
 		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
 	}
 ;
 
@@ -427,6 +474,8 @@ value:
 		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
+//| list
+//| arraysubscript
 ;
 
 aseq:
@@ -663,7 +712,7 @@ ternarycond:
 
 funcall:
 // prefix function call
-	OSC_EXPR_IDENTIFIER '(' exprlist ')' %prec OSC_EXPR_FUNCALL {
+	OSC_EXPR_IDENTIFIER '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
 		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
 							  input_string,
 							  osc_atom_u_getStringPtr($1),
@@ -687,14 +736,6 @@ expr:
 	| unaryop 
 	| binaryop
 	| ternarycond
-	| '[' aseq ']' {// %prec oscaddress_prec //{
-		$$ = $2;
-		osc_expr_ast_expr_setBrackets($$, '[', ']');
-	}
-	| '[' exprlist ']' {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
-		osc_expr_ast_expr_setBrackets($$, '[', ']');
-	}
 	| '(' expr ')' {
 		$$ = $2;
 		osc_expr_ast_expr_setBrackets($$, '(', ')');
@@ -703,23 +744,37 @@ expr:
 		printf("bundle...\n");
   	}
 	| let
+	| list %prec lowest
+	| arraysubscript %prec lowest
 ;
 
-exprlist:
+exprlist_zero_or_more:
 	{ $$ = NULL;}
-	| expr
-	| exprlist ',' expr {
+	| exprlist_one_or_more
+;
+
+exprlist_one_or_more:
+	expr //%prec lowest
+	| exprlist_more_than_one
+;
+
+exprlist_more_than_one:
+	expr ',' expr {
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
+	}
+	| exprlist_more_than_one ',' expr {//%prec lowest {
 		osc_expr_ast_expr_append($1, $3);
 		$$ = $1;
 	}
 ;
 
 expns: 
-	expr {
+	expr %prec lowest {
 		$$ = $1;
 		*exprstack = $1;
 	}
-	| expns expr {
+	| expns expr %prec lowest{
 		osc_expr_ast_expr_append($1, $2);
 		*exprstack = $1;
 		$$ = $1;

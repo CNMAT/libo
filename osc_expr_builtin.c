@@ -991,7 +991,7 @@ int osc_expr_specFunc_lval_nth(t_osc_expr_ast_funcall *f,
 	t_osc_expr_ast_expr *lst_expr = osc_expr_ast_funcall_getArgs(f);
 	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(lst_expr);
 	long nlvals_tmp = 0;
-	osc_expr_ast_expr_evalLvalInLexEnv(lst_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
+	int ret = osc_expr_ast_expr_evalLvalInLexEnv(lst_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
 	if(ret){
 		return ret;
 	}
