@@ -47,6 +47,8 @@ int *osc_expr_funcrec_getOutputTypes(t_osc_expr_funcrec *r);
 char *osc_expr_funcrec_getDocstring(t_osc_expr_funcrec *r);
 t_osc_expr_builtin_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r);
 t_osc_expr_builtin_lvalfuncptr osc_expr_funcrec_getLvalFunc(t_osc_expr_funcrec *r);
+int osc_expr_funcrec_hasVTab(t_osc_expr_funcrec *r);
+void *osc_expr_funcrec_getFuncForTypetag(t_osc_expr_funcrec *r, char tt);
 int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r);
 unsigned int *osc_expr_funcrec_getScalarExpansionArgv(t_osc_expr_funcrec *r);
 uint32_t osc_expr_funcrec_getScalarExpansionFlags(t_osc_expr_funcrec *r);

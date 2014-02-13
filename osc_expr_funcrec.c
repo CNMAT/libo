@@ -113,6 +113,22 @@ t_osc_expr_builtin_lvalfuncptr osc_expr_funcrec_getLvalFunc(t_osc_expr_funcrec *
 	return NULL;
 }
 
+int osc_expr_funcrec_hasVTab(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->vtab != NULL;
+	}
+	return 0;
+}
+
+void *osc_expr_funcrec_getFuncForTypetag(t_osc_expr_funcrec *r, char tt)
+{
+	if(r){
+		return r->vtab[tt];
+	}
+	return NULL;
+}
+
 int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r)
 {
 	if(r){

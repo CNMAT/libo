@@ -202,10 +202,13 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(gettimetag);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(settimetag);
 	*/
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(assign);
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(nth);
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lookup);
-	{
+	if(ff == osc_expr_builtin_assign){
+		return osc_expr_specFunc_assign((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_nth){
+		return osc_expr_specFunc_nth((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_lookup){
+		return osc_expr_specFunc_lookup((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////

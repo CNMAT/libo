@@ -32,25 +32,222 @@
 #include "osc_expr_ast_value.h"
 #include "osc_expr_privatedecls.h" 
 #include "osc_message_iterator_u.h"
+#include "osc_expr_builtin_typedfuncdecls.h"
 
-OSC_EXPR_BUILTIN_DECL(add);
-OSC_EXPR_BUILTIN_DECL(sub);
-OSC_EXPR_BUILTIN_DECL(mul);
-OSC_EXPR_BUILTIN_DECL(div);
-OSC_EXPR_BUILTIN_DECL(mod);
-OSC_EXPR_BUILTIN_DECL(pow);
-OSC_EXPR_BUILTIN_DECL(lt);
-OSC_EXPR_BUILTIN_DECL(gt);
-OSC_EXPR_BUILTIN_DECL(le);
-OSC_EXPR_BUILTIN_DECL(ge);
-OSC_EXPR_BUILTIN_DECL(list);
-OSC_EXPR_BUILTIN_DECL(aseq);
-
+int _osc_expr_sign(double f);
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
+int osc_expr_builtin_call_binary_func(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+
+#define OSC_EXPR_BUILTIN_BINARYOP_DECL(funcname, typetag, lhs, rhs, res)\
+	int osc_expr_builtin_##funcname##_##typetag(t_osc_atom_u *lhs, t_osc_atom_u *rhs, t_osc_atom_u *res)
+
+#ifdef OSC_EXPR_BUILTIN_BINARYOP_CHECKTYPES
+#define OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, lhs, rhs)			\
+	if(osc_atom_u_getTypetag(lhs) != typetag || osc_atom_u_getTypetag(rhs) != typetag){	\
+		return 1;						\
+	}
+#else
+#define OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, lhs, rhs)
+#endif
+
+
+#define OSC_EXPR_BUILTIN_BINARYOP(op, funcname, typetag, type)			\
+	OSC_EXPR_BUILTIN_BINARYOP_DECL(funcname, typetag, a, b, y){	\
+		OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, a, b);\
+		osc_atom_u_set##type (y, osc_atom_u_get##type (a) op osc_atom_u_get##type (b)); \
+		return 0;\
+	}
+
+#define OSC_EXPR_BUILTIN_BINARY_CFUNC(funcname, cfuncname, typetag, argtype, restype, casttype) \
+	OSC_EXPR_BUILTIN_BINARYOP_DECL(funcname, typetag, a, b, y){\
+		OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, a, b);\
+		osc_atom_u_set##restype(y, (casttype)cfuncname(osc_atom_u_get##argtype(a), osc_atom_u_get##argtype(b)));\
+		return 0;\
+	}
+
+OSC_EXPR_BUILTIN_BINARYOP(+, add, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(+, add, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(-, sub, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(*, mul, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(/, div, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(/, div, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(<, lt, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(>, gt, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(<=, le, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, H, UInt64);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, f, Float);
+OSC_EXPR_BUILTIN_BINARYOP(>=, ge, d, Double);
+
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, c, Int8);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, C, UInt8);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, u, Int16);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, U, UInt16);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, i, Int32);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, I, UInt32);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, h, Int64);
+OSC_EXPR_BUILTIN_BINARYOP(%, mod, H, UInt64);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(mod, fmodf, f, Float, Float, float);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(mod, fmod, d, Double, Double, double);
+/*
+OSC_EXPR_BUILTIN_BINARYOP_DECL(mod, f, a, b, y)
+{
+	OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, lhs, rhs);
+	osc_atom_u_setFloat(y, fmodf(osc_atom_u_getFloat(a), osc_atom_u_getFloat(b)));
+	return 0;
+}
+OSC_EXPR_BUILTIN_BINARYOP_DECL(mod, d, a, b, y)
+{
+	OSC_EXPR_BUILTIN_BINARYOP_TYPECHECK(typetag, lhs, rhs);
+	osc_atom_u_setDouble(y, fmod(osc_atom_u_getDouble(a), osc_atom_u_getDouble(b)));
+	return 0;
+}
+ */
+
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, c, Double, Int8, int8_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, C, Double, UInt8, uint8_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, u, Double, Int16, int16_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, U, Double, UInt16, uint16_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, i, Double, Int32, int32_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, I, Double, UInt32, uint32_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, h, Double, Int64, int64_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, H, Double, UInt64, uint64_t);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, powf, f, Double, Float, float);
+OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, d, Double, Double, double);
+
+#define OSC_EXPR_BUILTIN_ASEQ_TYPED(typetag, type, ctype)		\
+	int osc_expr_builtin_aseq_##typetag(t_osc_atom_u *_min, t_osc_atom_u *_max, t_osc_atom_u *_step, int n, t_osc_atom_ar_u *out){ \
+		ctype min = osc_atom_u_get##type(_min);\
+		ctype max = osc_atom_u_get##type(_max);\
+		ctype step = osc_atom_u_get##type(_step);\
+		for(int i = 0; i < n; i++){\
+			osc_atom_u_set##type(osc_atom_array_u_get(out, i), min);\
+			min += step;\
+		}\
+		return 0;\
+	}
+
+OSC_EXPR_BUILTIN_ASEQ_TYPED(c, Int8, int8_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(C, UInt8, uint8_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(u, Int16, int16_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(U, UInt16, uint16_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(i, Int32, int32_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(I, UInt32, uint32_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(h, Int64, int64_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(H, UInt64, uint64_t)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(f, Float, float)
+OSC_EXPR_BUILTIN_ASEQ_TYPED(d, Double, double)
+
+int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	t_osc_atom_u *start_a = osc_atom_array_u_get(argv[0], 0);
+	t_osc_atom_u *end_a = osc_atom_array_u_get(argv[1], 0);
+	t_osc_atom_u *step_a = osc_atom_array_u_get(argv[2], 0);
+
+	double start = osc_atom_u_getDouble(start_a);
+	double end = osc_atom_u_getDouble(end_a);
+	double step = osc_atom_u_getDouble(step_a);
+
+	if(step == 0){
+		// error
+		return 1;
+	}
+	if(_osc_expr_sign(end - start) != _osc_expr_sign(step)){
+		// error
+		return 1;
+	}
+	if(start > end){
+		start_a = end_a;
+		end_a = osc_atom_array_u_get(argv[0], 0);
+		double tmp = start;
+		start = end;
+		end = start;
+	}
+	int n = (int)((end - start) / fabs(step)) + 1;
+	t_osc_expr_funcrec *rec = osc_expr_ast_funcall_getFuncRec(ast);
+	int (*f)(t_osc_atom_u*, t_osc_atom_u*, t_osc_atom_u*, int, t_osc_atom_ar_u*) = (int (*)(t_osc_atom_u*, t_osc_atom_u*, t_osc_atom_u*, int, t_osc_atom_ar_u*))osc_expr_funcrec_getFuncForTypetag(rec, osc_atom_u_getTypetag(start_a));
+	*out = osc_atom_array_u_alloc(n);
+	return f(start_a, end_a, step_a, n, *out);
+}
+
 #define osc_expr_builtin_lval_NULL NULL
-#define OSC_EXPR_BUILTIN_DEFOP(op, opcode, func, lvalfunc, lhs, rhs, return, assoc, prec, docstring) \
+#define OSC_EXPR_BUILTIN_DEFOP(op, opcode, func, lvalfunc, vtab, lhs, rhs, return, assoc, prec, docstring) \
 t_osc_expr_oprec _osc_expr_builtin_op_##func = {\
 	#op,\
 	2,\
@@ -75,8 +272,9 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 	(char *[]){#return},\
 	NULL,\
 	docstring,\
-	osc_expr_builtin_##func,\
-	osc_expr_builtin_lval_##lvalfunc,\
+	osc_expr_builtin_call_binary_func,\
+	osc_expr_builtin_lval_##lvalfunc,	\
+	vtab,\
 	2,\
 	(unsigned int []){0, 1},\
 	0,\
@@ -85,18 +283,54 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 	0\
 };
 
-OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, NULL, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
-OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(+, '+', add, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the sum of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(-, '-', sub, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the difference of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the product of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(/, '/', div, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the quotient of its arguments");
-OSC_EXPR_BUILTIN_DEFOP(%, '%', mod, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the remainder of _a divided by _b");
-OSC_EXPR_BUILTIN_DEFOP(^, '^', pow, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 4, "Returns _a raised to the power of _b");
-OSC_EXPR_BUILTIN_DEFOP(., '.', lookup, lookup, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 2, "Returns the value bound to _b in a subbundle associated with _a");
+//OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, NULL, NULL, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
+OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, NULL, OSC_EXPR_BUILTIN_LT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, NULL, OSC_EXPR_BUILTIN_GT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, NULL, OSC_EXPR_BUILTIN_LE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, NULL, OSC_EXPR_BUILTIN_GE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(+, '+', add, NULL, OSC_EXPR_BUILTIN_ADD_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the sum of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(-, '-', sub, NULL, OSC_EXPR_BUILTIN_SUB_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the difference of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, NULL, OSC_EXPR_BUILTIN_MUL_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the product of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(/, '/', div, NULL, OSC_EXPR_BUILTIN_DIV_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the quotient of its arguments");
+OSC_EXPR_BUILTIN_DEFOP(%, '%', mod, NULL, OSC_EXPR_BUILTIN_MOD_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the remainder of _a divided by _b");
+OSC_EXPR_BUILTIN_DEFOP(^, '^', pow, NULL, OSC_EXPR_BUILTIN_POW_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 4, "Returns _a raised to the power of _b");
+//OSC_EXPR_BUILTIN_DEFOP(., '.', lookup, lookup, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 2, "Returns the value bound to _b in a subbundle associated with _a");
+
+static t_osc_expr_oprec _osc_expr_builtin_op_assign = {
+	"=",
+	2,
+	(char *[]){"_lval", "_rval"},
+	NULL,
+	1,
+	(char *[]){"_rval"},
+	NULL,
+	"Assigns _rval to _lval and returns _rval",
+	OSC_EXPR_PARSER_ASSOC_RIGHT,
+	16,
+	0,
+	'='
+};
+
+static t_osc_expr_funcrec _osc_expr_builtin_func_assign = {
+	"assign",
+	2,
+	(char *[]){"_lval", "_rval"},
+	NULL,
+	0,
+	1,
+	(char *[]){"_rval"},
+	NULL,
+	"Assigns _rval to _lval and returns _rval",
+	osc_expr_builtin_assign,
+	NULL,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	"apply",
@@ -109,6 +343,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	NULL,
 	"Applies _function to _args and returns the result",
 	osc_expr_builtin_apply,
+	NULL,
 	NULL,
 	0,
 	NULL,
@@ -130,6 +365,43 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_nth = {
 	"Returns the nth item in a list (counting from 0)",
 	osc_expr_builtin_nth,
 	osc_expr_builtin_lval_nth,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
+
+static t_osc_expr_oprec _osc_expr_builtin_op_lookup = {
+	".",
+	2,
+	(char *[]){"_a", "_b"},
+	NULL,
+	1,
+	(char *[]){"_y"},
+	NULL,
+	"Returns the value bound to _b in a subbundle associated with _a",
+	OSC_EXPR_PARSER_ASSOC_LEFT,
+	2,
+	0,
+	'.'
+};
+
+static t_osc_expr_funcrec _osc_expr_builtin_func_lookup = {
+	"lookup",
+	2,
+	(char *[]){"_a", "_b"},
+	NULL,
+	0,
+	1,
+	(char *[]){"_y"},
+	NULL,
+	"Returns the value bound to _b in a subbundle associated with _a",
+	osc_expr_builtin_lookup,
+	osc_expr_builtin_lval_lookup,
+	NULL,
 	0,
 	NULL,
 	0,
@@ -149,6 +421,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_list = {
 	NULL,
 	"Returns a list containing all elements passed as arguments",
 	osc_expr_builtin_list,
+	NULL,
 	NULL,
 	0,
 	NULL,
@@ -170,12 +443,13 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_aseq = {
 	"Returns an arithmetic sequence counting from min to max.",
 	osc_expr_builtin_aseq,
 	NULL,
+	OSC_EXPR_BUILTIN_ASEQ_VTAB,
 	0,
 	NULL,
 	0,
+	3,
+	(unsigned int []){0, 1, 2},
 	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_if = {
@@ -189,6 +463,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_if = {
 	NULL,
 	"Evaluates _then if _test is true, and _else if it is false. Returns the result of the evaluated expression(s).",
 	osc_expr_builtin_if,
+	NULL,
 	NULL,
 	0,
 	NULL,
@@ -686,13 +961,37 @@ t_osc_expr_funcrec *osc_expr_builtin_lookupFunctionForOpcode(char op)
 	}
 	return NULL;
 }
-
-
+typedef int (*t_osc_expr_builtin_binary_func)(t_osc_atom_u *, t_osc_atom_u *, t_osc_atom_u *);
+int osc_expr_builtin_call_binary_func(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// scalars should have been expanded, so all arg lists should be the same length
+	int n = osc_atom_array_u_getLen(argv[0]);
+	*out = osc_atom_array_u_alloc(n);
+	for(int i = 0; i < n; i++){
+		t_osc_expr_funcrec *rec = osc_expr_ast_funcall_getFuncRec(f);
+		t_osc_atom_u *a = osc_atom_array_u_get(argv[0], i);
+		t_osc_atom_u *b = osc_atom_array_u_get(argv[1], i);
+		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
+		t_osc_expr_builtin_binary_func f = (t_osc_expr_builtin_binary_func)osc_expr_funcrec_getFuncForTypetag(rec, osc_atom_u_getTypetag(a));
+		if(f){
+			int ret = f(a, b, y);
+			if(ret){
+				return ret;
+			}
+		}else{
+			return 1;
+		}
+	}
+	return 0;
+}
 
 //////////////////////////////////////////////////
 // built in c functions
 //////////////////////////////////////////////////
+
+
 // binary op that produces a numeric value
+/*
 #define OSC_EXPR_BUILTIN_BINARYOP_CASE(tt, type, op) case tt: osc_atom_u_set##type (y, osc_atom_u_get##type (l) op osc_atom_u_get##type (r)); break;
 
 #define OSC_EXPR_BUILTIN_BINARYOP_SWITCH_INT(op)		\
@@ -980,83 +1279,7 @@ int osc_expr_builtin_ge(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u *
 	}
 	return 0;
 }
-
-int osc_expr_specFunc_lval_nth(t_osc_expr_ast_funcall *f, 
-			       t_osc_expr_lexenv *lexenv, 
-			       t_osc_bndl_u *oscbndl,
-			       t_osc_msg_u **assign_target,
-			       long *nlvals,
-			       t_osc_atom_u ***lvals)
-{
-	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
-	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
-	long nlvals_tmp = 0;
-	int ret = osc_expr_ast_expr_evalLvalInLexEnv(vals_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
-	if(ret){
-		return ret;
-	}
-	if(!(*lvals)){
-		// error
-		return 1;
-	}
-	t_osc_atom_ar_u *idxs = NULL;
-	osc_expr_ast_expr_evalInLexEnv(idxs_expr, lexenv, oscbndl, &idxs);
-	if(!idxs){
-		// error
-		return 1;
-	}
-	long nidxs = osc_atom_array_u_getLen(idxs);
-	*nlvals = nidxs;
-	t_osc_atom_u *lvals_tmp[nlvals_tmp];
-	memcpy(lvals_tmp, *lvals, nlvals_tmp * sizeof(t_osc_atom_u *));
-	memset(*lvals, '\0', nlvals_tmp * sizeof(t_osc_atom_u*));
-	for(int i = 0; i < nidxs; i++){
-		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
-		if(idx >= nlvals_tmp){
-			// index out of bounds error
-			return 1;
-		}
-		(*lvals)[i] = lvals_tmp[idx];
-	}
-	osc_atom_array_u_free(idxs);
-	return 0;
-}
-
-int osc_expr_specFunc_nth(t_osc_expr_ast_funcall *f, 
-			     t_osc_expr_lexenv *lexenv, 
-			     t_osc_bndl_u *oscbndl,
-			     t_osc_atom_ar_u **out)
-{
-	// can't just call osc_expr_specFunc_lval_nth() because this may be a list literal or something
-	// that's not part of the bundle
-	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
-	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
-	t_osc_atom_ar_u *vals = NULL;
-	osc_expr_ast_expr_evalInLexEnv(vals_expr, lexenv, oscbndl, &vals);
-	if(!vals){
-		// error 
-		return 1;
-	}
-	t_osc_atom_ar_u *idxs = NULL;
-	osc_expr_ast_expr_evalInLexEnv(idxs_expr, lexenv, oscbndl, &idxs);
-	if(!idxs){
-		// error 
-		return 1;
-	}
-	int nvals = osc_atom_array_u_getLen(vals);
-	int n = osc_atom_array_u_getLen(idxs);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
-		if(idx >= nvals){
-			// index out of bounds error
-			return 1;
-		}
-		t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-		osc_atom_u_copyValue(a, osc_atom_array_u_get(vals, idx));
-	}
-	return 0;
-}
+*/
 
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
@@ -1077,10 +1300,15 @@ int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u
 	return 0;
 }
 
-int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+int _osc_expr_sign(double f)
 {
-
-	return 0;
+	if(f == 0){
+		return 0;
+	}else if(f < 0){
+		return -1;
+	}else{
+		return 1;
+	}
 }
 
 //////////////////////////////////////////////////
@@ -1198,7 +1426,6 @@ int osc_expr_specFunc_lval_lookup(t_osc_expr_ast_funcall *f,
 				  long *nlvals,
 				  t_osc_atom_u ***lvals)
 {
-	printf("%s\n", __func__);
 	t_osc_expr_ast_expr *lhs = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)f);
 	t_osc_expr_ast_expr *rhs = osc_expr_ast_expr_next(lhs);
 	if(rhs == NULL){
@@ -1210,7 +1437,6 @@ int osc_expr_specFunc_lval_lookup(t_osc_expr_ast_funcall *f,
 		t_osc_msg_u *at = NULL;
 		t_osc_atom_u **ar = NULL;
 		long len = 0;
-		printf("lhs = %d\n", osc_expr_ast_expr_getNodetype(lhs));
 		osc_expr_ast_expr_evalLvalInLexEnv(lhs, lexenv, oscbndl, &at, &len, &ar);
 		if(ar){
 			for(int i = 0; i < len; i++){
@@ -1240,20 +1466,103 @@ int osc_expr_specFunc_lookup(t_osc_expr_ast_funcall *f,
 			     t_osc_bndl_u *oscbndl,
 			     t_osc_atom_ar_u **out)
 {
-	t_osc_atom_ar_u *loc = NULL;
-	osc_expr_specFunc_lookup(f, lexenv, oscbndl, &loc);
-	if(loc){
-		int n = osc_atom_array_u_getLen(loc);
-		*out = osc_atom_array_u_alloc(n);
-		for(int i = 0; i < n; i++){
+	t_osc_msg_u *assign_target = NULL;
+	long nlvals = 0;
+	t_osc_atom_u **lvals = NULL;
+	osc_expr_specFunc_lval_lookup(f, lexenv, oscbndl, &assign_target, &nlvals, &lvals);
+	if(lvals){
+		*out = osc_atom_array_u_alloc(nlvals);
+		for(int i = 0; i < nlvals; i++){
 			t_osc_atom_u *dest = osc_atom_array_u_get(*out, i);
-			osc_atom_u_copy(&dest, osc_atom_array_u_get(loc, i));
+			osc_atom_u_copy(&dest, lvals[i]);
 		}
 	}else{
 		return 1;
 	}
 	return 0;
 }
+
+// nth doesn't seem like it needs to be a special function, but it does
+// because one of its arguments needs to be evaluated in an lval context
+// and the other must not be. 
+int osc_expr_specFunc_lval_nth(t_osc_expr_ast_funcall *f, 
+			       t_osc_expr_lexenv *lexenv, 
+			       t_osc_bndl_u *oscbndl,
+			       t_osc_msg_u **assign_target,
+			       long *nlvals,
+			       t_osc_atom_u ***lvals)
+{
+	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
+	long nlvals_tmp = 0;
+	int ret = osc_expr_ast_expr_evalLvalInLexEnv(vals_expr, lexenv, oscbndl, assign_target, &nlvals_tmp, lvals);
+	if(ret){
+		return ret;
+	}
+	if(!(*lvals)){
+		// error
+		return 1;
+	}
+	t_osc_atom_ar_u *idxs = NULL;
+	osc_expr_ast_expr_evalInLexEnv(idxs_expr, lexenv, oscbndl, &idxs);
+	if(!idxs){
+		// error
+		return 1;
+	}
+	long nidxs = osc_atom_array_u_getLen(idxs);
+	*nlvals = nidxs;
+	t_osc_atom_u *lvals_tmp[nlvals_tmp];
+	memcpy(lvals_tmp, *lvals, nlvals_tmp * sizeof(t_osc_atom_u *));
+	memset(*lvals, '\0', nlvals_tmp * sizeof(t_osc_atom_u*));
+	for(int i = 0; i < nidxs; i++){
+		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
+		if(idx >= nlvals_tmp){
+			// index out of bounds error
+			return 1;
+		}
+		(*lvals)[i] = lvals_tmp[idx];
+	}
+	osc_atom_array_u_free(idxs);
+	return 0;
+}
+
+int osc_expr_specFunc_nth(t_osc_expr_ast_funcall *f, 
+			     t_osc_expr_lexenv *lexenv, 
+			     t_osc_bndl_u *oscbndl,
+			     t_osc_atom_ar_u **out)
+{
+	// can't just call osc_expr_specFunc_lval_nth() because this may be a list literal or something
+	// that's not part of the bundle
+	t_osc_expr_ast_expr *vals_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *idxs_expr = osc_expr_ast_expr_next(vals_expr);
+	t_osc_atom_ar_u *vals = NULL;
+	osc_expr_ast_expr_evalInLexEnv(vals_expr, lexenv, oscbndl, &vals);
+	if(!vals){
+		// error 
+		return 1;
+	}
+	t_osc_atom_ar_u *idxs = NULL;
+	osc_expr_ast_expr_evalInLexEnv(idxs_expr, lexenv, oscbndl, &idxs);
+	if(!idxs){
+		// error 
+		return 1;
+	}
+	int nvals = osc_atom_array_u_getLen(vals);
+	int n = osc_atom_array_u_getLen(idxs);
+	*out = osc_atom_array_u_alloc(n);
+	for(int i = 0; i < n; i++){
+		int idx = osc_atom_u_getInt(osc_atom_array_u_get(idxs, i));
+		if(idx >= nvals){
+			// index out of bounds error
+			return 1;
+		}
+		t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
+		osc_atom_u_copyValue(a, osc_atom_array_u_get(vals, idx));
+	}
+	return 0;
+}
+
+
 
 // these are dummy functions---they're used to do a pointer comparison in osc_expr_ast_funcall_evalInLexEnv
 OSC_EXPR_BUILTIN_DECL(apply){return 0;}
@@ -1279,3 +1588,143 @@ OSC_EXPR_BUILTIN_LVAL_DECL(lookup){return 0;}
 OSC_EXPR_BUILTIN_DECL(nth){return 0;}
 OSC_EXPR_BUILTIN_LVAL_DECL(nth){return 0;}
 
+/*
+// special functions: bypass scalar expansion and type promotion and have access to the bundle
+assign
+nth
+bound
+exists
+emptybundle
+getaddresses
+delete
+getmsgcount
+eval
+apply
+map
+lreduce
+rreduce
+quote
+lambda
+gettimetag
+settimetag
+lookup
+if
+
+// typed builtins: builtins subject to scalar expansion and type promotion
+
+// Num a => a -> a
+math.h...
+
+// Num a => (a, a) -> a
+add
+sub
+mul
+div
+lt
+le
+gt
+ge
+eq
+neq
+and
+or
+mod
+pow
+min
+max
+
+//// (a, a, a) -> [a]
+aseq
+
+//// bool -> bool
+not
+
+//// [] -> int
+length
+
+//// [] -> []
+reverse
+sort
+list
+
+//// a -> [char]
+typetags
+
+//// [a] -> [a] -> a
+dot
+
+//// [a, a, a] -> [a, a, a] -> [a, a, a]
+cross
+
+//// [a] -> a
+l2norm
+
+//// string -> int
+strcmp
+
+//// string -> [string]
+split
+tokenize
+
+//// a -> b
+cast
+float32
+float64
+int8
+int16
+int32
+int64
+uint8
+uint16
+uint32
+uint64
+string
+
+// user defined: functions implemented in the expression language
+add1: add(1)
+sub1: sub(1)
+product: lreduce(mul)
+sum: lreduce(add)
+cumsum: 
+mean: lambda(l){sum(l) / length(l);}
+median: 
+nfill: lambda(n, v){map(lambda(x){v}, [0:n-1])}
+range: lambda(l){max(l) - min(l)}
+interleave: map(list)
+first: nth(, 0)
+last: lambda(l){nth(l, length(l) - 1)}
+rest: lambda(l){nth(l, [1:length(l) - 1])}
+butlast: lambda(l){nth(l, [0:length(l) - 2])}
+extrema: 
+clip:
+scale:
+mtof:
+ftom:
+sign:
+identity: lambda(x){x}
+
+// constants
+pi
+twopi
+halfpi
+quarterpi
+oneoverpi
+twooverpi
+degtorad
+radtodeg
+e
+lntwo
+lnten
+logtwoe
+logtene
+sqrttwo
+sqrthalf
+
+// deprecated/removed
+assign_to_index
+join
+prog1
+prog2
+progn
+value
+ */

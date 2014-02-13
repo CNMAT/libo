@@ -72,7 +72,7 @@ libo.dylib: $(LIBO_OBJECTS)
 	rm -f libo.dylib
 	$(DYNAMIC-LINK)
 
-%.o: %.c 
+%.o: osc_expr_builtin_typedfuncdecls.h %.c 
 	$(CC) $(CFLAGS) $(I) -c -o $(basename $@).o $(basename $@).c
 
 %_scanner.c: %_scanner.l %_parser.c
@@ -80,6 +80,9 @@ libo.dylib: $(LIBO_OBJECTS)
 
 %_parser.c: %_parser.y
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
+
+osc_expr_builtin_typedfuncdecls.h: _osc_expr_builtin_typedfuncdecls.h
+	m4 _osc_expr_builtin_typedfuncdecls.h > osc_expr_builtin_typedfuncdecls.h
 
 .PHONY: doc
 doc:
@@ -95,6 +98,7 @@ test-clean:
 .PHONY: clean
 clean:
 	rm -f *.o libo.a libo.dylib test/osc_test *~ $(LIBO_PARSER_CFILES) $(LIBO_PARSER_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_SCANNER_HFILES) *.output
+	rm -rf osc_expr_builtin_typedfuncdecls.h
 	cd doc && rm -rf html latex man
 	cd test && $(MAKE) clean
 	cd contrib && rm -rf *.o

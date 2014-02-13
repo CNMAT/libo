@@ -52,6 +52,7 @@ struct _osc_expr_funcrec
 	char *docstring;
 	t_osc_expr_builtin_funcptr func;
 	t_osc_expr_builtin_lvalfuncptr lval_func;
+	void **vtab;
 	int scalar_expansion_argc;
 	unsigned int *scalar_expansion_argv;
 	uint32_t scalar_expansion_flags;

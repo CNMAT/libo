@@ -24,6 +24,7 @@
 	\author John MacCallum
 
 */
+
 #ifndef __OSC_EXPR_BUILTIN_H__
 #define __OSC_EXPR_BUILTIN_H__
 
@@ -36,6 +37,8 @@ struct _osc_expr_ast_funcall;
 typedef int (*t_osc_expr_builtin_funcptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 typedef int (*t_osc_expr_builtin_lvalfuncptr)(struct _osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_msg_u **assign_target, long *nlvals, t_osc_atom_u ***lvals);
 
+typedef int (*t_osc_expr_builtin_typedfuncptr)(int argc, t_osc_atom_u **argv, int *argcout, t_osc_atom_u **argvout);
+
 #define OSC_EXPR_BUILTIN_DECL(name) int osc_expr_builtin_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 #define OSC_EXPR_BUILTIN_LVAL_DECL(name) int osc_expr_builtin_lval_##name (t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_msg_u **assign_target, long *nlvals, t_osc_atom_u ***lvals)
 
@@ -47,6 +50,8 @@ typedef int (*t_osc_expr_builtin_lvalfuncptr)(struct _osc_expr_ast_funcall *f, i
 #include "osc_expr_parser.h"
 #include "osc_expr_funcrec.h"
 #include "osc_expr_ast_funcall.h"
+
+
 
 /*
 // don't fuck with these!
