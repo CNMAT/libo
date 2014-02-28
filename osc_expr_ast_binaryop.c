@@ -95,7 +95,7 @@ t_osc_expr_ast_expr *osc_expr_ast_binaryop_copy(t_osc_expr_ast_expr *ast)
 		t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)ast;
 		t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec(b);
 		t_osc_expr_ast_expr *left = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
-		t_osc_expr_ast_expr *right = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getLeftArg(b));
+		t_osc_expr_ast_expr *right = osc_expr_ast_expr_copy(osc_expr_ast_binaryop_getRightArg(b));
 		t_osc_expr_ast_binaryop *copy = osc_expr_ast_binaryop_alloc(r, left, right);
 		return (t_osc_expr_ast_expr *)copy;
 	}else{
@@ -112,20 +112,30 @@ void osc_expr_ast_binaryop_free(t_osc_expr_ast_expr *e)
 	}
 }
 
-t_osc_err osc_expr_ast_binaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_binaryop_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){
-		return OSC_ERR_NULLPTR;
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)e;
+	t_osc_msg_u *nodetype = osc_message_u_allocWithInt32("/nodetype", OSC_EXPR_AST_NODETYPE_BINARYOP);
+	t_osc_msg_u *rec = osc_message_u_allocWithBndl_u("/record", osc_expr_oprec_toBndl(osc_expr_ast_binaryop_getOpRec(b)), 1);
+	t_osc_msg_u *left = osc_message_u_allocWithBndl_u("/left", osc_expr_ast_expr_toBndl(osc_expr_ast_binaryop_getLeftArg(b)), 1);
+	t_osc_msg_u *right = osc_message_u_allocWithBndl_u("/right", osc_expr_ast_expr_toBndl(osc_expr_ast_binaryop_getRightArg(b)), 1);
+	t_osc_bndl_u *bndl = osc_bundle_u_alloc();
+	osc_bundle_u_addMsg(bndl, nodetype);
+	osc_bundle_u_addMsg(bndl, rec);
+	osc_bundle_u_addMsg(bndl, left);
+	osc_bundle_u_addMsg(bndl, right);
+	return bndl;
 }
 
-t_osc_err osc_expr_ast_binaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_binaryop_fromBndl(t_osc_bndl_u *b)
 {
-	if(!len || !ptr){
-		return OSC_ERR_NOBUNDLE;
+	if(!b){
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
 t_osc_expr_oprec *osc_expr_ast_binaryop_getOpRec(t_osc_expr_ast_binaryop *e)
@@ -208,8 +218,8 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_os
 				  NULL,
 				  NULL,//osc_expr_ast_binaryop_free,
 				  osc_expr_ast_binaryop_copy,
-				  osc_expr_ast_binaryop_serialize,
-				  osc_expr_ast_binaryop_deserialize,
+				  osc_expr_ast_binaryop_toBndl,
+				  osc_expr_ast_binaryop_fromBndl,
 				  sizeof(t_osc_expr_ast_binaryop),
 				  funcrec,
 				  2,

@@ -218,6 +218,7 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 			}
 			return size;
 		}
+	case OSC_EXPR_TYPETAG:
 	case OSC_BUNDLE_TYPETAG:
 		return ntoh32(*((uint32_t *)data)) + 4;
 	case OSC_TIMETAG_TYPETAG:

@@ -32,6 +32,7 @@
 //#include "osc_query.h"
 #include "osc_message_u.h"
 #include "osc_message_iterator_u.h"
+#include "osc_expr_builtin.h"
 
 static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype);
 static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type);
@@ -55,12 +56,30 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		case OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER:
 			{
 				t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
-				t_osc_atom_ar_u *tmp = NULL;
-				if((tmp = osc_expr_lexenv_lookup(lexenv, osc_atom_u_getStringPtr(vv)))){
-					*out = osc_atom_array_u_copy(tmp);
+				void *tmp = NULL;
+				char *sp = osc_atom_u_getStringPtr(vv);
+				if((tmp = osc_expr_lexenv_lookup(lexenv, sp))){
+					*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)tmp);
+					return 0;
+				}else if((tmp = osc_expr_builtin_lookupFunction(sp))){
+					*out = osc_atom_array_u_alloc(1);
+					t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+					osc_atom_u_setExpr(a, (t_osc_expr_ast_expr *)osc_expr_funcrec_allocLambda((t_osc_expr_funcrec *)tmp), 1);
+					return 0;
+				}else if((tmp = osc_expr_builtin_lookupOperator(sp))){
+					// this doesn't actually work because the parser won't parse
+					// an operator used as an identifier.
+					*out = osc_atom_array_u_alloc(1);
+					t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+					osc_atom_u_setExpr(a, (t_osc_expr_ast_expr *)osc_expr_funcrec_allocLambda(osc_expr_builtin_lookupFunctionForOperator((t_osc_expr_oprec *)tmp)), 1);
+					return 0;
+				}else{
+					*out = osc_atom_array_u_alloc(1);
+					t_osc_atom_u *copy = osc_atom_array_u_get(*out, 0);
+					osc_atom_u_setExpr(copy, osc_expr_ast_value_copy((t_osc_expr_ast_expr *)v), 1);
+					return OSC_ERR_EXPR_ADDRESSUNBOUND;
 				}
 			}
-			return 0;
 		case OSC_EXPR_AST_VALUE_TYPE_LIST:
 			{
 				*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)osc_expr_ast_value_getList(v));
@@ -76,7 +95,7 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 					*out = osc_atom_array_u_alloc(nlvals);
 					for(int i = 0; i < nlvals; i++){
 						t_osc_atom_u *copy = osc_atom_array_u_get(*out, i);
-						osc_atom_u_copy(&copy, lvals[i]);
+						osc_atom_u_copyValue(copy, lvals[i]);
 					}
 				}
 				osc_mem_free(lvals);
@@ -123,7 +142,8 @@ int osc_expr_ast_value_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 						int i = 0;
 						t_osc_msg_it_u *it = osc_msg_it_u_get(m);
 						while(osc_msg_it_u_hasNext(it)){
-							(*lvals)[i] = osc_msg_it_u_next(it);
+							t_osc_atom_u *a = osc_msg_it_u_next(it);
+							(*lvals)[i] = a;
 							i++;
 						}
 						osc_msg_it_u_destroy(it);
@@ -146,13 +166,23 @@ int osc_expr_ast_value_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 t_osc_expr_ast_expr *osc_expr_ast_value_copy(t_osc_expr_ast_expr *ast)
 {
 	if(ast){
-		t_osc_atom_u *atom = osc_expr_ast_value_getValue((t_osc_expr_ast_value *)ast);
-		if(atom){
-			t_osc_atom_u *copy = NULL;
-			osc_atom_u_copy(&copy, atom);
-			return (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc(copy, ((t_osc_expr_ast_value *)ast)->valuetype);
+		if(osc_expr_ast_value_getValueType((t_osc_expr_ast_value *)ast) == OSC_EXPR_AST_VALUE_TYPE_LIST){
+			t_osc_atom_ar_u *ar = osc_expr_ast_value_getValue((t_osc_expr_ast_value *)ast);
+			if(ar){
+				t_osc_atom_ar_u *copy = osc_atom_array_u_copy(ar);
+				return (t_osc_expr_ast_expr *)osc_expr_ast_value_allocList(copy);
+			}else{
+				return (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc(NULL, 0);
+			}
 		}else{
-			return (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc(NULL, 0);
+			t_osc_atom_u *atom = osc_expr_ast_value_getValue((t_osc_expr_ast_value *)ast);
+			if(atom){
+				t_osc_atom_u *copy = NULL;
+				osc_atom_u_copy(&copy, atom);
+				return (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc(copy, ((t_osc_expr_ast_value *)ast)->valuetype);
+			}else{
+				return (t_osc_expr_ast_expr *)osc_expr_ast_value_alloc(NULL, 0);
+			}
 		}
 	}else{
 		return NULL;
@@ -169,6 +199,21 @@ long osc_expr_ast_value_format(char *buf, long n, t_osc_expr_ast_expr *v)
 		case OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER:
 		case OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS:
 			return snprintf(buf, n, "%s", osc_atom_u_getStringPtr(osc_expr_ast_value_getValue(vv)));
+		case OSC_EXPR_AST_VALUE_TYPE_LIST:
+			{
+				long count = 0;
+				t_osc_atom_ar_u *ar = (t_osc_atom_ar_u *)osc_expr_ast_value_getValue(vv);
+				if(buf){
+					for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
+						count += osc_atom_u_nformat(buf + count, n - count, osc_atom_array_u_get(ar, i), 0);
+					}
+				}else{
+					for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
+						count += osc_atom_u_nformat(NULL, 0, osc_atom_array_u_get(ar, i), 0);
+					}
+				}
+				return count;
+			}
 		}
 	}
 	return 0;
@@ -177,25 +222,48 @@ long osc_expr_ast_value_format(char *buf, long n, t_osc_expr_ast_expr *v)
 void osc_expr_ast_value_free(t_osc_expr_ast_expr *v)
 {
 	if(v){
-		osc_atom_u_free(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)v));
+		t_osc_expr_ast_value *vv = (t_osc_expr_ast_value *)v;
+		if(osc_expr_ast_value_getValueType(vv) == OSC_EXPR_AST_VALUE_TYPE_LIST){
+			osc_atom_array_u_free(osc_expr_ast_value_getList(vv));
+		}else{
+			osc_atom_u_free(osc_expr_ast_value_getValue(vv));
+		}
 		osc_mem_free(v);
 	}
 }
 
-t_osc_err osc_expr_ast_value_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_value_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){
-		return OSC_ERR_NULLPTR;
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	t_osc_expr_ast_value *v = (t_osc_expr_ast_value *)e;
+	t_osc_msg_u *nodetype = osc_message_u_allocWithInt32("/nodetype", OSC_EXPR_AST_NODETYPE_VALUE);
+	int valuetype = osc_expr_ast_value_getValueType(v);
+	t_osc_msg_u *value = NULL;
+	if(valuetype == OSC_EXPR_AST_VALUE_TYPE_LIST){
+		t_osc_atom_ar_u *ar = (t_osc_atom_ar_u *)osc_expr_ast_value_getValue(v);
+		value = osc_message_u_allocWithArray("/value", ar);
+	}else{
+		t_osc_atom_u *a = (t_osc_atom_u *)osc_expr_ast_value_getValue(v);
+		t_osc_atom_u *copy = NULL;
+		osc_atom_u_copy(&copy, a);
+		value = osc_message_u_allocWithAtom("/value", copy);
+	}
+	t_osc_msg_u *type = osc_message_u_allocWithInt32("/type", valuetype);
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	osc_bundle_u_addMsg(b, nodetype);
+	osc_bundle_u_addMsg(b, value);
+	osc_bundle_u_addMsg(b, type);
+	return b;
 }
 
-t_osc_err osc_expr_ast_value_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_value_fromBndl(t_osc_bndl_u *b)
 {
-	if(!len || !ptr){
-		return OSC_ERR_NOBUNDLE;
+	if(!b){
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
 int osc_expr_ast_value_getValueType(t_osc_expr_ast_value *v)
@@ -275,8 +343,8 @@ static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type)
 				       osc_expr_ast_value_format,
 				       osc_expr_ast_value_free,
 				       osc_expr_ast_value_copy,
-				       osc_expr_ast_value_serialize,
-				       osc_expr_ast_value_deserialize,
+				       osc_expr_ast_value_toBndl,
+				       osc_expr_ast_value_fromBndl,
 				       sizeof(t_osc_expr_ast_value));
 		osc_expr_ast_value_setValue(v, a, type);
 	}

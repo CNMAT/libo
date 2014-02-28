@@ -47,6 +47,7 @@ typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
 #include "osc_timetag.h"
 
 //typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+struct _osc_expr_ast_expr;
 
 t_osc_msg_u *osc_message_u_alloc(void);
 size_t osc_message_u_getStructSize(void);
@@ -86,6 +87,7 @@ t_osc_atom_u *osc_message_u_appendNull(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_appendBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc);
+t_osc_atom_u *osc_message_u_appendExpr(t_osc_msg_u *m, struct _osc_expr_ast_expr *b, int alloc);
 t_osc_atom_u *osc_message_u_appendTimetag(t_osc_msg_u *m, t_osc_timetag t);
 
 t_osc_atom_u *osc_message_u_prependInt8(t_osc_msg_u *m, int8_t v);
@@ -150,10 +152,17 @@ t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg);
 t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_array *ar);
 
 t_osc_msg_u *osc_message_u_allocWithAddress(char *address);
+t_osc_msg_u *osc_message_u_allocWithAtom(char *address, t_osc_atom_u *a);
+t_osc_msg_u *osc_message_u_allocWithUInt8(char *address, uint8_t i);
+t_osc_msg_u *osc_message_u_allocWithInt32(char *address, int32_t f);
 t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f);
+t_osc_msg_u *osc_message_u_allocWithBool(char *address, int b);
 t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s);
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
 t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_array *ar);
+t_osc_msg_u *osc_message_u_allocWithBndl_u(char *address, t_osc_bndl_u *b, int alloc);
+struct _osc_expr_ast_expr;
+t_osc_msg_u *osc_message_u_allocWithExpr(char *address, struct _osc_expr_ast_expr *e);
 
 #ifdef __cplusplus
 }

@@ -66,8 +66,8 @@ typedef int (*t_osc_expr_ast_evallvalfn)(t_osc_expr_ast_expr*,
 					 long *,
 					 t_osc_atom_u***);
 typedef t_osc_expr_ast_expr *(*t_osc_expr_ast_copyfn)(t_osc_expr_ast_expr*);
-typedef t_osc_err (*t_osc_expr_ast_serializefn)(t_osc_expr_ast_expr*, long*, char**);
-typedef t_osc_err (*t_osc_expr_ast_deserializefn)(long, char*,t_osc_expr_ast_expr**);
+typedef t_osc_bndl_u *(*t_osc_expr_ast_tobndlfn)(t_osc_expr_ast_expr*);
+typedef t_osc_expr_ast_expr *(*t_osc_expr_ast_frombndlfn)(t_osc_bndl_u*);
 
 void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
@@ -78,10 +78,14 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
 			    t_osc_expr_ast_copyfn copyfn,
-			    t_osc_expr_ast_serializefn serializefn,
-			    t_osc_expr_ast_deserializefn deserializefn,
+			    t_osc_expr_ast_tobndlfn tobndlfn,
+			    t_osc_expr_ast_frombndlfn frombndlfn,
 			    size_t objsize);
 int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
+			   long *len,
+			   char **oscbndl,
+			   t_osc_atom_ar_u **out);
+int osc_expr_ast_expr_evalAll(t_osc_expr_ast_expr *ast,
 			   long *len,
 			   char **oscbndl,
 			   t_osc_atom_ar_u **out);
@@ -102,12 +106,13 @@ int osc_expr_ast_expr_getNodetype(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_expr_next(t_osc_expr_ast_expr *e);
 void osc_expr_ast_expr_prepend(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_prepend);
 void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_append);
+void osc_expr_ast_expr_setNext(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_append);
 long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_expr_formatAllLinked(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_expr_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_expr *e);
-t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
-t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
+t_osc_bndl_u *osc_expr_ast_expr_toBndl(t_osc_expr_ast_expr *e);
+t_osc_expr_ast_expr *osc_expr_ast_expr_fromBndl(t_osc_bndl_u *b);
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e);
 void osc_expr_ast_expr_setBrackets(t_osc_expr_ast_expr *e, char leftbracket, char rightbracket);
 char osc_expr_ast_expr_getLeftBracket(t_osc_expr_ast_expr *e);

@@ -27,6 +27,7 @@
 #include "osc_expr_funcrec.r"
 #include "osc_expr_oprec.r"
 #include "osc_expr_ast_funcall.h"
+#include "osc_expr_ast_function.h"
 #include "osc_expr_ast_binaryop.h"
 #include "osc_expr_ast_arraysubscript.h"
 #include "osc_expr_ast_value.h"
@@ -1322,6 +1323,74 @@ void printbndl(t_osc_bndl_u *bndl)
 	printf("%s\n", buf);
 }
 
+int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f, 
+			    t_osc_expr_lexenv *lexenv, 
+			    t_osc_bndl_u *oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	t_osc_expr_ast_expr *first_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *rest_expr = osc_expr_ast_expr_next(first_expr);
+	t_osc_atom_ar_u *first = NULL;
+	int ret = 0;
+	ret = osc_expr_ast_expr_evalInLexEnv(first_expr, lexenv, oscbndl, &first);
+	t_osc_atom_u *a = osc_atom_array_u_get(first, 0);
+	if(ret){
+		goto out;
+	}
+	if(!first){
+		ret = 1;
+		goto out;
+	}
+
+	t_osc_expr_ast_function *func = NULL;
+	switch(osc_atom_u_getTypetag(a)){
+	case OSC_EXPR_TYPETAG:
+		{
+			t_osc_expr_ast_expr *e = osc_atom_u_getExpr(a);
+			if(osc_expr_ast_expr_getNodetype(e) == OSC_EXPR_AST_NODETYPE_FUNCTION){
+				func = (t_osc_expr_ast_function *)e;
+			}
+		}
+		break;
+	case 's':
+		printf("string: %s\n", osc_atom_u_getStringPtr(a));
+		break;
+	default:
+		printf("found a '%c' (%d) as the first arg to apply()\n", osc_atom_u_getTypetag(a), osc_atom_u_getTypetag(a));
+		ret = 1;
+		goto out;
+	}
+	t_osc_expr_ast_value *lambdalist = osc_expr_ast_function_getLambdaList(func);
+	t_osc_expr_lexenv *my_lexenv = NULL;
+	osc_expr_lexenv_deepCopy(&my_lexenv, lexenv);
+	while(lambdalist && rest_expr){
+		t_osc_atom_ar_u *ar = NULL;
+		int ret = osc_expr_ast_expr_evalInLexEnv(rest_expr, lexenv, oscbndl, &ar);
+		t_osc_atom_u *param = osc_expr_ast_value_getIdentifier(lambdalist);
+		osc_expr_lexenv_bind(my_lexenv, osc_atom_u_getStringPtr(param), ar);
+		lambdalist = (t_osc_expr_ast_function *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		rest_expr = osc_expr_ast_expr_next(rest_expr);
+	}
+	while(lambdalist){
+		t_osc_atom_u *param = osc_expr_ast_value_getIdentifier(lambdalist);
+		osc_expr_lexenv_bind(my_lexenv, osc_atom_u_getStringPtr(param), NULL);
+		lambdalist = (t_osc_expr_ast_function *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+	}
+	t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprs(func);
+	while(exprlist){
+		int ret = osc_expr_ast_expr_evalInLexEnv(exprlist, my_lexenv, oscbndl, out);
+		exprlist = osc_expr_ast_expr_next(exprlist);
+		if(exprlist){
+			osc_atom_array_u_free(*out);
+			*out = NULL;
+		}
+	}
+	osc_expr_lexenv_free(my_lexenv);
+ out:
+	osc_atom_array_u_free(first);
+	return ret;
+}
+
 int osc_expr_specFunc_assign(t_osc_expr_ast_funcall *f, 
 			     t_osc_expr_lexenv *lexenv, 
 			     t_osc_bndl_u *oscbndl,
@@ -1476,6 +1545,7 @@ int osc_expr_specFunc_lookup(t_osc_expr_ast_funcall *f,
 			t_osc_atom_u *dest = osc_atom_array_u_get(*out, i);
 			osc_atom_u_copy(&dest, lvals[i]);
 		}
+		osc_mem_free(lvals);
 	}else{
 		return 1;
 	}
@@ -1559,6 +1629,8 @@ int osc_expr_specFunc_nth(t_osc_expr_ast_funcall *f,
 		t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
 		osc_atom_u_copyValue(a, osc_atom_array_u_get(vals, idx));
 	}
+	osc_atom_array_u_free(vals);
+	osc_atom_array_u_free(idxs);
 	return 0;
 }
 

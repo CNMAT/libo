@@ -38,7 +38,7 @@ struct _osc_expr_ast_unaryop
 {
 	struct _osc_expr_ast_funcall funcall; // parent
 	struct _osc_expr_oprec *rec; // pointer to function record
-	struct _osc_expr_ast_expr *arg; // left argument to function
+	struct _osc_expr_ast_expr *arg; // argument to function
 	int side;
 };
 

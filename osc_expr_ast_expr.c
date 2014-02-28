@@ -26,6 +26,7 @@
 #include "osc_mem.h"
 #include "osc_expr_ast_expr.r"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_function.h"
 
 void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
@@ -36,8 +37,8 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    t_osc_expr_ast_formatfn format_lispfn,
 			    t_osc_expr_ast_freefn freefn,
 			    t_osc_expr_ast_copyfn copyfn,
-			    t_osc_expr_ast_serializefn serializefn,
-			    t_osc_expr_ast_deserializefn deserializefn,
+			    t_osc_expr_ast_tobndlfn tobndlfn,
+			    t_osc_expr_ast_frombndlfn frombndlfn,
 			    size_t objsize)
 {
 	if(e){
@@ -49,12 +50,45 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->format_lisp = format_lispfn;
 		e->free = freefn;
 		e->copy = copyfn;
-		e->serialize = serializefn;
-		e->deserialize = deserializefn;
+		e->tobndl = tobndlfn;
+		e->frombndl = frombndlfn;
 		e->objsize = sizeof(t_osc_expr_ast_expr);
 		e->leftbracket = 0;
 		e->rightbracket = 0;
 	}
+}
+
+int osc_expr_ast_expr_evalAll(t_osc_expr_ast_expr *ast,
+			      long *len,
+			      char **oscbndl,
+			      t_osc_atom_ar_u **out)
+{
+	t_osc_bndl_u *bndlu = NULL;
+	osc_bundle_s_deserialize(*len, *oscbndl, &bndlu);
+	int ret = 0;
+	if(bndlu){
+		while(ast){
+			ret = osc_expr_ast_expr_evalInLexEnv(ast, NULL, bndlu, out);
+			if(osc_expr_ast_expr_next(ast) != NULL){
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+			}
+			if(ret){
+				osc_bundle_u_free(bndlu);
+				return ret;
+			}
+			ast = osc_expr_ast_expr_next(ast);
+		}
+		*len = 0;
+		if(*oscbndl){
+			osc_mem_free(*oscbndl);
+			*oscbndl = NULL;
+		}
+		osc_bundle_u_serialize(bndlu, len, oscbndl);
+		osc_bundle_u_free(bndlu);
+		return 0;
+	}
+	return 1;
 }
 
 int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
@@ -126,7 +160,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast)
 	if(ast){
 		if(ast->copy){
 			t_osc_expr_ast_expr *copy = ast->copy(ast);
-			copy->next = osc_expr_ast_expr_copy(ast->next);
+			copy->next = osc_expr_ast_expr_copyAllLinked(ast->next);
 			return copy;
 		}else{
 			return osc_expr_ast_expr_alloc();
@@ -192,6 +226,13 @@ void osc_expr_ast_expr_append(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_
 	}
 }
 
+void osc_expr_ast_expr_setNext(t_osc_expr_ast_expr *e, t_osc_expr_ast_expr *expr_to_append)
+{
+	if(e){
+		e->next = expr_to_append;
+	}
+}
+
 long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 {
 	if(e){
@@ -249,19 +290,95 @@ long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_exp
 	}
 }
 
-t_osc_err osc_expr_ast_expr_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_expr_toBndl(t_osc_expr_ast_expr *e)
 {
-	if(e && e->serialize){
-		return e->serialize(e, len, ptr);
+	if(!e){
+		return NULL;
+	}
+	t_osc_expr_ast_expr *ee = e;
+	if(e->tobndl){
+		t_osc_bndl_u *b = ee->tobndl(ee);
+		if(b){
+			long l = osc_expr_ast_expr_format(NULL, 0, ee);
+			char buf[l + 1];
+			osc_expr_ast_expr_format(buf, l + 1, ee);
+			t_osc_msg_u *textmsg = osc_message_u_allocWithString("/text", buf);
+			osc_bundle_u_addMsg(b, textmsg);
+			//osc_message_u_appendBndl_u(exprlist, b, 1);
+		}
+		return b;
 	}else{
-		// serialize this bitch
-		return OSC_ERR_NONE;
+		return NULL;
 	}
 }
 
-t_osc_err osc_expr_ast_expr_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_expr_fromBndl(t_osc_bndl_u *bndl)
 {
-	return OSC_ERR_NONE;
+	long n = 0;
+	t_osc_msg_u **text_msg = NULL;
+	osc_bundle_u_lookupAddress(bndl, "/text", &n, &text_msg, 1);
+	if(text_msg){
+		t_osc_atom_u *a = NULL;
+		osc_message_u_getArg(text_msg[0], 0, &a);
+		t_osc_expr_ast_expr *e = NULL;
+		osc_expr_parser_parseExpr(osc_atom_u_getStringPtr(a), &e);
+		return e;
+	}else{
+		return NULL;
+	}
+	/*
+	printf("**************************************************\n");
+	long l = osc_bundle_u_nformat(NULL, 0, bndl, 0);
+	char buf[l + 1];
+	osc_bundle_u_nformat(buf, l + 1, bndl, 0);
+	printf("%s\n", buf);
+	printf("**************************************************\n");
+	long n = 0;
+	t_osc_msg_u **msg = NULL;
+	osc_bundle_u_lookupAddress(bndl, "/nodetype", &n, &msg, 1);
+	if(n == 1){
+		t_osc_atom_u *a = NULL;
+		osc_message_u_getArg(msg[0], 0, &a);
+		int t = osc_atom_u_getInt(a);
+		osc_atom_u_free(a);
+		switch(t){
+		case OSC_EXPR_AST_NODETYPE_EXPR:
+			printf("nodetype expr\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_FUNCALL:
+			printf("nodetype funcall\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_UNARYOP:
+			printf("nodetype unaryop\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_BINARYOP:
+			printf("nodetype binaryop\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_ARRAYSUBSCRIPT:
+			printf("nodetype arraysubscript\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_VALUE:
+			printf("nodetype value\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_LIST:
+			printf("nodetype list\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_FUNCTION:
+			printf("nodetype function\n");
+			return osc_expr_ast_function_fromBndl(bndl);
+		case OSC_EXPR_AST_NODETYPE_ASEQ:
+			printf("nodetype aseq\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_TERNARYCOND:
+			printf("nodetype ternarycond\n");
+			break;
+		case OSC_EXPR_AST_NODETYPE_LET:
+			printf("nodetype let\n");
+			break;
+		}
+	}
+	return NULL;
+	*/
 }
 
 size_t osc_expr_ast_expr_sizeof(t_osc_expr_ast_expr *e)

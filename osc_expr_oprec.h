@@ -31,6 +31,8 @@
 extern "C" {
 #endif
 
+#include "osc_bundle_u.h"
+
 typedef struct _osc_expr_oprec t_osc_expr_oprec;
 
 char *osc_expr_oprec_getName(t_osc_expr_oprec *r);
@@ -46,6 +48,8 @@ int osc_expr_oprec_getAssociativity(t_osc_expr_oprec *r);
 int osc_expr_oprec_getPrecedence(t_osc_expr_oprec *r);
 int osc_expr_oprec_getFixity(t_osc_expr_oprec *r);
 char osc_expr_oprec_getBytecode(t_osc_expr_oprec *r);
+t_osc_bndl_u *osc_expr_oprec_toBndl(t_osc_expr_oprec *r);
+t_osc_expr_oprec *osc_expr_oprec_fromBndl(t_osc_bndl_u *b);
 
 #ifdef __cplusplus
 }

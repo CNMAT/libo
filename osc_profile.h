@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#if defined(__i386__) || defined(__X86__)
+//#if defined(__i386__) || defined(__X86__)
 
 #include <unistd.h>
 //#define RDTSC_CYCLES_PER_SECOND 2.261E09
@@ -78,7 +78,7 @@ static double osc_profile_rdtsc_cps = 0;
 #define OSC_PROFILE_TIMER_PRINTF(varname)
 #define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname)
 #endif
-
+/*
 #else
 // not on i386 or x86
 #define OSC_PROFILE_TIMER_START(varname)
@@ -86,7 +86,7 @@ static double osc_profile_rdtsc_cps = 0;
 #define OSC_PROFILE_TIMER_PRINTF(varname)
 #define OSC_PROFILE_TIMER_SNPRINTF(varname, bufname)
 #endif
-
+*/
 #ifdef __cplusplus
 }
 #endif

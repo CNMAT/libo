@@ -35,6 +35,7 @@ extern "C" {
 typedef struct _osc_expr_funcrec t_osc_expr_funcrec;
 
 #include "osc_expr_builtin.h"
+#include "osc_expr_ast_function.h"
 
 char *osc_expr_funcrec_getName(t_osc_expr_funcrec *r);
 int osc_expr_funcrec_getInputArity(t_osc_expr_funcrec *r);
@@ -55,6 +56,9 @@ uint32_t osc_expr_funcrec_getScalarExpansionFlags(t_osc_expr_funcrec *r);
 int osc_expr_funcrec_getTypePromotionArgc(t_osc_expr_funcrec *r);
 unsigned int *osc_expr_funcrec_getTypePromotionArgv(t_osc_expr_funcrec *r);
 uint32_t osc_expr_funcrec_getTypePromotionFlags(t_osc_expr_funcrec *r);
+t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r);
+t_osc_expr_funcrec *osc_expr_funcrec_fromBndl(t_osc_bndl_u *b);
+t_osc_expr_ast_function *osc_expr_funcrec_allocLambda(t_osc_expr_funcrec *r);
 
 #ifdef __cplusplus
 }

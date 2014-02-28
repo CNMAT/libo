@@ -107,20 +107,20 @@ void osc_expr_ast_arraysubscript_free(t_osc_expr_ast_expr *e)
 	}
 }
 
-t_osc_err osc_expr_ast_arraysubscript_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_arraysubscript_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){
-		return OSC_ERR_NULLPTR;
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
-t_osc_err osc_expr_ast_arraysubscript_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_fromBndl(t_osc_bndl_u *b)
 {
-	if(!len || !ptr){
-		return OSC_ERR_NOBUNDLE;
+	if(!b){
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_arraysubscript_getBase(t_osc_expr_ast_arraysubscript *e)
@@ -171,8 +171,8 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 			       osc_expr_ast_arraysubscript_formatLisp,
 			       osc_expr_ast_arraysubscript_free,
 			       osc_expr_ast_arraysubscript_copy,
-			       osc_expr_ast_arraysubscript_serialize,
-			       osc_expr_ast_arraysubscript_deserialize,
+			       osc_expr_ast_arraysubscript_tobndl,
+			       osc_expr_ast_arraysubscript_frombndl,
 			       sizeof(t_osc_expr_ast_arraysubscript));
 	*/
 	t_osc_expr_funcrec *funcrec = osc_expr_builtin_func_nth;
@@ -185,8 +185,8 @@ t_osc_expr_ast_arraysubscript *osc_expr_ast_arraysubscript_alloc(t_osc_expr_ast_
 				  NULL,
 				  NULL,
 				  osc_expr_ast_arraysubscript_copy,
-				  osc_expr_ast_arraysubscript_serialize,
-				  osc_expr_ast_arraysubscript_deserialize,
+				  osc_expr_ast_arraysubscript_toBndl,
+				  osc_expr_ast_arraysubscript_fromBndl,
 				  sizeof(t_osc_expr_ast_arraysubscript),
 				  funcrec,
 				  2,

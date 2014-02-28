@@ -33,6 +33,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_mem.h"
 #include "osc_byteorder.h"
 #include "osc_util.h"
+#include "osc_expr_ast_expr.h"
 
 t_osc_msg_u *osc_message_u_alloc()
 {
@@ -466,6 +467,14 @@ t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int al
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
 	osc_atom_u_setBndl_u(a, b, alloc);
+	osc_message_u_appendAtom(m, a);
+	return a;
+}
+
+t_osc_atom_u *osc_message_u_appendExpr(t_osc_msg_u *m, t_osc_expr_ast_expr *b, int alloc)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	osc_atom_u_setExpr(a, b, alloc);
 	osc_message_u_appendAtom(m, a);
 	return a;
 }
@@ -1152,11 +1161,47 @@ t_osc_msg_u *osc_message_u_allocWithAddress(char *address)
 	return m;
 }
 
+t_osc_msg_u *osc_message_u_allocWithAtom(char *address, t_osc_atom_u *a)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendAtom(m, a);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithUInt8(char *address, uint8_t i)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendUInt8(m, i);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithInt32(char *address, int32_t i)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendInt32(m, i);
+	}
+	return m;
+}
+
 t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f)
 {
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_appendFloat(m, f);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithBool(char *address, int b)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendBool(m, b);
 	}
 	return m;
 }
@@ -1184,6 +1229,24 @@ t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_atom_ar_u *ar)
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_setArgArrayCopy(m, ar);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithBndl_u(char *address, t_osc_bndl_u *b, int alloc)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendBndl_u(m, b, alloc);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithExpr(char *address, t_osc_expr_ast_expr *e)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendExpr(m, e, 0);
 	}
 	return m;
 }

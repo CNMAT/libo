@@ -50,8 +50,8 @@ int osc_expr_ast_let_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 long osc_expr_ast_let_format(char *buf, long n, t_osc_expr_ast_expr *f);
 long osc_expr_ast_let_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f);
 void osc_expr_ast_let_free(t_osc_expr_ast_expr *f);
-t_osc_err osc_expr_ast_let_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
-t_osc_err osc_expr_ast_let_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
+t_osc_bndl_u *osc_expr_ast_let_toBndl(t_osc_expr_ast_expr *e);
+t_osc_expr_ast_expr *osc_expr_ast_let_fromBndl(t_osc_bndl_u *b);
 void osc_expr_ast_let_setVarlist(t_osc_expr_ast_let *f, t_osc_expr_ast_expr *varlist);
 void osc_expr_ast_let_setExprs(t_osc_expr_ast_let *f, t_osc_expr_ast_expr *exprs);
 t_osc_expr_ast_expr *osc_expr_ast_let_getVarlist(t_osc_expr_ast_let *f);

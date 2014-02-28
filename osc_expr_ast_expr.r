@@ -43,8 +43,8 @@ struct _osc_expr_ast_expr
 	t_osc_expr_ast_formatfn format_lisp;
 	t_osc_expr_ast_freefn free;
 	t_osc_expr_ast_copyfn copy;
-	t_osc_expr_ast_serializefn serialize;
-	t_osc_expr_ast_deserializefn deserialize;
+	t_osc_expr_ast_tobndlfn tobndl;
+	t_osc_expr_ast_frombndlfn frombndl;
 	size_t objsize;
 	char leftbracket, rightbracket;
 };

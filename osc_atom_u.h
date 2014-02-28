@@ -342,6 +342,8 @@ t_osc_bndl_u *osc_atom_u_getBndl(t_osc_atom_u *a);
 //long osc_atom_u_getBndlLen(t_osc_atom_u *a);
 //char *osc_atom_u_getBndlPtr(t_osc_atom_u *a);
 t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a);
+struct _osc_expr_ast_expr;
+struct _osc_expr_ast_expr *osc_atom_u_getExpr(t_osc_atom_u *a);
 
 /** \brief Set the contents of a #t_osc_atom_u to a 32-bit floating point value.
 
@@ -480,6 +482,7 @@ The #t_osc_bndl_s that bndl points to will be copied and freed when the
 void osc_atom_u_setBndl(t_osc_atom_u *a, long len, char *ptr);
 void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr);
 void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b, int alloc);
+void osc_atom_u_setExpr(t_osc_atom_u *a, struct _osc_expr_ast_expr *e, int alloc);
 
 /** \brief Set the #t_osc_atom_u to point to a(n unserialized) #t_osc_bndl_u.
 
@@ -541,6 +544,7 @@ t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf) __attribu
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);
+t_osc_atom_u *osc_atom_u_allocWithString(char *s);
 
 
 #ifdef __cplusplus

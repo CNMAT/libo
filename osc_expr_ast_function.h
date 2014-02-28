@@ -50,8 +50,8 @@ int osc_expr_ast_function_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 long osc_expr_ast_function_format(char *buf, long n, t_osc_expr_ast_expr *f);
 long osc_expr_ast_function_formatLisp(char *buf, long n, t_osc_expr_ast_expr *f);
 void osc_expr_ast_function_free(t_osc_expr_ast_expr *f);
-t_osc_err osc_expr_ast_function_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
-t_osc_err osc_expr_ast_function_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
+t_osc_bndl_u *osc_expr_ast_function_toBndl(t_osc_expr_ast_expr *e);
+t_osc_expr_ast_expr *osc_expr_ast_function_fromBndl(t_osc_bndl_u *b);
 void osc_expr_ast_function_setLambdaList(t_osc_expr_ast_function *f, t_osc_expr_ast_value *lambdalist);
 void osc_expr_ast_function_setExprs(t_osc_expr_ast_function *f, t_osc_expr_ast_expr *exprs);
 t_osc_expr_ast_value *osc_expr_ast_function_getLambdaList(t_osc_expr_ast_function *f);

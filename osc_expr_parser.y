@@ -76,6 +76,7 @@ int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan
 #include "osc_mem.h"
 #include "osc_atom_u.h"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_value.h"
 
 #define OSC_EXPR_PARSER_ASSOC_LEFT -1
 #define OSC_EXPR_PARSER_ASSOC_NONE 0
@@ -92,6 +93,7 @@ extern "C"{
 #endif
 //t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f);
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast);
+void osc_expr_parser_printlexenv(char *key, void *val, void *context);
 //t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
 #ifdef __cplusplus
 }
@@ -121,9 +123,11 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast)
 	t_osc_hashtab *lexenv = osc_hashtab_new(0, NULL);
 	long buflen = 0;
 	char *buf = NULL;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, lexenv, scanner, ptr, &buflen, &buf);
+	t_osc_expr_ast_value *freevars = NULL;
+	t_osc_err ret = osc_expr_parser_parse(&exprstack, lexenv, &freevars, scanner, ptr, &buflen, &buf);
 	osc_expr_scanner__delete_buffer(buf_state, scanner);
 	osc_expr_scanner_lex_destroy(scanner);
+	osc_hashtab_destroy(lexenv);
 	*ast = exprstack;
 	return ret;
 }
@@ -196,7 +200,7 @@ void osc_expr_error(YYLTYPE *llocp,
 	}
 }
 
-void yyerror(YYLTYPE *llocp, t_osc_expr_ast_expr **exprstack, t_osc_hashtab *lexenv, void *scanner, char *input_string, long *buflen, char **buf, char const *e)
+void yyerror(YYLTYPE *llocp, t_osc_expr_ast_expr **exprstack, t_osc_hashtab *lexenv, t_osc_expr_ast_value **freevars, void *scanner, char *input_string, long *buflen, char **buf, char const *e)
 {
 	osc_expr_error(llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
@@ -233,7 +237,8 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
 	if(!r){
 		return NULL;
 	}
-	return (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
+	t_osc_expr_ast_expr *b = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
+	return b;
 }
 
 t_osc_expr_ast_expr *osc_expr_parser_reduceCompoundAssign(YYLTYPE *llocp,
@@ -317,6 +322,7 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 // replace this bullshit with a struct...
 %parse-param{t_osc_expr_ast_expr **exprstack}
 %parse-param{t_osc_hashtab *lexenv}
+%parse-param{t_osc_expr_ast_value **freevars}
 %parse-param{void *scanner}
 %parse-param{char *input_string}
 %parse-param{long *buflen}
@@ -440,7 +446,7 @@ arraysubscript:
 
 // these are the only allowable lvalues 
 oscaddress:
-	OSC_EXPR_OSCADDRESS {
+	OSC_EXPR_OSCADDRESS %prec oscaddress_prec{
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
 	}
 	| oscaddress '.' OSC_EXPR_OSCADDRESS {
@@ -468,9 +474,20 @@ value:
 	literal
 	| oscaddress %prec oscaddress_prec
 	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
-		if(!osc_expr_parser_varIsBoundInLexEnv(lexenv, osc_atom_u_getStringPtr($1))){
-			printf("undefined variable %s\n", osc_atom_u_getStringPtr($1));
-			return 1;
+		char *str = osc_atom_u_getStringPtr($1);
+		if(!osc_expr_parser_varIsBoundInLexEnv(lexenv, str) &&
+		   !osc_expr_builtin_lookupFunction(str) &&
+		   !osc_expr_builtin_lookupOperator(str)){
+			//printf("undefined variable %s\n", osc_atom_u_getStringPtr($1));
+			//return 1;
+			t_osc_atom_u *a = NULL;
+			osc_atom_u_copy(&a, $1);
+			t_osc_expr_ast_value *fv = osc_expr_ast_value_allocIdentifier(a);
+			if(*freevars){
+				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)*freevars, (t_osc_expr_ast_expr *)fv);
+			}else{
+				*freevars = fv;
+			}
 		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
@@ -725,6 +742,14 @@ funcall:
 			return 1;
 		}
   	}
+	| OSC_EXPR_OSCADDRESS '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
+		t_osc_expr_ast_expr *v = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
+		osc_expr_ast_expr_append(v, $3);
+		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
+							  input_string,
+							  "apply",
+							  v);
+        }
 ;
 
 expr:
@@ -772,11 +797,96 @@ exprlist_more_than_one:
 
 expns: 
 	expr %prec lowest {
-		$$ = $1;
-		*exprstack = $1;
+		if(*freevars){
+			switch(osc_expr_ast_expr_getNodetype($1)){
+			case OSC_EXPR_AST_NODETYPE_BINARYOP:
+				{
+					t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec($1);
+					if(r == osc_expr_builtin_op_assign){
+						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($1)));
+						osc_expr_ast_binaryop_setRightArg($1, f);
+						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($1);
+						osc_expr_ast_expr_setNext(lval, f);
+						//osc_expr_ast_funcall_setArgs($1, f);
+						$$ = $1;
+					}else{
+						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
+						$$ = f;
+					}
+				}
+				break;
+			case OSC_EXPR_AST_NODETYPE_FUNCALL:
+				{
+					t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec($1);
+					if(r == osc_expr_builtin_func_assign){
+						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($1)));
+						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($1);
+						osc_expr_ast_expr_setNext(lval, f);
+						$$ = $1;
+					}else{
+						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
+						$$ = f;
+					}
+				}
+				break;
+			default:
+				{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
+					$$ = f;
+				}
+				break;
+			}
+			*freevars = NULL;
+		}else{
+			$$ = $1;
+		}
+		*exprstack = $$;
 	}
 	| expns expr %prec lowest{
-		osc_expr_ast_expr_append($1, $2);
+		if(*freevars){
+			switch(osc_expr_ast_expr_getNodetype($2)){
+			case OSC_EXPR_AST_NODETYPE_BINARYOP:
+				{
+					t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec($2);
+					if(r == osc_expr_builtin_op_assign){
+						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($2)));
+						osc_expr_ast_binaryop_setRightArg($2, f);
+						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($2);
+						osc_expr_ast_expr_setNext(lval, f);
+						//osc_expr_ast_funcall_setArgs($2, f);
+						$$ = $2;
+					}else{
+						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
+						$$ = f;
+					}
+				}
+				break;
+			case OSC_EXPR_AST_NODETYPE_FUNCALL:
+				{
+					t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec($2);
+					if(r == osc_expr_builtin_func_assign){
+						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($2)));
+						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($2);
+						osc_expr_ast_expr_setNext(lval, f);
+						$$ = $2;
+					}else{
+						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
+						$$ = f;
+					}
+				}
+				break;
+			default:
+				{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
+					$$ = f;
+				}
+				break;
+			}
+			*freevars = NULL;
+		}else{
+			$$ = $2;
+		}
+		osc_expr_ast_expr_append($1, $$);
 		*exprstack = $1;
 		$$ = $1;
  	}

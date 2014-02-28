@@ -7,7 +7,7 @@ CC = clang
 all: $(LIBO_TEST_BASENAMES) ../libo.a
 
 %: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -framework CoreServices -L.. -lo -lfl -o $@ $@.c
+	$(CC) -O0 $(CFLAGS) $(INCLUDES) -framework CoreServices -L.. -lo -lfl -o $@ $@.c
 
 .PHONY: clean
 clean:

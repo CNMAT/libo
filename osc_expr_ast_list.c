@@ -103,20 +103,28 @@ void osc_expr_ast_list_free(t_osc_expr_ast_expr *v)
 	}
 }
 
-t_osc_err osc_expr_ast_list_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_list_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){
-		return OSC_ERR_NULLPTR;
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	t_osc_expr_ast_list *l = (t_osc_expr_ast_list *)e;
+	t_osc_msg_u *nodetype = osc_message_u_allocWithInt32("/nodetype", OSC_EXPR_AST_NODETYPE_LIST);
+	t_osc_msg_u *list = osc_message_u_allocWithBndl_u("/list", osc_expr_ast_expr_toBndl(osc_expr_ast_list_getList(l)), 1);
+	t_osc_msg_u *len = osc_message_u_allocWithInt32("/length", osc_expr_ast_list_getLen(l));
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	osc_bundle_u_addMsg(b, nodetype);
+	osc_bundle_u_addMsg(b, list);
+	osc_bundle_u_addMsg(b, len);
+	return b;
 }
 
-t_osc_err osc_expr_ast_list_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_list_fromBndl(t_osc_bndl_u *b)
 {
-	if(!len || !ptr){
-		return OSC_ERR_NOBUNDLE;
+	if(!b){
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_list_getList(t_osc_expr_ast_list *v)
@@ -203,8 +211,8 @@ t_osc_expr_ast_list *osc_expr_ast_list_allocWithLen(t_osc_expr_ast_expr *list, l
 						  NULL,
 						  NULL,//osc_expr_ast_list_free,
 						  osc_expr_ast_list_copy,
-						  osc_expr_ast_list_serialize,
-						  osc_expr_ast_list_deserialize,
+						  osc_expr_ast_list_toBndl,
+						  osc_expr_ast_list_fromBndl,
 						  sizeof(t_osc_expr_ast_list),
 						  funcrec,
 						  list);
@@ -239,8 +247,8 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_expr_ast_expr *list)
 						  NULL,
 						  NULL,//osc_expr_ast_list_free,
 						  osc_expr_ast_list_copy,
-						  osc_expr_ast_list_serialize,
-						  osc_expr_ast_list_deserialize,
+						  osc_expr_ast_list_toBndl,
+						  osc_expr_ast_list_fromBndl,
 						  sizeof(t_osc_expr_ast_list),
 						  funcrec,
 						  list);

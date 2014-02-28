@@ -55,12 +55,13 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e);
 long osc_expr_ast_funcall_formatLisp(char *buf, long n, t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e);
-t_osc_err osc_expr_ast_funcall_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr);
-t_osc_err osc_expr_ast_funcall_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e);
+t_osc_bndl_u *osc_expr_ast_funcall_toBndl(t_osc_expr_ast_expr *e);
+t_osc_expr_ast_expr *osc_expr_ast_funcall_fromBndl(t_osc_bndl_u *);
 t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_lvalfuncptr osc_expr_ast_funcall_getLvalFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);
+void osc_expr_ast_funcall_setArgs(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *args);
 int osc_expr_ast_funcall_getNumArgs(t_osc_expr_ast_funcall *e);
 void osc_expr_ast_funcall_prependArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);
 void osc_expr_ast_funcall_appendArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a);
@@ -73,8 +74,8 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       t_osc_expr_ast_formatfn format_lispfn,
 				       t_osc_expr_ast_freefn freefn,
 				       t_osc_expr_ast_copyfn copyfn,
-				       t_osc_expr_ast_serializefn serializefn,
-				       t_osc_expr_ast_deserializefn deserializefn,
+				       t_osc_expr_ast_tobndlfn tobndlfn,
+				       t_osc_expr_ast_frombndlfn frombndlfn,
 				       size_t objsize,
 				       t_osc_expr_funcrec *rec,
 				       t_osc_expr_ast_expr *argv);
@@ -87,8 +88,8 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 			       t_osc_expr_ast_formatfn format_lispfn,
 			       t_osc_expr_ast_freefn freefn,
 			       t_osc_expr_ast_copyfn copyfn,
-			       t_osc_expr_ast_serializefn serializefn,
-			       t_osc_expr_ast_deserializefn deserializefn,
+			       t_osc_expr_ast_tobndlfn tobndlfn,
+			       t_osc_expr_ast_frombndlfn frombndlfn,
 			       size_t objsize,
 			       t_osc_expr_funcrec *rec,
 			       int argc,

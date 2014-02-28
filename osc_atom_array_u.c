@@ -52,6 +52,10 @@ void osc_atom_array_u_free(t_osc_atom_ar_u *ar)
 				if(a->w.bndl){
 					osc_bundle_u_free(a->w.bndl);
 				}
+			}else if(a->typetag == OSC_EXPR_TYPETAG){
+				if(a->w.expr){
+					osc_expr_ast_expr_free(a->w.expr);
+				}
 			}
 		}
 		osc_array_free(ar);

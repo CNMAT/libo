@@ -103,20 +103,30 @@ void osc_expr_ast_unaryop_free(t_osc_expr_ast_expr *e)
 	}
 }
 
-t_osc_err osc_expr_ast_unaryop_serialize(t_osc_expr_ast_expr *e, long *len, char **ptr)
+t_osc_bndl_u *osc_expr_ast_unaryop_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){
-		return OSC_ERR_NULLPTR;
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	t_osc_expr_ast_unaryop *o = (t_osc_expr_ast_unaryop *)e;
+	t_osc_msg_u *nodetype = osc_message_u_allocWithInt32("/nodetype", OSC_EXPR_AST_NODETYPE_UNARYOP);
+	t_osc_msg_u *rec = osc_message_u_allocWithBndl_u("/record", osc_expr_oprec_toBndl(osc_expr_ast_unaryop_getOpRec(o)), 1);
+	t_osc_msg_u *arg = osc_message_u_allocWithBndl_u("/arg", osc_expr_ast_expr_toBndl(osc_expr_ast_unaryop_getArg(o)), 1);
+	t_osc_msg_u *side = osc_message_u_allocWithInt32("/side", osc_expr_ast_unaryop_getSide(o));
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	osc_bundle_u_addMsg(b, nodetype);
+	osc_bundle_u_addMsg(b, rec);
+	osc_bundle_u_addMsg(b, arg);
+	osc_bundle_u_addMsg(b, side);
+	return b;
 }
 
-t_osc_err osc_expr_ast_unaryop_deserialize(long len, char *ptr, t_osc_expr_ast_expr **e)
+t_osc_expr_ast_expr *osc_expr_ast_unaryop_fromBndl(t_osc_bndl_u *b)
 {
-	if(!len || !ptr){
-		return OSC_ERR_NOBUNDLE;
+	if(!b){
+		return NULL;
 	}
-	return OSC_ERR_NONE;
+	return NULL;
 }
 
 t_osc_expr_oprec *osc_expr_ast_unaryop_getOpRec(t_osc_expr_ast_unaryop *e)
@@ -203,8 +213,8 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_
 				  NULL,
 				  NULL,//osc_expr_ast_unaryop_free,
 				  osc_expr_ast_unaryop_copy,
-				  osc_expr_ast_unaryop_serialize,
-				  osc_expr_ast_unaryop_deserialize,
+				  osc_expr_ast_unaryop_toBndl,
+				  osc_expr_ast_unaryop_fromBndl,
 				  sizeof(t_osc_expr_ast_unaryop),
 				  funcrec,
 				  0);
