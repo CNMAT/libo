@@ -39,7 +39,7 @@ typedef int (*t_osc_error_handler)(const char * const errorstr);
 #define OSC_ERROR_SIMPLE(errorcode, moreinfo_fmt, args...)				\
 	osc_error_handler(NULL, NULL, -1, errorcode, moreinfo_fmt, ##args);
 
-#define OSC_ERROR_VERBOSE_REPORTING
+//#define OSC_ERROR_VERBOSE_REPORTING
 #ifdef OSC_ERROR_VERBOSE_REPORTING
 #define osc_error OSC_ERROR_VERBOSE
 #else
