@@ -138,6 +138,8 @@ int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
+int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+
 // constants
 int osc_expr_pi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_twopi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -2002,6 +2004,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Extract a message from a nested bundle.",
 	 osc_expr_getbundlemember,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"imu",
+	 "imu(/imu_values, /quaternion)",
+	 2,
+	 0,
+	 (char *[]){"The imu data with optional temperature in the final position of the list", "The quaternion."},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Sensor fusion....",
+	 osc_expr_imu,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"pi",
