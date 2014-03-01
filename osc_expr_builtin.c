@@ -1353,7 +1353,34 @@ int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f,
 		}
 		break;
 	case 's':
-		printf("string: %s\n", osc_atom_u_getStringPtr(a));
+		{
+			t_osc_expr_ast_expr *e = NULL;
+			ret = osc_expr_parser_parseExpr(osc_atom_u_getStringPtr(a), &e);
+			if(ret){
+				goto out;
+			}
+			t_osc_atom_array_u *ar = NULL;
+			ret = osc_expr_ast_expr_evalInLexEnv(e, lexenv, oscbndl, &ar);
+			if(ret){
+				if(e){
+					osc_expr_ast_expr_free(e);
+				}
+				goto out;
+			}
+			if(ar){
+				t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+				if(a){
+					if(osc_atom_u_getTypetag(a) == OSC_EXPR_TYPETAG){
+						t_osc_expr_ast_expr *ee = osc_atom_u_getExpr(a);
+						if(osc_expr_ast_expr_getNodetype(ee) == OSC_EXPR_AST_NODETYPE_FUNCTION){
+							func = (t_osc_expr_ast_function *)osc_expr_ast_expr_copy(ee);
+						}
+					}
+				}
+				osc_atom_array_u_free(ar);
+			}
+			osc_expr_ast_expr_free(e);
+		}
 		break;
 	default:
 		printf("found a '%c' (%d) as the first arg to apply()\n", osc_atom_u_getTypetag(a), osc_atom_u_getTypetag(a));
@@ -1368,13 +1395,13 @@ int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f,
 		int ret = osc_expr_ast_expr_evalInLexEnv(rest_expr, lexenv, oscbndl, &ar);
 		t_osc_atom_u *param = osc_expr_ast_value_getIdentifier(lambdalist);
 		osc_expr_lexenv_bind(my_lexenv, osc_atom_u_getStringPtr(param), ar);
-		lambdalist = (t_osc_expr_ast_function *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 		rest_expr = osc_expr_ast_expr_next(rest_expr);
 	}
 	while(lambdalist){
 		t_osc_atom_u *param = osc_expr_ast_value_getIdentifier(lambdalist);
 		osc_expr_lexenv_bind(my_lexenv, osc_atom_u_getStringPtr(param), NULL);
-		lambdalist = (t_osc_expr_ast_function *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 	}
 	t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprs(func);
 	while(exprlist){
