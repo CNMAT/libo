@@ -91,10 +91,10 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 == {
 	return OSC_EXPR_EQ;
 }
-\&\& {
+\& {
 	return OSC_EXPR_AND;
 }
-\|\| {
+\| {
 	return OSC_EXPR_OR;
 }
 \+\+ {
@@ -270,6 +270,14 @@ lambda				{
 
 let				{
 						return OSC_EXPR_LET;
+					}
+
+this				{
+						if(alloc_atom){
+							yylval->atom = osc_atom_u_alloc();
+						}
+						osc_atom_u_setString(yylval->atom, yytext);
+						return OSC_EXPR_THIS;
 					}
 
 \/[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {

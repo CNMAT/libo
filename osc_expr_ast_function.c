@@ -62,14 +62,18 @@ long osc_expr_ast_function_format(char *buf, long n, t_osc_expr_ast_expr *f)
 		t_osc_expr_ast_expr *e = osc_expr_ast_function_getExprs(ff);
 		long offset = 0;
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s(", name);
-		while(lambdalist){
-			offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, (t_osc_expr_ast_expr *)lambdalist);
-			if(osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist)){
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
-			}else{
-				offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "){");
+		if(lambdalist){
+			while(lambdalist){
+				offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, (t_osc_expr_ast_expr *)lambdalist);
+				if(osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist)){
+					offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, ", ");
+				}else{
+					offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "){");
+				}
+				lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 			}
-			lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
+		}else{
+			offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "){");
 		}
 		offset += osc_expr_ast_expr_formatAllLinked(buf ? buf + offset : NULL, buf ? n - offset : 0, e);
 		offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "}");
@@ -137,11 +141,19 @@ t_osc_bndl_u *osc_expr_ast_function_toBndl(t_osc_expr_ast_expr *e)
 	}
 	t_osc_expr_ast_function *f = (t_osc_expr_ast_function *)e;
 	t_osc_msg_u *nodetype = osc_message_u_allocWithInt32("/nodetype", OSC_EXPR_AST_NODETYPE_FUNCTION);
-	t_osc_msg_u *lambdalist = osc_message_u_allocWithBndl_u("/lambdalist", osc_expr_ast_expr_toBndl((t_osc_expr_ast_expr *)osc_expr_ast_function_getLambdaList(f)), 1);
+	t_osc_msg_u *lambdalist = NULL;
+	t_osc_expr_ast_value *ll = osc_expr_ast_function_getLambdaList(f);
+	if(ll){
+		lambdalist = osc_message_u_allocWithBndl_u("/lambdalist", osc_expr_ast_expr_toBndl((t_osc_expr_ast_expr *)ll), 1);
+	}
 	t_osc_msg_u *exprs = osc_message_u_allocWithBndl_u("/exprlist", osc_expr_ast_expr_toBndl((t_osc_expr_ast_expr *)osc_expr_ast_function_getExprs(f)), 1);
 	t_osc_bndl_u *b = osc_bundle_u_alloc();
 	osc_bundle_u_addMsg(b, nodetype);
-	osc_bundle_u_addMsg(b, lambdalist);
+	if(ll){
+		osc_bundle_u_addMsg(b, lambdalist);
+	}else{
+		osc_bundle_u_addMsg(b, osc_message_u_allocWithAddress("/lambdalist"));
+	}
 	osc_bundle_u_addMsg(b, exprs);
 	return b;
 }

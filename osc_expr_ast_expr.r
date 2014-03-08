@@ -47,6 +47,7 @@ struct _osc_expr_ast_expr
 	t_osc_expr_ast_frombndlfn frombndl;
 	size_t objsize;
 	char leftbracket, rightbracket;
+	int is_static;
 };
 
 #ifdef __cplusplus

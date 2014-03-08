@@ -22,8 +22,6 @@
 
 
 /*
-M4 macro---don't mess with this...
-
 define(`types', ``c', `C', `u', `U', `i', `I', `h', `H', `f', `d', `s', `T', `F', `N', `B', `t', `b'')
 
 define(`make_define_name', ``OSC_EXPR_BUILTIN_'translit($1, a-z, A-Z)`_$2'')
@@ -192,3 +190,6 @@ DEFINE_TYPES_FOR_FUNCTION(gt, c, C, u, U, i, I, h, H, f, d)
 DEFINE_TYPES_FOR_FUNCTION(mod, c, C, u, U, i, I, h, H, f, d)
 DEFINE_TYPES_FOR_FUNCTION(pow, c, C, u, U, i, I, h, H, f, d)
 DEFINE_TYPES_FOR_FUNCTION(aseq, c, C, u, U, i, I, h, H, f, d)
+DEFINE_TYPES_FOR_FUNCTION(scale, c, C, u, U, i, I, h, H, f, d)
+DEFINE_TYPES_FOR_FUNCTION(and, T, F)
+DEFINE_TYPES_FOR_FUNCTION(or, T, F)

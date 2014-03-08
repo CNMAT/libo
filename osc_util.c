@@ -39,3 +39,4 @@ int osc_util_strdup(char **dest, char *src)
 	}
 	return len - 1;
 }
+

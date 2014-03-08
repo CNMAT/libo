@@ -2,6 +2,9 @@
 #include "osc_parser.h"
 #include "osc_mem.h"
 #include "osc_timetag.h"
+#include "osc_expr_ast_expr.h"
+
+extern t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast);
 
 int osc_scanner_wrap(yyscan_t scanner){
 	return 1;
@@ -26,8 +29,8 @@ hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
 	//string [^ $\t\"\n\\]*
-string [^ \t\"\n\\]*
-quoted_string [^\"\\]
+string [^ \t\"\n\\`]*
+quoted_string [^\"\\`]
 
 %x quote escape
 
@@ -126,7 +129,7 @@ quoted_string [^\"\\]
 						return OSCINT32;
 					}
 
-\/[^ \t\n#\"]+	{
+\/[^ \t\n#\`"]+	{
 			//printf("OSC address: %s\n", yytext);
 			int len = strlen(yytext) + 1;
 			char *copy = osc_mem_alloc(len);
@@ -199,6 +202,19 @@ quoted_string [^\"\\]
 			return STRING;
 		}
 
+`.*`		{
+			t_osc_expr_ast_expr *e = NULL;
+			yytext[yyleng - 1] = '\0';
+			t_osc_err ret = osc_expr_parser_parseExpr(yytext + 1, &e);
+			if(ret){
+				return ret;
+			}
+			if(!e){
+				return ret;
+			}
+			yylval->e = e;
+			return OSCEXPR;
+		}
 
 [ \t]+
 

@@ -3025,7 +3025,7 @@ extern t_osc_expr_funcrec *osc_expr_builtin_func_nth;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_list;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_aseq;
 extern t_osc_expr_funcrec *osc_expr_builtin_func_if;
-extern t_osc_expr_funcrec *osc_expr_builtin_func_lookup;
+extern t_osc_expr_funcrec *osc_expr_builtin_func_eval;
 
 t_osc_expr_funcrec *osc_expr_builtin_lookupFunction(char *name);
 t_osc_expr_oprec *osc_expr_builtin_lookupOperator(char *op);

@@ -55,6 +55,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->objsize = sizeof(t_osc_expr_ast_expr);
 		e->leftbracket = 0;
 		e->rightbracket = 0;
+		e->is_static = 0;
 	}
 }
 
@@ -172,7 +173,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast)
 
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e)
 {
-	if(e){
+	if(e && !e->is_static){
 		if(e->free){
 			if(e->next){
 				osc_expr_ast_expr_free(e->next);

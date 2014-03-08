@@ -241,6 +241,7 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		}
 */
 		t_osc_expr_ast_value *lambdalist = NULL;
+		int make_lambda_abstraction = 0;
 		int i = 0;
 		while(f_argv){
 			int ret = osc_expr_ast_expr_evalInLexEnv(f_argv, lexenv, oscbndl, argv + i);
@@ -254,6 +255,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 						}else{
 							lambdalist = vcopy;
 						}
+					}else if(osc_expr_ast_value_getValueType(v) == OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS){
+						make_lambda_abstraction = 1;
 					}
 				}else{
 					int j;
@@ -293,7 +296,7 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			f_argv = osc_expr_ast_expr_next(f_argv);
 			i++;
 		}
-		if(lambdalist){
+		if(make_lambda_abstraction){
 			t_osc_expr_ast_expr *e = NULL;
 			for(int j = 0; j < i; j++){
 				t_osc_expr_ast_expr *ee = osc_expr_ast_value_allocList(argv[j]);

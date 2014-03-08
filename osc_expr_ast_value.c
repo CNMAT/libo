@@ -26,6 +26,7 @@
 #include "osc.h"
 #include "osc_mem.h"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_expr.r"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_value.r"
 //#include "osc_rset.h"
@@ -33,6 +34,7 @@
 #include "osc_message_u.h"
 #include "osc_message_iterator_u.h"
 #include "osc_expr_builtin.h"
+
 
 static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype);
 static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type);
@@ -87,10 +89,50 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			return 0;
 		case OSC_EXPR_AST_VALUE_TYPE_OSCADDRESS:
 			{
+				t_osc_atom_u *vv = osc_expr_ast_value_getValue(v);
+				if(!oscbndl){
+					return OSC_ERR_EXPR_ADDRESSUNBOUND;
+				}
+				char *oscaddress = osc_atom_u_getStringPtr(vv);
+				t_osc_msg_u **msgar = NULL;
+				long nmsgs = 0;
+				osc_bundle_u_lookupAddress(oscbndl, oscaddress, &nmsgs, &msgar, 1);
+				if(nmsgs > 0 && msgar){
+					t_osc_msg_u *m = msgar[0];
+					if(m){
+						long arg_count = osc_message_u_getArgCount(m);
+						*out = osc_atom_array_u_alloc(arg_count);
+						int i = 0;
+						t_osc_msg_it_u *it = osc_msg_it_u_get(m);
+						while(osc_msg_it_u_hasNext(it)){
+							t_osc_atom_u *a = osc_msg_it_u_next(it);
+							osc_atom_u_copyValue(osc_atom_array_u_get(*out, i), a);
+							i++;
+						}
+						osc_msg_it_u_destroy(it);
+						if(msgar){
+							osc_mem_free(msgar);
+						}
+						return 0;
+					}
+				}
+				if(msgar){
+					osc_mem_free(msgar);
+				}
+				return OSC_ERR_EXPR_ADDRESSUNBOUND;
+			}
+			/*
+			{
 				t_osc_atom_u **lvals = NULL;
 				long nlvals = 0;
 				t_osc_msg_u *at = NULL;
 				int ret = osc_expr_ast_value_evalLvalInLexEnv(ast, lexenv, oscbndl, &at, &nlvals, &lvals);
+				if(nlvals == 0 || !lvals){
+					*out = osc_atom_array_u_alloc(1);
+					t_osc_atom_u *copy = osc_atom_array_u_get(*out, 0);
+					osc_atom_u_setExpr(copy, osc_expr_ast_value_copy((t_osc_expr_ast_expr *)v), 1);
+					return OSC_ERR_EXPR_ADDRESSUNBOUND;
+				}
 				if(!ret && lvals){
 					*out = osc_atom_array_u_alloc(nlvals);
 					for(int i = 0; i < nlvals; i++){
@@ -98,9 +140,12 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 						osc_atom_u_copyValue(copy, lvals[i]);
 					}
 				}
-				osc_mem_free(lvals);
+				if(lvals){
+					osc_mem_free(lvals);
+				}
 				return ret;
 			}
+			*/
 		}
 	}
 	return 1;

@@ -237,6 +237,19 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
 	if(!r){
 		return NULL;
 	}
+
+	// check types against entries in the vtab
+	t_osc_expr_ast_expr *args[] = {left, right};
+	for(int i = 0; i < 2; i++){
+		if(osc_expr_ast_expr_getNodetype(args[i]) == OSC_EXPR_AST_NODETYPE_VALUE &&
+		   osc_expr_ast_value_getValueType((t_osc_expr_ast_value *)args[i]) == OSC_EXPR_AST_VALUE_TYPE_LITERAL){
+			char tt = osc_atom_u_getTypetag(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)args[i]));
+			t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunctionForOpcode(opcode);
+			if(!osc_expr_funcrec_getFuncForTypetag(r, tt)){
+				printf("type error %d\n", i);
+			}
+		}
+	}
 	t_osc_expr_ast_expr *b = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
 	return b;
 }
@@ -345,7 +358,7 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 %type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list
 %type <msg>message messages
 %type <bndl>bundle
-%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
+%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER OSC_EXPR_THIS
 %nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
  //%type <func>function
  //%type <arg>arg args 
@@ -480,17 +493,31 @@ value:
 		   !osc_expr_builtin_lookupOperator(str)){
 			//printf("undefined variable %s\n", osc_atom_u_getStringPtr($1));
 			//return 1;
-			t_osc_atom_u *a = NULL;
-			osc_atom_u_copy(&a, $1);
-			t_osc_expr_ast_value *fv = osc_expr_ast_value_allocIdentifier(a);
-			if(*freevars){
-				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)*freevars, (t_osc_expr_ast_expr *)fv);
-			}else{
-				*freevars = fv;
+			int unique = 1;
+			t_osc_expr_ast_value *_fv = *freevars;
+			while(_fv){
+				if(!strcmp(osc_atom_u_getStringPtr(osc_expr_ast_value_getValue(_fv)), str)){
+					unique = 0;
+				}
+				_fv = osc_expr_ast_expr_next((t_osc_expr_ast_expr *)_fv);
+			}
+			if(unique){
+				t_osc_atom_u *a = NULL;
+				osc_atom_u_copy(&a, $1);
+				t_osc_expr_ast_value *fv = osc_expr_ast_value_allocIdentifier(a);
+				if(*freevars){
+					osc_expr_ast_expr_append((t_osc_expr_ast_expr *)*freevars, (t_osc_expr_ast_expr *)fv);
+				}else{
+					*freevars = fv;
+				}
 			}
 		}
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
+	| OSC_EXPR_THIS {
+		//$$ = osc_expr_ast_value_allocIdentifier($1);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	  }
 //| list
 //| arraysubscript
 ;
