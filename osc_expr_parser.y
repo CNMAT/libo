@@ -360,10 +360,6 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 %type <bndl>bundle
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER OSC_EXPR_THIS
 %nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
- //%type <func>function
- //%type <arg>arg args 
- //%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter
- //%nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B

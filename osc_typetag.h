@@ -31,6 +31,15 @@ extern "C" {
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
 
+typedef struct _osc_typetag_type t_osc_typetag_type;
+char osc_typetag_findLUB(char t1, char t2);
+char osc_typetag_isSubtype(char t1, char t2);
+char *osc_typetag_name(char typetag);
+
+//////////////////////////////////////////////////
+// old
+//////////////////////////////////////////////////
+
 enum{
 	OSC_TYPES_NULL = 0,
 	OSC_TYPES_FALSE,
@@ -48,6 +57,29 @@ enum{
 	OSC_TYPES_TIMETAG,
 	OSC_TYPES_STRING
 };
+
+#define OSC_TYPETAG_INSTANCE_NULL 0x1llu
+#define OSC_TYPETAG_INSTANCE_TRUE 0x2llu
+#define OSC_TYPETAG_INSTANCE_FALSE 0x4llu
+#define OSC_TYPETAG_INSTANCE_INT8 0x8llu
+#define OSC_TYPETAG_INSTANCE_UINT8 0x10llu
+#define OSC_TYPETAG_INSTANCE_INT16 0x20llu
+#define OSC_TYPETAG_INSTANCE_UINT16 0x40llu
+#define OSC_TYPETAG_INSTANCE_INT32 0x80llu
+#define OSC_TYPETAG_INSTANCE_UINT32 0x100llu
+#define OSC_TYPETAG_INSTANCE_INT64 0x200llu
+#define OSC_TYPETAG_INSTANCE_UINT64 0x400llu
+#define OSC_TYPETAG_INSTANCE_FLOAT 0x800llu
+#define OSC_TYPETAG_INSTANCE_DOUBLE 0x1000llu
+#define OSC_TYPETAG_INSTANCE_TIMETAG 0x2000llu
+#define OSC_TYPETAG_INSTANCE_BUNDLE 0x4000llu
+#define OSC_TYPETAG_INSTANCE_EXPR 0x8000llu
+#define OSC_TYPETAG_INSTANCE_STRING 0x10000llu
+
+#define OSC_TYPETAG_CLASS_BOOL OSC_TYPETAG_INSTANCE_TRUE | OSC_TYPETAG_INSTANCE_FALSE
+#define OSC_TYPETAG_CLASS_INTEGER OSC_TYPETAG_INSTANCE_INT8 | OSC_TYPETAG_INSTANCE_UINT8 | OSC_TYPETAG_INSTANCE_INT16 | OSC_TYPETAG_INSTANCE_UINT16 | OSC_TYPETAG_INSTANCE_INT32 | OSC_TYPETAG_INSTANCE_UINT32 | OSC_TYPETAG_INSTANCE_INT64 | OSC_TYPETAG_INSTANCE_UINT64
+#define OSC_TYPETAG_CLASS_FLOAT OSC_TYPETAG_INSTANCE_FLOAT | OSC_TYPETAG_INSTANCE_DOUBLE
+#define OSC_TYPETAG_CLASS_NUMBER OSC_TYPETAG_CLASS_INTEGER | OSC_TYPETAG_CLASS_FLOAT
 
 #define OSC_TYPETAG_ISFLOAT(tt) (tt == 'f' || tt == 'd')
 #define OSC_TYPETAG_ISINT(tt) (tt == 'i' || tt == 'I' || tt == 'h' || tt == 'H' || tt == 'u' || tt == 'U' || tt == 'c' || tt == 'C')

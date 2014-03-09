@@ -439,6 +439,27 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	0
 };
 
+static t_osc_expr_funcrec _osc_expr_builtin_func_map = {
+	"map",
+	1,
+	(char *[]){"_function"},
+	NULL,
+	1,
+	1,
+	(char *[]){"_result"},
+	NULL,
+	"Maps _function onto _args and returns the result",
+	osc_expr_builtin_map,
+	NULL,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
+
 static t_osc_expr_funcrec _osc_expr_builtin_func_nth = {
 	"nth",
 	2,
@@ -586,6 +607,7 @@ t_osc_expr_oprec *osc_expr_builtin_op_assign = &_osc_expr_builtin_op_assign;
 t_osc_expr_funcrec *osc_expr_builtin_func_add = &_osc_expr_builtin_func_add;
 t_osc_expr_funcrec *osc_expr_builtin_func_assign = &_osc_expr_builtin_func_assign;
 t_osc_expr_funcrec *osc_expr_builtin_func_apply = &_osc_expr_builtin_func_apply;
+t_osc_expr_funcrec *osc_expr_builtin_func_map = &_osc_expr_builtin_func_map;
 t_osc_expr_funcrec *osc_expr_builtin_func_nth = &_osc_expr_builtin_func_nth;
 t_osc_expr_funcrec *osc_expr_builtin_func_list = &_osc_expr_builtin_func_list;
 t_osc_expr_funcrec *osc_expr_builtin_func_aseq = &_osc_expr_builtin_func_aseq;
@@ -609,6 +631,7 @@ static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_or,
 	&_osc_expr_builtin_func_lookup,
 	&_osc_expr_builtin_func_apply,
+	&_osc_expr_builtin_func_map,
 	&_osc_expr_builtin_func_nth,
 	&_osc_expr_builtin_func_list,
 	&_osc_expr_builtin_func_aseq,
@@ -1074,6 +1097,7 @@ t_osc_expr_funcrec *osc_expr_builtin_lookupFunctionForOpcode(char op)
 	}
 	return NULL;
 }
+
 typedef int (*t_osc_expr_builtin_binary_func)(t_osc_atom_u *, t_osc_atom_u *, t_osc_atom_u *);
 int osc_expr_builtin_call_binary_func(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
@@ -1102,299 +1126,6 @@ int osc_expr_builtin_call_binary_func(t_osc_expr_ast_funcall *f, int argc, t_osc
 //////////////////////////////////////////////////
 // built in c functions
 //////////////////////////////////////////////////
-
-
-// binary op that produces a numeric value
-/*
-#define OSC_EXPR_BUILTIN_BINARYOP_CASE(tt, type, op) case tt: osc_atom_u_set##type (y, osc_atom_u_get##type (l) op osc_atom_u_get##type (r)); break;
-
-#define OSC_EXPR_BUILTIN_BINARYOP_SWITCH_INT(op)		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('i', Int32, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('c', Int8, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('C', UInt8, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('u', Int16, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('U', UInt16, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('I', UInt32, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('h', Int64, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('H', UInt64, op);
-
-#define OSC_EXPR_BUILTIN_BINARYOP_SWITCH_FLOAT(op)		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('f', Float, op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_CASE('d', Double, op);
-
-#define OSC_EXPR_BUILTIN_BINARYOP_SWITCH_NUMERIC(op)	\
-	OSC_EXPR_BUILTIN_BINARYOP_SWITCH_INT(op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_SWITCH_FLOAT(op);
-
-// binary op that has to be called as a function
-#define OSC_EXPR_BUILTIN_BINARYFUNC_CASE(tt, type, func) case tt: osc_atom_u_set##type (y, func (osc_atom_u_get##type (l), osc_atom_u_get##type (r))); break;
-
-#define OSC_EXPR_BUILTIN_BINARYFUNC_SWITCH_INT(func)		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('i', Int32, func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('c', Int8, func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('C', UInt8, func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('u', Int16, func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('U', UInt16, func);	\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('I', UInt32, func);	\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('h', Int64, func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('H', UInt64, func);
-
-#define OSC_EXPR_BUILTIN_BINARYFUNC_SWITCH_FLOAT(float_func, double_func)		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('f', Float, float_func);		\
-	OSC_EXPR_BUILTIN_BINARYFUNC_CASE('d', Double, double_func);
-
-#define OSC_EXPR_BUILTIN_BINARYFUNC_SWITCH_NUMERIC(int_func, float_func, double_func) \
-	OSC_EXPR_BUILTIN_BINARYFUNC_SWITCH_INT(int_func);	\
-	OSC_EXPR_BUILTIN_BINARYFUNC_SWITCH_FLOAT(float_func, double_func);
-
-// binary op that produces a bool value
-#define OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE(tt, type, op) case tt: osc_atom_u_setBool (y, osc_atom_u_get##type (l) op osc_atom_u_get##type (r)); break;
-
-#define OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_INT(op)		\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('i', Int32, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('c', Int8, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('C', UInt8, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('u', Int16, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('U', UInt16, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('I', UInt32, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('h', Int64, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('H', UInt64, op);
-
-#define OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_FLOAT(op)		\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('f', Float, op);	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_CASE('d', Double, op);
-
-#define OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_NUMERIC(op)	\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_INT(op);		\
-	OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_FLOAT(op);
-
-int osc_expr_builtin_add(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	// all argument vectors have been expanded to be the same length
-	// all types have been harmonized
-	// arity has been checked
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_SWITCH_NUMERIC(+);
-			// string
-			// bundle
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_sub(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_SWITCH_NUMERIC(-);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_mul(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_SWITCH_NUMERIC(*);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_div(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_SWITCH_NUMERIC(/);
-			// timetag
-		default:
-			;
-		}
-	}
-
-	return 0;
-}
-
-int osc_expr_builtin_mod(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('c', Int8, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('C', UInt8, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('u', Int16, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('U', UInt16, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('i', Int32, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('I', UInt32, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('h', Int64, %);
-			OSC_EXPR_BUILTIN_BINARYOP_CASE('H', UInt64, %);
-			OSC_EXPR_BUILTIN_BINARYFUNC_CASE('f', Float, fmodf);
-			OSC_EXPR_BUILTIN_BINARYFUNC_CASE('d', Double, fmod);
-			// timetag
-		default:
-			;
-		}
-	}
-
-	return 0;
-}
-
-int osc_expr_builtin_pow(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		double l = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i));
-		double r = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i));
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], i))){			
-		case 'c':
-			osc_atom_u_setInt8(y, (int8_t)pow(l, r));
-			break;
-		case 'C':
-			osc_atom_u_setUInt8(y, (uint8_t)pow(l, r));
-			break;
-		case 'u':
-			osc_atom_u_setInt16(y, (int16_t)pow(l, r));
-			break;
-		case 'U':
-			osc_atom_u_setUInt16(y, (uint16_t)pow(l, r));
-			break;
-		case 'i':
-			osc_atom_u_setInt32(y, (int32_t)pow(l, r));
-			break;
-		case 'I':
-			osc_atom_u_setUInt32(y, (uint32_t)pow(l, r));
-			break;
-		case 'h':
-			osc_atom_u_setInt64(y, (int64_t)pow(l, r));
-			break;
-		case 'H':
-			osc_atom_u_setUInt64(y, (uint64_t)pow(l, r));
-			break;
-		case 'f':
-			osc_atom_u_setFloat(y, powf(l, r));
-			break;
-		case 'd':
-			osc_atom_u_setDouble(y, pow(l, r));
-			break;
-			// timetag
-		default:
-			;
-		}
-	}
-
-	return 0;
-}
-
-int osc_expr_builtin_lt(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_NUMERIC(<);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_gt(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_NUMERIC(>);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_le(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_NUMERIC(<=);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-
-int osc_expr_builtin_ge(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
-{
-	int n = osc_atom_array_u_getLen(argv[0]);
-	*out = osc_atom_array_u_alloc(n);
-	for(int i = 0; i < n; i++){
-		t_osc_atom_u *l = osc_atom_array_u_get(argv[0], i);
-		t_osc_atom_u *r = osc_atom_array_u_get(argv[1], i);
-		t_osc_atom_u *y = osc_atom_array_u_get(*out, i);
-		switch(osc_atom_u_getTypetag(l)){				
-			OSC_EXPR_BUILTIN_BINARYOP_BOOL_SWITCH_NUMERIC(>=);
-			// timetag
-		default:
-			;
-		}
-	}
-	return 0;
-}
-*/
-
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	int outlen = 0;
@@ -1436,12 +1167,31 @@ void printbndl(t_osc_bndl_u *bndl)
 	printf("%s\n", buf);
 }
 
+int _osc_expr_apply(t_osc_expr_ast_function *f, t_osc_expr_lexenv *lexenv, t_osc_expr_ast_expr *exprlist, t_osc_bndl_u *oscbndl, t_osc_atom_ar_u **out)
+{
+	while(exprlist){
+		int ret = osc_expr_ast_expr_evalInLexEnv(exprlist, lexenv, oscbndl, out);
+		exprlist = osc_expr_ast_expr_next(exprlist);
+		if(exprlist){
+			osc_atom_array_u_free(*out);
+			*out = NULL;
+		}
+		if(ret){
+			return ret;
+		}
+	}
+	return 0;
+}
+
 int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f, 
 			    t_osc_expr_lexenv *lexenv, 
 			    t_osc_bndl_u *oscbndl,
 			    t_osc_atom_ar_u **out)
 {
-	OSC_PROFILE_TIMER_START(apply1);
+	//////////////////////////////////////////////////
+	// get function
+      	//////////////////////////////////////////////////
+	t_osc_expr_ast_function *func = NULL;
 	t_osc_expr_ast_expr *first_expr = osc_expr_ast_funcall_getArgs(f);
 	t_osc_expr_ast_expr *rest_expr = osc_expr_ast_expr_next(first_expr);
 	t_osc_atom_ar_u *first = NULL;
@@ -1455,8 +1205,6 @@ int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f,
 		ret = 1;
 		goto out;
 	}
-
-	t_osc_expr_ast_function *func = NULL;
 	switch(osc_atom_u_getTypetag(a)){
 	case OSC_EXPR_TYPETAG:
 		{
@@ -1505,9 +1253,9 @@ int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f,
 		// error
 		return 1;
 	}
-	OSC_PROFILE_TIMER_STOP(apply1);
-	OSC_PROFILE_TIMER_PRINTF(apply1);
-	OSC_PROFILE_TIMER_START(apply2);
+	//////////////////////////////////////////////////
+	// we have a function, now make a lexenv out of the lambda list and args
+	//////////////////////////////////////////////////
 	t_osc_expr_ast_value *lambdalist = osc_expr_ast_function_getLambdaList(func);
 	t_osc_expr_lexenv *my_lexenv = NULL;
 	osc_expr_lexenv_deepCopy(&my_lexenv, lexenv);
@@ -1524,17 +1272,11 @@ int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f,
 		osc_expr_lexenv_bind(my_lexenv, osc_atom_u_getStringPtr(param), NULL);
 		lambdalist = (t_osc_expr_ast_value *)osc_expr_ast_expr_next((t_osc_expr_ast_expr *)lambdalist);
 	}
+	//////////////////////////////////////////////////
+	// evaluate the expressions
+	//////////////////////////////////////////////////
 	t_osc_expr_ast_expr *exprlist = osc_expr_ast_function_getExprs(func);
-	OSC_PROFILE_TIMER_STOP(apply2);
-	OSC_PROFILE_TIMER_PRINTF(apply2);
-	while(exprlist){
-		int ret = osc_expr_ast_expr_evalInLexEnv(exprlist, my_lexenv, oscbndl, out);
-		exprlist = osc_expr_ast_expr_next(exprlist);
-		if(exprlist){
-			osc_atom_array_u_free(*out);
-			*out = NULL;
-		}
-	}
+	ret =  _osc_expr_apply(func, my_lexenv, exprlist, oscbndl, out);
 	osc_expr_lexenv_free(my_lexenv);
  out:
 	osc_atom_array_u_free(first);
