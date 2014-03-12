@@ -24,7 +24,9 @@
 #include "osc_expr_lexenv.h"
 #include "osc_hashtab.h"
 #include "osc_mem.h"
+#include "osc_expr_ast_expr.h"
 
+/*
 void osc_expr_lexenv_dtor(char *key, void *val)
 {
 	if(key){
@@ -34,15 +36,26 @@ void osc_expr_lexenv_dtor(char *key, void *val)
 		osc_atom_array_u_free((t_osc_atom_ar_u *)val);
 	}
 }
+*/
 
 t_osc_expr_lexenv *osc_expr_lexenv_alloc(void)
 {
-	return osc_hashtab_new(0, osc_expr_lexenv_dtor);
+	//return osc_hashtab_new(0, osc_expr_lexenv_dtor);
+	return osc_hashtab_new(0, NULL);
 }
 
 void osc_expr_lexenv_free(t_osc_expr_lexenv *lexenv)
 {
 	osc_hashtab_destroy(lexenv);
+}
+
+void osc_expr_lexenv_printlexenv_cb(char *key, void *val, void *context)
+{
+	printf("%s: %s, %p\n", __func__, key, val);
+	long l = osc_expr_ast_expr_format(NULL, 0, (t_osc_expr_ast_expr *)val);
+	char buf[l + 1];
+	osc_expr_ast_expr_format(buf, l + 1, (t_osc_expr_ast_expr *)val);
+	printf("%s: %s\n", key, buf);
 }
 
 void osc_expr_lexenv_copy_cb(char *key, void *val, void *context)
@@ -60,7 +73,10 @@ void osc_expr_lexenv_copy_cb(char *key, void *val, void *context)
 
 void osc_expr_lexenv_copy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src)
 {
-	t_osc_hashtab *copy = osc_hashtab_new(0, osc_expr_lexenv_dtor);
+	t_osc_hashtab *copy = *dest;
+	if(!copy){
+		copy = osc_hashtab_new(0, NULL);
+	}
 	osc_hashtab_foreach(src, osc_expr_lexenv_copy_cb, (void *)copy);
 	*dest = (t_osc_expr_lexenv *)copy;
 }
@@ -74,18 +90,22 @@ void osc_expr_lexenv_deepCopy_cb(char *key, void *val, void *context)
 	int keylen = strlen(key) + 1;
 	char *key_copy = osc_mem_alloc(keylen);
 	strncpy(key_copy, key, keylen);
-	t_osc_atom_ar_u *ar = osc_atom_array_u_copy((t_osc_atom_ar_u *)val);
-	osc_hashtab_store(ht, keylen - 1, key_copy, (void *)ar);
+	//t_osc_atom_ar_u *ar = osc_atom_array_u_copy((t_osc_atom_ar_u *)val);
+	t_osc_expr_ast_expr *copy = osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)val);
+	osc_hashtab_store(ht, keylen - 1, key_copy, (void *)copy);
 }
 
 void osc_expr_lexenv_deepCopy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src)
 {
-	t_osc_hashtab *copy = osc_hashtab_new(0, osc_expr_lexenv_dtor);
+	t_osc_hashtab *copy = *dest;
+	if(!copy){
+		copy = osc_hashtab_new(0, NULL);
+	}
 	osc_hashtab_foreach(src, osc_expr_lexenv_deepCopy_cb, (void *)copy);
 	*dest = (t_osc_expr_lexenv *)copy;
 }
 
-void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_atom_ar_u *val)
+void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_expr_ast_expr *val)
 {
 	int len = strlen(varname) + 1;
 	char *copy = osc_mem_alloc(len);
@@ -95,7 +115,7 @@ void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_atom_a
 	}
 }
 
-t_osc_atom_ar_u *osc_expr_lexenv_lookup(t_osc_expr_lexenv *lexenv, char *varname)
+t_osc_expr_ast_expr *osc_expr_lexenv_lookup(t_osc_expr_lexenv *lexenv, char *varname)
 {
 	if(lexenv && varname){
 		return osc_hashtab_lookup((t_osc_hashtab *)lexenv, strlen(varname), varname);

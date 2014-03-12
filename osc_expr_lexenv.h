@@ -25,15 +25,28 @@
 
 */
 
-#include "osc_hashtab.h"
-#include "osc_atom_array_u.h"
+#ifndef __OSC_EXPR_LEXENV_H__
+#define __OSC_EXPR_LEXENV_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "osc_hashtab.h"
 typedef t_osc_hashtab t_osc_expr_lexenv;
+#include "osc_expr_ast_expr.h"
 
 void osc_expr_lexenv_dtor(char *key, void *val);
 t_osc_expr_lexenv *osc_expr_lexenv_alloc(void);
 void osc_expr_lexenv_free(t_osc_expr_lexenv *lexenv);
+void osc_expr_lexenv_printlexenv_cb(char *key, void *val, void *context);
 void osc_expr_lexenv_copy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src);
 void osc_expr_lexenv_deepCopy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src);
-void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_atom_ar_u *val);
-t_osc_atom_ar_u *osc_expr_lexenv_lookup(t_osc_expr_lexenv *lexenv, char *varname);
+void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_expr_ast_expr *val);
+t_osc_expr_ast_expr *osc_expr_lexenv_lookup(t_osc_expr_lexenv *lexenv, char *varname);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

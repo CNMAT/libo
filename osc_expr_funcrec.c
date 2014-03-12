@@ -50,10 +50,25 @@ char **osc_expr_funcrec_getParamNames(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
-int *osc_expr_funcrec_getParamTypes(t_osc_expr_funcrec *r)
+char **osc_expr_funcrec_getParamTypeConstraints(t_osc_expr_funcrec *r)
 {
 	if(r){
-		return r->param_types;
+		return r->param_type_constraints;
+	}
+	return NULL;
+}
+
+char *osc_expr_funcrec_getTypeConstraintsForParam(t_osc_expr_funcrec *r, int param)
+{
+	if(r){
+		if(param >= osc_expr_funcrec_getInputArity(r)){
+			return NULL;
+		}
+		if(r->param_type_constraints){
+			return r->param_type_constraints[param];
+		}else{
+			return NULL;
+		}
 	}
 	return NULL;
 }
@@ -180,6 +195,11 @@ uint32_t osc_expr_funcrec_getTypePromotionFlags(t_osc_expr_funcrec *r)
 
 t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 {
+	if(!r){
+		return NULL;
+	}
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+
 	t_osc_msg_u *name_msg = osc_message_u_allocWithString("/name", osc_expr_funcrec_getName(r));
 	int input_arity = osc_expr_funcrec_getInputArity(r);
 	t_osc_msg_u *input_arity_msg = osc_message_u_allocWithInt32("/arity/input", input_arity);
@@ -190,11 +210,22 @@ t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 			osc_message_u_appendString(param_names_msg, param_names[i]);
 		}
 	}
-	t_osc_msg_u *param_types_msg = osc_message_u_allocWithAddress("/param/types");
-	int *param_types = osc_expr_funcrec_getParamTypes(r);
-	if(param_types){
-		for(int i = 0; i < input_arity; i++){
-			osc_message_u_appendInt32(param_types_msg, param_types[i]);
+	for(int i = 0; i < input_arity; i++){
+		char *tc_list = osc_expr_funcrec_getTypeConstraintsForParam(r, i);
+		if(tc_list){
+			char buf[10];
+			char tc = tc_list[0];
+			int j = 0;
+			while(tc){
+				buf[j] = tc;
+				j++;
+				tc = tc_list[j];
+			}
+			buf[j] = tc;
+			char address[32];
+			snprintf(address, sizeof(address), "/param/%d/typeconstraints", i);
+			t_osc_msg_u *msg = osc_message_u_allocWithString(address, buf);
+			osc_bundle_u_addMsg(b, msg);
 		}
 	}
 	t_osc_msg_u *variadic_msg = osc_message_u_allocWithBool("/variadic", osc_expr_funcrec_getVariadic(r));
@@ -219,11 +250,9 @@ t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 	t_osc_msg_u *docstring_msg = osc_message_u_allocWithString("/docstring", osc_expr_funcrec_getDocstring(r));
 	// skip funcptr, lvalfuncptr and vtab
 
-	t_osc_bndl_u *b = osc_bundle_u_alloc();
 	osc_bundle_u_addMsg(b, name_msg);
 	osc_bundle_u_addMsg(b, input_arity_msg);
 	osc_bundle_u_addMsg(b, param_names_msg);
-	osc_bundle_u_addMsg(b, param_types_msg);
 	osc_bundle_u_addMsg(b, variadic_msg);
 	osc_bundle_u_addMsg(b, output_arity_msg);
 	osc_bundle_u_addMsg(b, output_names_msg);

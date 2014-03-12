@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 #include "osc_expr_ast_funcall.h"
+#include "osc_typetag.h"
 
 #pragma pack(push)
 #pragma pack(4)
@@ -44,7 +45,7 @@ struct _osc_expr_funcrec
 	char *name; /**< Name of the function as a C string. */
 	int input_arity;
 	char **param_names;
-	int *param_types;
+	char **param_type_constraints; /**< List of least upper bounds for each argument */
 	int variadic; /**< true/false */
 	int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
 	char **output_names; /**< Plural for possible future support of multiple return values. */

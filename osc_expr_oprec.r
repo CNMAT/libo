@@ -42,7 +42,7 @@ struct _osc_expr_oprec
 	char *name; /**< Name of the operator as a C string. */
 	int input_arity;
 	char **param_names;
-	int *param_types;
+	char **param_type_constraints;
 	int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
 	char **output_names; /**< Plural for possible future support of multiple return values. */
 	int *output_types; /**< Plural for possible future support of multiple return values. */

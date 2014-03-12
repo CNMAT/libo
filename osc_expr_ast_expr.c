@@ -291,6 +291,14 @@ long osc_expr_ast_expr_formatAllLinkedLisp(char *buf, long n, t_osc_expr_ast_exp
 	}
 }
 
+void osc_expr_ast_expr_printf(t_osc_expr_ast_expr *e)
+{
+	long l = osc_expr_ast_expr_format(NULL, 0, e);
+	char buf[l + 1];
+	osc_expr_ast_expr_format(buf, l + 1, e);
+	printf("%s\n", buf);
+}
+
 t_osc_bndl_u *osc_expr_ast_expr_toBndl(t_osc_expr_ast_expr *e)
 {
 	if(!e){

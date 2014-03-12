@@ -29,6 +29,7 @@
 #include "osc_expr_ast_expr.r"
 #include "osc_expr_ast_value.h"
 #include "osc_expr_ast_value.r"
+#include "osc_expr_lexenv.h"
 //#include "osc_rset.h"
 //#include "osc_query.h"
 #include "osc_message_u.h"
@@ -61,7 +62,8 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				void *tmp = NULL;
 				char *sp = osc_atom_u_getStringPtr(vv);
 				if((tmp = osc_expr_lexenv_lookup(lexenv, sp))){
-					*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)tmp);
+					//*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)tmp);
+					osc_expr_ast_expr_evalInLexEnv((t_osc_expr_ast_expr *)tmp, lexenv, oscbndl, out);
 					return 0;
 				}else if((tmp = osc_expr_builtin_lookupFunction(sp))){
 					*out = osc_atom_array_u_alloc(1);

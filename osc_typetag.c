@@ -76,12 +76,13 @@ OSC_TYPETAG_DEFTYPE('O', bool, 3, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE('T', true, 2, &_osc_typetag_bool, NULL);
 OSC_TYPETAG_DEFTYPE('F', false, 1, &_osc_typetag_bool, NULL);
 OSC_TYPETAG_DEFTYPE('N', null, 0, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(0, unknown, -1, &_osc_typetag_true, &_osc_typetag_false, &_osc_typetag_null, &_osc_typetag_int8, &_osc_typetag_float, &_osc_typetag_timetag, &_osc_typetag_bundle, &_osc_typetag_string, NULL);
 
 // supported typetags:
 // N T F c C u U i I h H f d s OSC_TYPETAG_EXPR OSC_TYPETAG_BUNDLE OSC_TYPETAG_TIMETAG
 
 static t_osc_typetag_type *osc_typetag_map[128] = {
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	&_osc_typetag_unknown, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,

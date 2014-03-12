@@ -37,6 +37,9 @@
 #include "osc_expr_builtin.h"
 #include "osc_typetag.h"
 
+//#define __OSC_PROFILE__
+#include "osc_profile.h"
+
 void osc_expr_funcall_expandScalars(int argc, t_osc_atom_ar_u **argv, int scalar_expansion_index_count, unsigned int *scalar_expansion_indexes)
 {
 	int sargc = scalar_expansion_index_count;
@@ -80,7 +83,84 @@ void osc_expr_funcall_expandScalars(int argc, t_osc_atom_ar_u **argv, int scalar
 	}
 }
 
-void osc_expr_funcall_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int arg_indexes_count, unsigned int *arg_indexes_to_promote)
+int osc_expr_funcall_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int arg_indexes_count, unsigned int *arg_indexes_to_promote, char **type_constraints)
+{
+	int aic = arg_indexes_count;
+	unsigned int *aiv = arg_indexes_to_promote;
+	// scalars should have been expanded already
+	int n = osc_atom_array_u_getLen(*argv);
+	t_osc_atom_u *av[aic];
+	for(int i = 0; i < n; i++){
+		//char tt = osc_atom_u_getTypetag(osc_atom_array_u_get(argv[aiv[0]], 0));
+		char tt = 0;
+		for(int arg = 0; arg < aic; arg++){
+			av[arg] = osc_atom_array_u_get(argv[aiv[arg]], i);
+			tt = osc_typetag_findLUB(tt, osc_atom_u_getTypetag(av[arg]));
+		}
+		for(int j = 0; j < aic; j++){
+			char att = osc_atom_u_getTypetag(av[j]);
+			if(att != tt){
+				switch(tt){
+				case 'N':
+					osc_atom_u_setNull(av[j]);
+					break;
+				case OSC_BOOL_TYPETAG:
+				case 'T':
+				case 'F':
+					// do nothing
+					break;
+				case 'c':
+					osc_atom_u_setInt8(av[j], osc_atom_u_getInt8(av[j]));
+					break;
+				case 'C':
+					osc_atom_u_setUInt8(av[j], osc_atom_u_getUInt8(av[j]));
+					break;
+				case 'u':
+					osc_atom_u_setInt16(av[j], osc_atom_u_getInt16(av[j]));
+					break;
+				case 'U':
+					osc_atom_u_setUInt16(av[j], osc_atom_u_getUInt16(av[j]));
+					break;
+				default:
+				case 'i':
+					osc_atom_u_setInt32(av[j], osc_atom_u_getInt32(av[j]));
+					break;
+				case 'I':
+					osc_atom_u_setUInt32(av[j], osc_atom_u_getUInt32(av[j]));
+					break;
+				case 'h':
+					osc_atom_u_setInt64(av[j], osc_atom_u_getInt64(av[j]));
+					break;
+				case 'H':
+					osc_atom_u_setUInt64(av[j], osc_atom_u_getUInt64(av[j]));
+					break;
+				case 'f':
+					osc_atom_u_setFloat(av[j], osc_atom_u_getFloat(av[j]));
+					break;
+				case 'd':
+					osc_atom_u_setDouble(av[j], osc_atom_u_getDouble(av[j]));
+					break;
+				case OSC_TIMETAG_TYPETAG:
+					// FIXME
+					break;
+				case OSC_EXPR_TYPETAG:
+				case OSC_BUNDLE_TYPETAG:
+					// these can't happen since nothing can be promoted to them
+					break;
+				case 's':
+					{
+						char *buf = NULL;
+						osc_atom_u_getString(av[j], 0, &buf);
+						osc_atom_u_setStringPtr(av[j], buf);
+					}
+					break;
+				}
+			}
+		}
+	}
+	return 0;
+}
+/*
 {
 	int aic = arg_indexes_count;
 	unsigned int *aiv = arg_indexes_to_promote;
@@ -90,8 +170,10 @@ void osc_expr_funcall_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < aic; j++){
 			av[j] = osc_atom_array_u_get(argv[aiv[j]], i);
+
 		}
 		char tt = osc_typetag_getLargestType(aic, av);
+
 		if(!tt){
 			// typetags couldn't be harmonized---print an error
 			continue;
@@ -155,6 +237,7 @@ void osc_expr_funcall_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int
 		}
 	}
 }
+*/
 
 #define OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(funcname)if(ff == osc_expr_builtin_##funcname) { \
 		return osc_expr_specFunc_##funcname((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out); \
@@ -213,6 +296,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		return osc_expr_specFunc_lookup((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else if(ff == osc_expr_builtin_apply){
 		return osc_expr_specFunc_apply((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_map){
+		return osc_expr_specFunc_map((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -316,11 +401,23 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			// arity check and possible partial application
 
 			// scalar expansion
+			OSC_PROFILE_TIMER_START(funcall_expand_scalars);
 			osc_expr_funcall_expandScalars(f_argc, argv, osc_expr_funcrec_getScalarExpansionArgc(funcrec), osc_expr_funcrec_getScalarExpansionArgv(funcrec));
+			OSC_PROFILE_TIMER_STOP(funcall_expand_scalars);
+			OSC_PROFILE_TIMER_PRINTF(funcall_expand_scalars);
 			// type promotion
-			osc_expr_funcall_promoteToLargestType(f_argc, argv, osc_expr_funcrec_getTypePromotionArgc(funcrec), osc_expr_funcrec_getTypePromotionArgv(funcrec));
+			OSC_PROFILE_TIMER_START(funcall_promote_types);
+			ret = osc_expr_funcall_promoteToLargestType(f_argc, argv, osc_expr_funcrec_getTypePromotionArgc(funcrec), osc_expr_funcrec_getTypePromotionArgv(funcrec), osc_expr_funcrec_getParamTypeConstraints(funcrec));
+			OSC_PROFILE_TIMER_STOP(funcall_promote_types);
+			OSC_PROFILE_TIMER_PRINTF(funcall_promote_types);
+			if(ret){
+				return ret;
+			}
 			// call function
+			OSC_PROFILE_TIMER_START(funcall_call);
 			ret = ff(f, f_argc, argv, out);
+			OSC_PROFILE_TIMER_STOP(funcall_call);
+			OSC_PROFILE_TIMER_PRINTF(funcall_call);
 			for(i = 0; i < f_argc; i++){
 				if(argv[i]){
 					osc_atom_array_u_free(argv[i]);
