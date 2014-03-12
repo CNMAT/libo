@@ -925,6 +925,7 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 			osc_bundle_s_deserialize(osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs), &bu);
 			if(bu){
 				osc_atom_u_setExpr(atom_u, osc_expr_ast_expr_fromBndl(bu), 1);
+				osc_bundle_u_free(bu);
 			}
 		}
 		break;

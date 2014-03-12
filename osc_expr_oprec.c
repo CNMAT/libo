@@ -147,7 +147,6 @@ t_osc_bndl_u *osc_expr_oprec_toBndl(t_osc_expr_oprec *r)
 		}
 	}
 
-	t_osc_msg_u *param_types_msg = osc_message_u_allocWithAddress("/param/types");
 	for(int i = 0; i < input_arity; i++){
 		char *tc_list = osc_expr_oprec_getTypeConstraintsForParam(r, i);
 		if(tc_list){

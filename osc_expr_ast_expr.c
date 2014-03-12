@@ -331,6 +331,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_fromBndl(t_osc_bndl_u *bndl)
 		osc_message_u_getArg(text_msg[0], 0, &a);
 		t_osc_expr_ast_expr *e = NULL;
 		osc_expr_parser_parseExpr(osc_atom_u_getStringPtr(a), &e);
+		osc_mem_free(text_msg);
 		return e;
 	}else{
 		return NULL;

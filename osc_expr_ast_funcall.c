@@ -298,6 +298,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		return osc_expr_specFunc_apply((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else if(ff == osc_expr_builtin_map){
 		return osc_expr_specFunc_map((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_if){
+		return osc_expr_specFunc_if((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function

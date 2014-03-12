@@ -1330,9 +1330,19 @@ int osc_expr_specFunc_map(t_osc_expr_ast_funcall *f,
 	for(i = 0; i < min; i++){
 		osc_atom_array_u_copyInto(out, out_tmp[i], pos);
 		pos += osc_atom_array_u_getLen(out_tmp[i]);
+		osc_atom_array_u_free(out_tmp[i]);
 	}
 	osc_expr_lexenv_free(my_lexenv);
 	osc_expr_ast_function_free((t_osc_expr_ast_expr *)func);
+	for(int i = 0; i < n; i++){
+		if(ar[i]){
+			osc_atom_array_u_free(ar[i]);
+		}
+		if(argv[i]){
+			osc_expr_ast_value_setLiteral((t_osc_expr_ast_value *)argv[i], NULL);
+			osc_expr_ast_expr_free(argv[i]);
+		}
+	}
 	return 0;
 }
 
@@ -1431,6 +1441,15 @@ int osc_expr_specFunc_assign(t_osc_expr_ast_funcall *f,
 		osc_mem_free(ar);
 	}
 	return ret;
+}
+
+int osc_expr_specFunc_if(t_osc_expr_ast_funcall *f, 
+			    t_osc_expr_lexenv *lexenv, 
+			    t_osc_bndl_u *oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	printf("%s\n", __func__);
+	return 0;
 }
 
 int osc_expr_specFunc_lval_lookup(t_osc_expr_ast_funcall *f, 

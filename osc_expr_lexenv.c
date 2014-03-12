@@ -51,7 +51,6 @@ void osc_expr_lexenv_free(t_osc_expr_lexenv *lexenv)
 
 void osc_expr_lexenv_printlexenv_cb(char *key, void *val, void *context)
 {
-	printf("%s: %s, %p\n", __func__, key, val);
 	long l = osc_expr_ast_expr_format(NULL, 0, (t_osc_expr_ast_expr *)val);
 	char buf[l + 1];
 	osc_expr_ast_expr_format(buf, l + 1, (t_osc_expr_ast_expr *)val);
@@ -107,11 +106,11 @@ void osc_expr_lexenv_deepCopy(t_osc_expr_lexenv **dest, t_osc_expr_lexenv *src)
 
 void osc_expr_lexenv_bind(t_osc_expr_lexenv *lexenv, char *varname, t_osc_expr_ast_expr *val)
 {
-	int len = strlen(varname) + 1;
-	char *copy = osc_mem_alloc(len);
-	strncpy(copy, varname, len);
+	//int len = strlen(varname) + 1;
+	//char *copy = osc_mem_alloc(len);
+	//strncpy(copy, varname, len);
 	if(lexenv && varname){
-		osc_hashtab_store((t_osc_hashtab *)lexenv, len - 1, copy, (void *)val);
+		osc_hashtab_store((t_osc_hashtab *)lexenv, strlen(varname), varname, (void *)val);
 	}
 }
 
