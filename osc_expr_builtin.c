@@ -1306,7 +1306,7 @@ int osc_expr_specFunc_map(t_osc_expr_ast_funcall *f,
 			min = nn;
 		}
 		rest_expr = osc_expr_ast_expr_next(rest_expr);
-		i++;
+		//i++;
 	}
 	t_osc_atom_ar_u *out_tmp[min];
 	memset(out_tmp, '\0', min * sizeof(t_osc_atom_ar_u*));
@@ -1327,7 +1327,7 @@ int osc_expr_specFunc_map(t_osc_expr_ast_funcall *f,
 	}
 	*out = osc_atom_array_u_alloc(outlen);
 	int pos = 0;
-	for(i = 0; i < min; i++){
+	for(int i = 0; i < min; i++){
 		osc_atom_array_u_copyInto(out, out_tmp[i], pos);
 		pos += osc_atom_array_u_getLen(out_tmp[i]);
 		osc_atom_array_u_free(out_tmp[i]);
