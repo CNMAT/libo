@@ -220,6 +220,22 @@ void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom)
 	*atom = a;
 }
 
+t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m)
+{
+	if(m){
+		return m->next;
+	}else{
+		return NULL;
+	}
+}
+
+void osc_message_u_setNext(t_osc_msg_u *m, t_osc_msg_u *next)
+{
+	if(m){
+		m->next = next;
+	}
+}
+
 t_osc_err osc_message_u_appendAtom(t_osc_msg_u *m, t_osc_atom_u *a)
 {
 	m->argc++;

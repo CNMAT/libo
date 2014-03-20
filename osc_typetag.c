@@ -23,11 +23,13 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 /*
 
  */
-
+#include <string.h>
+#include <stdio.h>
 #include "osc.h"
 #include "osc_typetag.h"
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
+#include "osc_hashtab.h"
 
 struct _osc_typetag_type {
 	char typetag;
@@ -61,22 +63,22 @@ struct _osc_typetag_type {
 OSC_TYPETAG_DEFTYPE('s', string, 17, NULL);
 OSC_TYPETAG_DEFTYPE('B', bundle, 16, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE('A', expr, 15, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('t', timetag, 14, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('H', uint64, 13, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('h', int64, 12, &_osc_typetag_uint64, NULL);
-OSC_TYPETAG_DEFTYPE('d', double, 11, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('I', uint32, 10, &_osc_typetag_int64, &_osc_typetag_double, NULL);
+OSC_TYPETAG_DEFTYPE('d', double, 14, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE('t', timetag, 13, &_osc_typetag_double, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE('H', uint64, 12, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE('h', int64, 11, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE('I', uint32, 10, &_osc_typetag_int64, &_osc_typetag_uint64, &_osc_typetag_double, NULL);
 OSC_TYPETAG_DEFTYPE('f', float, 9, &_osc_typetag_double, &_osc_typetag_timetag, NULL);
-OSC_TYPETAG_DEFTYPE('i', int32, 8, &_osc_typetag_uint32, NULL);
-OSC_TYPETAG_DEFTYPE('U', uint16, 7, &_osc_typetag_int32, &_osc_typetag_float, NULL);
-OSC_TYPETAG_DEFTYPE('u', int16, 6, &_osc_typetag_uint16, NULL);
-OSC_TYPETAG_DEFTYPE('C', uint8, 5, &_osc_typetag_int16, NULL);
-OSC_TYPETAG_DEFTYPE('c', int8, 4, &_osc_typetag_uint8, NULL);
+OSC_TYPETAG_DEFTYPE('i', int32, 8, &_osc_typetag_double, &_osc_typetag_int64, NULL);
+OSC_TYPETAG_DEFTYPE('U', uint16, 7, &_osc_typetag_int32, &_osc_typetag_uint32, &_osc_typetag_float, NULL);
+OSC_TYPETAG_DEFTYPE('u', int16, 6, &_osc_typetag_int32, &_osc_typetag_float, NULL);
+OSC_TYPETAG_DEFTYPE('C', uint8, 5, &_osc_typetag_int16, &_osc_typetag_uint16, NULL);
+OSC_TYPETAG_DEFTYPE('c', int8, 4, &_osc_typetag_int16, NULL);
 OSC_TYPETAG_DEFTYPE('O', bool, 3, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE('T', true, 2, &_osc_typetag_bool, NULL);
 OSC_TYPETAG_DEFTYPE('F', false, 1, &_osc_typetag_bool, NULL);
 OSC_TYPETAG_DEFTYPE('N', null, 0, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE(0, unknown, -1, &_osc_typetag_true, &_osc_typetag_false, &_osc_typetag_null, &_osc_typetag_int8, &_osc_typetag_float, &_osc_typetag_timetag, &_osc_typetag_bundle, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(0, unknown, -1, &_osc_typetag_true, &_osc_typetag_false, &_osc_typetag_null, &_osc_typetag_int8, &_osc_typetag_uint8, &_osc_typetag_float, &_osc_typetag_timetag, &_osc_typetag_bundle, &_osc_typetag_string, NULL);
 
 // supported typetags:
 // N T F c C u U i I h H f d s OSC_TYPETAG_EXPR OSC_TYPETAG_BUNDLE OSC_TYPETAG_TIMETAG
@@ -103,11 +105,15 @@ static t_osc_typetag_type *osc_typetag_map[128] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
 
-static t_osc_typetag_type *_osc_typetag_findLUB_t1(t_osc_typetag_type *t1, t_osc_typetag_type *t2, t_osc_typetag_type *lub)
+static t_osc_typetag_type *_osc_typetag_findLUB_t1(t_osc_typetag_type *t1, t_osc_typetag_type *t2, t_osc_typetag_type *lub, int *visited)
 {
 	if(!t1 || !t2){
 		return lub;
 	}
+	if(visited[t1->weight]){
+		return lub;
+	}
+	visited[t1->weight] = 1;
 	if(t1 == t2){
 		if(!lub || t1->weight < lub->weight){
 			lub = t1;
@@ -122,7 +128,7 @@ static t_osc_typetag_type *_osc_typetag_findLUB_t1(t_osc_typetag_type *t1, t_osc
 					lub = t1_edge;
 				}
 			}	
-			lub = _osc_typetag_findLUB_t1(t1_edge, t2, lub);
+			lub = _osc_typetag_findLUB_t1(t1_edge, t2, lub, visited);
 			i++;
 			t1_edge = t1->edges[i];
 		}
@@ -136,7 +142,9 @@ static t_osc_typetag_type *_osc_typetag_findLUB_t2(t_osc_typetag_type *t1, t_osc
 	if(!t1 || !t2){
 		return lub;
 	}
-	lub = _osc_typetag_findLUB_t1(t1, t2, lub);
+	int visited[18];
+	memset(visited, '\0', sizeof(int) * 18);
+	lub = _osc_typetag_findLUB_t1(t1, t2, lub, visited);
 	{
 		int i = 0;
 		t_osc_typetag_type *t2_edge = t2->edges[0];
@@ -217,6 +225,32 @@ char *osc_typetag_name(char typetag)
 		return t->name;
 	}
 	return NULL;
+}
+
+void osc_typetag_formatTypeLattice_dot_r(t_osc_typetag_type *tt, int *visited)//t_osc_hashtab *ht)
+{
+	if(visited[tt->weight] && tt->weight >= 0){
+		return;
+	}
+	visited[tt->weight] = 1;
+	t_osc_typetag_type **edges = tt->edges;
+	t_osc_typetag_type *edge = *edges;
+	int i = 0;
+	while(edge){
+		printf("%s -> %s;\n", tt->name, edge->name);
+		osc_typetag_formatTypeLattice_dot_r(edge, visited);
+		edge = edges[++i];
+	}
+}
+
+void osc_typetag_formatTypeLattice_dot(void)
+{
+	int visited[18];
+	memset(visited, '\0', sizeof(int) * 18);
+	printf("digraph typelattice {\n");
+	printf("rankdir = BT;\n");
+	osc_typetag_formatTypeLattice_dot_r(osc_typetag_unknown, visited);
+	printf("}\n");
 }
 
 

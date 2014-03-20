@@ -79,7 +79,7 @@ libo.dylib: $(LIBO_OBJECTS)
 	flex -o $(basename $@).c --prefix=$(basename $@)_ --header-file=$(basename $@).h $(basename $@).l
 
 %_parser.c: %_parser.y
-	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
+	bison -p $(basename $@)_ -d -v --graph --report=itemset -o $(basename $@).c $(basename $@).y
 
 osc_expr_builtin_typedfuncdecls.h: _osc_expr_builtin_typedfuncdecls.h
 	m4 _osc_expr_builtin_typedfuncdecls.h > osc_expr_builtin_typedfuncdecls.h

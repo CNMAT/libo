@@ -250,7 +250,8 @@ t_osc_err osc_bundle_u_lookupAddress_copy(t_osc_bndl_u *bndl, const char *addres
 	return OSC_ERR_NONE;
 }
 
-static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, int remove_dups)
+static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *_msg, int remove_dups)
+/*
 {
 	if(!bndl || !msg){
 		return OSC_ERR_NONE;
@@ -288,6 +289,59 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
 	msg->next = NULL;
 	bndl->msgtail->next = msg;
 	bndl->msgtail = msg;
+	return OSC_ERR_NONE;
+}
+*/
+{
+	if(!bndl || !_msg){
+		return OSC_ERR_NONE;
+	}
+	t_osc_msg_u *msg = _msg;
+	t_osc_msg_u *lastmsg = msg;
+	int nmsgs = 0;
+	if(remove_dups){
+		while(msg){
+			char *address = osc_message_u_getAddress(msg);
+			if(address){
+				t_osc_msg_u *m = bndl->msghead;
+				while(m){
+					t_osc_msg_u *next = m->next;
+					if(!strcmp(address, osc_message_u_getAddress(m))){
+						osc_bundle_u_removeMsg(bndl, m);
+						osc_message_u_free(m);
+						bndl->msgcount--;
+					}
+					m = next;
+				}
+			}
+			lastmsg = msg;
+			msg = osc_message_u_next(msg);
+			nmsgs++;
+		}
+	}
+	msg = _msg;
+	bndl->msgcount += nmsgs;
+	if(!(bndl->msghead)){
+		bndl->msghead = msg;
+		if(msg == lastmsg){
+			bndl->msgtail = NULL;
+		}else{
+			bndl->msgtail = lastmsg;
+		}
+		msg->prev = lastmsg->next = NULL;
+		return OSC_ERR_NONE;
+	}
+	if(bndl->msghead && !(bndl->msgtail)){
+		bndl->msghead->next = msg;
+		msg->prev = bndl->msghead;
+		lastmsg->next = NULL;
+		bndl->msgtail = lastmsg;
+		return OSC_ERR_NONE;
+	}
+	msg->prev = bndl->msgtail;
+	lastmsg->next = NULL;
+	bndl->msgtail->next = msg;
+	bndl->msgtail = lastmsg;
 	return OSC_ERR_NONE;
 }
 
@@ -340,6 +394,30 @@ t_osc_err osc_bundle_u_addMsgArrayCopy(t_osc_bndl_u *bndl, t_osc_msg_ar_u *ar)
 		osc_bundle_u_addMsgCopy(bndl, osc_message_array_u_get(ar, i));
 	}
 	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_addMsgArray(t_osc_bndl_u *bndl, t_osc_msg_ar_u *ar)
+{
+	if(!bndl){
+		return OSC_ERR_NOBUNDLE;
+	}
+	if(!ar){
+		return OSC_ERR_NONE;
+	}
+	int len = osc_message_array_u_getLen(ar);
+	if(len == 0){
+		return OSC_ERR_NONE;
+	}
+	int i;
+	for(i = 0; i < len; i++){
+		osc_bundle_u_addMsg(bndl, osc_message_array_u_get(ar, i));
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_addMsgListWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msglist)
+{
+	return osc_bundle_u_addMsg_impl(bndl, msglist, 1);
 }
 
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m)

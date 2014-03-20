@@ -270,11 +270,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	// Special functions
 	//////////////////////////////////////////////////
 	/*
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(apply);
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(map);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(lreduce);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(rreduce);
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(if);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(emptybundle);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(bound);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(exists);
@@ -300,6 +297,10 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		return osc_expr_specFunc_map((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else if(ff == osc_expr_builtin_if){
 		return osc_expr_specFunc_if((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_emptybundle){
+		return osc_expr_specFunc_emptybundle((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
+	}else if(ff == osc_expr_builtin_bundle){
+		return osc_expr_specFunc_bundle((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -362,6 +363,7 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 					switch(osc_expr_ast_expr_getNodetype(e)){
 					case OSC_EXPR_AST_NODETYPE_FUNCTION:
 						{
+							make_lambda_abstraction = 1;
 							t_osc_expr_ast_expr *body = osc_expr_ast_function_getExprs(e);
 							if(lambdalist){
 								osc_expr_ast_expr_append(lambdalist, osc_expr_ast_function_getLambdaList(e));

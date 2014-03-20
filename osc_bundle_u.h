@@ -60,6 +60,8 @@ t_osc_err osc_bundle_u_addMsgWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
 t_osc_err osc_bundle_u_addMsgCopy(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
 t_osc_err osc_bundle_u_addMsgWithoutDupsCopy(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
 t_osc_err osc_bundle_u_addMsgArrayCopy(t_osc_bndl_u *bndl, t_osc_array *ar);
+t_osc_err osc_bundle_u_addMsgArray(t_osc_bndl_u *bndl, t_osc_msg_ar_u *ar);
+t_osc_err osc_bundle_u_addMsgListWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msglist);
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m);
 t_osc_err osc_bundle_u_explode(t_osc_bndl_u **dest,
 			       t_osc_bndl_u *src,

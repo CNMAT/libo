@@ -41,6 +41,7 @@ typedef struct _osc_typetag_type t_osc_typetag_type;
 char osc_typetag_findLUB(char t1, char t2);
 char osc_typetag_isSubtype(char t1, char t2);
 char *osc_typetag_name(char typetag);
+void osc_typetag_formatTypeLattice_dot(void);
 
 //////////////////////////////////////////////////
 // old

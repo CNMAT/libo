@@ -349,15 +349,13 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 %union {
 	t_osc_expr_ast_expr *expr;
 	t_osc_atom_u *atom;
-	t_osc_msg_u *msg;
-	t_osc_bndl_u *bndl;
+	//t_osc_msg_u *msg;
+	//t_osc_bndl_u *bndl;
 }
 
 %precedence lowest
 
-%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list
-%type <msg>message messages
-%type <bndl>bundle
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list message messages bundle
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER OSC_EXPR_THIS
 %nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
 
@@ -508,6 +506,7 @@ value:
 				}
 			}
 		}
+		// make lambda if this is a function or operator
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
 	| OSC_EXPR_THIS {
@@ -579,31 +578,33 @@ varlist: {$$ = NULL;}
 
 message:
 	OSC_EXPR_OSCADDRESS {
-		$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
+		//$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, 0);
 		if(alloc_atom){
 			osc_mem_free($1);
 		}
 	}
 	| OSC_EXPR_OSCADDRESS ':' expns {
-		printf("message\n");
+		t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
+		osc_expr_ast_expr_append((t_osc_expr_ast_expr *)v, $3);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, (t_osc_expr_ast_expr *)v);
 	}
 ;
 
 messages:
-	message {
-		printf("message\n");
-	}
+	message
 	| messages ',' message {
-		printf("messages\n");
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
 	}
 ;
 
 bundle:
 	'{' '}' { 
-		$$ = NULL; 
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_bundle, 0);
 	}
 	| '{' messages '}' {
-		printf("yep\n");
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, $2);
   	}
 ;
 
@@ -789,9 +790,7 @@ expr:
 		$$ = $2;
 		osc_expr_ast_expr_setBrackets($$, '(', ')');
   	}
-	| bundle {
-		printf("bundle...\n");
-  	}
+	| bundle 
 	| let
 	| list %prec lowest
 	| arraysubscript %prec lowest

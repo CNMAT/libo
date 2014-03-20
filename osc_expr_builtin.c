@@ -171,6 +171,32 @@ OSC_EXPR_BUILTIN_BINARYOP(>=, ge, H, UInt64, Bool);
 OSC_EXPR_BUILTIN_BINARYOP(>=, ge, f, Float, Bool);
 OSC_EXPR_BUILTIN_BINARYOP(>=, ge, d, Double, Bool);
 
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, c, Int8, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, C, UInt8, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, u, Int16, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, U, UInt16, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, i, Int32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, I, UInt32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, h, Int64, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, H, UInt64, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, f, Float, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, d, Double, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, T, Int32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(==, eq, F, Int32, Bool);
+
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, c, Int8, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, C, UInt8, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, u, Int16, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, U, UInt16, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, i, Int32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, I, UInt32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, h, Int64, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, H, UInt64, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, f, Float, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, d, Double, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, T, Int32, Bool);
+OSC_EXPR_BUILTIN_BINARYOP(!=, neq, F, Int32, Bool);
+
 OSC_EXPR_BUILTIN_BINARYOP(%, mod, c, Int8, Int8);
 OSC_EXPR_BUILTIN_BINARYOP(%, mod, C, UInt8, UInt8);
 OSC_EXPR_BUILTIN_BINARYOP(%, mod, u, Int16, Int16);
@@ -228,6 +254,116 @@ int osc_expr_builtin_or_F(t_osc_atom_u *lhs, t_osc_atom_u *rhs, t_osc_atom_u *re
 {
 	return osc_expr_builtin_or_T(lhs, rhs, res);
 }
+
+//int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+//{
+
+//////////////////////////////////////////////////
+// constants
+//////////////////////////////////////////////////
+
+#define OSC_EXPR_BUILTIN_DEFCONSTANT(name, val)				\
+	static t_osc_expr_funcrec _osc_expr_builtin_func_##name = {	\
+		#name,							\
+		0,							\
+		NULL,					\
+		NULL,\
+		0,							\
+		1,							\
+		(char *[]){"_y"},					\
+		NULL,							\
+		"returns "#val,						\
+		osc_expr_builtin_##name,			\
+		NULL,\
+		NULL,							\
+		0,							\
+		NULL,				\
+		0,							\
+		0,							\
+		NULL,				\
+		0							\
+	};
+
+#define OSC_EXPR_BUILTIN_CONSTANT(name, val, type)			\
+	int osc_expr_builtin_##name(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){ \
+		*out = osc_atom_array_u_alloc(1);			\
+		osc_atom_u_set##type(osc_atom_array_u_get(*out, 0), val); \
+		return 0;						\
+	}								\
+	OSC_EXPR_BUILTIN_DEFCONSTANT(name, val);
+
+OSC_EXPR_BUILTIN_CONSTANT(pi, M_PI, Double);
+OSC_EXPR_BUILTIN_CONSTANT(twopi, 2. * M_PI, Double);
+OSC_EXPR_BUILTIN_CONSTANT(halfpi, M_PI_2, Double);
+OSC_EXPR_BUILTIN_CONSTANT(quarterpi, M_PI_4, Double);
+OSC_EXPR_BUILTIN_CONSTANT(oneoverpi, M_1_PI, Double);
+OSC_EXPR_BUILTIN_CONSTANT(twooverpi, M_2_PI, Double);
+
+OSC_EXPR_BUILTIN_CONSTANT(e, M_E, Double);
+
+OSC_EXPR_BUILTIN_CONSTANT(lntwo, M_LN2, Double);
+OSC_EXPR_BUILTIN_CONSTANT(lnten, M_LN10, Double);
+OSC_EXPR_BUILTIN_CONSTANT(logtwoe, M_LOG2E, Double);
+OSC_EXPR_BUILTIN_CONSTANT(logtene, M_LOG10E, Double);
+
+OSC_EXPR_BUILTIN_CONSTANT(sqrttwo, M_SQRT2, Double);
+OSC_EXPR_BUILTIN_CONSTANT(sqrthalf, M_SQRT1_2, Double);
+
+OSC_EXPR_BUILTIN_CONSTANT(degtorad, M_PI / 180., Double);
+OSC_EXPR_BUILTIN_CONSTANT(radtodeg, 180. / M_PI, Double);
+
+//////////////////////////////////////////////////
+// type casts
+//////////////////////////////////////////////////
+/*
+#define OSC_EXPR_BUILTIN_DEFCAST(name)					\
+	static t_osc_expr_funcrec _osc_expr_builtin_func_##name = {	\
+		#name,							\
+		1,							\
+		(char *[]){"_x"},					\
+		NULL,							\
+		0,							\
+		1,							\
+		(char *[]){"_y"},					\
+		NULL,							\
+		"returns _x cast to "#name,				\
+		osc_expr_builtin_##name,				\
+		NULL,							\
+		NULL,							\
+		0,							\
+		NULL,							\
+		0,							\
+		0,							\
+		NULL,							\
+		0							\
+	};
+
+#define OSC_EXPR_BUILTIN_CAST(name, type, typetag)			\
+	int osc_expr_builtin_##name(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){ \
+		if(osc_typetag_isSubtype(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], 0)), typetag)){ \
+			*out = osc_atom_array_u_alloc(1);		\
+			osc_atom_u_set##type(osc_atom_array_u_get(*out, 0), osc_atom_u_get##type(osc_atom_array_u_get(argv[0], 0))); \
+		}else{							\
+			return 1;					\
+		}							\
+		return 0;						\
+	}								\
+	OSC_EXPR_BUILTIN_DEFCAST(name);
+
+// string, bundle, code
+OSC_EXPR_BUILTIN_CAST(timetag, Timetag, OSC_TIMETAG_TYPETAG);
+OSC_EXPR_BUILTIN_CAST(uint64, UInt64, 'H');
+OSC_EXPR_BUILTIN_CAST(int64, Int64, 'h');
+OSC_EXPR_BUILTIN_CAST(float64, Double, 'd');
+OSC_EXPR_BUILTIN_CAST(uint32, UInt32, 'I');
+OSC_EXPR_BUILTIN_CAST(float32, Float, 'f');
+OSC_EXPR_BUILTIN_CAST(int32, Int32, 'i');
+OSC_EXPR_BUILTIN_CAST(uint16, UInt16, 'U');
+OSC_EXPR_BUILTIN_CAST(int16, Int16, 'u');
+OSC_EXPR_BUILTIN_CAST(uint8, UInt8, 'C');
+OSC_EXPR_BUILTIN_CAST(int8, Int8, 'c');
+// can't cast to bool, true, false, or null
+*/
 
 #define OSC_EXPR_BUILTIN_ASEQ_TYPED(typetag, type, ctype)		\
 	int osc_expr_builtin_aseq_##typetag(t_osc_atom_u *_min, t_osc_atom_u *_max, t_osc_atom_u *_step, int n, t_osc_atom_ar_u *out){ \
@@ -376,10 +512,12 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 };
 
 //OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, NULL, NULL, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
-OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, NULL, OSC_EXPR_BUILTIN_LT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, NULL, OSC_EXPR_BUILTIN_GT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, NULL, OSC_EXPR_BUILTIN_LE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or NULL otherwise");
-OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, NULL, OSC_EXPR_BUILTIN_GE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or NULL otherwise");
+OSC_EXPR_BUILTIN_DEFOP(<, '<', lt, NULL, OSC_EXPR_BUILTIN_LT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than _b or false otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>, '>', gt, NULL, OSC_EXPR_BUILTIN_GT_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than _b or false otherwise");
+OSC_EXPR_BUILTIN_DEFOP(<=, OSC_EXPR_LTE, le, NULL, OSC_EXPR_BUILTIN_LE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is less than or equal to _b or false otherwise");
+OSC_EXPR_BUILTIN_DEFOP(>=, OSC_EXPR_GTE, ge, NULL, OSC_EXPR_BUILTIN_GE_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is greater than or equal to _b or false otherwise");
+OSC_EXPR_BUILTIN_DEFOP(==, OSC_EXPR_EQ, eq, NULL, OSC_EXPR_BUILTIN_EQ_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is equal to _b or false otherwise");
+OSC_EXPR_BUILTIN_DEFOP(!=, OSC_EXPR_NEQ, neq, NULL, OSC_EXPR_BUILTIN_NEQ_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 8, "Returns true (bool) if _a is equal to _b or false otherwise");
 OSC_EXPR_BUILTIN_DEFOP(+, '+', add, NULL, OSC_EXPR_BUILTIN_ADD_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the sum of its arguments");
 OSC_EXPR_BUILTIN_DEFOP(-, '-', sub, NULL, OSC_EXPR_BUILTIN_SUB_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 6, "Returns the difference of its arguments");
 OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, NULL, OSC_EXPR_BUILTIN_MUL_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the product of its arguments");
@@ -458,6 +596,27 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_map = {
 	NULL,
 	"Maps _function onto _args and returns the result",
 	osc_expr_builtin_map,
+	NULL,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
+
+static t_osc_expr_funcrec _osc_expr_builtin_func_lreduce = {
+	"lreduce",
+	2,
+	(char *[]){"_function", "_list"},
+	NULL,
+	0,
+	1,
+	(char *[]){"_result"},
+	NULL,
+	"Combines all the elements in a list using a left-associative binary operation.",
+	osc_expr_builtin_lreduce,
 	NULL,
 	NULL,
 	0,
@@ -609,6 +768,48 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_if = {
 	0
 };
 
+static t_osc_expr_funcrec _osc_expr_builtin_func_bundle = {
+	"bundle",
+	1,
+	(char *[]){"_messages"},
+	NULL,
+	1,
+	1,
+	(char *[]){"_bundle"},
+	NULL,
+	"Creates a bundle containing the messages passed to it",
+	osc_expr_builtin_bundle,
+	NULL,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
+
+static t_osc_expr_funcrec _osc_expr_builtin_func_message = {
+	"message",
+	1,
+	(char *[]){"_address", "_data"},
+	NULL,
+	1,
+	1,
+	(char *[]){"_message"},
+	NULL,
+	"Creates a message with the address and data passed to it",
+	osc_expr_builtin_message,
+	NULL,
+	NULL,
+	0,
+	NULL,
+	0,
+	0,
+	NULL,
+	0
+};
+
 t_osc_expr_oprec *osc_expr_builtin_op_add = &_osc_expr_builtin_op_add;
 t_osc_expr_oprec *osc_expr_builtin_op_assign = &_osc_expr_builtin_op_assign;
 
@@ -616,12 +817,15 @@ t_osc_expr_funcrec *osc_expr_builtin_func_add = &_osc_expr_builtin_func_add;
 t_osc_expr_funcrec *osc_expr_builtin_func_assign = &_osc_expr_builtin_func_assign;
 t_osc_expr_funcrec *osc_expr_builtin_func_apply = &_osc_expr_builtin_func_apply;
 t_osc_expr_funcrec *osc_expr_builtin_func_map = &_osc_expr_builtin_func_map;
+t_osc_expr_funcrec *osc_expr_builtin_func_lreduce = &_osc_expr_builtin_func_lreduce;
 t_osc_expr_funcrec *osc_expr_builtin_func_nth = &_osc_expr_builtin_func_nth;
 t_osc_expr_funcrec *osc_expr_builtin_func_list = &_osc_expr_builtin_func_list;
 t_osc_expr_funcrec *osc_expr_builtin_func_aseq = &_osc_expr_builtin_func_aseq;
 t_osc_expr_funcrec *osc_expr_builtin_func_scale = &_osc_expr_builtin_func_scale;
 t_osc_expr_funcrec *osc_expr_builtin_func_if = &_osc_expr_builtin_func_if;
 t_osc_expr_funcrec *osc_expr_builtin_func_lookup = &_osc_expr_builtin_func_lookup;
+t_osc_expr_funcrec *osc_expr_builtin_func_message = &_osc_expr_builtin_func_message;
+t_osc_expr_funcrec *osc_expr_builtin_func_bundle = &_osc_expr_builtin_func_bundle;
 
 static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_assign,
@@ -629,6 +833,8 @@ static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_gt,
 	&_osc_expr_builtin_func_le,
 	&_osc_expr_builtin_func_ge,
+	&_osc_expr_builtin_func_eq,
+	&_osc_expr_builtin_func_neq,
 	&_osc_expr_builtin_func_add,
 	&_osc_expr_builtin_func_sub,
 	&_osc_expr_builtin_func_mul,
@@ -638,13 +844,46 @@ static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_and,
 	&_osc_expr_builtin_func_or,
 	&_osc_expr_builtin_func_lookup,
-	&_osc_expr_builtin_func_apply,
+ 	&_osc_expr_builtin_func_apply,
 	&_osc_expr_builtin_func_map,
+ 	&_osc_expr_builtin_func_lreduce,
 	&_osc_expr_builtin_func_nth,
 	&_osc_expr_builtin_func_list,
 	&_osc_expr_builtin_func_aseq,
 	&_osc_expr_builtin_func_scale,
 	&_osc_expr_builtin_func_if,
+	&_osc_expr_builtin_func_message,
+	&_osc_expr_builtin_func_bundle,
+	// constants
+	&_osc_expr_builtin_func_pi,
+	&_osc_expr_builtin_func_twopi,
+	&_osc_expr_builtin_func_halfpi,
+	&_osc_expr_builtin_func_quarterpi,
+	&_osc_expr_builtin_func_oneoverpi,
+	&_osc_expr_builtin_func_twooverpi,
+	&_osc_expr_builtin_func_e,
+	&_osc_expr_builtin_func_lntwo,
+	&_osc_expr_builtin_func_lnten,
+	&_osc_expr_builtin_func_logtwoe,
+	&_osc_expr_builtin_func_logtene,
+	&_osc_expr_builtin_func_sqrttwo,
+	&_osc_expr_builtin_func_sqrthalf,
+	&_osc_expr_builtin_func_degtorad,
+	&_osc_expr_builtin_func_radtodeg,
+	// casts
+	/*
+	&_osc_expr_builtin_func_timetag,
+	&_osc_expr_builtin_func_uint64,
+	&_osc_expr_builtin_func_int64,
+	&_osc_expr_builtin_func_float64,
+	&_osc_expr_builtin_func_uint32,
+	&_osc_expr_builtin_func_float32,
+	&_osc_expr_builtin_func_int32,
+	&_osc_expr_builtin_func_uint16,
+	&_osc_expr_builtin_func_int16,
+	&_osc_expr_builtin_func_uint8,
+	&_osc_expr_builtin_func_int8
+	*/
 };
 
 static t_osc_expr_oprec *osc_expr_builtin_osymtab[] = {
@@ -653,6 +892,8 @@ static t_osc_expr_oprec *osc_expr_builtin_osymtab[] = {
 	&_osc_expr_builtin_op_gt,
 	&_osc_expr_builtin_op_le,
 	&_osc_expr_builtin_op_ge,
+	&_osc_expr_builtin_op_eq,
+	&_osc_expr_builtin_op_neq,
 	&_osc_expr_builtin_op_add,
 	&_osc_expr_builtin_op_sub,
 	&_osc_expr_builtin_op_mul,
@@ -669,8 +910,8 @@ static t_osc_expr_oprec *osc_expr_builtin_osymtab[] = {
 // token defined in osc_expr_parser.y
 static t_osc_expr_oprec *osc_expr_builtin_opcodeToOpRec[128] = {
 	NULL	,// 0
-	NULL, //&osc_expr_builtin_op_eq	,
-	NULL, //&osc_expr_builtin_op_neq	,
+	&_osc_expr_builtin_op_eq	,
+	&_osc_expr_builtin_op_neq	,
 	&_osc_expr_builtin_op_le	,
 	&_osc_expr_builtin_op_ge	,
 	NULL, //&_osc_expr_builtin_op_nullcoalesce,
@@ -800,8 +1041,8 @@ static t_osc_expr_oprec *osc_expr_builtin_opcodeToOpRec[128] = {
 
 static t_osc_expr_funcrec *osc_expr_builtin_opcodeToFuncRec[128] = {
 	NULL	,// 0
-	NULL, //&osc_expr_builtin_func_eq	,
-	NULL, //&osc_expr_builtin_func_neq	,
+	&_osc_expr_builtin_func_eq	,
+	&_osc_expr_builtin_func_neq	,
 	&_osc_expr_builtin_func_le	,
 	&_osc_expr_builtin_func_ge	,
 	NULL    ,
@@ -931,8 +1172,8 @@ static t_osc_expr_funcrec *osc_expr_builtin_opcodeToFuncRec[128] = {
 
 static char *osc_expr_builtin_opcodeToString[128] = {
 	NULL	,// 0
-	NULL, //&osc_expr_builtin_func_eq	,
-	NULL, //&osc_expr_builtin_func_neq	,
+	"==",
+	"!=",
 	"<="	,
 	">="	,
 	NULL    ,
@@ -1346,6 +1587,14 @@ int osc_expr_specFunc_map(t_osc_expr_ast_funcall *f,
 	return 0;
 }
 
+int osc_expr_specFunc_lreduce(t_osc_expr_ast_funcall *f, 
+			      t_osc_expr_lexenv *lexenv, 
+			      t_osc_bndl_u *oscbndl,
+			      t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
 int osc_expr_specFunc_assign(t_osc_expr_ast_funcall *f, 
 			     t_osc_expr_lexenv *lexenv, 
 			     t_osc_bndl_u *oscbndl,
@@ -1443,12 +1692,71 @@ int osc_expr_specFunc_assign(t_osc_expr_ast_funcall *f,
 	return ret;
 }
 
+/*
+Thread 0 Crashed:: Dispatch queue: com.apple.main-thread
+0   libsystem_kernel.dylib        	0x00007fff8d8aa212 __pthread_kill + 10
+1   libsystem_c.dylib             	0x00007fff972cab24 pthread_kill + 90
+2   libsystem_c.dylib             	0x00007fff9730ef61 abort + 143
+3   libsystem_c.dylib             	0x00007fff972e2989 free + 392
+4   edu.cnmat.berkeley.o.expr     	0x0000000110325e6d osc_array_free + 29
+5   edu.cnmat.berkeley.o.expr     	0x00000001103332a0 osc_expr_specFunc_if + 432
+6   edu.cnmat.berkeley.o.expr     	0x0000000110329ad4 osc_expr_ast_funcall_evalInLexEnv + 292
+7   edu.cnmat.berkeley.o.expr     	0x0000000110332e0c osc_expr_specFunc_assign + 172
+8   edu.cnmat.berkeley.o.expr     	0x0000000110329a20 osc_expr_ast_funcall_evalInLexEnv + 112
+9   edu.cnmat.berkeley.o.expr     	0x0000000110328cab osc_expr_ast_expr_eval + 91
+10  edu.cnmat.berkeley.o.expr     	0x00000001103184a9 oexpr_fullPacket + 313
+ */
+
 int osc_expr_specFunc_if(t_osc_expr_ast_funcall *f, 
 			    t_osc_expr_lexenv *lexenv, 
 			    t_osc_bndl_u *oscbndl,
 			    t_osc_atom_ar_u **out)
 {
-	printf("%s\n", __func__);
+	t_osc_expr_ast_expr *test_expr = osc_expr_ast_funcall_getArgs(f);
+	t_osc_expr_ast_expr *then_expr = osc_expr_ast_expr_next(test_expr);
+	t_osc_expr_ast_expr *else_expr = osc_expr_ast_expr_next(then_expr);
+	t_osc_atom_ar_u *test_ar = NULL;
+	int ret = osc_expr_ast_expr_evalInLexEnv(test_expr, lexenv, oscbndl, &test_ar);
+	if(ret){
+		// report error
+		if(test_ar){
+			osc_atom_array_u_free(test_ar);
+		}
+	}
+	int test_result_len = osc_atom_array_u_getLen(test_ar);
+	t_osc_atom_ar_u *branch_vals[test_result_len];
+	memset(branch_vals, '\0', test_result_len * sizeof(t_osc_atom_ar_u *));
+	int outlen = 0;
+	for(int i = 0; i < osc_atom_array_u_getLen(test_ar); i++){
+		if(osc_atom_u_getInt32(osc_atom_array_u_get(test_ar, i))){
+			ret = osc_expr_ast_expr_evalInLexEnv(then_expr, lexenv, oscbndl, branch_vals + i);
+			if(ret){
+				// report error
+				goto out;
+			}
+			outlen += osc_atom_array_u_getLen(branch_vals[i]);
+		}else{
+			ret = osc_expr_ast_expr_evalInLexEnv(else_expr, lexenv, oscbndl, branch_vals + i);
+			if(ret){
+				// report error
+				goto out;
+			}
+			outlen += osc_atom_array_u_getLen(branch_vals[i]);
+		}
+	}
+	*out = osc_atom_array_u_alloc(outlen);
+	int j = 0;
+	for(int i = 0; i < test_result_len; i++){
+		osc_atom_array_u_copyInto(out, branch_vals[i], j);
+		j += osc_atom_array_u_getLen(branch_vals[i]);
+	}
+ out:
+	for(int i = 0; i < test_result_len; i++){
+		if(branch_vals[i]){
+			osc_atom_array_u_free(branch_vals[i]);
+		}
+	}
+	osc_atom_array_u_free(test_ar);
 	return 0;
 }
 
@@ -1610,8 +1918,148 @@ int osc_expr_specFunc_nth(t_osc_expr_ast_funcall *f,
 	return 0;
 }
 
+int osc_expr_specFunc_emptybundle(t_osc_expr_ast_funcall *f, 
+				  t_osc_expr_lexenv *lexenv, 
+				  t_osc_bndl_u *oscbndl,
+				  t_osc_atom_ar_u **out)
+{
+	*out = osc_atom_array_u_alloc(1);
+			
+	if(osc_bundle_u_getMsgCount(oscbndl)){
+		osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+	}else{
+		osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+	}
+	return 0;
+}
 
+int osc_expr_specFunc_bundle(t_osc_expr_ast_funcall *f, 
+			     t_osc_expr_lexenv *lexenv, 
+			     t_osc_bndl_u *oscbndl,
+			     t_osc_atom_ar_u **out)
+{
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	t_osc_expr_ast_funcall *msg = (t_osc_expr_ast_funcall *)osc_expr_ast_funcall_getArgs(f);
+	while(msg){
+		t_osc_msg_u *m = osc_message_u_alloc();
+		t_osc_expr_ast_expr *args = osc_expr_ast_funcall_getArgs(msg);
+		if(osc_expr_ast_expr_getNodetype(args) != OSC_EXPR_AST_NODETYPE_VALUE){
+			return 1;
+		}
+		t_osc_expr_ast_value *address = (t_osc_expr_ast_value *)args;
+		osc_message_u_setAddress(m, osc_atom_u_getStringPtr(osc_expr_ast_value_getOSCAddress(address)));
+		args = osc_expr_ast_expr_next(args);
+		while(args){
+			t_osc_atom_ar_u *ar = NULL;
+			osc_expr_ast_expr_evalInLexEnv(args, lexenv, oscbndl, &ar);
+			if(ar){
+				osc_message_u_setArgArrayCopy(m, ar);
+				osc_atom_array_u_free(ar);
+			}
+			args = osc_expr_ast_expr_next(args);
+		}
+		osc_bundle_u_addMsg(b, m);
+		msg = osc_expr_ast_expr_next((t_osc_expr_ast_expr *)msg);
+	}
+	*out = osc_atom_array_u_alloc(1);
+	osc_atom_u_setBndl_u(osc_atom_array_u_get(*out, 0), b, 1);
+	return 0;
+}
+/*
+int osc_expr_specFunc_existsorbound(t_osc_expr_ast_funcall *f,
+				    t_osc_expr_lexenv *lexenv,
+				    t_osc_bndl_u *oscbndl,
+				    t_osc_atom_ar_u **out,
+				    t_osc_err (*func)(long, char*, char*, int, int*))
+{
+	t_osc_expr_ast_expr *arg = osc_expr_ast_funcall_getArgs(f);
+	int type = osc_expr_ast_expr_getNodetype(arg);
+	char *address = NULL;
 
+	// if arg is an OSC address, get the address as a string, otherwise eval the arg
+	// and see if it returns a string
+	switch(type){
+	case OSC_EXPR_ARG_TYPE_ATOM:
+		{
+			t_osc_atom_u *a = osc_expr_arg_getOSCAtom(f_argv);
+			if(osc_atom_u_getTypetag(a) == 's'){
+				t_osc_atom_ar_u *ar = NULL;
+				osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &ar);
+				if(ar){
+					t_osc_atom_u *aa = osc_atom_array_u_get(ar, 0);
+					if(osc_atom_u_getTypetag(aa) == 's'){
+						osc_atom_u_getString(aa, 0, &address);
+					}
+					osc_atom_array_u_free(ar);
+				}
+			}
+		}
+		break;
+	case OSC_EXPR_ARG_TYPE_OSCADDRESS:
+		{
+			char *tmp = osc_expr_arg_getOSCAddress(f_argv);
+			osc_util_strdup(&address, tmp);
+		}
+		break;
+	case OSC_EXPR_ARG_TYPE_EXPR:
+		{
+			// this could be value(/foo)
+			t_osc_atom_ar_u *ar = NULL;
+			int err = osc_expr_evalInLexEnv(osc_expr_arg_getExpr(f_argv), lexenv, len, oscbndl, &ar);
+			if(!err && ar){
+				if(osc_atom_array_u_getLen(ar) != 1){
+					goto err;
+				}
+				t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+				if(!a){
+					goto err;
+				}
+				if(osc_atom_u_getTypetag(a) != 's'){
+					goto err;
+				}
+				osc_atom_u_getString(a, 0, &address);
+				if(!address){
+					goto err;
+				}
+				if(address[0] != '/'){
+					goto err;
+				}
+			}
+		}
+		break;
+	}
+	if(address){
+		*out = osc_atom_array_u_alloc(1);
+		int res = 0;
+		func(*len, *oscbndl, address, 1, &res);
+		osc_atom_u_setBool(osc_atom_array_u_get(*out, 0), res);
+		osc_mem_free(address);
+		return 0;
+	}
+ err:
+	osc_error(OSC_ERR_EXPR_ARGCHK, "arg 1 should be an OSC address");
+	return 1;
+
+}
+
+int osc_expr_specFunc_bound(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	return osc_expr_specFunc_existsorbound(f, lexenv, len, oscbndl, out, osc_bundle_s_addressIsBound);
+}
+
+int osc_expr_specFunc_exists(t_osc_expr *f,
+			    t_osc_expr_lexenv *lexenv,
+			    long *len,
+			    char **oscbndl,
+			    t_osc_atom_ar_u **out)
+{
+	return osc_expr_specFunc_existsorbound(f, lexenv, len, oscbndl, out, osc_bundle_s_addressExists);
+}
+*/
 // these are dummy functions---they're used to do a pointer comparison in osc_expr_ast_funcall_evalInLexEnv
 OSC_EXPR_BUILTIN_DECL(apply){return 0;}
 OSC_EXPR_BUILTIN_DECL(map){return 0;}
@@ -1634,6 +2082,8 @@ OSC_EXPR_BUILTIN_DECL(lookup){return 0;}
 OSC_EXPR_BUILTIN_LVAL_DECL(lookup){return 0;}
 OSC_EXPR_BUILTIN_DECL(nth){return 0;}
 OSC_EXPR_BUILTIN_LVAL_DECL(nth){return 0;}
+OSC_EXPR_BUILTIN_DECL(message){return 0;}
+OSC_EXPR_BUILTIN_DECL(bundle){return 0;}
 
 /*
 // special functions: bypass scalar expansion and type promotion and have access to the bundle

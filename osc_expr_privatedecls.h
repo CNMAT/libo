@@ -55,6 +55,8 @@ OSC_EXPR_BUILTIN_DECL(lookup);
 OSC_EXPR_BUILTIN_LVAL_DECL(lookup);
 OSC_EXPR_BUILTIN_DECL(nth);
 OSC_EXPR_BUILTIN_LVAL_DECL(nth);
+OSC_EXPR_BUILTIN_DECL(message);
+OSC_EXPR_BUILTIN_DECL(bundle);
 
 #define OSC_EXPR_SPECFUNC_DECL(name) int osc_expr_specFunc_##name(t_osc_expr_ast_funcall *f, \
 								  t_osc_expr_lexenv *lexenv, \
@@ -90,4 +92,6 @@ OSC_EXPR_SPECFUNC_DECL(lookup);
 OSC_EXPR_SPECFUNC_LVAL_DECL(lookup);
 OSC_EXPR_SPECFUNC_DECL(nth);
 OSC_EXPR_SPECFUNC_LVAL_DECL(nth);
+OSC_EXPR_SPECFUNC_DECL(message);
+OSC_EXPR_SPECFUNC_DECL(bundle);
 
