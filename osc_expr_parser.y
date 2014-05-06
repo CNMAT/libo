@@ -239,17 +239,22 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
 	}
 
 	// check types against entries in the vtab
+	/* this assumes that all operators are typed and that's not true for = and a few others
 	t_osc_expr_ast_expr *args[] = {left, right};
 	for(int i = 0; i < 2; i++){
+		printf("i = %d\n", i);
 		if(osc_expr_ast_expr_getNodetype(args[i]) == OSC_EXPR_AST_NODETYPE_VALUE &&
 		   osc_expr_ast_value_getValueType((t_osc_expr_ast_value *)args[i]) == OSC_EXPR_AST_VALUE_TYPE_LITERAL){
 			char tt = osc_atom_u_getTypetag(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)args[i]));
+			printf("checking typetag %c\n", tt);
 			t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunctionForOpcode(opcode);
+			printf("funcrec = %p\n", r);
 			if(!osc_expr_funcrec_getFuncForTypetag(r, tt)){
 				printf("type error %d\n", i);
 			}
 		}
 	}
+	*/
 	t_osc_expr_ast_expr *b = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
 	return b;
 }
@@ -662,7 +667,7 @@ unaryop:
 
 binaryop:
 	// Infix operators
-	oscaddress '=' expr {
+	expr '=' expr {
 		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '=', $3);
  	}
 	| expr '+' expr {

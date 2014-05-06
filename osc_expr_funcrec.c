@@ -139,7 +139,7 @@ int osc_expr_funcrec_hasVTab(t_osc_expr_funcrec *r)
 
 void *osc_expr_funcrec_getFuncForTypetag(t_osc_expr_funcrec *r, char tt)
 {
-	if(r){
+	if(r && r->vtab){
 		return r->vtab[(int)tt];
 	}
 	return NULL;
