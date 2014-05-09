@@ -361,7 +361,7 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 %precedence lowest
 
 %type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list message messages bundle
-%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER OSC_EXPR_THIS
+%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
 
 // low to high precedence
@@ -413,6 +413,9 @@ literal:
 	| OSC_EXPR_STRING {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
 	}
+	| bundle
+	| function
+	| list
 ;
 
 list:
@@ -514,10 +517,6 @@ value:
 		// make lambda if this is a function or operator
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
-	| OSC_EXPR_THIS {
-		//$$ = osc_expr_ast_value_allocIdentifier($1);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
-	  }
 //| list
 //| arraysubscript
 ;
@@ -786,7 +785,7 @@ expr:
 		$$ = osc_expr_ast_expr_alloc();
 	}
 	| value
-	| function
+	  //| function
 	| funcall
 	| unaryop 
 	| binaryop
@@ -795,9 +794,9 @@ expr:
 		$$ = $2;
 		osc_expr_ast_expr_setBrackets($$, '(', ')');
   	}
-	| bundle 
+//| bundle 
 	| let
-	| list %prec lowest
+	  //| list %prec lowest
 	| arraysubscript %prec lowest
 ;
 
