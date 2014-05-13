@@ -137,6 +137,7 @@ int osc_expr_lambda(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_assigntobundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -2004,6 +2005,18 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Extract a message from a nested bundle.",
 	 osc_expr_getbundlemember,
+	 NULL},
+	{"assigntobundlemember",
+	 "assigntobundlemember(/bundle, /member, /val)",
+	 3,
+	 0,
+	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle.", "The value to assign."},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Assign a value to an address contained in a named nested bundle.",
+	 osc_expr_assigntobundlemember,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"imu",

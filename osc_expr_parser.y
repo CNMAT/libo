@@ -858,6 +858,19 @@ expr:
 	| arg OSC_EXPR_POWEQ arg {
 		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "^", $1, $3);
  	}
+	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS {
+		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		osc_atom_u_getString($1, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a1, ptr);
+		ptr = NULL;
+		osc_atom_u_getString($3, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ".", a1, a2);
+		osc_mem_free($1);
+		osc_mem_free($3);
+ 	}
 
 // prefix not
 	| '!' arg {
@@ -957,6 +970,21 @@ expr:
 		//$$ = osc_expr_parser_infix("=", arg, $3);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
 		osc_atom_u_free($1);
+	}
+	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS '=' arg{
+		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		osc_atom_u_getString($1, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a1, ptr);
+		ptr = NULL;
+		osc_atom_u_getString($3, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		osc_expr_arg_append(a1, a2);
+		osc_expr_arg_append(a1, $5);
+		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assigntobundlemember", a1);
+		osc_mem_free($1);
+		osc_mem_free($3);
 	}
 	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg ':' arg CLOSE_DBL_BRKTS '=' arg{
 		char *ptr = NULL;
