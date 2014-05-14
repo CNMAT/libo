@@ -870,7 +870,7 @@ expr:
 		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ".", a1, a2);
 		osc_mem_free($1);
 		osc_mem_free($3);
- 	}
+	}
 
 // prefix not
 	| '!' arg {
