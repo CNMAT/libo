@@ -113,7 +113,7 @@ void osc_expr_format(t_osc_expr *fg, long *buflen, char **fmt);
 void osc_expr_formatFunctionTable(long *buflen, char **buf);
 
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 }
 #endif
 
