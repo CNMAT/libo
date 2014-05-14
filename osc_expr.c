@@ -37,6 +37,7 @@
 #include "osc_mem.h"
 #include "osc_bundle_s.h"
 #include "osc_bundle_iterator_s.h"
+#include "osc_bundle_iterator_u.h"
 #include "osc_message_s.h"
 #include "osc_message_u.h"
 #include "osc_message_iterator_s.h"
@@ -1095,20 +1096,50 @@ static int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 		return 1;
 	}
 	int n = 0;
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(*len, *oscbndl);
-	while(osc_bndl_it_s_hasNext(it)){
-		osc_bndl_it_s_next(it);
-		n++;
+	if(osc_expr_getArgCount(f)){
+		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+		t_osc_atom_ar_u *ar = NULL;
+		osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &ar);
+		if(ar){
+			t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+			if(osc_atom_u_getTypetag(a) != OSC_BUNDLE_TYPETAG){
+				osc_atom_array_u_free(ar);
+				osc_error(OSC_ERR_EXPR_ARGCHK, "argumnt to getaddresses() should be a bundle.");
+				return 1;
+			}
+			t_osc_bndl_u *b = osc_atom_u_getBndl(a);
+			t_osc_bndl_it_u *it = osc_bndl_it_u_get(b);
+			while(osc_bndl_it_u_hasNext(it)){
+				osc_bndl_it_u_next(it);
+				n++;
+			}
+			*out = osc_atom_array_u_alloc(n);
+			osc_bndl_it_u_reset(it);
+			n = 0;
+			while(osc_bndl_it_u_hasNext(it)){
+				t_osc_msg_u *m = osc_bndl_it_u_next(it);
+				osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_u_getAddress(m));
+				n++;
+			}
+			osc_bndl_it_u_destroy(it);
+			osc_atom_array_u_free(ar);
+		}
+	}else{
+		t_osc_bndl_it_s *it = osc_bndl_it_s_get(*len, *oscbndl);
+		while(osc_bndl_it_s_hasNext(it)){
+			osc_bndl_it_s_next(it);
+			n++;
+		}
+		*out = osc_atom_array_u_alloc(n);
+		osc_bndl_it_s_reset(it);
+		n = 0;
+		while(osc_bndl_it_s_hasNext(it)){
+			t_osc_msg_s *m = osc_bndl_it_s_next(it);
+			osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_s_getAddress(m));
+			n++;
+		}
+		osc_bndl_it_s_destroy(it);
 	}
-	*out = osc_atom_array_u_alloc(n);
-	osc_bndl_it_s_reset(it);
-	n = 0;
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *m = osc_bndl_it_s_next(it);
-		osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_s_getAddress(m));
-		n++;
-	}
-	osc_bndl_it_s_destroy(it);
 	return 0;
 }
 
