@@ -1460,18 +1460,41 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 	if(!arg1){
 		return 1;
 	}
-	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
-		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
-		if(b){
-			long l = 0;
-			char *p = NULL;
-			osc_bundle_u_serialize(b, &l, &p);
-			if(p){
-				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &l, &p, out);
-				osc_mem_free(p);
-				return 0;
-			}
+	long bndl_len_s = 0;
+	char *bndl_s = NULL;
+	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
+		t_osc_message_array_s *msgar = NULL;
+		osc_bundle_s_lookupAddress(*len, *oscbndl, string, &msgar, 1);
+		if(msgar){
+			t_osc_msg_s *m = osc_message_array_s_get(msgar, 0);
+			t_osc_atom_s *a = NULL;
+			osc_message_s_getArg(m, 0, &a);
+			char tmp[osc_bundle_s_getStructSize()];
+			t_osc_bndl_s *b = (t_osc_bndl_s *)tmp;
+			osc_atom_s_getBndlCopy(&b, a);
+			bndl_len_s = osc_bundle_s_getLen(b);
+			bndl_s = osc_bundle_s_getPtr(b);
+			osc_atom_s_free(a);
+			osc_message_array_s_free(msgar);
 		}
+	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
+		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
+	}
+
+	if(bndl_len_s && bndl_s){
+
+	/* if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){ */
+	/* 	t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0)); */
+	/* 	if(b){ */
+	/* 		long l = 0; */
+	/* 		char *p = NULL; */
+	/* 		osc_bundle_u_serialize(b, &l, &p); */
+		//if(p){
+				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
+				osc_mem_free(bndl_s);
+				return 0;
 	}
 	return 1;
 }
