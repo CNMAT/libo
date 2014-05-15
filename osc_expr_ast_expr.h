@@ -99,6 +99,8 @@ int osc_expr_ast_expr_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 				       t_osc_msg_u **assign_target,
 				       long *nlvals,
 				       t_osc_atom_u ***lvals);
+int osc_expr_ast_expr_evalBundle_s(long *len, char **oscbndl);
+int osc_expr_ast_expr_evalBundle_u(t_osc_bndl_u *b);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copy(t_osc_expr_ast_expr *ast);
 t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast);
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e);

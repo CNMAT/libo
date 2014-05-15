@@ -27,6 +27,8 @@
 #include "osc_expr_ast_expr.r"
 #include "osc_expr_ast_expr.h"
 #include "osc_expr_ast_function.h"
+#include "osc_bundle_iterator_u.h"
+#include "osc_message_iterator_u.h"
 
 void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,
@@ -108,6 +110,60 @@ int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
 		}
 		osc_bundle_u_serialize(bndlu, len, oscbndl);
 		osc_bundle_u_free(bndlu);
+		return 0;
+	}
+	return 1;
+}
+
+int osc_expr_ast_expr_evalBundle_s(long *len, char **oscbndl)
+{
+	t_osc_bndl_u *bndlu = NULL;
+	osc_bundle_s_deserialize(*len, *oscbndl, &bndlu);
+	osc_expr_ast_expr_evalBundle_u(bndlu);
+	osc_bundle_u_serialize(bndlu, len, oscbndl);
+	osc_bundle_u_free(bndlu);
+	return 0;
+}
+
+int osc_expr_ast_expr_evalBundle_u(t_osc_bndl_u *bndlu)
+{
+	int ret = 0;
+	if(bndlu){
+		t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndlu);
+		while(osc_bndl_it_u_hasNext(it)){
+			t_osc_msg_u *m = osc_bndl_it_u_next(it);
+			t_osc_msg_it_u *mit = osc_msg_it_u_get(m);
+			int arg = 0;
+			while(osc_msg_it_u_hasNext(mit)){
+				t_osc_atom_u *a = osc_msg_it_u_next(mit);
+				if(osc_atom_u_getTypetag(a) == OSC_EXPR_TYPETAG){
+					osc_message_u_removeAtom(m, a);
+					t_osc_expr_ast_expr *ast = osc_atom_u_getExpr(a);
+					t_osc_atom_ar_u *out = NULL;
+					int ret = osc_expr_ast_expr_evalInLexEnv(ast, NULL, bndlu, &out);
+					if(out){
+						for(int i = 0; i < osc_atom_array_u_getLen(out); i++){
+							t_osc_atom_u *copy = NULL;
+							osc_atom_u_copy(&copy, osc_atom_array_u_get(out, i));
+							osc_message_u_insertAtom(m, copy, arg);
+							arg++;
+						}
+					}
+					osc_atom_array_u_free(out);
+				}else if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+					t_osc_bndl_u *b = osc_atom_u_getBndl(a);
+					ret = osc_expr_ast_expr_evalBundle_u(b);
+					if(ret){
+						osc_msg_it_u_destroy(mit);
+						osc_bndl_it_u_destroy(it);
+						return ret;
+					}
+				}
+				arg++;
+			}
+			osc_msg_it_u_destroy(mit);
+		}
+		osc_bndl_it_u_destroy(it);
 		return 0;
 	}
 	return 1;
