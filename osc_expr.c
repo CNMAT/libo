@@ -838,7 +838,6 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		return err;
 	}
 	int nindexes = osc_atom_array_u_getLen(indexes);
-
 	// get data
 	t_osc_atom_ar_u *data = NULL;
 	err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &data);
@@ -848,7 +847,6 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		return err;
 	}
 	int ndata = osc_atom_array_u_getLen(data);
-
 	if(nindexes == 0 || ndata == 0){
 		return 1;
 	}else if(nindexes == 1 && ndata > 1){
@@ -887,7 +885,6 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 			osc_atom_u_copy(&dest, osc_atom_array_u_get(data, i));
 		}
 	}
-
 	int i;
 	for(i = 0; i < osc_atom_array_u_getLen(*out); i++){
 		t_osc_atom_u *cpy = NULL;
@@ -1601,21 +1598,40 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			return ret;
 		}
 
-		t_osc_atom_u *a = osc_atom_u_alloc();
-		osc_atom_u_setBndl_s(a, bndl_len_s, bndl_s);
-		t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(arg_bndl, a);
-		osc_expr_arg_copy(&target, f_argv);
-		osc_expr_arg_append(target, arg_bndl);
-		osc_expr_setArg(assign, target);
-		*out = NULL;
-		ret = osc_expr_specFunc_assign(assign, lexenv, len, oscbndl, out);
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
+			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
+			t_osc_expr_rec *r = osc_expr_getRec(e);
+			if(osc_expr_rec_getFunction(r) == osc_expr_nth){
+				osc_expr_setRec(assign, osc_expr_lookupFunction("assign_to_index"));
+				t_osc_expr_arg *nth_args = osc_expr_getArgs(e);
+				osc_expr_arg_copy(&target, nth_args);
+				t_osc_expr_arg *nth_arg2 = NULL;
+				osc_expr_arg_copy(&nth_arg2, osc_expr_arg_next(nth_args));
+				osc_expr_arg_append(target, nth_arg2);
+				t_osc_atom_u *a = osc_atom_u_alloc();
+				osc_atom_u_setBndl_s(a, bndl_len_s, bndl_s);
+				t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAtom(arg_bndl, a);
+				osc_expr_arg_append(target, arg_bndl);
+				osc_expr_setArg(assign, target);
+				*out = NULL;
+				ret = osc_expr_specFunc_assigntoindex(assign, lexenv, len, oscbndl, out);
+			}else{
+				return 1;
+			}
+		}else{
+			osc_atom_u_setBndl_s(osc_atom_array_u_get(arg1, 0), bndl_len_s, bndl_s);
+			t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
+
+			osc_expr_arg_setList(arg_bndl, arg1);
+			osc_expr_arg_copy(&target, f_argv);
+			osc_expr_arg_append(target, arg_bndl);
+			osc_expr_setArg(assign, target);
+			*out = NULL;
+			ret = osc_expr_specFunc_assign(assign, lexenv, len, oscbndl, out);
+		}
+
 		osc_expr_free(assign);
-		/*
-		  if(target){
-		  osc_expr_arg_freeList(target);
-		  }
-		*/
 		osc_mem_free(bndl_s);
 		return ret;
 	}

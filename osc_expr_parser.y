@@ -583,7 +583,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!'
 
 // level 2
-%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS
+%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
 
 %token START_EXPNS START_FUNCTION
 %start start
@@ -871,6 +871,9 @@ expr:
 		osc_mem_free($1);
 		osc_mem_free($3);
 	}
+	/* | OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg CLOSE_DBL_BRKTS '.' OSC_EXPR_OSCADDRESS{ */
+	/* 	printf("here\n"); */
+	/* } */
 
 // prefix not
 	| '!' arg {
