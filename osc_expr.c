@@ -344,6 +344,10 @@ static int osc_expr_specFunc_apply(t_osc_expr *f,
 		t_osc_expr *e = (t_osc_expr *)osc_expr_rec_getExtra(r);
 		while(e){
 			int ret =  osc_expr_evalInLexEnv(e, lexenv_copy, len, oscbndl, out);
+			if(e->next){
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+			}
 			if(ret){
 				osc_expr_destroyLexenv(lexenv_copy);
 				return ret;
