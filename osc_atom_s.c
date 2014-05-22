@@ -687,10 +687,6 @@ int32_t osc_atom_s_getBlobLen(t_osc_atom_s *a)
 		}else{
 			return 0;
 		}
-	case 'q':
-		return 16;
-	case 'Q':
-		return 32;
 	default:
 		return osc_sizeof(osc_atom_s_getTypetag(a), a->data);
 	}
@@ -708,22 +704,27 @@ char *osc_atom_s_getBlob(t_osc_atom_s *a)
 	}
 }
 
-t_osc_err osc_atom_s_getBlobCopy(char **blob, int32_t *len, t_osc_atom_s *a)
+t_osc_err osc_atom_s_getBlobCopy(char **blob, int32_t *buflen, t_osc_atom_s *a)
 {
 	if(!a){
 		return OSC_ERR_NULLPTR;
 	}
+	int bloblen = osc_atom_s_getBlobLen(a);
 	if(!(*blob)){
-		*len = osc_atom_s_getBlobLen(a) + 4;
-		*blob = osc_mem_alloc(*len);
+		*buflen = bloblen + 1;
+		while(*buflen % 4){
+			*buflen += 1;
+		}
+		*buflen += 4;
+		*blob = osc_mem_alloc(*buflen);
 	}
 	switch(osc_atom_s_getTypetag(a)){
 	case 'b':
-		memcpy(*blob, a->data, *len);
+		memcpy(*blob, a->data, *buflen);
 		break;
 	default:
-		*((int32_t *)(*blob)) = hton32(*len - 4);
-		memcpy((*blob) + 4, a->data, *len - 4);
+		*((int32_t *)(*blob)) = hton32(bloblen);
+		memcpy((*blob) + 4, a->data, *buflen);
 	}
 	return OSC_ERR_NONE;
 }

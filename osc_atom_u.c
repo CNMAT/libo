@@ -884,10 +884,8 @@ int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a)
 			}
 			return len;
 		}
-	case 'q':
-		return 16;
-	case 'Q':
-		return 32;
+	case 's':
+		return strlen(a->w.s);
 	default:
 		return osc_sizeof(osc_atom_u_getTypetag(a), a->w.s);
 	}
@@ -904,28 +902,33 @@ char *osc_atom_u_getBlob(t_osc_atom_u *a)
 	return a->w.b;
 }
 
-void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob)
+void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *buflen, char **blob)
 {
 	if(!a){
 		return;
 	}
+	int bloblen = osc_atom_u_getBlobLen(a);
 	if(!(*blob)){
-		*len = osc_atom_u_getBlobLen(a) + 4;
-		*blob = osc_mem_alloc(*len);
+		*buflen = bloblen + 1;
+		while(*buflen % 4){
+			*buflen += 1;
+		}
+		*buflen += 4;
+		*blob = osc_mem_alloc(*buflen);
 	}
-	memset(*blob, '\0', *len);
+	memset(*blob, '\0', *buflen);
 	switch(osc_atom_u_getTypetag(a)){
 	case 'b':
-		memcpy(*blob, a->w.b, *len);
+		memcpy(*blob, a->w.b, *buflen);
 		break;
 	case 'c':
 	case 'C':
-		*((int32_t *)(*blob)) = hton32(4);
+		*((int32_t *)(*blob)) = hton32(1);
 		(*blob)[4] = a->w.c;
 		break;
 	case 'u':
 	case 'U':
-		*((int32_t *)(*blob)) = hton32(4);
+		*((int32_t *)(*blob)) = hton32(2);
 		*((int16_t *)((*blob) + 4)) = hton16(a->w.u);
 		break;
 	case 'i':
@@ -957,9 +960,9 @@ void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob)
 		break;
 	case 's':
 		{
-			*((int32_t *)(*blob)) = hton32(*len - 4);
+			*((int32_t *)(*blob)) = hton32(*buflen - 4);
 			char *p = (*blob) + 4;
-			osc_atom_u_getString(a, *len, &p);
+			osc_atom_u_getString(a, *buflen, &p);
 		}
 		break;
 	case OSC_BUNDLE_TYPETAG:
@@ -981,7 +984,7 @@ void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob)
 		*((int32_t *)(*blob)) = hton32(OSC_TIMETAG_SIZEOF);
 		osc_timetag_encodeForHeader(a->w.t, (*blob) + 4);
 		break;
-		default: ;
+	default: ;
 	}
 }
 
@@ -1208,7 +1211,12 @@ void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob)
 	}
 	osc_atom_u_clear(a);
 	int32_t l = ntoh32(*((int32_t *)blob));
-	char *copy = osc_mem_alloc(l + 4);
+	int buflen = l + 1;
+	while(buflen % 4){
+		buflen++;
+	}
+	char *copy = osc_mem_alloc(buflen + 4);
+	memset(copy, '\0', buflen + 4);
 	memcpy(copy, blob, l + 4);
 	a->w.b = copy;
 	a->typetag = 'b';
@@ -1252,6 +1260,8 @@ size_t osc_atom_u_sizeof(t_osc_atom_u *a)
 		return osc_bundle_u_getSerializedSize(a->w.bndl);
 	case OSC_TIMETAG_TYPETAG:
 		return OSC_TIMETAG_SIZEOF;
+	case 'b':
+		return ntoh32(*((int32_t *)a->w.b));
 	}
 	return 0;
 }
@@ -1362,6 +1372,10 @@ t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, ch
 	case 'b':
 		{
 			int32_t l = ntoh32(*((int32_t *)a->w.b));
+			l++;
+			while(l % 4){
+				l++;
+			}
 			memcpy(*buf + *bufpos, a->w.b, l + 4);
 			(*bufpos) += l + 4;
 		}
