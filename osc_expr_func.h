@@ -138,6 +138,8 @@ int osc_expr_gettimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 int osc_expr_settimetag(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_assigntobundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_bitand(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_bitor(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -2017,6 +2019,32 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Assign a value to an address contained in a named nested bundle.",
 	 osc_expr_assigntobundlemember,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"bitand",
+	 "bitand(lhs, rhs)",
+	 2,
+	 0,
+	 (char *[]){"Left hand side", "Right hand side"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/bitwise", NULL},
+	 "Bitwise and",
+	 osc_expr_bitand,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"bitor",
+	 "bitor(lhs, rhs)",
+	 2,
+	 0,
+	 (char *[]){"Left hand side", "Right hand side"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/bitwise", NULL},
+	 "Bitwise or",
+	 osc_expr_bitor,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"imu",

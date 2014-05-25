@@ -36,6 +36,17 @@ char *osc_typetag_str(int8_t tt)
 	return osc_typetag_strings[tt];
 }
 
+int osc_typetag_compare(char tt1, char tt2)
+{
+	if(tt1 == tt2){
+		return 0;
+	}else if(osc_typetag_indexes[(int)tt1] < osc_typetag_indexes[(int)tt2]){
+		return -1;
+	}else{
+		return 1;
+	}
+}
+
 char osc_typetag_getLargestType(int argc, t_osc_atom_array_u **argv)
 {
 	uint32_t largest_type = 0;

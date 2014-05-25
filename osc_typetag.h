@@ -55,6 +55,7 @@ enum{
 #define OSC_TYPETAG_ISNUMERIC(tt) (tt == 'f' || tt == 'd' || tt == 'T' || tt == 'F' ||tt == 'i' || tt == 'I' || tt == 'h' || tt == 'H' || tt == 'u' || tt == 'U' || tt == 'c' || tt == 'C')
 
 char *osc_typetag_str(int8_t tt);
+int osc_typetag_compare(char tt1, char tt2);
 char osc_typetag_getLargestType(int argc, t_osc_atom_array_u **argv);
 
 #ifdef __cplusplus

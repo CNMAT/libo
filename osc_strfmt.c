@@ -114,7 +114,7 @@ int osc_strfmt_bool(char *buf, size_t n, char b)
 
 int osc_strfmt_null(char *buf, size_t n)
 {
-	return snprintf(buf, n, "null");
+	return snprintf(buf, n, "nil");
 }
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)

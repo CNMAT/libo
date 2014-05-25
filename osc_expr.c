@@ -181,7 +181,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 					}
 				}
 				int j;
-				for(j = 0; j < i; j++){
+				for(j = 0; j < i + 1; j++){
 					if(argv[j]){
 						osc_atom_array_u_free(argv[j]);
 					}
@@ -1574,7 +1574,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		t_osc_atom_array_u *ar = NULL;
 		osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &ar);
 		if(!ar){
-			return 1;
+			goto cleanup;
 		}
 		t_osc_expr_arg *target = NULL;
 		osc_expr_arg_copy(&target, f_argv->next);
@@ -1585,7 +1585,9 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			osc_expr_arg_setOSCAtom(val, copy);
 			osc_atom_array_u_free(ar);
 		}else{
-			osc_expr_arg_setList(val, ar);
+			t_osc_atom_ar_u *copy = osc_atom_array_u_copy(ar);
+			osc_expr_arg_setList(val, copy);
+			osc_atom_array_u_free(ar);
 		}
 		osc_expr_arg_append(target, val);
 		osc_expr_setArg(assign, target);
@@ -1635,8 +1637,16 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			ret = osc_expr_specFunc_assign(assign, lexenv, len, oscbndl, out);
 		}
 
-		osc_expr_free(assign);
-		osc_mem_free(bndl_s);
+	cleanup:
+		if(arg1){
+			osc_atom_array_u_free(arg1);
+		}
+		if(assign){
+			osc_expr_free(assign);
+		}
+		if(bndl_s){
+			osc_mem_free(bndl_s);
+		}
 		return ret;
 	}
 
@@ -2016,7 +2026,34 @@ int osc_expr_add(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		if(OSC_TYPETAG_ISFLOAT(tt1) || OSC_TYPETAG_ISFLOAT(tt2)){
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) + osc_atom_u_getDouble(f2));
 		}else{
-			osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) + osc_atom_u_getInt32(f2));
+			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
+			printf("tt = %c\n", tt);
+			switch(tt){
+			case 'i':
+				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) + osc_atom_u_getInt32(f2));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(*result, osc_atom_u_getUInt32(f1) + osc_atom_u_getUInt32(f2));
+				break;
+			case 'h':
+				osc_atom_u_setInt64(*result, osc_atom_u_getInt64(f1) + osc_atom_u_getInt64(f2));
+				break;
+			case 'H':
+				osc_atom_u_setUInt64(*result, osc_atom_u_getUInt64(f1) + osc_atom_u_getUInt64(f2));
+				break;
+			case 'u':
+				osc_atom_u_setInt16(*result, osc_atom_u_getInt16(f1) + osc_atom_u_getInt16(f2));
+				break;
+			case 'U':
+				osc_atom_u_setUInt16(*result, osc_atom_u_getUInt16(f1) + osc_atom_u_getUInt16(f2));
+				break;
+			case 'c':
+				osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) + osc_atom_u_getInt8(f2));
+				break;
+			case 'C':
+				osc_atom_u_setUInt8(*result, osc_atom_u_getUInt8(f1) + osc_atom_u_getUInt8(f2));
+				break;
+			}
 		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
@@ -2091,7 +2128,34 @@ int osc_expr_multiply(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		if(OSC_TYPETAG_ISFLOAT(tt1) || OSC_TYPETAG_ISFLOAT(tt2)){
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) * osc_atom_u_getDouble(f2));
 		}else{
-			osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) * osc_atom_u_getInt32(f2));
+			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
+			printf("tt = %c\n", tt);
+			switch(tt){
+			case 'i':
+				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) * osc_atom_u_getInt32(f2));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(*result, osc_atom_u_getUInt32(f1) * osc_atom_u_getUInt32(f2));
+				break;
+			case 'h':
+				osc_atom_u_setInt64(*result, osc_atom_u_getInt64(f1) * osc_atom_u_getInt64(f2));
+				break;
+			case 'H':
+				osc_atom_u_setUInt64(*result, osc_atom_u_getUInt64(f1) * osc_atom_u_getUInt64(f2));
+				break;
+			case 'u':
+				osc_atom_u_setInt16(*result, osc_atom_u_getInt16(f1) * osc_atom_u_getInt16(f2));
+				break;
+			case 'U':
+				osc_atom_u_setUInt16(*result, osc_atom_u_getUInt16(f1) * osc_atom_u_getUInt16(f2));
+				break;
+			case 'c':
+				osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) * osc_atom_u_getInt8(f2));
+				break;
+			case 'C':
+				osc_atom_u_setUInt8(*result, osc_atom_u_getUInt8(f1) * osc_atom_u_getUInt8(f2));
+				break;
+			}
 		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1)){
@@ -2514,7 +2578,7 @@ int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
 		blob += 4;
                 for(j = 1; j < argc; j++){
                         for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
-                                osc_atom_u_setDouble(osc_atom_array_u_get(*out, k), 0.);
+                                osc_atom_u_setInt8(osc_atom_array_u_get(*out, k), 0.);
                                 int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
                                 if(l > nbytes - 1){
                                         osc_atom_array_u_free(*out);
@@ -4087,6 +4151,148 @@ int osc_expr_join(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	return 0;
 }
 
+int osc_expr_bitand(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		return 1;
+	}
+	if(!OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, 0))) || !OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[1], 0)))){
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	char largest_type = osc_typetag_getLargestType(argc, argv);
+	switch(largest_type){
+	case 'i':
+		{
+			int32_t i1 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], 0));
+			int32_t i2 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'I':
+		{
+			uint32_t i1 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[0], 0));
+			uint32_t i2 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt32(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'h':
+		{
+			int64_t i1 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[0], 0));
+			int64_t i2 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt64(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'H':
+		{
+			uint64_t i1 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[0], 0));
+			uint64_t i2 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt64(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'u':
+		{
+			int16_t i1 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[0], 0));
+			int16_t i2 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt16(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'U':
+		{
+			uint16_t i1 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[0], 0));
+			uint16_t i2 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt16(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'c':
+		{
+			int8_t i1 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[0], 0));
+			int8_t i2 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'C':
+		{
+			uint8_t i1 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[0], 0));
+			uint8_t i2 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	}
+	return 0;
+}
+
+int osc_expr_bitor(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		return 1;
+	}
+	if(!OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, 0))) || !OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[1], 0)))){
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	char largest_type = osc_typetag_getLargestType(argc, argv);
+	switch(largest_type){
+	case 'i':
+		{
+			int32_t i1 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], 0));
+			int32_t i2 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'I':
+		{
+			uint32_t i1 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[0], 0));
+			uint32_t i2 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt32(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'h':
+		{
+			int64_t i1 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[0], 0));
+			int64_t i2 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt64(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'H':
+		{
+			uint64_t i1 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[0], 0));
+			uint64_t i2 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt64(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'u':
+		{
+			int16_t i1 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[0], 0));
+			int16_t i2 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt16(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'U':
+		{
+			uint16_t i1 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[0], 0));
+			uint16_t i2 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt16(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'c':
+		{
+			int8_t i1 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[0], 0));
+			int8_t i2 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'C':
+		{
+			uint8_t i1 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[0], 0));
+			uint8_t i2 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	}
+	return 0;
+}
+
 //=====================================================================================================
 // MadgwickAHRS.c
 //=====================================================================================================
@@ -4888,6 +5094,13 @@ void osc_expr_arg_clear(t_osc_expr_arg *a)
 			osc_expr_rec_free(a->arg.func, (void **)&e);
 			if(e){
 				osc_expr_free(e);
+			}
+		}
+		break;
+	case OSC_EXPR_ARG_TYPE_LIST:
+		{
+			if(a->arg.list){
+				osc_atom_array_u_free(a->arg.list);
 			}
 		}
 		break;
