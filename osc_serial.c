@@ -246,8 +246,8 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			case 6:
 				OSC_SERIAL_RETURN(s + 1);
 			case 7:
-				// negative size check
-				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24));
+				// do negative size check
+				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 24));
 			}
 		}
 	case OSC_SERIAL_BUNDLE_MESSAGE:
@@ -257,9 +257,9 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				int32_t c = count & 0xff;
 				switch(c){
 				case 0:
-					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1));
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 16) | (c + 1));
 				case 1:
-					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1));
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 8) | (c + 1));
 				case 2:
 					// negative size check
 					//count = ntoh32(count | b);
@@ -523,6 +523,53 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 	OSC_SERIAL_RETURN(0);
 }
 
+long osc_serial_slipEncode(long len, char *buf, char **encoded)
+{
+
+}
+
+/*
+#define OSC_SERIAL_GETCOUNT(state) (state & 0x00ffffffffffffff)
+#define OSC_SERIAL_GETSTATE(state) ((state & 0xff00000000000000) >> 56)
+#define OSC_SERIAL_GETSTATEANDCOUNT(state, s, c) {s = OSC_SERIAL_GETSTATE(state); c = OSC_SERIAL_GETCOUNT(state);}
+#define OSC_SERIAL_SETSTATEANDCOUNT(state, s, c) (state = ((uint64_t)s << 56) | (c & 0x00ffffffffffffff))
+*/
+
+#define OSC_SERIAL_SLIP_END 	0300 // end (or beginning) of packet
+#define OSC_SERIAL_SLIP_ESC 	0333 // byte stuffing
+#define OSC_SERIAL_SLIP_ESC_END 0334 // END data byte
+#define OSC_SERIAL_SLIP_ESC_ESC 0335 // ESC data byte
+/*
+unsigned long osc_serial_slipDecode(unsigned char byte, unsigned long count, unsigned long *state)
+{
+	unsigned long s = *state;
+	unsigned long c = count;
+	switch(s){
+	case 0: // waiting for packet to start
+		s = 1;
+		if(byte == OSC_SERIAL_SLIP_END){
+			break;
+		}else{
+			; // we incremented the state, so intentionally fallthrough to the next case
+		}
+	case 1: // packet has started
+		switch(byte){
+		case OSC_SERIAL_SLIP_END:
+			if(c > 0){
+
+			}
+			*state = 0;
+			break;
+		case OSC_SERIAL_SLIP_ESC:
+
+		}
+ 	case 2: // this byte has been escaped
+
+	case 3: // error
+	}
+	return c;
+}
+*/
 /*
 int main(int argc, char **argv)
 {
