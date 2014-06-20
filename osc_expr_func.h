@@ -663,7 +663,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_ANYTHING},
 	 (char *[]){NULL},
 	 (int []){},
-	 (char *[]){"/math/arithmetic", NULL},
+	 (char *[]){"/core", NULL},
 	 "Assignment",
 	 osc_expr_assign,
 	 NULL},
