@@ -536,7 +536,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", NULL},
 	 "Add",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_div},
 	//////////////////////////////////////////////////
 	{"lt",
 	 "/result = lt($1, $2)",
