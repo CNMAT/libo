@@ -999,10 +999,12 @@ size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m)
 		ptr += padded_typetag_len;
 		*ttptr++ = ',';
 		t_osc_msg_it_u *it = osc_msg_it_u_get(m);
-		while(osc_msg_it_u_hasNext(it) && _n < n){
+		while(osc_msg_it_u_hasNext(it) && ttptr < (buf + n)){
 			t_osc_atom_u *a = osc_msg_it_u_next(it);
 			*ttptr++ = osc_atom_u_getTypetag(a);
-			_n += osc_atom_u_nserialize(buf + _n, n - _n, a);
+			if(_n <= n){
+				_n += osc_atom_u_nserialize(buf + _n, n - _n, a);
+			}
 		}
 		osc_msg_it_u_destroy(it);
 		*((int32_t *)buf) = hton32((int32_t)_n - 4);
