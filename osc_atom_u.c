@@ -28,6 +28,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <math.h> // for floor for formatting float
 #include "osc.h"
 #include "osc_mem.h"
+#include "osc_util.h"
 #include "osc_byteorder.h"
 #include "osc_bundle_s.h"
 #include "osc_atom_u.h"
@@ -1199,7 +1200,6 @@ void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)
 		return;
 	}
 	osc_atom_u_clear(a);
-	t_osc_timetag copy;
 	a->w.t = timetag;
 	a->typetag = OSC_TIMETAG_TYPETAG;
 }
@@ -1266,18 +1266,10 @@ size_t osc_atom_u_sizeof(t_osc_atom_u *a)
 	return 0;
 }
 
-t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, char **buf)
+size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 {
 	if(!a){
-		return OSC_ERR_NOBUNDLE;
-	}
-	if((*buflen - *bufpos) < 64){
-		*buf = osc_mem_resize(*buf, *buflen + 256);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
-		}
-		memset(*buf + *buflen, '\0', 256);
-		(*buflen) += 256;
+		return 0;
 	}
 	switch(osc_atom_u_getTypetag(a)){
 	case 'c':
@@ -1286,194 +1278,97 @@ t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, ch
 	case 'U':
 	case 'i':
 	case 'I':
-		*((uint32_t *)(*buf + *bufpos)) = hton32(a->w.i);
-		(*bufpos) += 4;
+		if(!buf){
+			return 4;
+		}else if(n >= 4){
+			int32_t i = a->w.i;
+			*((int32_t *)buf) = hton32(i);
+			return 4;
+		}
 		break;
 	case 'f':
-		{
+		if(!buf){
+			return 4;
+		}else if(n >= 4){
 			float f = a->w.f;
-			*((uint32_t *)((*buf) + (*bufpos))) = hton32(*((uint32_t *)(&f)));
-			(*bufpos) += 4;
-
+			*((int32_t *)buf) = hton32(*((int32_t *)(&f)));
+			return 4;
 		}
 		break;
 	case 'd':
-		{
+		if(!buf){
+			return 8;
+		}else if(n >= 8){
 			double d = a->w.d;
-			*((uint64_t *)((*buf) + (*bufpos))) = hton64(*((uint64_t *)(&d)));
-			(*bufpos) += 8;
-
+			*((int64_t *)buf) = hton64(*((int64_t *)(&d)));
+			return 8;
 		}
 		break;
 	case 's':
-		(*bufpos) += sprintf(*buf + *bufpos, "%s", a->w.s);
-		(*bufpos)++;
-		while((*bufpos) % 4){
-			(*bufpos)++;
+		{
+			size_t len = strlen(a->w.s);
+			size_t plen = osc_util_getPaddingForNBytes(len);
+			if(!buf){
+				return plen;
+			}else if(n >= plen){
+				memset(buf, '\0', plen);
+				memcpy(buf, a->w.s, len);
+				return plen;
+			}
 		}
 		break;
 	case OSC_BUNDLE_TYPETAG:
 		{
-			/*
-			long l = osc_bundle_s_getLen(a->w.bndl);
-			char *p = osc_bundle_s_getPtr(a->w.bndl);
-			if((*buflen) - (*bufpos) < l + 4){
-				(*buf) = osc_mem_resize((*buf), (*buflen) + l + 4);
-				if(!(*buf)){
-					return OSC_ERR_OUTOFMEM;
-				}
-				memset((*buf) + (*buflen), '\0', l + 4);
-				(*buflen) += l + 4;
+			size_t len = osc_bundle_u_nserialize(NULL, 0, a->w.bndl);
+			if(!buf){
+				return len + 4;
+			}else if(n >= len + 4){
+				*((int32_t *)buf) = hton32(len);
+				return osc_bundle_u_nserialize(buf + 4, len, a->w.bndl) + 4;
 			}
-			*((uint32_t *)((*buf) + (*bufpos))) = hton32(l);
-			(*bufpos) += 4;
-			memcpy((*buf) + (*bufpos), p, l);
-			(*bufpos) += l;
-			*/
-			long l = 0;
-			char *p = NULL;
-			osc_bundle_u_serialize(a->w.bndl, &l, &p);
-			if((*buflen) - (*bufpos) < l + 4){
-				(*buf) = osc_mem_resize((*buf), (*buflen) + l + 4);
-				if(!(*buf)){
-					return OSC_ERR_OUTOFMEM;
-				}
-				memset((*buf) + (*buflen), '\0', l + 4);
-				(*buflen) += l + 4;
-			}
-			*((uint32_t *)((*buf) + (*bufpos))) = hton32(l);
-			(*bufpos) += 4;
-			memcpy((*buf) + (*bufpos), p, l);
-			(*bufpos) += l;
-			osc_mem_free(p);
 		}
-		break;
 	case OSC_TIMETAG_TYPETAG:
-		{
-			if((*buflen) - (*bufpos) < OSC_TIMETAG_SIZEOF){
-				(*buf) = osc_mem_resize((*buf), (*buflen) + OSC_TIMETAG_SIZEOF);
-				if(!(*buf)){
-					return OSC_ERR_OUTOFMEM;
-				}
-				memset((*buf) + (*buflen), '\0', OSC_TIMETAG_SIZEOF);
-				(*buflen) += OSC_TIMETAG_SIZEOF;
-			}
-			//*((t_osc_timetag *)((*buf) + (*bufpos))) = a->w.t;
-			osc_timetag_encodeForHeader(a->w.t, (*buf) + (*bufpos));
-			(*bufpos) += OSC_TIMETAG_SIZEOF;
+		if(!buf){
+			return OSC_TIMETAG_SIZEOF;
+		}else if(n >= OSC_TIMETAG_SIZEOF){
+			osc_timetag_encodeForHeader(a->w.t, buf);
+			return OSC_TIMETAG_SIZEOF;
 		}
 		break;
 	case 'h':
 	case 'H':
-		*((uint64_t *)(*buf + *bufpos)) = hton64(a->w.h);
-		(*bufpos) += 8;
+		if(!buf){
+			return 8;
+		}else if(n >= 8){
+			*((int64_t *)buf) = hton64(a->w.h);
+			return 8;
+		}
 		break;
 // nothing to do for T, F, or N
 	case 'b':
 		{
-			int32_t l = ntoh32(*((int32_t *)a->w.b));
-			l++;
-			while(l % 4){
-				l++;
+			int32_t len = ntoh32(*((int32_t *)a->w.b));
+			size_t plen = osc_util_getPaddingForNBytes(len);
+			if(!buf){
+				return plen + 4;
+			}else if(n >= plen){
+				memset(buf, '\0', plen + 4);
+				memcpy(buf, a->w.b, len + 4);
+				return plen + 4;
 			}
-			memcpy(*buf + *bufpos, a->w.b, l + 4);
-			(*bufpos) += l + 4;
 		}
 		break;
+	default: return 0;
 	}
-	return OSC_ERR_NONE;
+	return 0;
 }
 
-t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf){
-	if(!a){
-		return OSC_ERR_NOBUNDLE;
-	}
-	long mybuflen = *buflen, mybufpos = 0;
-	t_osc_err e = osc_atom_u_doSerialize(a, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
-}
-
-long osc_atom_u_getFormatLen(t_osc_atom_u *a);
-t_osc_err osc_atom_u_doFormat(t_osc_atom_u *a, long *buflen, long *bufpos, char **buf)
+t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf)
 {
-	if(!a){
-		return OSC_ERR_NOBUNDLE;
-	}
-	if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
-		*bufpos += sprintf(*buf + *bufpos, "[\n");
-		extern t_osc_err osc_bundle_u_doFormat(t_osc_bndl_u *b, long *buflen, long *bufpos, char **buf);
-		osc_bundle_u_doFormat(a->w.bndl, buflen, bufpos, buf);
-		*bufpos += sprintf(*buf + *bufpos, "]");
-		/*
-		int n = osc_bundle_s_getLen(a->w.bndl) + 32;
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		*bufpos += sprintf(*buf + *bufpos, "[\n");
-		extern t_osc_err osc_bundle_s_doFormat(long len, char *bndl, long *buflen, long *bufpos, char **buf);
-		osc_bundle_s_doFormat(osc_bundle_s_getLen(a->w.bndl), osc_bundle_s_getPtr(a->w.bndl), buflen, bufpos, buf);
-		*bufpos += sprintf(*buf + *bufpos, "]");
-		*/
-		//	}else if(osc_atom_u_getTypetag(a) == OSC_TIMETAG_TYPETAG){
-		//(*bufpos) += sprintf(*buf + *bufpos, "timetag");
-		//(*bufpos) += osc_timetag_format(a->w->t, *buf + *bufpos);
-
-	}else if(osc_atom_u_getTypetag(a) == 's'){
-		char *stringptr = osc_atom_u_getStringPtr(a);
-		int stringlen = strlen(stringptr);
-
-#ifdef OSC_QUOTE_STRINGS
-		int n = stringlen + 4 + osc_strfmt_countMeta(stringlen, stringptr);
-#else
-		int n = stringlen + 2;
-#endif
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		char *b = *buf + *bufpos;
-
-#ifdef OSC_QUOTE_STRINGS
-		(*bufpos) += osc_strfmt_addQuotesAndQuoteMeta(stringlen, stringptr, &b);
-#else
-		(*bufpos) += osc_atom_u_getString(a, *buflen - *bufpos, &b);
-#endif
-		(*buf)[(*bufpos)++] = ' ';
-		(*buf)[(*bufpos)] = '\0';
-	}else{
-		int n = osc_atom_u_getStringLen(a) + 2; // space and null byte
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		char *b = *buf + *bufpos;
-		(*bufpos) += osc_atom_u_getString(a, *buflen - *bufpos, &b);
-		(*buf)[(*bufpos)++] = ' ';
-		(*buf)[(*bufpos)] = '\0';
-	}
+	size_t n = osc_atom_u_nserialize(NULL, 0, a);
+	*buf = osc_mem_alloc(n);
+	*buflen = osc_atom_u_nserialize(*buf, n, a);
 	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf)
-{
-	if(!a){
-		return OSC_ERR_NOBUNDLE;
-	}
-	long mybuflen = *buflen, mybufpos = 0;
-	t_osc_err e = osc_atom_u_doFormat(a, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
 }
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)

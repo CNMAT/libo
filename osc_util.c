@@ -39,3 +39,18 @@ int osc_util_strdup(char **dest, char *src)
 	}
 	return len - 1;
 }
+
+size_t osc_util_getPaddedStringLen(char *s)
+{
+	if(!s){
+		return 0;
+	}
+	size_t n = strlen(s);
+	n = (n + 4) & 0xfffffffc;
+	return n;
+}
+
+size_t osc_util_getPaddingForNBytes(size_t n)
+{
+	return (n + 4) & 0xfffffffc;
+}

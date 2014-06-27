@@ -517,6 +517,8 @@ including the first 4 bytes which contain its size.
  */
 size_t osc_atom_u_sizeof(t_osc_atom_u *a);
 
+size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a);
+
 /** \brief Serialize a #t_osc_atom_u
 
 This function will convert the contents of a #t_osc_atom_u to a byte array suitable
@@ -544,7 +546,6 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
 */
-t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf) __attribute__((deprecated("use osc_atom_u_nformat() instead.")));
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 

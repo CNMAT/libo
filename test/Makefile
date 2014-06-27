@@ -1,4 +1,4 @@
-LIBO_TEST_BASENAMES = osc_test osc_match_test
+LIBO_TEST_BASENAMES = osc_serialize_test
 
 INCLUDES = -I.. -I/System/Library/Frameworks/Carbon.framework/Headers -I/System/Library/Frameworks/CoreServices.framework/Headers
 CFLAGS += -std=c99 -Wall -Wno-trigraphs -arch x86_64 -O3 -funroll-loops

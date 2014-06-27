@@ -25,6 +25,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <inttypes.h>
 #include "osc.h"
 #include "osc_mem.h"
+#include "osc_util.h"
 #include "osc_byteorder.h"
 #include "osc_timetag.h"
 
@@ -214,14 +215,7 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 		return ntoh32(*((int32_t *)data)) + 4;
 	case 's':
 	case 'S':
-		{
-			int size = strlen(data);
-			size++;
-			while(size % 4){
-				size++;
-			}
-			return size;
-		}
+		return osc_util_getPaddedStringLen(data);
 	case OSC_BUNDLE_TYPETAG:
 		return ntoh32(*((uint32_t *)data)) + 4;
 	case OSC_TIMETAG_TYPETAG:

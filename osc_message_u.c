@@ -960,114 +960,62 @@ t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlev
 	return ret;
 }
 
-extern t_osc_err osc_atom_u_doSerialize(t_osc_atom_u *a, long *buflen, long *bufpos, char **buf);
-t_osc_err osc_message_u_doSerialize(t_osc_msg_u *m, long *buflen, long *bufpos, char **buf)
+size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m)
 {
 	if(!m){
-		return OSC_ERR_NONE;
+		return 0;
 	}
-	if(!(m->address)){
-		return OSC_ERR_MALFORMEDMSG;
+	if(!osc_message_u_getAddress(m)){
+		return 0;
 	}
-	if((*buflen - *bufpos) < 256){
-		*buf = osc_mem_resize(*buf, *buflen + 1024);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
+	size_t _n = 0;
+	if(!buf){
+		_n += 4; // size
+		_n += osc_util_getPaddedStringLen(osc_message_u_getAddress(m)); // padded address len
+		_n += osc_util_getPaddingForNBytes(osc_message_u_getArgCount(m) + 1); // padded typetag len + initial comma
+		// data section
+		t_osc_msg_it_u *it = osc_msg_it_u_get(m);
+		while(osc_msg_it_u_hasNext(it)){
+			t_osc_atom_u *a = osc_msg_it_u_next(it);
+			_n += osc_atom_u_nserialize(NULL, 0, a);
 		}
-		memset(*buf + *buflen, '\0', 1024);
-		*buflen += 1024;
-	}
-	long bufstart = *bufpos;
-	(*bufpos) += 4; // size
-
-	long addresslen = strlen(m->address) + 1;
-	strncpy(*buf + *bufpos, m->address, addresslen);
-	(*bufpos) += addresslen; // includes NULL byte
-	while(*bufpos % 4){
-		(*bufpos)++;
-	}
-
-	int tt = *bufpos;
-	int ntypetags = m->argc;
-	long datapos = (tt + ntypetags + 2);
-	while(datapos % 4){
-		datapos++;
-	}
-
-	(*buf)[tt++] = ',';
-
-	t_osc_msg_it_u *it = osc_msg_it_u_get(m);
-	while(osc_msg_it_u_hasNext(it)){
-		t_osc_atom_u *a = osc_msg_it_u_next(it);
-		(*buf)[tt++] = osc_atom_u_getTypetag(a);
-		t_osc_err e = osc_atom_u_doSerialize(a, buflen, &datapos, buf);
-		if(e){
-			return e;
+		osc_msg_it_u_destroy(it);
+	}else{
+		char *address = osc_message_u_getAddress(m);
+		size_t addresslen = strlen(address);
+		size_t padded_address_len = osc_util_getPaddingForNBytes(addresslen);
+		size_t padded_typetag_len = osc_util_getPaddingForNBytes(osc_message_u_getArgCount(m) + 1);
+		size_t num_bytes_before_data = 4 + padded_address_len + padded_typetag_len;
+		if(n < num_bytes_before_data){
+			return 0;
 		}
+		_n = num_bytes_before_data;
+		char *ptr = buf;
+		memset(ptr, '\0', num_bytes_before_data);
+		ptr += 4;
+		memcpy(ptr, address, addresslen);
+		ptr += padded_address_len;
+		char *ttptr = ptr;
+		ptr += padded_typetag_len;
+		*ttptr++ = ',';
+		t_osc_msg_it_u *it = osc_msg_it_u_get(m);
+		while(osc_msg_it_u_hasNext(it) && _n < n){
+			t_osc_atom_u *a = osc_msg_it_u_next(it);
+			*ttptr++ = osc_atom_u_getTypetag(a);
+			_n += osc_atom_u_nserialize(buf + _n, n - _n, a);
+		}
+		osc_msg_it_u_destroy(it);
+		*((int32_t *)buf) = hton32((int32_t)_n - 4);
 	}
-	osc_msg_it_u_destroy(it);
-	*((uint32_t *)((*buf) + bufstart)) = hton32((datapos - bufstart) - 4);
-	*bufpos = datapos;
-
-	return OSC_ERR_NONE;
+	return _n;
 }
 
 t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf)
 {
-	long mybuflen = *buflen, mybufpos = 0;
-	t_osc_err e = osc_message_u_doSerialize(m, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
-}
-
-extern t_osc_err osc_atom_u_doFormat(t_osc_atom_u *a, long *buflen, long *bufpos, char **buf);
-
-t_osc_err osc_message_u_doFormatArgs(t_osc_msg_u *m, long *buflen, long *bufpos, char **buf)
-{
-	if((*buflen - *bufpos) < 256){
-		*buf = osc_mem_resize(*buf, *buflen + 1024);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
-		}
-		*buflen += 1024;
-	}
-	t_osc_msg_it_u *it = osc_msg_it_u_get(m);
-	while(osc_msg_it_u_hasNext(it)){
-		t_osc_atom_u *a = osc_msg_it_u_next(it);
-		osc_atom_u_doFormat(a, buflen, bufpos, buf);
-	}
-	osc_msg_it_u_destroy(it);
+	size_t n = osc_message_u_nserialize(NULL, 0, m);
+	*buf = osc_mem_alloc(n);
+	*buflen = osc_message_u_nserialize(*buf, n, m);
 	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_message_u_formatArgs(t_osc_msg_u *m, long *buflen, char **buf)
-{
-	long mybuflen = 0, mybufpos = 0;
-	t_osc_err e = osc_message_u_doFormatArgs(m, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
-}
-
-t_osc_err osc_message_u_doFormat(t_osc_msg_u *m, long *buflen, long *bufpos, char **buf)
-{
-	if((*buflen - *bufpos) < 256){
-		*buf = osc_mem_resize(*buf, *buflen + 1024);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
-		}
-		*buflen += 1024;
-	}
-	*bufpos += sprintf(*buf + *bufpos, "%s ", osc_message_u_getAddress(m));
-	osc_message_u_doFormatArgs(m, buflen, bufpos, buf);
-	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_message_u_format(t_osc_msg_u *m, long *buflen, char **buf)
-{
-	long mybuflen = 0, mybufpos = 0;
-	t_osc_err e = osc_message_u_doFormat(m, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
 }
 
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent)
@@ -1092,7 +1040,7 @@ long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent)
 		offset += snprintf(NULL, 0, "\n");
 	}else{
 		offset += snprintf(buf + offset, n - offset, "%s%s", tabs, osc_message_u_getAddress(m));
-		while(osc_msg_it_u_hasNext(it)){
+		while(osc_msg_it_u_hasNext(it) && offset < n){
 			offset += snprintf(buf + offset, n - offset, " ");
 			t_osc_atom_u *a = osc_msg_it_u_next(it);
 			offset += osc_atom_u_nformat(buf + offset, n - offset, a, nindent);

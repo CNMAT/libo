@@ -1759,9 +1759,10 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 			//osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), st);
 			osc_atom_u_setString(osc_atom_array_u_get(*ar, i), st);
 		}
-		long len = 0;
-		char *fmt = NULL;
-		osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
+		long len = osc_atom_u_nformat(NULL, 0, osc_atom_array_u_get(*ar, i), 0);
+		char *fmt = osc_mem_alloc(len + 1);
+		osc_atom_u_nformat(fmt, len + 1, osc_atom_array_u_get(*ar, i), 0);
+		//osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
 		i++;
 		//yylval_param.atom = (t_osc_atom_u *)(((long)out) + (i * atomsize));
 	cont:
@@ -1832,16 +1833,6 @@ t_osc_atom_ar_u *osc_expr_lookupBindingInLexenv(t_osc_expr_lexenv *lexenv, char 
 		return osc_hashtab_lookup((t_osc_hashtab *)lexenv, strlen(varname), varname);
 	}
 	return NULL;
-}
-
-t_osc_expr *osc_expr_makeFuncObjFromOSCMsg_s(t_osc_msg_s *msg, int argoffset)
-{
-	char *buf = NULL;
-	long len = 0;
-	osc_message_s_formatArgs(msg, &len, &buf, argoffset);
-	t_osc_expr *f = NULL;
-	osc_expr_parser_parseExpr(buf, &f);
-	return f;
 }
 
 t_osc_expr_rec *osc_expr_lookupFunction(char *name)
@@ -5412,32 +5403,21 @@ int osc_expr_format_r(t_osc_expr *fg, char *buf)
 		case OSC_EXPR_ARG_TYPE_ATOM:
 			{
 				t_osc_atom_u *a = f_argv->arg.atom;
-				long buflen = 64;
-				char *buf = osc_mem_alloc(buflen);
-				if(!buf){
-					return 0;
-				}
-				osc_atom_u_format(a, &buflen, &buf);
+				long buflen = osc_atom_u_nformat(NULL, 0, a, 0);
+				char buf[buflen + 1];
+				osc_atom_u_nformat(buf, buflen + 1, a, 0);
 				ptr += sprintf(ptr, "%s ", buf);
-				if(buf){
-					osc_mem_free(buf);
-				}
 			}
 			break;
 		case OSC_EXPR_ARG_TYPE_LIST:
 			{
 				t_osc_atom_ar_u *ar = f_argv->arg.list;
-				long buflen = 64;
-				char *buf = osc_mem_alloc(buflen);
-				if(!buf){
-					return 0;
-				}
 				for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
-					osc_atom_u_format(osc_atom_array_u_get(ar, i), &buflen, &buf);
+					t_osc_atom_u *a = osc_atom_array_u_get(ar, i);
+					long buflen = osc_atom_u_nformat(NULL, 0, a, 0);
+					char buf[buflen + 1];
+					osc_atom_u_nformat(buf, buflen + 1, a, 0);
 					ptr += sprintf(ptr, "%s ", buf);
-				}
-				if(buf){
-					osc_mem_free(buf);
 				}
 			}
 			break;
@@ -5736,20 +5716,13 @@ void osc_expr_formatFunctionTable(long *buflen, char **buf)
 
 static void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right)
 {
-	char *leftstr = NULL;
-	char *rightstr = NULL;
-	long len = 0;
-	osc_atom_u_format(left, &len, &leftstr);
-	if(!leftstr){
-		return;
-	}
-	len = 0;
-	osc_atom_u_format(right, &len, &rightstr);
-	if(rightstr){
-		osc_error(OSC_ERR_EXPR_ARGCHK, "bad argument for expression %s %s %s. arg %d is a %s", leftstr, func, rightstr, argnum, osc_typetag_str(typetag));
-		osc_mem_free(leftstr);
-		osc_mem_free(rightstr);
-	}
+	long len = osc_atom_u_nformat(NULL, 0, left, 0);
+	char leftstr[len + 1];
+	osc_atom_u_nformat(leftstr, len + 1, left, 0);
+	len = osc_atom_u_nformat(NULL, 0, right, 0);
+	char rightstr[len + 1];
+	osc_atom_u_nformat(rightstr, len + 1, right, 0);
+	osc_error(OSC_ERR_EXPR_ARGCHK, "bad argument for expression %s %s %s. arg %d is a %s", leftstr, func, rightstr, argnum, osc_typetag_str(typetag));
 }
 
 static void osc_expr_err_unbound(char *address, char *func)

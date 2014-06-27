@@ -133,9 +133,8 @@ t_osc_atom_u *osc_message_u_insertBlob(t_osc_msg_u *m, char *b, int pos);
 
 t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlevel, char *sep);
 
+size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m);
 t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf);
-t_osc_err osc_message_u_format(t_osc_msg_u *m, long *buflen, char **buf) __attribute__((deprecated("use osc_message_u_nformat() instead.")));
-t_osc_err osc_message_u_formatArgs(t_osc_msg_u *m, long *buflen, char **buf) __attribute__((deprecated));
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 
 t_osc_message_array_u *osc_message_array_u_alloc(long len);
