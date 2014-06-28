@@ -581,18 +581,19 @@ varlist: {$$ = NULL;}
 	
 
 message:
-	OSC_EXPR_OSCADDRESS {
-		//$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, 0);
-		if(alloc_atom){
-			osc_mem_free($1);
-		}
-	}
-	| OSC_EXPR_OSCADDRESS ':' expns {
-		t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
-		osc_expr_ast_expr_append((t_osc_expr_ast_expr *)v, $3);
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, (t_osc_expr_ast_expr *)v);
-	}
+OSC_EXPR_OSCADDRESS {
+	//$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, 1, (t_osc_expr_ast_expr *)v);
+	//if(alloc_atom){
+	//osc_mem_free($1);
+	//}
+}
+| OSC_EXPR_OSCADDRESS ':' expns {
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
+	osc_expr_ast_expr_append((t_osc_expr_ast_expr *)v, $3);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, (t_osc_expr_ast_expr *)v);
+  }
 ;
 
 messages:
@@ -604,12 +605,16 @@ messages:
 ;
 
 bundle:
-	'{' '}' { 
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_bundle, 0);
-	}
-	| '{' messages '}' {
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, $2);
-  	}
+'{' '}' { 
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	t_osc_atom_u *a = osc_atom_u_allocWithBndl_u(b, 1);
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocLiteral(a);
+	$$ = (t_osc_expr_ast_expr *)v;
+	//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_bundle, 0);
+}
+| '{' messages '}' {
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, $2);
+  }
 ;
 
 unaryop:
