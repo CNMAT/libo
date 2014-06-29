@@ -470,6 +470,8 @@ int osc_atom_s_getStringLen(t_osc_atom_s *a)
 	case 't': // timetag
 		//return osc_strfmt_timetag(NULL, 0, *((t_osc_timetag *)(a->data)));
 		return osc_strfmt_timetag(NULL, 0, osc_atom_s_getTimetag(a));
+	case 'b': // blob
+		return osc_strfmt_blob(NULL, 0, a->data);
 	}
 	return 0;
 }
@@ -567,6 +569,9 @@ int osc_atom_s_getString(t_osc_atom_s *a, size_t n, char **out)
 		//stringlen = osc_strfmt_timetag(*out, nn, *((t_osc_timetag *)(a->data)));
 		stringlen = osc_strfmt_timetag(*out, nn, osc_atom_s_getTimetag(a));
 		break;
+	case 'b': // blob
+		stringlen = osc_strfmt_blob(*out, nn, a->data);
+		break;
 	}
 	return stringlen;
 }
@@ -656,6 +661,7 @@ t_osc_err osc_atom_s_getBndlCopy(t_osc_bndl_s **b, t_osc_atom_s *a)
 	long len = osc_bundle_s_getLen(*b);
 	char *ptr = osc_mem_alloc(len);
 	memcpy(ptr, osc_bundle_s_getPtr(*b), len);
+	osc_bundle_s_setPtr(*b, ptr);
 	return OSC_ERR_NONE;
 }
 
@@ -673,6 +679,60 @@ t_osc_timetag osc_atom_s_getTimetag(t_osc_atom_s *a)
 	default:
 		return OSC_TIMETAG_NULL;
 	}
+}
+
+int32_t osc_atom_s_getBlobLen(t_osc_atom_s *a)
+{
+	if(!a){
+		return -1;
+	}
+	switch(osc_atom_s_getTypetag(a)){
+	case 'b':
+		if(a->data){
+			return ntoh32(*((int32_t *)a->data));
+		}else{
+			return 0;
+		}
+	default:
+		return osc_sizeof(osc_atom_s_getTypetag(a), a->data);
+	}
+}
+
+char *osc_atom_s_getBlob(t_osc_atom_s *a)
+{
+	if(!a){
+		return NULL;
+	}
+	if(osc_atom_s_getTypetag(a) == 'b'){
+		return a->data;
+	}else{
+		return NULL;
+	}
+}
+
+t_osc_err osc_atom_s_getBlobCopy(char **blob, int32_t *buflen, t_osc_atom_s *a)
+{
+	if(!a){
+		return OSC_ERR_NULLPTR;
+	}
+	int bloblen = osc_atom_s_getBlobLen(a);
+	if(!(*blob)){
+		*buflen = bloblen + 1;
+		while(*buflen % 4){
+			*buflen += 1;
+		}
+		*buflen += 4;
+		*blob = osc_mem_alloc(*buflen);
+	}
+	switch(osc_atom_s_getTypetag(a)){
+	case 'b':
+		memcpy(*blob, a->data, *buflen);
+		break;
+	default:
+		*((int32_t *)(*blob)) = hton32(bloblen);
+		memcpy((*blob) + 4, a->data, *buflen);
+	}
+	return OSC_ERR_NONE;
 }
 
 void osc_atom_s_setFloat(t_osc_atom_s *a, float v)
@@ -943,6 +1003,9 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 		{
 			osc_atom_u_setTimetag(atom_u, osc_atom_s_getTimetag(a));
 		}
+		break;
+	case 'b':
+		osc_atom_u_setBlob(atom_u, a->data);
 		break;
 	}
 	*a_u = atom_u;

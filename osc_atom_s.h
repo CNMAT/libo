@@ -97,6 +97,9 @@ t_osc_err osc_atom_s_getBndl(t_osc_bndl_s **b, t_osc_atom_s *a);
 t_osc_err osc_atom_s_getBndlCopy(t_osc_bndl_s **b, t_osc_atom_s *a);
 t_osc_err osc_atom_s_getExpr(t_osc_bndl_s **b, t_osc_atom_s *a);
 t_osc_timetag osc_atom_s_getTimetag(t_osc_atom_s *a);
+int32_t osc_atom_s_getBlobLen(t_osc_atom_s *a);
+char *osc_atom_s_getBlob(t_osc_atom_s *a);
+t_osc_err osc_atom_s_getBlobCopy(char **blob, int32_t *len, t_osc_atom_s *a);
 
 void osc_atom_s_setFloat(t_osc_atom_s *a, float v);
 void osc_atom_s_setDouble(t_osc_atom_s *a, double v);

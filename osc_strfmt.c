@@ -22,6 +22,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include "osc_strfmt.h"
 #include "osc_mem.h"
+#include "osc_byteorder.h"
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
@@ -113,12 +114,33 @@ int osc_strfmt_bool(char *buf, size_t n, char b)
 
 int osc_strfmt_null(char *buf, size_t n)
 {
-	return snprintf(buf, n, "null");
+	return snprintf(buf, n, "nil");
 }
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)
 {
 	return osc_timetag_format(buf, n, t);
+}
+
+int osc_strfmt_blob(char *buf, size_t n, char *blob)
+{
+	char *ptr = blob + 4;
+	int32_t len = ntoh32(*((int32_t *)blob));
+	int c = 0;
+	if(buf){
+		c = snprintf(buf, n, "blob(%d", *ptr++);
+		for(int i = 1; i < len; i++){
+			c += snprintf(buf + c, n - c, ", %d", *ptr++);
+		}
+		c += snprintf(buf + c, n - c, ")");
+	}else{
+		c = snprintf(NULL, 0, "blob(%d", *ptr++);
+		for(int i = 1; i < len; i++){
+			c += snprintf(NULL, 0, ", %d", *ptr++);
+		}
+		c += snprintf(NULL, 0, ")");
+	}
+	return c;
 }
 
 int osc_strfmt_quotedString(char *buf, size_t n, char *str)

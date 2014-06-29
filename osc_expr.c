@@ -37,6 +37,7 @@
 #include "osc_mem.h"
 #include "osc_bundle_s.h"
 #include "osc_bundle_iterator_s.h"
+#include "osc_bundle_iterator_u.h"
 #include "osc_message_s.h"
 #include "osc_message_u.h"
 #include "osc_message_iterator_s.h"
@@ -157,6 +158,10 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_gettimetag(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_settimetag){
 		return osc_expr_specFunc_settimetag(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_getbundlemember){
+		return osc_expr_specFunc_getBundleMember(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_assigntobundlemember){
+		return osc_expr_specFunc_assignToBundleMember(f, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -178,7 +183,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 					}
 				}
 				int j;
-				for(j = 0; j < i; j++){
+				for(j = 0; j < i + 1; j++){
 					if(argv[j]){
 						osc_atom_array_u_free(argv[j]);
 					}
@@ -341,6 +346,10 @@ int osc_expr_specFunc_apply(t_osc_expr *f,
 		t_osc_expr *e = (t_osc_expr *)osc_expr_rec_getExtra(r);
 		while(e){
 			int ret =  osc_expr_evalInLexEnv(e, lexenv_copy, len, oscbndl, out);
+			if(e->next){
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+			}
 			if(ret){
 				osc_expr_destroyLexenv(lexenv_copy);
 				return ret;
@@ -757,8 +766,8 @@ int osc_expr_specFunc_assign(t_osc_expr *f,
 
 	t_osc_msg_u *mm = osc_message_u_alloc();
 	osc_message_u_setAddress(mm, address);
-
 	t_osc_err ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, out);
+
 	if(ret){
 		osc_error(OSC_ERR_EXPR_EVAL, NULL);
 		if(address){
@@ -775,6 +784,7 @@ int osc_expr_specFunc_assign(t_osc_expr *f,
 		osc_atom_u_copy(&cpy, osc_atom_array_u_get(*out, i));
 		osc_message_u_appendAtom(mm, cpy);
 	}
+
 	char *msg_s = NULL;
         long len_s = 0;
         osc_message_u_serialize(mm, &len_s, &msg_s);
@@ -840,7 +850,6 @@ int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		return err;
 	}
 	int nindexes = osc_atom_array_u_getLen(indexes);
-
 	// get data
 	t_osc_atom_ar_u *data = NULL;
 	err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &data);
@@ -850,7 +859,6 @@ int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		return err;
 	}
 	int ndata = osc_atom_array_u_getLen(data);
-
 	if(nindexes == 0 || ndata == 0){
 		return 1;
 	}else if(nindexes == 1 && ndata > 1){
@@ -889,7 +897,6 @@ int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 			osc_atom_u_copy(&dest, osc_atom_array_u_get(data, i));
 		}
 	}
-
 	int i;
 	for(i = 0; i < osc_atom_array_u_getLen(*out); i++){
 		t_osc_atom_u *cpy = NULL;
@@ -1098,20 +1105,50 @@ int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 		return 1;
 	}
 	int n = 0;
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(*len, *oscbndl);
-	while(osc_bndl_it_s_hasNext(it)){
-		osc_bndl_it_s_next(it);
-		n++;
+	if(osc_expr_getArgCount(f)){
+		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+		t_osc_atom_ar_u *ar = NULL;
+		osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &ar);
+		if(ar){
+			t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+			if(osc_atom_u_getTypetag(a) != OSC_BUNDLE_TYPETAG){
+				osc_atom_array_u_free(ar);
+				osc_error(OSC_ERR_EXPR_ARGCHK, "argumnt to getaddresses() should be a bundle.");
+				return 1;
+			}
+			t_osc_bndl_u *b = osc_atom_u_getBndl(a);
+			t_osc_bndl_it_u *it = osc_bndl_it_u_get(b);
+			while(osc_bndl_it_u_hasNext(it)){
+				osc_bndl_it_u_next(it);
+				n++;
+			}
+			*out = osc_atom_array_u_alloc(n);
+			osc_bndl_it_u_reset(it);
+			n = 0;
+			while(osc_bndl_it_u_hasNext(it)){
+				t_osc_msg_u *m = osc_bndl_it_u_next(it);
+				osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_u_getAddress(m));
+				n++;
+			}
+			osc_bndl_it_u_destroy(it);
+			osc_atom_array_u_free(ar);
+		}
+	}else{
+		t_osc_bndl_it_s *it = osc_bndl_it_s_get(*len, *oscbndl);
+		while(osc_bndl_it_s_hasNext(it)){
+			osc_bndl_it_s_next(it);
+			n++;
+		}
+		*out = osc_atom_array_u_alloc(n);
+		osc_bndl_it_s_reset(it);
+		n = 0;
+		while(osc_bndl_it_s_hasNext(it)){
+			t_osc_msg_s *m = osc_bndl_it_s_next(it);
+			osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_s_getAddress(m));
+			n++;
+		}
+		osc_bndl_it_s_destroy(it);
 	}
-	*out = osc_atom_array_u_alloc(n);
-	osc_bndl_it_s_reset(it);
-	n = 0;
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *m = osc_bndl_it_s_next(it);
-		osc_atom_u_setString(osc_atom_array_u_get(*out, n), osc_message_s_getAddress(m));
-		n++;
-	}
-	osc_bndl_it_s_destroy(it);
 	return 0;
 }
 
@@ -1463,19 +1500,164 @@ int osc_expr_specFunc_lookup(t_osc_expr_ast_expr *f,
 	if(!arg1){
 		return 1;
 	}
-	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
-		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
-		if(b){
-			long l = 0;
-			char *p = NULL;
-			osc_bundle_u_serialize(b, &l, &p);
-			if(p){
-				osc_expr_ast_expr_evalInLexEnv(f_argv->next, lexenv, &l, &p, out);
-				osc_mem_free(p);
-				return 0;
-			}
+	long bndl_len_s = 0;
+	char *bndl_s = NULL;
+	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
+		t_osc_message_array_s *msgar = NULL;
+		osc_bundle_s_lookupAddress(*len, *oscbndl, string, &msgar, 1);
+		if(msgar){
+			t_osc_msg_s *m = osc_message_array_s_get(msgar, 0);
+			t_osc_atom_s *a = NULL;
+			osc_message_s_getArg(m, 0, &a);
+			char tmp[osc_bundle_s_getStructSize()];
+			t_osc_bndl_s *b = (t_osc_bndl_s *)tmp;
+			osc_atom_s_getBndlCopy(&b, a);
+			bndl_len_s = osc_bundle_s_getLen(b);
+			bndl_s = osc_bundle_s_getPtr(b);
+			osc_atom_s_free(a);
+			osc_message_array_s_free(msgar);
 		}
+	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
+		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
 	}
+
+	if(bndl_len_s && bndl_s){
+
+	/* if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){ */
+	/* 	t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0)); */
+	/* 	if(b){ */
+	/* 		long l = 0; */
+	/* 		char *p = NULL; */
+	/* 		osc_bundle_u_serialize(b, &l, &p); */
+		//if(p){
+				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
+				osc_mem_free(bndl_s);
+				return 0;
+	}
+	return 1;
+}
+
+static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
+					     t_osc_expr_lexenv *lexenv,
+					     long *len,
+					     char **oscbndl,
+					     t_osc_atom_ar_u **out)
+{
+	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+	t_osc_atom_ar_u *arg1 = NULL;
+	osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1);
+	if(!arg1){
+		return 1;
+	}
+	long bndl_len_s = 0;
+	char *bndl_s = NULL;
+	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
+		t_osc_message_array_s *msgar = NULL;
+		osc_bundle_s_lookupAddress(*len, *oscbndl, string, &msgar, 1);
+		if(msgar){
+			t_osc_msg_s *m = osc_message_array_s_get(msgar, 0);
+			t_osc_atom_s *a = NULL;
+			osc_message_s_getArg(m, 0, &a);
+			char tmp[osc_bundle_s_getStructSize()];
+			t_osc_bndl_s *b = (t_osc_bndl_s *)tmp;
+			osc_atom_s_getBndlCopy(&b, a);
+			bndl_len_s = osc_bundle_s_getLen(b);
+			bndl_s = osc_bundle_s_getPtr(b);
+			osc_atom_s_free(a);
+			osc_message_array_s_free(msgar);
+		}
+	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
+		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
+	}
+
+	if(bndl_len_s && bndl_s){
+		t_osc_expr *assign = osc_expr_alloc();
+		t_osc_expr_rec *r = osc_expr_lookupFunction("assign");
+		osc_expr_setRec(assign, r);
+
+		t_osc_atom_array_u *ar = NULL;
+		osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &ar);
+		if(!ar){
+			goto cleanup;
+		}
+		t_osc_expr_arg *target = NULL;
+		osc_expr_arg_copy(&target, f_argv->next);
+		t_osc_expr_arg *val = osc_expr_arg_alloc();
+		if(osc_atom_array_u_getLen(ar) == 1){
+			t_osc_atom_u *copy = osc_atom_u_alloc();
+			osc_atom_u_copy(&copy, osc_atom_array_u_get(ar, 0));
+			osc_expr_arg_setOSCAtom(val, copy);
+			osc_atom_array_u_free(ar);
+		}else{
+			t_osc_atom_ar_u *copy = osc_atom_array_u_copy(ar);
+			osc_expr_arg_setList(val, copy);
+			osc_atom_array_u_free(ar);
+		}
+		osc_expr_arg_append(target, val);
+		osc_expr_setArg(assign, target);
+		int ret = osc_expr_specFunc_assign(assign, lexenv, &bndl_len_s, &bndl_s, out);
+		osc_expr_arg_freeList(target);
+		target = NULL;
+		if(*out){
+			osc_atom_array_u_free(*out);
+			*out = NULL;
+		}
+
+		if(ret){
+			// cleanup
+			return ret;
+		}
+
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
+			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
+			t_osc_expr_rec *r = osc_expr_getRec(e);
+			if(osc_expr_rec_getFunction(r) == osc_expr_nth){
+				osc_expr_setRec(assign, osc_expr_lookupFunction("assign_to_index"));
+				t_osc_expr_arg *nth_args = osc_expr_getArgs(e);
+				osc_expr_arg_copy(&target, nth_args);
+				t_osc_expr_arg *nth_arg2 = NULL;
+				osc_expr_arg_copy(&nth_arg2, osc_expr_arg_next(nth_args));
+				osc_expr_arg_append(target, nth_arg2);
+				t_osc_atom_u *a = osc_atom_u_alloc();
+				osc_atom_u_setBndl_s(a, bndl_len_s, bndl_s);
+				t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAtom(arg_bndl, a);
+				osc_expr_arg_append(target, arg_bndl);
+				osc_expr_setArg(assign, target);
+				*out = NULL;
+				ret = osc_expr_specFunc_assigntoindex(assign, lexenv, len, oscbndl, out);
+			}else{
+				return 1;
+			}
+		}else{
+			osc_atom_u_setBndl_s(osc_atom_array_u_get(arg1, 0), bndl_len_s, bndl_s);
+			t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
+
+			osc_expr_arg_setList(arg_bndl, arg1);
+			osc_expr_arg_copy(&target, f_argv);
+			osc_expr_arg_append(target, arg_bndl);
+			osc_expr_setArg(assign, target);
+			*out = NULL;
+			ret = osc_expr_specFunc_assign(assign, lexenv, len, oscbndl, out);
+		}
+
+	cleanup:
+		if(arg1){
+			osc_atom_array_u_free(arg1);
+		}
+		if(assign){
+			osc_expr_free(assign);
+		}
+		if(bndl_s){
+			osc_mem_free(bndl_s);
+		}
+		return ret;
+	}
+
 	return 1;
 }
 
@@ -1575,9 +1757,10 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 			//osc_atom_u_setString((t_osc_atom_u *)(((long)out) + (i * atomsize)), st);
 			osc_atom_u_setString(osc_atom_array_u_get(*ar, i), st);
 		}
-		long len = 0;
-		char *fmt = NULL;
-		osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
+		long len = osc_atom_u_nformat(NULL, 0, osc_atom_array_u_get(*ar, i), 0);
+		char *fmt = osc_mem_alloc(len + 1);
+		osc_atom_u_nformat(fmt, len + 1, osc_atom_array_u_get(*ar, i), 0);
+		//osc_atom_u_format(osc_atom_array_u_get(*ar, i), &len, &fmt);
 		i++;
 		//yylval_param.atom = (t_osc_atom_u *)(((long)out) + (i * atomsize));
 
@@ -1648,16 +1831,6 @@ t_osc_atom_ar_u *osc_expr_lookupBindingInLexenv(t_osc_expr_lexenv *lexenv, char 
 		return osc_hashtab_lookup((t_osc_hashtab *)lexenv, strlen(varname), varname);
 	}
 	return NULL;
-}
-
-t_osc_expr *osc_expr_makeFuncObjFromOSCMsg_s(t_osc_msg_s *msg, int argoffset)
-{
-	char *buf = NULL;
-	long len = 0;
-	osc_message_s_formatArgs(msg, &len, &buf, argoffset);
-	t_osc_expr *f = NULL;
-	osc_expr_parser_parseExpr(buf, &f);
-	return f;
 }
 
 t_osc_expr_rec *osc_expr_lookupFunction(char *name)
@@ -1845,7 +2018,34 @@ int osc_expr_add(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		if(OSC_TYPETAG_ISFLOAT(tt1) || OSC_TYPETAG_ISFLOAT(tt2)){
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) + osc_atom_u_getDouble(f2));
 		}else{
-			osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) + osc_atom_u_getInt32(f2));
+			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
+			printf("tt = %c\n", tt);
+			switch(tt){
+			case 'i':
+				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) + osc_atom_u_getInt32(f2));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(*result, osc_atom_u_getUInt32(f1) + osc_atom_u_getUInt32(f2));
+				break;
+			case 'h':
+				osc_atom_u_setInt64(*result, osc_atom_u_getInt64(f1) + osc_atom_u_getInt64(f2));
+				break;
+			case 'H':
+				osc_atom_u_setUInt64(*result, osc_atom_u_getUInt64(f1) + osc_atom_u_getUInt64(f2));
+				break;
+			case 'u':
+				osc_atom_u_setInt16(*result, osc_atom_u_getInt16(f1) + osc_atom_u_getInt16(f2));
+				break;
+			case 'U':
+				osc_atom_u_setUInt16(*result, osc_atom_u_getUInt16(f1) + osc_atom_u_getUInt16(f2));
+				break;
+			case 'c':
+				osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) + osc_atom_u_getInt8(f2));
+				break;
+			case 'C':
+				osc_atom_u_setUInt8(*result, osc_atom_u_getUInt8(f1) + osc_atom_u_getUInt8(f2));
+				break;
+			}
 		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
@@ -1920,7 +2120,34 @@ int osc_expr_multiply(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 		if(OSC_TYPETAG_ISFLOAT(tt1) || OSC_TYPETAG_ISFLOAT(tt2)){
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) * osc_atom_u_getDouble(f2));
 		}else{
-			osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) * osc_atom_u_getInt32(f2));
+			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
+			printf("tt = %c\n", tt);
+			switch(tt){
+			case 'i':
+				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) * osc_atom_u_getInt32(f2));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(*result, osc_atom_u_getUInt32(f1) * osc_atom_u_getUInt32(f2));
+				break;
+			case 'h':
+				osc_atom_u_setInt64(*result, osc_atom_u_getInt64(f1) * osc_atom_u_getInt64(f2));
+				break;
+			case 'H':
+				osc_atom_u_setUInt64(*result, osc_atom_u_getUInt64(f1) * osc_atom_u_getUInt64(f2));
+				break;
+			case 'u':
+				osc_atom_u_setInt16(*result, osc_atom_u_getInt16(f1) * osc_atom_u_getInt16(f2));
+				break;
+			case 'U':
+				osc_atom_u_setUInt16(*result, osc_atom_u_getUInt16(f1) * osc_atom_u_getUInt16(f2));
+				break;
+			case 'c':
+				osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) * osc_atom_u_getInt8(f2));
+				break;
+			case 'C':
+				osc_atom_u_setUInt8(*result, osc_atom_u_getUInt8(f1) * osc_atom_u_getUInt8(f2));
+				break;
+			}
 		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1)){
@@ -2329,30 +2556,51 @@ int osc_expr_sub1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 
 int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
-	int i, j, k = 0;
-	int argc_out = 0;
-	for(i = 1; i < argc; i++){
-		argc_out += osc_atom_array_u_getLen(argv[i]);
-	}
-	*out = osc_atom_array_u_alloc(argc_out);
-		
-	long argv0len = osc_atom_array_u_getLen(argv[0]);
-	for(j = 1; j < argc; j++){
-		for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
-			osc_atom_u_setDouble(osc_atom_array_u_get(*out, k), 0.);
-			int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
-			if(l > argv0len - 1){
-				osc_atom_array_u_free(*out);
-				*out = NULL;
-				osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", l, argv0len);
-				return 1;
-			}
-			t_osc_atom_u *r = osc_atom_array_u_get(*out, k);
-			osc_atom_u_copy(&r, osc_atom_array_u_get(argv[0], l));
-			k++;
-		}
-	}
-	return 0;
+        int i, j, k = 0;
+        int argc_out = 0;
+        for(i = 1; i < argc; i++){
+                argc_out += osc_atom_array_u_getLen(argv[i]);
+        }
+        *out = osc_atom_array_u_alloc(argc_out);
+
+        if(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], 0)) == 'b'){
+                t_osc_atom_u *a = osc_atom_array_u_get(argv[0], 0);
+                char *blob = osc_atom_u_getBlob(a);
+                int32_t nbytes = ntoh32(*((int32_t *)blob));
+		blob += 4;
+                for(j = 1; j < argc; j++){
+                        for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
+                                osc_atom_u_setInt8(osc_atom_array_u_get(*out, k), 0.);
+                                int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
+                                if(l > nbytes - 1){
+                                        osc_atom_array_u_free(*out);
+                                        *out = NULL;
+                                        osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", l, nbytes);
+                                        return 1;
+                                }
+                                osc_atom_u_setInt8(osc_atom_array_u_get(*out, k), blob[l]);
+                                k++;
+                        }
+                }
+        }else{
+                long argv0len = osc_atom_array_u_getLen(argv[0]);
+                for(j = 1; j < argc; j++){
+                        for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
+                                osc_atom_u_setDouble(osc_atom_array_u_get(*out, k), 0.);
+                                int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
+                                if(l > argv0len - 1){
+                                        osc_atom_array_u_free(*out);
+                                        *out = NULL;
+                                        osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", l, argv0len);
+                                        return 1;
+                                }
+                                t_osc_atom_u *r = osc_atom_array_u_get(*out, k);
+                                osc_atom_u_copy(&r, osc_atom_array_u_get(argv[0], l));
+                                k++;
+                        }
+                }
+        }
+        return 0;
 }
 
 int osc_expr_assign_to_index(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
@@ -3778,6 +4026,12 @@ int osc_expr_lookup(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	return 0;
 }
 
+int osc_expr_assigntobundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	// dummy
+	return 0;
+}
+
 int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	if(argc < 2){
@@ -3886,6 +4140,431 @@ int osc_expr_join(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	if(sep){
 		osc_mem_free(sep);
 	}
+	return 0;
+}
+
+int osc_expr_bitand(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		return 1;
+	}
+	if(!OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, 0))) || !OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[1], 0)))){
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	char largest_type = osc_typetag_getLargestType(argc, argv);
+	switch(largest_type){
+	case 'i':
+		{
+			int32_t i1 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], 0));
+			int32_t i2 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'I':
+		{
+			uint32_t i1 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[0], 0));
+			uint32_t i2 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt32(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'h':
+		{
+			int64_t i1 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[0], 0));
+			int64_t i2 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt64(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'H':
+		{
+			uint64_t i1 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[0], 0));
+			uint64_t i2 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt64(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'u':
+		{
+			int16_t i1 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[0], 0));
+			int16_t i2 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt16(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'U':
+		{
+			uint16_t i1 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[0], 0));
+			uint16_t i2 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt16(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'c':
+		{
+			int8_t i1 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[0], 0));
+			int8_t i2 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	case 'C':
+		{
+			uint8_t i1 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[0], 0));
+			uint8_t i2 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 & i2);
+		}
+		break;
+	}
+	return 0;
+}
+
+int osc_expr_bitor(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		return 1;
+	}
+	if(!OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, 0))) || !OSC_TYPETAG_ISINT(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[1], 0)))){
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	char largest_type = osc_typetag_getLargestType(argc, argv);
+	switch(largest_type){
+	case 'i':
+		{
+			int32_t i1 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], 0));
+			int32_t i2 = osc_atom_u_getInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'I':
+		{
+			uint32_t i1 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[0], 0));
+			uint32_t i2 = osc_atom_u_getUInt32(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt32(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'h':
+		{
+			int64_t i1 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[0], 0));
+			int64_t i2 = osc_atom_u_getInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt64(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'H':
+		{
+			uint64_t i1 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[0], 0));
+			uint64_t i2 = osc_atom_u_getUInt64(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt64(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'u':
+		{
+			int16_t i1 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[0], 0));
+			int16_t i2 = osc_atom_u_getInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt16(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'U':
+		{
+			uint16_t i1 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[0], 0));
+			uint16_t i2 = osc_atom_u_getUInt16(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setUInt16(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'c':
+		{
+			int8_t i1 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[0], 0));
+			int8_t i2 = osc_atom_u_getInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	case 'C':
+		{
+			uint8_t i1 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[0], 0));
+			uint8_t i2 = osc_atom_u_getUInt8(osc_atom_array_u_get(argv[1], 0));
+			osc_atom_u_setInt8(osc_atom_array_u_get(*out, 0), i1 | i2);
+		}
+		break;
+	}
+	return 0;
+}
+
+//=====================================================================================================
+// MadgwickAHRS.c
+//=====================================================================================================
+//
+// Implementation of Madgwick's IMU and AHRS algorithms.
+// See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
+//
+// Date			Author          Notes
+// 29/09/2011	SOH Madgwick    Initial release
+// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
+// 19/02/2012	SOH Madgwick	Magnetometer measurement is normalised
+//
+//=====================================================================================================
+
+//---------------------------------------------------------------------------------------------------
+// Definitions
+
+#define sampleFreq	512.0f		// sample frequency in Hz
+#define beta		0.1f		// 2 * proportional gain
+
+//---------------------------------------------------------------------------------------------------
+// Variable definitions
+
+//volatile float beta = betaDef;								// 2 * proportional gain (Kp)
+//volatile float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
+
+//---------------------------------------------------------------------------------------------------
+// Function declarations
+
+float invSqrt(float x);
+void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az, float *_q0, float *_q1, float *_q2, float *_q3);
+
+//====================================================================================================
+// Functions
+
+//---------------------------------------------------------------------------------------------------
+// AHRS algorithm update
+
+void MadgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float *_q0, float *_q1, float *_q2, float *_q3) {
+	float q0 = *_q0;
+	float q1 = *_q1;
+	float q2 = *_q2;
+	float q3 = *_q3;
+	float recipNorm;
+	float s0, s1, s2, s3;
+	float qDot1, qDot2, qDot3, qDot4;
+	float hx, hy;
+	float _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
+
+	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
+	if((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
+		MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az, &q0, &q1, &q2, &q3);
+		return;
+	}
+
+	// Rate of change of quaternion from gyroscope
+	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
+	qDot2 = 0.5f * (q0 * gx + q2 * gz - q3 * gy);
+	qDot3 = 0.5f * (q0 * gy - q1 * gz + q3 * gx);
+	qDot4 = 0.5f * (q0 * gz + q1 * gy - q2 * gx);
+
+	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
+	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+
+		// Normalise accelerometer measurement
+		recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+		ax *= recipNorm;
+		ay *= recipNorm;
+		az *= recipNorm;   
+
+		// Normalise magnetometer measurement
+		recipNorm = invSqrt(mx * mx + my * my + mz * mz);
+		mx *= recipNorm;
+		my *= recipNorm;
+		mz *= recipNorm;
+
+		// Auxiliary variables to avoid repeated arithmetic
+		_2q0mx = 2.0f * q0 * mx;
+		_2q0my = 2.0f * q0 * my;
+		_2q0mz = 2.0f * q0 * mz;
+		_2q1mx = 2.0f * q1 * mx;
+		_2q0 = 2.0f * q0;
+		_2q1 = 2.0f * q1;
+		_2q2 = 2.0f * q2;
+		_2q3 = 2.0f * q3;
+		_2q0q2 = 2.0f * q0 * q2;
+		_2q2q3 = 2.0f * q2 * q3;
+		q0q0 = q0 * q0;
+		q0q1 = q0 * q1;
+		q0q2 = q0 * q2;
+		q0q3 = q0 * q3;
+		q1q1 = q1 * q1;
+		q1q2 = q1 * q2;
+		q1q3 = q1 * q3;
+		q2q2 = q2 * q2;
+		q2q3 = q2 * q3;
+		q3q3 = q3 * q3;
+
+		// Reference direction of Earth's magnetic field
+		hx = mx * q0q0 - _2q0my * q3 + _2q0mz * q2 + mx * q1q1 + _2q1 * my * q2 + _2q1 * mz * q3 - mx * q2q2 - mx * q3q3;
+		hy = _2q0mx * q3 + my * q0q0 - _2q0mz * q1 + _2q1mx * q2 - my * q1q1 + my * q2q2 + _2q2 * mz * q3 - my * q3q3;
+		_2bx = sqrt(hx * hx + hy * hy);
+		_2bz = -_2q0mx * q2 + _2q0my * q1 + mz * q0q0 + _2q1mx * q3 - mz * q1q1 + _2q2 * my * q3 - mz * q2q2 + mz * q3q3;
+		_4bx = 2.0f * _2bx;
+		_4bz = 2.0f * _2bz;
+
+		// Gradient decent algorithm corrective step
+		s0 = -_2q2 * (2.0f * q1q3 - _2q0q2 - ax) + _2q1 * (2.0f * q0q1 + _2q2q3 - ay) - _2bz * q2 * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (-_2bx * q3 + _2bz * q1) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + _2bx * q2 * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
+		s1 = _2q3 * (2.0f * q1q3 - _2q0q2 - ax) + _2q0 * (2.0f * q0q1 + _2q2q3 - ay) - 4.0f * q1 * (1 - 2.0f * q1q1 - 2.0f * q2q2 - az) + _2bz * q3 * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q2 + _2bz * q0) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * q3 - _4bz * q1) * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
+		s2 = -_2q0 * (2.0f * q1q3 - _2q0q2 - ax) + _2q3 * (2.0f * q0q1 + _2q2q3 - ay) - 4.0f * q2 * (1 - 2.0f * q1q1 - 2.0f * q2q2 - az) + (-_4bx * q2 - _2bz * q0) * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q1 + _2bz * q3) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * q0 - _4bz * q2) * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
+		s3 = _2q1 * (2.0f * q1q3 - _2q0q2 - ax) + _2q2 * (2.0f * q0q1 + _2q2q3 - ay) + (-_4bx * q3 + _2bz * q1) * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (-_2bx * q0 + _2bz * q2) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + _2bx * q1 * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
+		recipNorm = invSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+		s0 *= recipNorm;
+		s1 *= recipNorm;
+		s2 *= recipNorm;
+		s3 *= recipNorm;
+
+		// Apply feedback step
+		qDot1 -= beta * s0;
+		qDot2 -= beta * s1;
+		qDot3 -= beta * s2;
+		qDot4 -= beta * s3;
+	}
+
+	// Integrate rate of change of quaternion to yield quaternion
+	q0 += qDot1 * (1.0f / sampleFreq);
+	q1 += qDot2 * (1.0f / sampleFreq);
+	q2 += qDot3 * (1.0f / sampleFreq);
+	q3 += qDot4 * (1.0f / sampleFreq);
+
+	// Normalise quaternion
+	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+	q0 *= recipNorm;
+	q1 *= recipNorm;
+	q2 *= recipNorm;
+	q3 *= recipNorm;
+
+	*_q0 = q0;
+	*_q1 = q1;
+	*_q2 = q2;
+	*_q3 = q3;
+}
+
+//---------------------------------------------------------------------------------------------------
+// IMU algorithm update
+
+void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az, float *_q0, float *_q1, float *_q2, float *_q3) {
+	float q0 = *_q0;
+	float q1 = *_q1;
+	float q2 = *_q2;
+	float q3 = *_q3;
+
+	float recipNorm;
+	float s0, s1, s2, s3;
+	float qDot1, qDot2, qDot3, qDot4;
+	float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 ,_8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
+
+	// Rate of change of quaternion from gyroscope
+	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
+	qDot2 = 0.5f * (q0 * gx + q2 * gz - q3 * gy);
+	qDot3 = 0.5f * (q0 * gy - q1 * gz + q3 * gx);
+	qDot4 = 0.5f * (q0 * gz + q1 * gy - q2 * gx);
+
+	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
+	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+
+		// Normalise accelerometer measurement
+		recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+		ax *= recipNorm;
+		ay *= recipNorm;
+		az *= recipNorm;   
+
+		// Auxiliary variables to avoid repeated arithmetic
+		_2q0 = 2.0f * q0;
+		_2q1 = 2.0f * q1;
+		_2q2 = 2.0f * q2;
+		_2q3 = 2.0f * q3;
+		_4q0 = 4.0f * q0;
+		_4q1 = 4.0f * q1;
+		_4q2 = 4.0f * q2;
+		_8q1 = 8.0f * q1;
+		_8q2 = 8.0f * q2;
+		q0q0 = q0 * q0;
+		q1q1 = q1 * q1;
+		q2q2 = q2 * q2;
+		q3q3 = q3 * q3;
+
+		// Gradient decent algorithm corrective step
+		s0 = _4q0 * q2q2 + _2q2 * ax + _4q0 * q1q1 - _2q1 * ay;
+		s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
+		s2 = 4.0f * q0q0 * q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
+		s3 = 4.0f * q1q1 * q3 - _2q1 * ax + 4.0f * q2q2 * q3 - _2q2 * ay;
+		recipNorm = invSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+		s0 *= recipNorm;
+		s1 *= recipNorm;
+		s2 *= recipNorm;
+		s3 *= recipNorm;
+
+		// Apply feedback step
+		qDot1 -= beta * s0;
+		qDot2 -= beta * s1;
+		qDot3 -= beta * s2;
+		qDot4 -= beta * s3;
+	}
+
+	// Integrate rate of change of quaternion to yield quaternion
+	q0 += qDot1 * (1.0f / sampleFreq);
+	q1 += qDot2 * (1.0f / sampleFreq);
+	q2 += qDot3 * (1.0f / sampleFreq);
+	q3 += qDot4 * (1.0f / sampleFreq);
+
+	// Normalise quaternion
+	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+	q0 *= recipNorm;
+	q1 *= recipNorm;
+	q2 *= recipNorm;
+	q3 *= recipNorm;
+
+	*_q0 = q0;
+	*_q1 = q1;
+	*_q2 = q2;
+	*_q3 = q3;
+}
+
+//---------------------------------------------------------------------------------------------------
+// Fast inverse square-root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+
+float invSqrt(float x) {
+	float halfx = 0.5f * x;
+	float y = x;
+	long i = *(long*)&y;
+	i = 0x5f3759df - (i>>1);
+	y = *(float*)&i;
+	y = y * (1.5f - (halfx * y * y));
+	return y;
+}
+
+//====================================================================================================
+// END OF IMU CODE
+//====================================================================================================
+
+int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc < 2){
+		return 1;
+	}
+	if(osc_atom_array_u_getLen(*argv) < 9){
+		return 1;
+	}
+	if(osc_atom_array_u_getLen(argv[1]) < 4){
+		return 1;
+	}
+	// imu(/imu, /quaternion)
+	float gx = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 0));
+	float gy = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 1));
+	float gz = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 2));
+	float ax = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 3));
+	float ay = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 4));
+	float az = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 5));
+	float mx = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 6));
+	float my = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 7));
+	float mz = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 8));
+	float temp = 0;
+	int havetemp = 0;
+	if(osc_atom_array_u_getLen(*argv) == 10){
+		temp = osc_atom_u_getFloat(osc_atom_array_u_get(*argv, 9));
+		havetemp++;
+	}
+	float q0 = osc_atom_u_getFloat(osc_atom_array_u_get(argv[1], 0));
+	float q1 = osc_atom_u_getFloat(osc_atom_array_u_get(argv[1], 1));
+	float q2 = osc_atom_u_getFloat(osc_atom_array_u_get(argv[1], 2));
+	float q3 = osc_atom_u_getFloat(osc_atom_array_u_get(argv[1], 3));
+	*out = osc_atom_array_u_alloc(4);
+
+	MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz, &q0, &q1, &q2, &q3);
+	osc_atom_u_setFloat(osc_atom_array_u_get(*out, 0), q0);
+	osc_atom_u_setFloat(osc_atom_array_u_get(*out, 1), q1);
+	osc_atom_u_setFloat(osc_atom_array_u_get(*out, 2), q2);
+	osc_atom_u_setFloat(osc_atom_array_u_get(*out, 3), q3);
 	return 0;
 }
 
@@ -4100,14 +4779,29 @@ int osc_expr_explicitCast_bool(t_osc_atom_u *dest, t_osc_atom_u *src)
 int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src)
 {
 	char *s = NULL;
-	osc_atom_u_getString(src, 0, &s);
-	if(s){
-		osc_atom_u_setString(dest, s);
-		osc_mem_free(s);
+	if(osc_atom_u_getTypetag(src) == 'b'){
+		char *b = osc_atom_u_getBlob(src);
+		osc_atom_u_setString(dest, b + 4);
 		return 0;
 	}else{
-		return 1;
+		osc_atom_u_getString(src, 0, &s);
+		if(s){
+			osc_atom_u_setString(dest, s);
+			osc_mem_free(s);
+			return 0;
+		}else{
+			return 1;
+		}
 	}
+}
+
+int osc_expr_explicitCast_blob(t_osc_atom_u *dest, t_osc_atom_u *src)
+{
+	int32_t l = 0;
+	char *blob = NULL;
+	osc_atom_u_getBlobCopy(src, &l, &blob);
+	osc_atom_u_setBlobPtr(dest, blob);
+	return 0;
 }
 
 int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
@@ -4168,6 +4862,9 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 			case 's':
 				osc_expr_explicitCast_string(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(argv[1], i));
 				break;
+			case 'b':
+				osc_expr_explicitCast_blob(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(argv[1], i));
+				break;
 			}
 		}
 		if(alloc){
@@ -4176,6 +4873,106 @@ int osc_expr_explicitCast_dynamic(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 		return 0;
 	}
 	return 1;
+}
+
+int osc_expr_hton32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getInt32(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getUInt32(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_ntoh32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getInt32(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getUInt32(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getInt64(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
+}
+
+int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	int count = 0;
+	for(int i = 0; i < argc; i++){
+		count += osc_atom_array_u_getLen(argv[i]);
+	}
+	*out = osc_atom_array_u_alloc(count);
+	int k = 0;
+	for(int i = 0; i < argc; i++){
+		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			switch(osc_atom_u_getTypetag(a)){
+			case 'i':
+				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getInt64(a)));
+				break;
+			case 'I':
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
+				break;
+			}
+			k++;
+		}
+	}
+	return 0;
 }
 
 t_osc_expr *osc_expr_alloc(void)
@@ -4289,6 +5086,13 @@ void osc_expr_arg_clear(t_osc_expr_arg *a)
 			osc_expr_rec_free(a->arg.func, (void **)&e);
 			if(e){
 				osc_expr_free(e);
+			}
+		}
+		break;
+	case OSC_EXPR_ARG_TYPE_LIST:
+		{
+			if(a->arg.list){
+				osc_atom_array_u_free(a->arg.list);
 			}
 		}
 		break;
@@ -4600,32 +5404,21 @@ int osc_expr_format_r(t_osc_expr *fg, char *buf)
 		case OSC_EXPR_ARG_TYPE_ATOM:
 			{
 				t_osc_atom_u *a = f_argv->arg.atom;
-				long buflen = 64;
-				char *buf = osc_mem_alloc(buflen);
-				if(!buf){
-					return 0;
-				}
-				osc_atom_u_format(a, &buflen, &buf);
+				long buflen = osc_atom_u_nformat(NULL, 0, a, 0);
+				char buf[buflen + 1];
+				osc_atom_u_nformat(buf, buflen + 1, a, 0);
 				ptr += sprintf(ptr, "%s ", buf);
-				if(buf){
-					osc_mem_free(buf);
-				}
 			}
 			break;
 		case OSC_EXPR_ARG_TYPE_LIST:
 			{
 				t_osc_atom_ar_u *ar = f_argv->arg.list;
-				long buflen = 64;
-				char *buf = osc_mem_alloc(buflen);
-				if(!buf){
-					return 0;
-				}
 				for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
-					osc_atom_u_format(osc_atom_array_u_get(ar, i), &buflen, &buf);
+					t_osc_atom_u *a = osc_atom_array_u_get(ar, i);
+					long buflen = osc_atom_u_nformat(NULL, 0, a, 0);
+					char buf[buflen + 1];
+					osc_atom_u_nformat(buf, buflen + 1, a, 0);
 					ptr += sprintf(ptr, "%s ", buf);
-				}
-				if(buf){
-					osc_mem_free(buf);
 				}
 			}
 			break;
@@ -4925,20 +5718,13 @@ void osc_expr_formatFunctionTable(long *buflen, char **buf)
 
 void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right)
 {
-	char *leftstr = NULL;
-	char *rightstr = NULL;
-	long len = 0;
-	osc_atom_u_format(left, &len, &leftstr);
-	if(!leftstr){
-		return;
-	}
-	len = 0;
-	osc_atom_u_format(right, &len, &rightstr);
-	if(rightstr){
-		osc_error(OSC_ERR_EXPR_ARGCHK, "bad argument for expression %s %s %s. arg %d is a %s", leftstr, func, rightstr, argnum, osc_typetag_str(typetag));
-		osc_mem_free(leftstr);
-		osc_mem_free(rightstr);
-	}
+	long len = osc_atom_u_nformat(NULL, 0, left, 0);
+	char leftstr[len + 1];
+	osc_atom_u_nformat(leftstr, len + 1, left, 0);
+	len = osc_atom_u_nformat(NULL, 0, right, 0);
+	char rightstr[len + 1];
+	osc_atom_u_nformat(rightstr, len + 1, right, 0);
+	osc_error(OSC_ERR_EXPR_ARGCHK, "bad argument for expression %s %s %s. arg %d is a %s", leftstr, func, rightstr, argnum, osc_typetag_str(typetag));
 }
 
 void osc_expr_err_unbound(char *address, char *func)

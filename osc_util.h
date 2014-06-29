@@ -33,6 +33,8 @@ extern "C" {
 #endif
 
 int osc_util_strdup(char **dest, char *src);
+size_t osc_util_getPaddedStringLen(char *s);
+size_t osc_util_getPaddingForNBytes(size_t n);
 
 #ifdef __cplusplus
 }

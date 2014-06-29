@@ -25,6 +25,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <inttypes.h>
 #include "osc.h"
 #include "osc_mem.h"
+#include "osc_util.h"
 #include "osc_byteorder.h"
 #include "osc_timetag.h"
 
@@ -169,7 +170,7 @@ char osc_data_lengths[128] = {
 	/*	94		*/	-1	,
 	/*	95		*/	-1	,
 	/*	96		*/	-1	,
-	/*	97	a	*/	3	,
+	/*	97	a	*/	-1	,
 	/*	98	b	*/	sizeof(char *)	,
 	/*	99	c	*/	4	,
 	/*	100	d	*/	8	,
@@ -206,19 +207,15 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 	if(typetag > 127){
 		return -1;
 	}
+	if(!data){
+		return -1;
+	}
 	switch(typetag){
 	case 'b':
+		return ntoh32(*((int32_t *)data)) + 4;
 	case 's':
 	case 'S':
-		{
-			int size = strlen(data);
-			size++;
-			while(size % 4){
-				size++;
-			}
-			return size;
-		}
-	case OSC_EXPR_TYPETAG:
+		return osc_util_getPaddedStringLen(data);
 	case OSC_BUNDLE_TYPETAG:
 		return ntoh32(*((uint32_t *)data)) + 4;
 	case OSC_TIMETAG_TYPETAG:

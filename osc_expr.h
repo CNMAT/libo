@@ -55,7 +55,6 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 			  t_osc_atom_ar_u **out);
 int osc_expr_eval(t_osc_expr *function, long *len, char **oscbndl, t_osc_atom_ar_u **out);
 //int osc_expr_evalLexExprsInBndl(long *len, char **oscbndl, t_osc_atom_ar_u **out);
-t_osc_expr *osc_expr_makeFuncObjFromOSCMsg_s(t_osc_msg_s *msg, int argoffset);
 t_osc_expr_rec *osc_expr_lookupFunction(char *name);
 t_osc_expr_rec *osc_expr_lookupFunctionForOperator(char op);
 t_osc_expr_lexenv *osc_expr_makeLexenv(void);
@@ -122,7 +121,7 @@ void osc_expr_expandScalars(int argc, t_osc_atom_ar_u **argv, int scalar_expansi
 void osc_expr_promoteToLargestType(int argc, t_osc_atom_ar_u **argv, int *arg_indexes_to_promote);
 
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 }
 #endif
 

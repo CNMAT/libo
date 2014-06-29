@@ -155,6 +155,8 @@ The default is 0 (false).
 */
 void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int val);
 
+void osc_atom_u_clear(t_osc_atom_u *a);
+
 /** \brief Get the OSC typetag associated with the #t_osc_atom_u
 
 \param a The #t_osc_atom_u whose typetag will be returned.
@@ -345,6 +347,10 @@ t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a);
 struct _osc_expr_ast_expr;
 struct _osc_expr_ast_expr *osc_atom_u_getExpr(t_osc_atom_u *a);
 
+int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a);
+char *osc_atom_u_getBlob(t_osc_atom_u *a);
+void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *len, char **blob);
+
 /** \brief Set the contents of a #t_osc_atom_u to a 32-bit floating point value.
 
 \param a The #t_osc_atom_u
@@ -501,6 +507,9 @@ void osc_atom_u_setSerializedBndl(t_osc_atom_u *a, t_osc_bndl_u *bndl);
 */
 void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag);
 
+void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob);
+void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob);
+
 /** \brief Return the size of the data represented by the #t_osc_atom_u.
 
 If the #t_osc_atom_u contains a string, this function will return the result of 
@@ -512,6 +521,8 @@ including the first 4 bytes which contain its size.
 \return The size of the data contained in the #t_osc_atom_u
  */
 size_t osc_atom_u_sizeof(t_osc_atom_u *a);
+
+size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a);
 
 /** \brief Serialize a #t_osc_atom_u
 
@@ -540,7 +551,6 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
 */
-t_osc_err osc_atom_u_format(t_osc_atom_u *a, long *buflen, char **buf) __attribute__((deprecated("use osc_atom_u_nformat() instead.")));
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);

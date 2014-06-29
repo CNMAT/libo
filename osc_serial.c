@@ -246,8 +246,8 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			case 6:
 				OSC_SERIAL_RETURN(s + 1);
 			case 7:
-				// negative size check
-				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 24));
+				// do negative size check
+				OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 24));
 			}
 		}
 	case OSC_SERIAL_BUNDLE_MESSAGE:
@@ -257,9 +257,9 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 				int32_t c = count & 0xff;
 				switch(c){
 				case 0:
-					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 16) | (c + 1));
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 16) | (c + 1));
 				case 1:
-					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b) << 8) | (c + 1));
+					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_MESSAGE | OSC_SERIAL_MESSAGE_SIZE | (((int32_t)b & 0xff) << 8) | (c + 1));
 				case 2:
 					// negative size check
 					//count = ntoh32(count | b);
@@ -522,6 +522,7 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 	}
 	OSC_SERIAL_RETURN(0);
 }
+
 
 /*
 int main(int argc, char **argv)

@@ -608,57 +608,36 @@ t_osc_err osc_bundle_u_intersection(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_
 	return OSC_ERR_NONE;
 }
 
-extern t_osc_err osc_message_u_doSerialize(t_osc_msg_u *msg, long *buflen, long *bufpos, char **buf);
-t_osc_err osc_bundle_u_doSerialize(t_osc_bndl_u *bndl, long *buflen, long *bufpos, char **buf)
+size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 {
-	if((*buflen - *bufpos) < 256){
-		*buf = osc_mem_resize(*buf, *buflen + 1024);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
+	size_t _n = 0;
+	t_osc_bndl_it_u *it = osc_bndl_it_u_get(b);
+	if(!buf){
+		_n += OSC_HEADER_SIZE;
+		while(osc_bndl_it_u_hasNext(it)){
+			t_osc_msg_u *m = osc_bndl_it_u_next(it);
+			_n += osc_message_u_nserialize(NULL, 0, m);
 		}
-		memset(*buf + *buflen, '\0', 1024);
-		*buflen += 1024;
-	}
-	strncpy(*buf + *bufpos, OSC_IDENTIFIER, OSC_IDENTIFIER_SIZE);
-	(*bufpos) += OSC_HEADER_SIZE;
-	t_osc_msg_u *m = bndl->msghead;
-	while(m){
-		t_osc_err e = osc_message_u_doSerialize(m, buflen, bufpos, buf);
-		if(e){
-			return e;
+	}else{
+		if(n < OSC_HEADER_SIZE){
+			return 0;
 		}
-		m = m->next;
+		memcpy(buf, OSC_EMPTY_HEADER, OSC_HEADER_SIZE);
+		_n += OSC_HEADER_SIZE;
+		while(osc_bndl_it_u_hasNext(it) && _n < n){
+			t_osc_msg_u *m = osc_bndl_it_u_next(it);
+			_n += osc_message_u_nserialize(buf + _n, n - _n, m);
+		}
 	}
-	return OSC_ERR_NONE;
+	osc_bndl_it_u_destroy(it);
+	return _n;
 }
 
 t_osc_err osc_bundle_u_serialize(t_osc_bundle_u *bndl, long *buflen, char **buf)
 {
-	long bufpos = 0;
-	if(!(*buf)){
-		*buflen = 1024;
-		(*buf) = osc_mem_alloc(*buflen);
-	}
-	memset(*buf, '\0', *buflen);
-	t_osc_err e = osc_bundle_u_doSerialize(bndl, buflen, &bufpos, buf);
-	*buflen = bufpos;
-	return e;
-}
-
-extern t_osc_err osc_message_u_doFormat(t_osc_msg_u *m, long *buflen, long *bufpos, char **buf);
-
-t_osc_err osc_bundle_u_doFormat(t_osc_bndl_u *bndl, long *buflen, long *bufpos, char **buf)
-{
-	if(osc_bundle_u_getMsgCount(bndl) == 0){
-		return OSC_ERR_NONE;
-	}
-	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
-	while(osc_bndl_it_u_hasNext(it)){
-		t_osc_msg_u *m = osc_bndl_it_u_next(it);
-		osc_message_u_doFormat(m, buflen, bufpos, buf);
-		(*bufpos) += sprintf(*buf + *bufpos, "\n");
-	}
-	osc_bndl_it_u_destroy(it);
+	size_t n = osc_bundle_u_nserialize(NULL, 0, bndl);
+	*buf = osc_mem_alloc(n);
+	*buflen = osc_bundle_u_nserialize(*buf, n, bndl);
 	return OSC_ERR_NONE;
 }
 
@@ -667,25 +646,12 @@ t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf)
 	if(!bndl){
 		return OSC_ERR_NOBUNDLE;
 	}
-#ifdef OSC_SAFESTRINGS
 	if(!(*buf)){
 		*buflen = osc_bundle_u_nformat(NULL, 0, bndl, 0) + 1;
 		*buf = osc_mem_alloc(*buflen);
 	}
 	osc_bundle_u_nformat(*buf, *buflen, bndl, 0);
 	return OSC_ERR_NONE;
-#else
-	long mybuflen = 0, mybufpos = 0;
-	if(*buflen > 0){
-		if(*buf){
-			mybuflen = *buflen;
-		}
-	}
-	t_osc_err e = osc_bundle_u_doFormat(bndl, &mybuflen, &mybufpos, buf);
-	// don't return the actual buffer length since it may be longer than the number of bytes used
-	*buflen = mybufpos;
-	return e;
-#endif
 }
 
 long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
@@ -701,7 +667,7 @@ long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
 			offset += osc_message_u_nformat(NULL, 0, m, nindent);
 		}
 	}else{
-		while(osc_bndl_it_u_hasNext(it)){
+		while(osc_bndl_it_u_hasNext(it) && offset < n){
 			t_osc_msg_u *m = osc_bndl_it_u_next(it);
 			offset += osc_message_u_nformat(buf + offset, n - offset, m, nindent);
 		}

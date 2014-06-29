@@ -76,6 +76,8 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	//%}
 
 
+#.*$ 
+
 \+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\. {
 	return *yytext;
 }
@@ -262,6 +264,14 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 							yylval->atom = osc_atom_u_alloc();
 						}
 						osc_atom_u_setFalse(yylval->atom);
+						return OSC_EXPR_NUM;
+					}
+
+(nil|Nil|NIL)				{
+						if(alloc_atom){
+							yylval->atom = osc_atom_u_alloc();
+						}
+						osc_atom_u_setNull(yylval->atom);
 						return OSC_EXPR_NUM;
 					}
 lambda				{
