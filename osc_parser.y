@@ -330,13 +330,10 @@ arglist:
 		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
 		osc_message_u_appendTimetag(*msg, $2);
  	}
-<<<<<<< HEAD
 	| arglist OSCEXPR {
 		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
 		osc_message_u_appendExpr(*msg, $2, 1);
  	}
-=======
->>>>>>> master
 	| '[' bundle ']' {
 		//if(!(*msg)){
 			t_osc_msg_u *m = osc_message_u_alloc();
