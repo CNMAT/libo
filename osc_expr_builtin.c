@@ -52,7 +52,20 @@
 int _osc_expr_sign(double f);
 int osc_expr_builtin_list(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_builtin_scale(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+//int osc_expr_builtin_scale(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+
+int osc_expr_specFunc_apply_impl(t_osc_expr_ast_funcall *f, 
+				 t_osc_expr_lexenv *lexenv, 
+				 t_osc_bndl_u *oscbndl,
+				 t_osc_atom_ar_u **out);
+int osc_expr_specFunc_map_impl(t_osc_expr_ast_funcall *f, 
+			       t_osc_expr_lexenv *lexenv, 
+			       t_osc_bndl_u *oscbndl,
+			       t_osc_atom_ar_u **out);
+int osc_expr_specFunc_foldl_impl(t_osc_expr_ast_funcall *f, 
+				   t_osc_expr_lexenv *lexenv, 
+				   t_osc_bndl_u *oscbndl,
+				   t_osc_atom_ar_u **out);
 
 int osc_expr_builtin_call_binary_func(t_osc_expr_ast_funcall *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -267,21 +280,14 @@ int osc_expr_builtin_or_F(t_osc_atom_u *lhs, t_osc_atom_u *rhs, t_osc_atom_u *re
 		#name,							\
 		0,							\
 		NULL,					\
-		NULL,\
 		0,							\
 		1,							\
 		(char *[]){"_y"},					\
-		NULL,							\
 		"returns "#val,						\
 		osc_expr_builtin_##name,			\
 		NULL,\
+		osc_expr_specFunc_apply_impl,				\
 		NULL,							\
-		0,							\
-		NULL,				\
-		0,							\
-		0,							\
-		NULL,				\
-		0							\
 	};
 
 #define OSC_EXPR_BUILTIN_CONSTANT(name, val, type)			\
@@ -424,6 +430,7 @@ int osc_expr_builtin_aseq(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_u
 	}
 }
 
+/*
 #define OSC_EXPR_BUILTIN_SCALE_TYPED(typetag, type, ctype)		\
 	int osc_expr_builtin_scale_##typetag(t_osc_atom_u *_x, t_osc_atom_u *_x1, t_osc_atom_u *_x2, t_osc_atom_u *_y1, t_osc_atom_u *_y2, t_osc_atom_u *out){ \
 		ctype x = osc_atom_u_get##type(_x);\
@@ -473,6 +480,7 @@ int osc_expr_builtin_scale(t_osc_expr_ast_funcall *ast, int argc, t_osc_atom_ar_
 	}
 	return 0;
 }
+*/
 
 #define osc_expr_builtin_lval_NULL NULL
 #define OSC_EXPR_BUILTIN_DEFOP(op, opcode, func, lvalfunc, vtab, lhs, rhs, return, assoc, prec, docstring) \
@@ -480,10 +488,8 @@ t_osc_expr_oprec _osc_expr_builtin_op_##func = {\
 	#op,\
 	2,\
 	(char *[]){#lhs, #rhs},			\
-	(char *[]){(char []){OSC_TYPETAG_CLASS_NUMERIC, 0}, (char []){OSC_TYPETAG_CLASS_NUMERIC, 0}}, \
 	1,\
 	(char *[]){#return},\
-	NULL,\
 	docstring,\
 	assoc,\
 	prec,\
@@ -494,21 +500,14 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_##func = {\
 	#func,\
 	2,\
 	(char *[]){#lhs, #rhs},			\
-	(char *[]){(char []){OSC_TYPETAG_CLASS_NUMERIC, 0}, (char []){OSC_TYPETAG_CLASS_NUMERIC, 0}}, \
 	0,\
 	1,\
 	(char *[]){#return},\
-	NULL,\
 	docstring,\
 	osc_expr_builtin_call_binary_func,\
 	osc_expr_builtin_lval_##lvalfunc,	\
+	osc_expr_specFunc_map_impl,		\
 	vtab,\
-	2,\
-	(unsigned int []){0, 1},\
-	0,\
-	2,\
-	(unsigned int []){0, 1},\
-	0\
 };
 
 //OSC_EXPR_BUILTIN_DEFOP(=, '=', assign, NULL, NULL, _lval, _rval, _rval, OSC_EXPR_PARSER_ASSOC_RIGHT, 16, "Assigns _rval to _lval and returns _rval");
@@ -532,10 +531,8 @@ static t_osc_expr_oprec _osc_expr_builtin_op_assign = {
 	"=",
 	2,
 	(char *[]){"_lval", "_rval"},
-	NULL,
 	1,
 	(char *[]){"_rval"},
-	NULL,
 	"Assigns _rval to _lval and returns _rval",
 	OSC_EXPR_PARSER_ASSOC_RIGHT,
 	16,
@@ -547,115 +544,78 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_assign = {
 	"assign",
 	2,
 	(char *[]){"_lval", "_rval"},
-	NULL,
 	0,
 	1,
 	(char *[]){"_rval"},
-	NULL,
 	"Assigns _rval to _lval and returns _rval",
 	osc_expr_builtin_assign,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_apply = {
 	"apply",
 	1,
 	(char *[]){"_function"},
-	NULL,
 	1,
 	1,
 	(char *[]){"_result"},
-	NULL,
 	"Applies _function to _args and returns the result",
 	osc_expr_builtin_apply,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_map = {
 	"map",
 	1,
 	(char *[]){"_function"},
-	NULL,
 	1,
 	1,
 	(char *[]){"_result"},
-	NULL,
 	"Maps _function onto _args and returns the result",
 	osc_expr_builtin_map,
 	NULL,
+	osc_expr_specFunc_map_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
-static t_osc_expr_funcrec _osc_expr_builtin_func_lreduce = {
-	"lreduce",
+static t_osc_expr_funcrec _osc_expr_builtin_func_foldl = {
+	"foldl",
 	2,
 	(char *[]){"_function", "_list"},
-	NULL,
 	0,
 	1,
 	(char *[]){"_result"},
-	NULL,
 	"Combines all the elements in a list using a left-associative binary operation.",
-	osc_expr_builtin_lreduce,
+	osc_expr_builtin_foldl,
 	NULL,
+	osc_expr_specFunc_foldl_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_nth = {
 	"nth",
 	2,
 	(char *[]){"_list", "_index"},
-	NULL,
 	0,
 	1,
 	(char *[]){"_item"},
-	NULL,
 	"Returns the nth item in a list (counting from 0)",
 	osc_expr_builtin_nth,
 	osc_expr_builtin_lval_nth,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_oprec _osc_expr_builtin_op_lookup = {
 	".",
 	2,
 	(char *[]){"_a", "_b"},
-	NULL,
 	1,
 	(char *[]){"_y"},
-	NULL,
 	"Returns the value bound to _b in a subbundle associated with _a",
 	OSC_EXPR_PARSER_ASSOC_LEFT,
 	2,
@@ -667,65 +627,44 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_lookup = {
 	"lookup",
 	2,
 	(char *[]){"_a", "_b"},
-	NULL,
 	0,
 	1,
 	(char *[]){"_y"},
-	NULL,
 	"Returns the value bound to _b in a subbundle associated with _a",
 	osc_expr_builtin_lookup,
 	osc_expr_builtin_lval_lookup,
+	osc_expr_specFunc_map_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_list = {
 	"list",
 	0,
 	(char *[]){"_listelems"},
-	NULL,
 	1,
 	1,
 	(char *[]){"_list"},
-	NULL,
 	"Returns a list containing all elements passed as arguments",
 	osc_expr_builtin_list,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_aseq = {
 	"aseq",
 	3,
 	(char *[]){"_min", "_max", "_step"},
-	(char *[]){(char []){OSC_TYPETAG_CLASS_NUMERIC, 0}, (char []){OSC_TYPETAG_CLASS_NUMERIC, 0}, (char []){OSC_TYPETAG_CLASS_NUMERIC, 0}},
 	0,
 	1,
 	(char *[]){"_aseq"},
-	NULL,
 	"Returns an arithmetic sequence counting from min to max.",
 	osc_expr_builtin_aseq,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	OSC_EXPR_BUILTIN_ASEQ_VTAB,
-	0,
-	NULL,
-	0,
-	3,
-	(unsigned int []){0, 1, 2},
-	0,
 };
-
+/*
 static t_osc_expr_funcrec _osc_expr_builtin_func_scale = {
 	"scale",
 	5,
@@ -746,68 +685,47 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_scale = {
 	(unsigned int []){0, 1, 2, 3, 4},
 	0,
 };
-
+*/
 static t_osc_expr_funcrec _osc_expr_builtin_func_if = {
 	"if",
 	3,
 	(char *[]){"_test", "_then", "_else"},
-	NULL,
 	0,
 	1,
 	(char *[]){"_result"},
-	NULL,
 	"Evaluates _then if _test is true, and _else if it is false. Returns the result of the evaluated expression(s).",
 	osc_expr_builtin_if,
 	NULL,
+	osc_expr_specFunc_map_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_bundle = {
 	"bundle",
 	1,
 	(char *[]){"_messages"},
-	NULL,
 	1,
 	1,
 	(char *[]){"_bundle"},
-	NULL,
 	"Creates a bundle containing the messages passed to it",
 	osc_expr_builtin_bundle,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_message = {
 	"message",
 	1,
 	(char *[]){"_address", "_data"},
-	NULL,
 	1,
 	1,
 	(char *[]){"_message"},
-	NULL,
 	"Creates a message with the address and data passed to it",
 	osc_expr_builtin_message,
 	NULL,
+	osc_expr_specFunc_apply_impl,
 	NULL,
-	0,
-	NULL,
-	0,
-	0,
-	NULL,
-	0
 };
 
 t_osc_expr_oprec *osc_expr_builtin_op_add = &_osc_expr_builtin_op_add;
@@ -817,11 +735,11 @@ t_osc_expr_funcrec *osc_expr_builtin_func_add = &_osc_expr_builtin_func_add;
 t_osc_expr_funcrec *osc_expr_builtin_func_assign = &_osc_expr_builtin_func_assign;
 t_osc_expr_funcrec *osc_expr_builtin_func_apply = &_osc_expr_builtin_func_apply;
 t_osc_expr_funcrec *osc_expr_builtin_func_map = &_osc_expr_builtin_func_map;
-t_osc_expr_funcrec *osc_expr_builtin_func_lreduce = &_osc_expr_builtin_func_lreduce;
+t_osc_expr_funcrec *osc_expr_builtin_func_foldl = &_osc_expr_builtin_func_foldl;
 t_osc_expr_funcrec *osc_expr_builtin_func_nth = &_osc_expr_builtin_func_nth;
 t_osc_expr_funcrec *osc_expr_builtin_func_list = &_osc_expr_builtin_func_list;
 t_osc_expr_funcrec *osc_expr_builtin_func_aseq = &_osc_expr_builtin_func_aseq;
-t_osc_expr_funcrec *osc_expr_builtin_func_scale = &_osc_expr_builtin_func_scale;
+//t_osc_expr_funcrec *osc_expr_builtin_func_scale = &_osc_expr_builtin_func_scale;
 t_osc_expr_funcrec *osc_expr_builtin_func_if = &_osc_expr_builtin_func_if;
 t_osc_expr_funcrec *osc_expr_builtin_func_lookup = &_osc_expr_builtin_func_lookup;
 t_osc_expr_funcrec *osc_expr_builtin_func_message = &_osc_expr_builtin_func_message;
@@ -846,11 +764,11 @@ static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_lookup,
  	&_osc_expr_builtin_func_apply,
 	&_osc_expr_builtin_func_map,
- 	&_osc_expr_builtin_func_lreduce,
+ 	&_osc_expr_builtin_func_foldl,
 	&_osc_expr_builtin_func_nth,
 	&_osc_expr_builtin_func_list,
 	&_osc_expr_builtin_func_aseq,
-	&_osc_expr_builtin_func_scale,
+	//&_osc_expr_builtin_func_scale,
 	&_osc_expr_builtin_func_if,
 	&_osc_expr_builtin_func_message,
 	&_osc_expr_builtin_func_bundle,
@@ -1490,6 +1408,30 @@ void _osc_expr_makeLexEnvForFunc(t_osc_expr_ast_function *f, t_osc_expr_ast_expr
 	}
 }
 
+int osc_expr_specFunc_apply_impl(t_osc_expr_ast_funcall *f, 
+				 t_osc_expr_lexenv *lexenv, 
+				 t_osc_bndl_u *oscbndl,
+				 t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
+int osc_expr_specFunc_map_impl(t_osc_expr_ast_funcall *f, 
+			       t_osc_expr_lexenv *lexenv, 
+			       t_osc_bndl_u *oscbndl,
+			       t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
+int osc_expr_specFunc_foldl_impl(t_osc_expr_ast_funcall *f, 
+				   t_osc_expr_lexenv *lexenv, 
+				   t_osc_bndl_u *oscbndl,
+				   t_osc_atom_ar_u **out)
+{
+	return 0;
+}
+
 int osc_expr_specFunc_apply(t_osc_expr_ast_funcall *f, 
 			    t_osc_expr_lexenv *lexenv, 
 			    t_osc_bndl_u *oscbndl,
@@ -1587,7 +1529,7 @@ int osc_expr_specFunc_map(t_osc_expr_ast_funcall *f,
 	return 0;
 }
 
-int osc_expr_specFunc_lreduce(t_osc_expr_ast_funcall *f, 
+int osc_expr_specFunc_foldl(t_osc_expr_ast_funcall *f, 
 			      t_osc_expr_lexenv *lexenv, 
 			      t_osc_bndl_u *oscbndl,
 			      t_osc_atom_ar_u **out)
@@ -2063,8 +2005,8 @@ int osc_expr_specFunc_exists(t_osc_expr *f,
 // these are dummy functions---they're used to do a pointer comparison in osc_expr_ast_funcall_evalInLexEnv
 OSC_EXPR_BUILTIN_DECL(apply){return 0;}
 OSC_EXPR_BUILTIN_DECL(map){return 0;}
-OSC_EXPR_BUILTIN_DECL(lreduce){return 0;}
-OSC_EXPR_BUILTIN_DECL(rreduce){return 0;}
+OSC_EXPR_BUILTIN_DECL(foldl){return 0;}
+OSC_EXPR_BUILTIN_DECL(foldr){return 0;}
 OSC_EXPR_BUILTIN_DECL(assign){return 0;}
 OSC_EXPR_BUILTIN_DECL(if){return 0;}
 OSC_EXPR_BUILTIN_DECL(emptybundle){return 0;}
@@ -2098,8 +2040,8 @@ getmsgcount
 eval
 apply
 map
-lreduce
-rreduce
+foldl
+foldr
 quote
 lambda
 gettimetag
@@ -2180,8 +2122,8 @@ string
 // user defined: functions implemented in the expression language
 add1: add(1)
 sub1: sub(1)
-product: lreduce(mul)
-sum: lreduce(add)
+product: foldl(mul)
+sum: foldl(add)
 cumsum: 
 mean: lambda(l){sum(l) / length(l);}
 median: 

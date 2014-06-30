@@ -50,29 +50,6 @@ char **osc_expr_funcrec_getParamNames(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
-char **osc_expr_funcrec_getParamTypeConstraints(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->param_type_constraints;
-	}
-	return NULL;
-}
-
-char *osc_expr_funcrec_getTypeConstraintsForParam(t_osc_expr_funcrec *r, int param)
-{
-	if(r){
-		if(param >= osc_expr_funcrec_getInputArity(r)){
-			return NULL;
-		}
-		if(r->param_type_constraints){
-			return r->param_type_constraints[param];
-		}else{
-			return NULL;
-		}
-	}
-	return NULL;
-}
-
 int osc_expr_funcrec_getVariadic(t_osc_expr_funcrec *r)
 {
 	if(r){
@@ -93,14 +70,6 @@ char **osc_expr_funcrec_getOutputNames(t_osc_expr_funcrec *r)
 {
 	if(r){
 		return r->output_names;
-	}
-	return NULL;
-}
-
-int *osc_expr_funcrec_getOutputTypes(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->output_types;
 	}
 	return NULL;
 }
@@ -145,54 +114,6 @@ void *osc_expr_funcrec_getFuncForTypetag(t_osc_expr_funcrec *r, char tt)
 	return NULL;
 }
 
-int osc_expr_funcrec_getScalarExpansionArgc(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->scalar_expansion_argc;
-	}
-	return 0;
-}
-
-unsigned int *osc_expr_funcrec_getScalarExpansionArgv(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->scalar_expansion_argv;
-	}
-	return NULL;
-}
-
-uint32_t osc_expr_funcrec_getScalarExpansionFlags(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->scalar_expansion_flags;
-	}
-	return 0;
-}
-
-int osc_expr_funcrec_getTypePromotionArgc(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->type_promotion_argc;
-	}
-	return 0;
-}
-
-unsigned int *osc_expr_funcrec_getTypePromotionArgv(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->type_promotion_argv;
-	}
-	return NULL;
-}
-
-uint32_t osc_expr_funcrec_getTypePromotionFlags(t_osc_expr_funcrec *r)
-{
-	if(r){
-		return r->type_promotion_flags;
-	}
-	return 0;
-}
-
 t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 {
 	if(!r){
@@ -210,24 +131,7 @@ t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 			osc_message_u_appendString(param_names_msg, param_names[i]);
 		}
 	}
-	for(int i = 0; i < input_arity; i++){
-		char *tc_list = osc_expr_funcrec_getTypeConstraintsForParam(r, i);
-		if(tc_list){
-			char buf[10];
-			char tc = tc_list[0];
-			int j = 0;
-			while(tc){
-				buf[j] = tc;
-				j++;
-				tc = tc_list[j];
-			}
-			buf[j] = tc;
-			char address[32];
-			snprintf(address, sizeof(address), "/param/%d/typeconstraints", i);
-			t_osc_msg_u *msg = osc_message_u_allocWithString(address, buf);
-			osc_bundle_u_addMsg(b, msg);
-		}
-	}
+
 	t_osc_msg_u *variadic_msg = osc_message_u_allocWithBool("/variadic", osc_expr_funcrec_getVariadic(r));
 
 	int output_arity = osc_expr_funcrec_getOutputArity(r);
@@ -237,13 +141,6 @@ t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 	if(output_names){
 		for(int i = 0; i < output_arity; i++){
 			osc_message_u_appendString(output_names_msg, output_names[i]);
-		}
-	}
-	t_osc_msg_u *output_types_msg = osc_message_u_allocWithAddress("/output/types");
-	int *output_types = osc_expr_funcrec_getOutputTypes(r);
-	if(output_types){
-		for(int i = 0; i < output_arity; i++){
-			osc_message_u_appendInt32(output_types_msg, output_types[i]);
 		}
 	}
 
@@ -256,7 +153,6 @@ t_osc_bndl_u *osc_expr_funcrec_toBndl(t_osc_expr_funcrec *r)
 	osc_bundle_u_addMsg(b, variadic_msg);
 	osc_bundle_u_addMsg(b, output_arity_msg);
 	osc_bundle_u_addMsg(b, output_names_msg);
-	osc_bundle_u_addMsg(b, output_types_msg);
 	osc_bundle_u_addMsg(b, docstring_msg);
 	return b;
 }

@@ -45,21 +45,22 @@ struct _osc_expr_funcrec
 	char *name; /**< Name of the function as a C string. */
 	int input_arity;
 	char **param_names;
-	char **param_type_constraints; /**< List of least upper bounds for each argument */
+	//char **param_type_constraints; /**< List of least upper bounds for each argument */
 	int variadic; /**< true/false */
 	int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
 	char **output_names; /**< Plural for possible future support of multiple return values. */
-	int *output_types; /**< Plural for possible future support of multiple return values. */
+	//int *output_types; /**< Plural for possible future support of multiple return values. */
 	char *docstring;
 	t_osc_expr_builtin_funcptr func;
 	t_osc_expr_builtin_lvalfuncptr lval_func;
+	t_osc_expr_builtin_specfuncptr applicator;
 	void **vtab;
-	int scalar_expansion_argc;
-	unsigned int *scalar_expansion_argv;
-	uint32_t scalar_expansion_flags;
-	int type_promotion_argc;
-	unsigned int *type_promotion_argv;
-	uint32_t type_promotion_flags;
+	//int scalar_expansion_argc;
+	//unsigned int *scalar_expansion_argv;
+	//uint32_t scalar_expansion_flags;
+	//int type_promotion_argc;
+	//unsigned int *type_promotion_argv;
+	//uint32_t type_promotion_flags;
 };
 #pragma pack(pop)
 

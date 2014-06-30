@@ -50,21 +50,6 @@ char **osc_expr_oprec_getParamNames(t_osc_expr_oprec *r)
 	return NULL;
 }
 
-char *osc_expr_oprec_getTypeConstraintsForParam(t_osc_expr_oprec *r, int param)
-{
-	if(r){
-		if(param >= osc_expr_oprec_getInputArity(r)){
-			return NULL;
-		}
-		if(r->param_type_constraints){
-			return r->param_type_constraints[param];
-		}else{
-			return NULL;
-		}
-	}
-	return NULL;
-}
-
 int osc_expr_oprec_getOutputArity(t_osc_expr_oprec *r)
 {
 	if(r){
@@ -77,14 +62,6 @@ char **osc_expr_oprec_getOutputNames(t_osc_expr_oprec *r)
 {
 	if(r){
 		return r->output_names;
-	}
-	return NULL;
-}
-
-int *osc_expr_oprec_getOutputTypes(t_osc_expr_oprec *r)
-{
-	if(r){
-		return r->output_types;
 	}
 	return NULL;
 }
@@ -147,25 +124,6 @@ t_osc_bndl_u *osc_expr_oprec_toBndl(t_osc_expr_oprec *r)
 		}
 	}
 
-	for(int i = 0; i < input_arity; i++){
-		char *tc_list = osc_expr_oprec_getTypeConstraintsForParam(r, i);
-		if(tc_list){
-			char buf[10];
-			char tc = tc_list[0];
-			int j = 0;
-			while(tc){
-				buf[j] = tc;
-				j++;
-				tc = tc_list[j];
-			}
-			buf[j] = tc;
-			char address[32];
-			snprintf(address, sizeof(address), "/param/%d/typeconstraints", i);
-			t_osc_msg_u *msg = osc_message_u_allocWithString(address, buf);
-			osc_bundle_u_addMsg(b, msg);
-		}
-	}
-
 	int output_arity = osc_expr_oprec_getOutputArity(r);
 	t_osc_msg_u *output_arity_msg = osc_message_u_allocWithInt32("/arity/output", output_arity);
 	t_osc_msg_u *output_names_msg = osc_message_u_allocWithAddress("/output_names");
@@ -173,13 +131,6 @@ t_osc_bndl_u *osc_expr_oprec_toBndl(t_osc_expr_oprec *r)
 	if(output_names){
 		for(int i = 0; i < output_arity; i++){
 			osc_message_u_appendString(output_names_msg, output_names[i]);
-		}
-	}
-	t_osc_msg_u *output_types_msg = osc_message_u_allocWithAddress("/output/types");
-	int *output_types = osc_expr_oprec_getOutputTypes(r);
-	if(output_types){
-		for(int i = 0; i < output_arity; i++){
-			osc_message_u_appendInt32(output_types_msg, output_types[i]);
 		}
 	}
 	t_osc_msg_u *docstring_msg = osc_message_u_allocWithString("/docstring", osc_expr_oprec_getDocstring(r));
@@ -194,7 +145,6 @@ t_osc_bndl_u *osc_expr_oprec_toBndl(t_osc_expr_oprec *r)
 	osc_bundle_u_addMsg(b, param_names_msg);
 	osc_bundle_u_addMsg(b, output_arity_msg);
 	osc_bundle_u_addMsg(b, output_names_msg);
-	osc_bundle_u_addMsg(b, output_types_msg);
 	osc_bundle_u_addMsg(b, docstring_msg);
 	osc_bundle_u_addMsg(b, assoc_msg);
 	osc_bundle_u_addMsg(b, precedence_msg);
