@@ -1360,10 +1360,12 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			t_osc_atom_u tmpatom; // ahhh! an atom on the stack! naughty...
 			tmpatom.w.bndl = osc_expr_ast_expr_toBndl(a->w.expr);
 			tmpatom.typetag = OSC_BUNDLE_TYPETAG;
-			long l = osc_atom_u_doSerialize(&tmpatom, buflen, bufpos, buf);
+			//long l = osc_atom_u_doSerialize(&tmpatom, buflen, bufpos, buf);
+			size_t l = l = osc_atom_u_nserialize(buf, n, &tmpatom);
 			if(tmpatom.w.bndl){
 				osc_bundle_u_free(tmpatom.w.bndl);
 			}
+			return l;
 		}
 		break;
 	case OSC_BUNDLE_TYPETAG:
@@ -1465,6 +1467,15 @@ t_osc_atom_u *osc_atom_u_allocWithString(char *s)
 	t_osc_atom_u *a = osc_atom_u_alloc();
 	if(a){
 		osc_atom_u_setString(a, s);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithBndl_u(t_osc_bndl_u *b, int alloc)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setBndl_u(a, b, 1);
 	}
 	return a;
 }

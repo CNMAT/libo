@@ -686,7 +686,7 @@ static t_osc_expr_funcrec _osc_expr_builtin_func_lookup = {
 
 static t_osc_expr_funcrec _osc_expr_builtin_func_list = {
 	"list",
-	1,
+	0,
 	(char *[]){"_listelems"},
 	NULL,
 	1,

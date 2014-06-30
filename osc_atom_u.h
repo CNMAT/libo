@@ -555,7 +555,7 @@ one will be created and must be freed by the caller using #osc_mem_free().
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);
 t_osc_atom_u *osc_atom_u_allocWithString(char *s);
-
+t_osc_atom_u *osc_atom_u_allocWithBndl_u(t_osc_bndl_u *b, int alloc);
 
 #ifdef __cplusplus
 }

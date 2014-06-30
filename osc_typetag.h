@@ -73,7 +73,7 @@ enum{
 
 char *osc_typetag_str(int8_t tt);
 int osc_typetag_compare(char tt1, char tt2);
-char osc_typetag_getLargestType(int argc, t_osc_atom_array_u **argv);
+char osc_typetag_getLargestType(int argc, t_osc_atom_u **argv);
 
 #ifdef __cplusplus
 }

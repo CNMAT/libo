@@ -423,7 +423,7 @@ list:
 	'[' expr ']' {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
 	}
-	| */'[' exprlist_one_or_more ']'  {
+	| */'[' exprlist_zero_or_more ']'  {
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
 		osc_expr_ast_expr_setBrackets($$, '[', ']');
 	}
