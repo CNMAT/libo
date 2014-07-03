@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "osc.h"
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_expr_builtin.h"
 #include "osc_expr_oprec.h"
@@ -222,6 +223,7 @@ t_osc_expr_ast_binaryop *osc_expr_ast_binaryop_alloc(t_osc_expr_oprec *rec, t_os
 				  osc_expr_ast_binaryop_fromBndl,
 				  sizeof(t_osc_expr_ast_binaryop),
 				  funcrec,
+				  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 				  2,
 				  left,
 				  right);

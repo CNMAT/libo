@@ -283,15 +283,18 @@ t_osc_expr_ast_expr *osc_expr_parser_reduceCompoundAssign(YYLTYPE *llocp,
 
 t_osc_expr_ast_expr *osc_expr_parser_reducePrefixFunction(YYLTYPE *llocp,
 							  char *input_string,
-							  char *function_name,
+							  t_osc_atom_u *function_token,
 							  t_osc_expr_ast_expr *arglist)
 {
-	t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunction(function_name);
+	t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunction(osc_atom_u_getStringPtr(function_token));
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocIdentifier(function_token);
+	/*
 	if(!r){
 		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
 		return NULL;
 	}
-	return (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(r, arglist);
+	*/
+	return (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(r, v, arglist);
 }
 
 void osc_expr_parser_printlexenv(char *key, void *val, void *context)
@@ -584,7 +587,7 @@ message:
 OSC_EXPR_OSCADDRESS {
 	//$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
 	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
-	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, 1, (t_osc_expr_ast_expr *)v);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("message")), 1, (t_osc_expr_ast_expr *)v);
 	//if(alloc_atom){
 	//osc_mem_free($1);
 	//}
@@ -592,7 +595,7 @@ OSC_EXPR_OSCADDRESS {
 | OSC_EXPR_OSCADDRESS ':' expns {
 	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
 	osc_expr_ast_expr_append((t_osc_expr_ast_expr *)v, $3);
-	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, (t_osc_expr_ast_expr *)v);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("message")), (t_osc_expr_ast_expr *)v);
   }
 ;
 
@@ -613,7 +616,7 @@ bundle:
 	//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_bundle, 0);
 }
 | '{' messages '}' {
-	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, $2);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("bundle")), $2);
   }
 ;
 
@@ -764,30 +767,27 @@ ternarycond:
 funcall:
 // prefix function call
 	OSC_EXPR_IDENTIFIER '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
-		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
-							  input_string,
-							  osc_atom_u_getStringPtr($1),
-							  $3);
-		osc_atom_u_free($1);
-		if(!$$){
-			osc_expr_ast_expr_free($$);
-			$$ = NULL;
-			return 1;
-		}
+		t_osc_expr_ast_funcall *fc = osc_expr_parser_reducePrefixFunction(&yylloc,
+										  input_string,
+										  $1,
+										  $3);
+		$$ = (t_osc_expr_ast_expr *)fc;
   	}
 	| OSC_EXPR_OSCADDRESS '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
 		t_osc_expr_ast_expr *v = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
-		osc_expr_ast_expr_append(v, $3);
-		$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
-							  input_string,
-							  "apply",
-							  v);
+		//osc_expr_ast_expr_append(v, $3);
+		//$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
+		//input_string,
+		//"apply",
+		//v);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(NULL, v, $3);
         }
 ;
 
 expr:
-	';' {
-		$$ = osc_expr_ast_expr_alloc();
+	expr ';' {
+		osc_expr_ast_expr_setSemicolonTerminated($1, 1);
+		$$ = $1;
 	}
 	| value
 	  //| function

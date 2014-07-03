@@ -57,7 +57,7 @@ void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 		e->objsize = sizeof(t_osc_expr_ast_expr);
 		e->leftbracket = 0;
 		e->rightbracket = 0;
-		e->is_static = 0;
+		e->semicolon_terminated = 0;
 	}
 }
 
@@ -108,6 +108,11 @@ int osc_expr_ast_expr_eval(t_osc_expr_ast_expr *ast,
 			osc_bundle_u_free(bndlu);
 			return ret;
 		}
+		if(*oscbndl){
+			osc_mem_free(*oscbndl);
+			*oscbndl = NULL;
+		}
+		*len = 0;
 		osc_bundle_u_serialize(bndlu, len, oscbndl);
 		osc_bundle_u_free(bndlu);
 		return 0;
@@ -229,7 +234,7 @@ t_osc_expr_ast_expr *osc_expr_ast_expr_copyAllLinked(t_osc_expr_ast_expr *ast)
 
 void osc_expr_ast_expr_free(t_osc_expr_ast_expr *e)
 {
-	if(e && !e->is_static){
+	if(e){
 		if(e->free){
 			if(e->next){
 				osc_expr_ast_expr_free(e->next);
@@ -302,9 +307,12 @@ long osc_expr_ast_expr_format(char *buf, long n, t_osc_expr_ast_expr *e)
 			if(osc_expr_ast_expr_getRightBracket(e)){
 				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, "%c", osc_expr_ast_expr_getRightBracket(e));
 			}
+			if(osc_expr_ast_expr_isSemicolonTerminated(e)){
+				l += snprintf(buf ? buf + l : NULL, buf ? n - l : 0, ";");
+			}
 			return l;
 		}else{
-			return snprintf(buf, n, ";");
+			return 0;
 		}
 	}else{
 		return 0;
@@ -478,6 +486,21 @@ char osc_expr_ast_expr_getRightBracket(t_osc_expr_ast_expr *e)
 		return e->rightbracket;
 	}
 	return 0;
+}
+
+int osc_expr_ast_expr_isSemicolonTerminated(t_osc_expr_ast_expr *e)
+{
+	if(e){
+		return e->semicolon_terminated;
+	}
+	return 0;
+}
+
+void osc_expr_ast_expr_setSemicolonTerminated(t_osc_expr_ast_expr *e, int bool)
+{
+	if(e){
+		e->semicolon_terminated = bool;
+	}
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void)

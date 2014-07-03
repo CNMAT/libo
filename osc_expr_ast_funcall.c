@@ -185,12 +185,16 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				      t_osc_atom_ar_u **out)
 {
 	t_osc_expr_ast_funcall *f = (t_osc_expr_ast_funcall *)ast;
-	t_osc_expr_builtin_funcptr ff = osc_expr_ast_funcall_getFunc(f);
-	t_osc_expr_funcrec *funcrec = osc_expr_ast_funcall_getFuncRec(f);
-	if(!ff){
-		// wha?
-		return 1;
+	t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec(f);
+	if(r){
+		t_osc_expr_builtin_funcptr applicator = osc_expr_funcrec_getApplicator(r);
+		if(applicator){
+			return applicator(ast, lexenv, oscbndl, 0, NULL, out);
+		}
+	}else{
+		return osc_expr_builtin_apply(ast, lexenv, oscbndl, 0, NULL, out);
 	}
+
 	//////////////////////////////////////////////////
 	// Special functions
 	//////////////////////////////////////////////////
@@ -210,6 +214,7 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(gettimetag);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC(settimetag);
 	*/
+	/*
 	if(ff == osc_expr_builtin_assign){
 		return osc_expr_specFunc_assign((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else if(ff == osc_expr_builtin_nth){
@@ -227,32 +232,18 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 	}else if(ff == osc_expr_builtin_bundle){
 		return osc_expr_specFunc_bundle((t_osc_expr_ast_funcall *)ast, lexenv, oscbndl, out);
 	}else{
+	*/
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
+	/*
 		int f_argc = osc_expr_ast_funcall_getNumArgs(f);
 		t_osc_expr_ast_expr *f_argv = osc_expr_ast_funcall_getArgs(f);
 		t_osc_atom_ar_u *argv[f_argc];
 		memset(argv, '\0', sizeof(argv));
 		int ret = 0;
 		int arity = osc_expr_funcrec_getInputArity(funcrec);
-/*
-		if(f_argc < arity){
-			// partial function application: wrap expression in a lambda and return it
-			int lambdalistlen = arity - f_argc;
-			char *varnames[] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
-			t_osc_atom_u *a = osc_atom_u_alloc();
-			osc_atom_u_setString(a, varnames[0]);
-			t_osc_expr_ast_value *lambdalist = osc_expr_ast_value_allocIdentifier(a);
-			for(int i = 1; i < lambdalistlen; i++){
-				t_osc_atom_u *a = osc_atom_u_alloc();
-				osc_atom_u_setString(a, varnames[i]);
-				t_osc_expr_ast_value *v = osc_expr_ast_value_allocIdentifier(a);
-				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalist, (t_osc_expr_ast_expr *)v);
-			}
-			t_osc_expr_ast_function *function = osc_expr_ast_function_alloc(lambdalist, ast);
-		}
-*/
+
 		t_osc_expr_ast_value *lambdalist = NULL;
 		int make_lambda_abstraction = 0;
 		int i = 0;
@@ -341,7 +332,8 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 			}
 			return ret;
 		}
-	}
+	*/
+		//}
 	return 1;
 }
 
@@ -384,8 +376,8 @@ int osc_expr_ast_funcall_evalLvalInLexEnv(t_osc_expr_ast_expr *ast,
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(gettimetag);
 	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(settimetag);
 	*/
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(nth);
-	OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(lookup);
+	//OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(nth);
+	//OSC_EXPR_AST_FUNCALL_EVALSPECFUNC_LVAL(lookup);
 
 	return 1;
 }
@@ -395,13 +387,12 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e)
 	if(!e){
 		return 0;
 	}
-	t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec((t_osc_expr_ast_funcall *)e);
-	if(!r){
-		return 0;
-	}
+	//t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec((t_osc_expr_ast_funcall *)e);
+	t_osc_expr_ast_value *function_token = osc_expr_ast_funcall_getFunctionToken(e);
         t_osc_expr_ast_expr *arg = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e);
 	long offset = 0;
-	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "%s(", osc_expr_funcrec_getName(r));
+	offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, function_token);
+	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(");
 	while(arg){
 		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
 		arg = osc_expr_ast_expr_next(arg);
@@ -440,6 +431,7 @@ t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast)
 		t_osc_expr_ast_funcall *fc = (t_osc_expr_ast_funcall *)ast;
 		t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec(fc);
 		t_osc_expr_ast_expr *args = osc_expr_ast_funcall_getArgs(fc);
+		t_osc_expr_ast_value *tokencopy = (t_osc_expr_ast_value *)osc_expr_ast_value_copy((t_osc_expr_ast_expr *)osc_expr_ast_funcall_getFunctionToken(fc));
 		t_osc_expr_ast_expr *argcopy = NULL;
 		int n = 0;
 		while(args){
@@ -454,7 +446,7 @@ t_osc_expr_ast_expr *osc_expr_ast_funcall_copy(t_osc_expr_ast_expr *ast)
 			args = osc_expr_ast_expr_next(args);
 			n++;
 		}
-		t_osc_expr_ast_funcall *copy = osc_expr_ast_funcall_allocWithList(r, argcopy);
+		t_osc_expr_ast_funcall *copy = osc_expr_ast_funcall_allocWithList(r, tokencopy, argcopy);
 		return (t_osc_expr_ast_expr *)copy;
 	}else{
 		return NULL;
@@ -465,6 +457,10 @@ void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e)
 {
 	if(e){
 		osc_expr_ast_expr_free(osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e));
+		t_osc_expr_ast_value *v = osc_expr_ast_funcall_getFunctionToken((t_osc_expr_ast_funcall *)e);
+		if(v){
+			osc_expr_ast_value_free(v);
+		}
 		osc_mem_free(e);
 	}
 }
@@ -516,6 +512,14 @@ t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e)
 	return NULL;
 }
 
+t_osc_expr_ast_value *osc_expr_ast_funcall_getFunctionToken(t_osc_expr_ast_funcall *e)
+{
+	if(e){
+		return e->function_token;
+	}
+	return NULL;
+}
+
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e)
 {
 	if(e){
@@ -545,18 +549,7 @@ int osc_expr_ast_funcall_getNumArgs(t_osc_expr_ast_funcall *e)
 	}
 	return 0;
 }
-/* something weird here...
-void osc_expr_ast_funcall_appendArg(t_osc_expr_ast_funcall *e, t_osc_expr_ast_expr *a)
-{
-	t_osc_expr_ast_expr *args = osc_expr_ast_funcall_getArgs(e);
-	if(args){
-		osc_expr_ast_expr_append(args, a);
-	}else{
-		e->argv = a;
-	}
-	e->argc++;
-}
-*/
+
 void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       int nodetype,
 				       t_osc_expr_ast_expr *next,
@@ -570,6 +563,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       t_osc_expr_ast_frombndlfn frombndlfn,
 				       size_t objsize,
 				       t_osc_expr_funcrec *rec,
+				       t_osc_expr_ast_value *function_token,
 				       t_osc_expr_ast_expr *argv)
 {
 	if(e){
@@ -586,6 +580,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       frombndlfn ? frombndlfn : osc_expr_ast_funcall_fromBndl,
 				       objsize);
 		e->rec = rec;
+		e->function_token = function_token;
 		t_osc_expr_ast_expr *a = argv;
 		int argc = 0;
 		while(a){
@@ -598,20 +593,21 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 }
 
 void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
-				       int nodetype,
-				       t_osc_expr_ast_expr *next,
-				       t_osc_expr_ast_evalfn evalfn,
-				       t_osc_expr_ast_evallvalfn evallvalfn,
-				       t_osc_expr_ast_formatfn formatfn,
-				       t_osc_expr_ast_formatfn format_lispfn,
-				       t_osc_expr_ast_freefn freefn,
-				       t_osc_expr_ast_copyfn copyfn,
-				       t_osc_expr_ast_tobndlfn tobndlfn,
-				       t_osc_expr_ast_frombndlfn frombndlfn,
-				       size_t objsize,
-				       t_osc_expr_funcrec *rec,
-				       int argc,
-				       ...)
+			       int nodetype,
+			       t_osc_expr_ast_expr *next,
+			       t_osc_expr_ast_evalfn evalfn,
+			       t_osc_expr_ast_evallvalfn evallvalfn,
+			       t_osc_expr_ast_formatfn formatfn,
+			       t_osc_expr_ast_formatfn format_lispfn,
+			       t_osc_expr_ast_freefn freefn,
+			       t_osc_expr_ast_copyfn copyfn,
+			       t_osc_expr_ast_tobndlfn tobndlfn,
+			       t_osc_expr_ast_frombndlfn frombndlfn,
+			       size_t objsize,
+			       t_osc_expr_funcrec *rec,
+			       t_osc_expr_ast_value *function_token,
+			       int argc,
+			       ...)
 {
 	t_osc_expr_ast_expr *argv = NULL;
 	if(argc > 0){
@@ -636,56 +632,59 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 					  frombndlfn,
 					  objsize,
 					  rec,
+					  function_token,
 					  argv);
 }
 
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *rec, t_osc_expr_ast_expr *argv)
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *rec, t_osc_expr_ast_value *function_token, t_osc_expr_ast_expr *argv)
 {
 	t_osc_expr_ast_funcall *e = osc_mem_alloc(sizeof(t_osc_expr_ast_funcall));
 	if(e){
 		osc_expr_ast_funcall_initWithList(e, 
-					  OSC_EXPR_AST_NODETYPE_FUNCALL, 
-					  NULL, 
-					  osc_expr_ast_funcall_evalInLexEnv, 
-					  osc_expr_ast_funcall_evalLvalInLexEnv, 
-					  osc_expr_ast_funcall_format, 
-					  osc_expr_ast_funcall_formatLisp, 
-					  osc_expr_ast_funcall_free, 
-					  osc_expr_ast_funcall_copy, 
-					  osc_expr_ast_funcall_toBndl, 
-					  osc_expr_ast_funcall_fromBndl, 
-					  sizeof(t_osc_expr_ast_funcall),
-					  rec,
-					  argv);
+						  OSC_EXPR_AST_NODETYPE_FUNCALL, 
+						  NULL, 
+						  osc_expr_ast_funcall_evalInLexEnv, 
+						  osc_expr_ast_funcall_evalLvalInLexEnv, 
+						  osc_expr_ast_funcall_format, 
+						  osc_expr_ast_funcall_formatLisp, 
+						  osc_expr_ast_funcall_free, 
+						  osc_expr_ast_funcall_copy, 
+						  osc_expr_ast_funcall_toBndl, 
+						  osc_expr_ast_funcall_fromBndl, 
+						  sizeof(t_osc_expr_ast_funcall),
+						  rec,
+						  function_token,
+						  argv);
 	}
 	// if args are missing, wrap it in a lambda abstraction
-	char *varnames[] = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
-	int arity = osc_expr_funcrec_getInputArity(rec);
-	if(e->argc < arity){
-		t_osc_expr_ast_value *lambdalist = NULL;
-		for(int i = 0; i < arity - e->argc; i++){
-			t_osc_atom_u *a = osc_atom_u_alloc();
-			osc_atom_u_setString(a, varnames[i]);
-			t_osc_expr_ast_value *v = osc_expr_ast_value_allocIdentifier(a);
-			osc_expr_ast_expr_append(e->argv, (t_osc_expr_ast_expr *)v);
+	if(rec){
+		char *varnames[] = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
+		int arity = osc_expr_funcrec_getInputArity(rec);
+		if(e->argc < arity){
+			t_osc_expr_ast_value *lambdalist = NULL;
+			for(int i = 0; i < arity - e->argc; i++){
+				t_osc_atom_u *a = osc_atom_u_alloc();
+				osc_atom_u_setString(a, varnames[i]);
+				t_osc_expr_ast_value *v = osc_expr_ast_value_allocIdentifier(a);
+				osc_expr_ast_expr_append(e->argv, (t_osc_expr_ast_expr *)v);
 
-			t_osc_atom_u *a2 = osc_atom_u_alloc();
-			osc_atom_u_setString(a2, varnames[i]);
-			t_osc_expr_ast_value *v2 = osc_expr_ast_value_allocIdentifier(a2);
-			if(lambdalist == NULL){
-				lambdalist = v2;
-			}else{
-				osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalist, (t_osc_expr_ast_expr *)v2);
+				t_osc_atom_u *a2 = osc_atom_u_alloc();
+				osc_atom_u_setString(a2, varnames[i]);
+				t_osc_expr_ast_value *v2 = osc_expr_ast_value_allocIdentifier(a2);
+				if(lambdalist == NULL){
+					lambdalist = v2;
+				}else{
+					osc_expr_ast_expr_append((t_osc_expr_ast_expr *)lambdalist, (t_osc_expr_ast_expr *)v2);
+				}
+				e->argc++;
 			}
-			e->argc++;
+			e = (t_osc_expr_ast_funcall *)osc_expr_ast_function_alloc(lambdalist, (t_osc_expr_ast_expr *)e);
 		}
-		e = (t_osc_expr_ast_funcall *)osc_expr_ast_function_alloc(lambdalist, (t_osc_expr_ast_expr *)e);
 	}
-
 	return e;
 }
 
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, int argc, ...)
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, t_osc_expr_ast_value *function_token, int argc, ...)
 {
 	if(argc > 0){
 		va_list ap;
@@ -699,8 +698,8 @@ t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, int 
 		while(ee){
 			ee = osc_expr_ast_expr_next(ee);
 		}
-		return osc_expr_ast_funcall_allocWithList(rec, argv);
+		return osc_expr_ast_funcall_allocWithList(rec, function_token, argv);
 	}else{
-		return osc_expr_ast_funcall_allocWithList(rec, NULL);
+		return osc_expr_ast_funcall_allocWithList(rec, function_token, NULL);
 	}
 }

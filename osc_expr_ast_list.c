@@ -215,6 +215,7 @@ t_osc_expr_ast_list *osc_expr_ast_list_allocWithLen(t_osc_expr_ast_expr *list, l
 						  osc_expr_ast_list_fromBndl,
 						  sizeof(t_osc_expr_ast_list),
 						  funcrec,
+				  		  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 						  list);
 	}
 	return v;
@@ -251,6 +252,7 @@ t_osc_expr_ast_list *osc_expr_ast_list_alloc(t_osc_expr_ast_expr *list)
 						  osc_expr_ast_list_fromBndl,
 						  sizeof(t_osc_expr_ast_list),
 						  funcrec,
+				  		  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 						  list);
 		osc_expr_ast_list_setList(v, list);
 	}

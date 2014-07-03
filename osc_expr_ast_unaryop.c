@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "osc.h"
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_expr_builtin.h"
 #include "osc_expr_oprec.h"
@@ -217,6 +218,7 @@ t_osc_expr_ast_unaryop *osc_expr_ast_unaryop_alloc(t_osc_expr_oprec *rec, t_osc_
 				  osc_expr_ast_unaryop_fromBndl,
 				  sizeof(t_osc_expr_ast_unaryop),
 				  funcrec,
+				  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 				  0);
 	osc_expr_ast_unaryop_setOpRec(b, rec);
 	osc_expr_ast_unaryop_setArg(b, arg);

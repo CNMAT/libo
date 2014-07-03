@@ -82,6 +82,14 @@ char *osc_expr_funcrec_getDocstring(t_osc_expr_funcrec *r)
 	return NULL;
 }
 
+int osc_expr_funcrec_shouldEvalArgs(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->suppress_argument_evaluation == 0;
+	}
+	return 0;
+}
+
 t_osc_expr_builtin_funcptr osc_expr_funcrec_getFunc(t_osc_expr_funcrec *r)
 {
 	if(r){
@@ -94,6 +102,14 @@ t_osc_expr_builtin_lvalfuncptr osc_expr_funcrec_getLvalFunc(t_osc_expr_funcrec *
 {
 	if(r){
 		return r->lval_func;
+	}
+	return NULL;
+}
+
+t_osc_expr_builtin_funcptr osc_expr_funcrec_getApplicator(t_osc_expr_funcrec *r)
+{
+	if(r){
+		return r->applicator;
 	}
 	return NULL;
 }
@@ -179,6 +195,6 @@ t_osc_expr_ast_function *osc_expr_funcrec_allocLambda(t_osc_expr_funcrec *r)
 			arglist = osc_expr_ast_value_copy((t_osc_expr_ast_expr *)v);
 		}
 	}
-	t_osc_expr_ast_expr *expr = osc_expr_ast_funcall_allocWithList(r, arglist);
+	t_osc_expr_ast_expr *expr = osc_expr_ast_funcall_allocWithList(r, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(r))), arglist);
 	return osc_expr_ast_function_alloc(lambdalist, expr);
 }

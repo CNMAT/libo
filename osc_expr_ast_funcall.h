@@ -38,6 +38,7 @@ typedef struct _osc_expr_ast_funcall t_osc_expr_ast_funcall;
 
 #include "osc_expr_funcrec.h"
 #include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_value.h"
 #include "osc_expr_builtin.h"
 #include "osc_bundle_u.h"
 
@@ -58,6 +59,7 @@ void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e);
 t_osc_bndl_u *osc_expr_ast_funcall_toBndl(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_fromBndl(t_osc_bndl_u *);
 t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
+t_osc_expr_ast_value *osc_expr_ast_funcall_getFunctionToken(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_lvalfuncptr osc_expr_ast_funcall_getLvalFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);
@@ -78,6 +80,7 @@ void osc_expr_ast_funcall_initWithList(t_osc_expr_ast_funcall *e,
 				       t_osc_expr_ast_frombndlfn frombndlfn,
 				       size_t objsize,
 				       t_osc_expr_funcrec *rec,
+				       t_osc_expr_ast_value *function_token,
 				       t_osc_expr_ast_expr *argv);
 void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 			       int nodetype,
@@ -92,10 +95,11 @@ void osc_expr_ast_funcall_init(t_osc_expr_ast_funcall *e,
 			       t_osc_expr_ast_frombndlfn frombndlfn,
 			       size_t objsize,
 			       t_osc_expr_funcrec *rec,
+			       t_osc_expr_ast_value *function_token,
 			       int argc,
 			       ...);
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *rec, t_osc_expr_ast_expr *argv);
-t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, int argc, ...);
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_allocWithList(t_osc_expr_funcrec *rec, t_osc_expr_ast_value *function_token, t_osc_expr_ast_expr *argv);
+t_osc_expr_ast_funcall *osc_expr_ast_funcall_alloc(t_osc_expr_funcrec *rec, t_osc_expr_ast_value *function_token, int argc, ...);
 
 #ifdef __cplusplus
 }

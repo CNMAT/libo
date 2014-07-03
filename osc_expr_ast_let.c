@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "osc.h"
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
@@ -233,6 +234,7 @@ t_osc_expr_ast_let *osc_expr_ast_let_alloc(t_osc_expr_ast_expr *varlist, t_osc_e
 						  osc_expr_ast_let_fromBndl,
 						  sizeof(t_osc_expr_ast_let),
 						  funcrec,
+				  		  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 						  (t_osc_expr_ast_expr *)lambda);
 
 		osc_expr_ast_let_setVarlist(f, varlist);

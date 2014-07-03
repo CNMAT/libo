@@ -63,6 +63,15 @@ int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				char *sp = osc_atom_u_getStringPtr(vv);
 				if((tmp = osc_expr_lexenv_lookup(lexenv, sp))){
 					//*out = osc_atom_array_u_copy((t_osc_atom_ar_u *)tmp);
+					if(osc_expr_ast_expr_getNodetype((t_osc_expr_ast_expr *)tmp) == OSC_EXPR_AST_NODETYPE_VALUE &&
+					   osc_expr_ast_value_getValueType((t_osc_expr_ast_value *)tmp) == OSC_EXPR_AST_VALUE_TYPE_IDENTIFIER){
+						t_osc_atom_u *a = osc_expr_ast_value_getValue((t_osc_expr_ast_value *)tmp);
+						if(!strcmp(osc_atom_u_getStringPtr(a), sp)){
+							*out = osc_atom_array_u_alloc(1);
+							osc_atom_u_setExpr(osc_atom_array_u_get(*out, 0), osc_expr_ast_expr_copy(tmp), 1);
+							return 0;
+						}
+					}
 					osc_expr_ast_expr_evalInLexEnv((t_osc_expr_ast_expr *)tmp, lexenv, oscbndl, out);
 					return 0;
 				}else if((tmp = osc_expr_builtin_lookupFunction(sp))){

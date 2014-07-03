@@ -38,6 +38,7 @@ struct _osc_expr_ast_funcall
 	struct _osc_expr_ast_expr expr; // parent
 	struct _osc_expr_funcrec *rec; // pointer to function record
 	struct _osc_expr_ast_expr *argv; // arguments to function
+	struct _osc_expr_ast_value *function_token; // the symbol that represents the function. this may be an OSC address
 	int argc;
 };
 

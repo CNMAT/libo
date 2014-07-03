@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "osc.h"
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
@@ -239,6 +240,7 @@ t_osc_expr_ast_aseq *osc_expr_ast_aseq_alloc(t_osc_expr_ast_expr *min, t_osc_exp
 				  osc_expr_ast_aseq_fromBndl,
 				  sizeof(t_osc_expr_ast_aseq),
 				  funcrec,
+				  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 				  3,
 				  min,
 				  max,

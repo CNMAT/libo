@@ -32,7 +32,7 @@
 //void osc_expr_err_badInfixArg(char *func, char typetag, int argnum, t_osc_atom_u *left, t_osc_atom_u *right);
 //void osc_expr_err_unbound(char *address, char *func); 
 //void osc_expr_err_argnum(unsigned int expected, unsigned int found, unsigned int optional_args_allowed, char *func);
-
+/*
 OSC_EXPR_BUILTIN_DECL(apply);
 OSC_EXPR_BUILTIN_DECL(map);
 OSC_EXPR_BUILTIN_DECL(foldl);
@@ -95,3 +95,4 @@ OSC_EXPR_SPECFUNC_LVAL_DECL(nth);
 OSC_EXPR_SPECFUNC_DECL(message);
 OSC_EXPR_SPECFUNC_DECL(bundle);
 
+*/

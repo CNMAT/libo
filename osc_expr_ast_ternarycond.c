@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "osc.h"
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_expr_builtin.h"
 #include "osc_expr_ast_expr.h"
@@ -214,6 +215,7 @@ t_osc_expr_ast_ternarycond *osc_expr_ast_ternarycond_alloc(t_osc_expr_ast_expr *
 				  osc_expr_ast_ternarycond_fromBndl,
 				  sizeof(t_osc_expr_ast_ternarycond),
 				  funcrec,
+				  osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString(osc_expr_funcrec_getName(funcrec))),
 				  3,
 				  test,
 				  leftbranch,
