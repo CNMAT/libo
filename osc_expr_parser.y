@@ -363,7 +363,7 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 
 %precedence lowest
 
-%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdalist let varlist arraysubscript list message messages bundle
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdavar lambdalist let letvar letvarlist arraysubscript list message messages bundle
 %token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
 %nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
 
@@ -535,49 +535,74 @@ aseq:
 ;
 
 function: 
-	OSC_EXPR_LAMBDA '(' lambdalist ')' '{' expns '}' {
+	//OSC_EXPR_LAMBDA '(' lambdalist ')' '{' expns '}' {
+	OSC_EXPR_LAMBDA '(' '[' lambdalist ']' ',' expns ')'{
 		//osc_hashtab_foreach(lexenv, osc_expr_parser_printlexenv, NULL);
-		t_osc_expr_ast_expr *v = $3;
+		t_osc_expr_ast_expr *v = $4;
 		while(v){
 			osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)v)));
 			v = osc_expr_ast_expr_next(v);
 		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$3, $6);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$4, $7);
+	}
+	| OSC_EXPR_LAMBDA '(' lambdavar ',' expns ')'{
+		//osc_hashtab_foreach(lexenv, osc_expr_parser_printlexenv, NULL);
+		osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$3, $5);
 	}
 ;
 
-lambdalist: {$$ = NULL;}
+lambdavar:
+	{$$ = NULL;}
 	| OSC_EXPR_IDENTIFIER {
 		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($1));
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
 	}
-	| lambdalist ',' OSC_EXPR_IDENTIFIER {
-		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($3));
-		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3));
+;
+
+lambdalist: 
+	lambdavar
+	| lambdalist ',' lambdavar {
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
+		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)$3);
 		$$ = $1;
 	}
 ;
 
 let:
-	OSC_EXPR_LET '(' varlist ')' '{' expns '}' {
-		t_osc_expr_ast_expr *v = $3;
+//OSC_EXPR_LET '(' letvarlist ')' '{' expns '}' {
+	OSC_EXPR_LET '(' '[' letvarlist ']' ',' expns ')' {
+		t_osc_expr_ast_expr *v = $4;
 		while(v){
 			t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)v;
 			osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg(b))));
 			v = osc_expr_ast_expr_next(v);
 		}
-		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_let_alloc($3, $6);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_let_alloc($4, $7);
+	}
+	| OSC_EXPR_LET '(' letvar ',' expns ')' {
+		t_osc_expr_ast_expr *v = $3;
+		t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)v;
+		osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg(b))));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_let_alloc($3, $5);
 	}
 ;
 
-varlist: {$$ = NULL;}
+letvar:
+	{$$ = NULL;}
 	| OSC_EXPR_IDENTIFIER '=' expr {
 		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($1));
 		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1), $3);
   	}
-	| varlist ',' OSC_EXPR_IDENTIFIER '=' expr {
-		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($3));
-		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3), $5));
+;
+
+letvarlist:
+	letvar
+	//| letvarlist ',' OSC_EXPR_IDENTIFIER '=' expr {
+	| letvarlist ',' letvar {
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)$3))));
+		//osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3), $5));
+		osc_expr_ast_expr_append($1, $3);
 		$$ = $1;
   	}
 ;
@@ -785,11 +810,18 @@ funcall:
 ;
 
 expr:
-	expr ';' {
-		osc_expr_ast_expr_setSemicolonTerminated($1, 1);
-		$$ = $1;
+/*
+	';' {
+		//osc_expr_ast_expr_setSemicolonTerminated($1, 1);
+		//$$ = $1;
+		if(*exprstack){
+			osc_expr_ast_expr_setSemicolonTerminated(*exprstack, 1);
+		}else{
+			*exprstack = osc_expr_ast_expr_alloc();
+		}
 	}
-	| value
+*/
+	value
 	  //| function
 	| funcall
 	| unaryop 
@@ -826,8 +858,13 @@ exprlist_more_than_one:
 	}
 ;
 
+// generalize the following 
 expns: 
-	expr %prec lowest {
+	expr ';' {
+		$$ = $1;
+		*exprstack = $$;
+	}
+	| expr %prec lowest {
 		if(*freevars){
 			switch(osc_expr_ast_expr_getNodetype($1)){
 			case OSC_EXPR_AST_NODETYPE_BINARYOP:

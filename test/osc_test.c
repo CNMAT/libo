@@ -19,11 +19,19 @@ int main(int argc, char **argv)
 		"aseq(1, 10, 1)",
 		"apply(aseq, 1, 10, 1)",
 		"apply(/func, 1, 10, 1)",
-		"apply(lambda(a){aseq(a, 10, 1)}, 1)",
+		//"apply(lambda(a){aseq(a, 10, 1)}, 1)",
+		"apply(lambda([a], aseq(a, 10, 1)), 1)",
 		"/aseq(1, 10, 1)",
 		"suckit(1, 2, 3)",
-		"apply(lambda(aseq){apply(aseq, 1, 2, 3)}, aseq)",
-		"apply(lambda(aseq){apply(aseq, 1, 2)}, lambda(a, b){a + b})",
+		//"apply(lambda(aseq){apply(aseq, 1, 2, 3)}, aseq)",
+		"apply(lambda(aseq, apply(aseq, 1, 2, 3)), aseq)",
+		"apply(lambda(aseq, apply(aseq, 1, 2)), lambda([a, b], a + b))",
+		"10 + 10",
+		"10 + 10;",
+		"10 + 10 20 + 20",
+		"10 + 10; 20 + 20",
+		"let([a = 1, b = 10, c = 1], aseq(a, b, c))",
+		"let(a = 1, aseq(a, 10, 1))",
 	};
 	for(int i = 0; i < sizeof(exprstrs) / sizeof(char*); i++){
 		printf("**************************************************\n");
@@ -40,27 +48,31 @@ int main(int argc, char **argv)
 		char *bndl = osc_mem_alloc(len);
 		memcpy(bndl, OSC_EMPTY_HEADER, len);
 		*/
-		char *bndlstr = "/func aseq\n/aseq `lambda(a, b, c){aseq(a, b, c)}`\n";
-		t_osc_bndl_u *bndlu = NULL;
-		osc_parser_parseString(strlen(bndlstr), bndlstr, &bndlu);
-		long len = 0;
-		char *bndl = NULL;
-		osc_bundle_u_serialize(bndlu, &len, &bndl);
-		t_osc_atom_ar_u *out = NULL;
-		osc_expr_ast_expr_eval(ast, &len, &bndl, &out);
-		printf("result: ");
-		for(int i = 0; i < osc_atom_array_u_getLen(out); i++){
-			t_osc_atom_u *a = osc_atom_array_u_get(out, i);
-			long len = osc_atom_u_nformat(NULL, 0, a, 0);
-			char buf[len + 1];
-			osc_atom_u_nformat(buf, len + 1, a, 0);
-			printf("%s ", buf);
+		t_osc_expr_ast_expr *_ast = ast;
+		while(ast){
+			char *bndlstr = "/func \"aseq\"\n/aseq `lambda([a, b, c], aseq(a, b, c))`\n";
+			t_osc_bndl_u *bndlu = NULL;
+			osc_parser_parseString(strlen(bndlstr), bndlstr, &bndlu);
+			long len = 0;
+			char *bndl = NULL;
+			osc_bundle_u_serialize(bndlu, &len, &bndl);
+			t_osc_atom_ar_u *out = NULL;
+			osc_expr_ast_expr_eval(ast, &len, &bndl, &out);
+			printf("result: ");
+			for(int i = 0; i < osc_atom_array_u_getLen(out); i++){
+				t_osc_atom_u *a = osc_atom_array_u_get(out, i);
+				long len = osc_atom_u_nformat(NULL, 0, a, 0);
+				char buf[len + 1];
+				osc_atom_u_nformat(buf, len + 1, a, 0);
+				printf("%s ", buf);
+			}
+			printf("\n");
+			osc_bundle_u_free(bndlu);
+			osc_mem_free(bndl);
+			osc_atom_array_u_free(out);
+			ast = osc_expr_ast_expr_next(ast);
 		}
-		printf("\n");
-		osc_expr_ast_expr_free(ast);
-		osc_bundle_u_free(bndlu);
-		osc_mem_free(bndl);
-		osc_atom_array_u_free(out);
+		osc_expr_ast_expr_free(_ast);
 	}
 	/*
 	while(1){
