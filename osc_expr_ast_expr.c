@@ -496,10 +496,10 @@ int osc_expr_ast_expr_isSemicolonTerminated(t_osc_expr_ast_expr *e)
 	return 0;
 }
 
-void osc_expr_ast_expr_setSemicolonTerminated(t_osc_expr_ast_expr *e, int bool)
+void osc_expr_ast_expr_setSemicolonTerminated(t_osc_expr_ast_expr *e, int b)
 {
 	if(e){
-		e->semicolon_terminated = bool;
+		e->semicolon_terminated = b;
 	}
 }
 

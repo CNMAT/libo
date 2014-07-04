@@ -334,6 +334,55 @@ int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
 	return (int)count;
 }
 
+t_osc_expr_ast_expr *osc_expr_parser_bindFreeVars(t_osc_expr_ast_value **freevars, t_osc_expr_ast_expr *expr)
+{
+	t_osc_expr_ast_expr *ret = NULL;
+	if(*freevars){
+		switch(osc_expr_ast_expr_getNodetype(expr)){
+		case OSC_EXPR_AST_NODETYPE_BINARYOP:
+			{
+				t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec(expr);
+				if(r == osc_expr_builtin_op_assign){
+					t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs(expr)));
+					osc_expr_ast_binaryop_setRightArg(expr, f);
+					t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs(expr);
+					osc_expr_ast_expr_setNext(lval, f);
+					//osc_expr_ast_funcall_setArgs(expr, f);
+					ret = expr;
+				}else{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+					ret = f;
+				}
+			}
+			break;
+		case OSC_EXPR_AST_NODETYPE_FUNCALL:
+			{
+				t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec(expr);
+				if(r == osc_expr_builtin_func_assign){
+					t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs(expr)));
+					t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs(expr);
+					osc_expr_ast_expr_setNext(lval, f);
+					ret = expr;
+				}else{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+					ret = f;
+				}
+			}
+			break;
+		default:
+			{
+				t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+				ret = f;
+			}
+			break;
+		}
+		*freevars = NULL;
+	}else{
+		ret = expr;
+	}
+	return ret;
+}
+
 %}
 
 %define "api.pure"
@@ -858,102 +907,17 @@ exprlist_more_than_one:
 	}
 ;
 
-// generalize the following 
 expns: 
 	expr ';' {
-		$$ = $1;
+		$$ = osc_expr_parser_bindFreeVars(freevars, $1);
 		*exprstack = $$;
 	}
 	| expr %prec lowest {
-		if(*freevars){
-			switch(osc_expr_ast_expr_getNodetype($1)){
-			case OSC_EXPR_AST_NODETYPE_BINARYOP:
-				{
-					t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec($1);
-					if(r == osc_expr_builtin_op_assign){
-						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($1)));
-						osc_expr_ast_binaryop_setRightArg($1, f);
-						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($1);
-						osc_expr_ast_expr_setNext(lval, f);
-						//osc_expr_ast_funcall_setArgs($1, f);
-						$$ = $1;
-					}else{
-						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
-						$$ = f;
-					}
-				}
-				break;
-			case OSC_EXPR_AST_NODETYPE_FUNCALL:
-				{
-					t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec($1);
-					if(r == osc_expr_builtin_func_assign){
-						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($1)));
-						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($1);
-						osc_expr_ast_expr_setNext(lval, f);
-						$$ = $1;
-					}else{
-						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
-						$$ = f;
-					}
-				}
-				break;
-			default:
-				{
-					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $1);
-					$$ = f;
-				}
-				break;
-			}
-			*freevars = NULL;
-		}else{
-			$$ = $1;
-		}
+		$$ = osc_expr_parser_bindFreeVars(freevars, $1);
 		*exprstack = $$;
 	}
 	| expns expr %prec lowest{
-		if(*freevars){
-			switch(osc_expr_ast_expr_getNodetype($2)){
-			case OSC_EXPR_AST_NODETYPE_BINARYOP:
-				{
-					t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec($2);
-					if(r == osc_expr_builtin_op_assign){
-						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($2)));
-						osc_expr_ast_binaryop_setRightArg($2, f);
-						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($2);
-						osc_expr_ast_expr_setNext(lval, f);
-						//osc_expr_ast_funcall_setArgs($2, f);
-						$$ = $2;
-					}else{
-						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
-						$$ = f;
-					}
-				}
-				break;
-			case OSC_EXPR_AST_NODETYPE_FUNCALL:
-				{
-					t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec($2);
-					if(r == osc_expr_builtin_func_assign){
-						t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs($2)));
-						t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs($2);
-						osc_expr_ast_expr_setNext(lval, f);
-						$$ = $2;
-					}else{
-						t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
-						$$ = f;
-					}
-				}
-				break;
-			default:
-				{
-					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, $2);
-					$$ = f;
-				}
-				break;
-			}
-			*freevars = NULL;
-		}else{
-			$$ = $2;
-		}
+		$$ = osc_expr_parser_bindFreeVars(freevars, $2);
 		osc_expr_ast_expr_append($1, $$);
 		*exprstack = $1;
 		$$ = $1;

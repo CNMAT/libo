@@ -121,7 +121,7 @@ void osc_expr_ast_expr_setBrackets(t_osc_expr_ast_expr *e, char leftbracket, cha
 char osc_expr_ast_expr_getLeftBracket(t_osc_expr_ast_expr *e);
 char osc_expr_ast_expr_getRightBracket(t_osc_expr_ast_expr *e);
 int osc_expr_ast_expr_isSemicolonTerminated(t_osc_expr_ast_expr *e);
-void osc_expr_ast_expr_setSemicolonTerminated(t_osc_expr_ast_expr *e, int bool);
+void osc_expr_ast_expr_setSemicolonTerminated(t_osc_expr_ast_expr *e, int b);
 t_osc_expr_ast_expr *osc_expr_ast_expr_alloc(void);
 
 #ifdef __cplusplus
