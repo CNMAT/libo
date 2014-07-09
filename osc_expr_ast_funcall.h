@@ -60,6 +60,7 @@ t_osc_bndl_u *osc_expr_ast_funcall_toBndl(t_osc_expr_ast_expr *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_fromBndl(t_osc_bndl_u *);
 t_osc_expr_funcrec *osc_expr_ast_funcall_getFuncRec(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_value *osc_expr_ast_funcall_getFunctionToken(t_osc_expr_ast_funcall *e);
+void osc_expr_ast_funcall_setFunctionToken(t_osc_expr_ast_funcall *e, t_osc_expr_ast_value *v);
 t_osc_expr_builtin_funcptr osc_expr_ast_funcall_getFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_builtin_lvalfuncptr osc_expr_ast_funcall_getLvalFunc(t_osc_expr_ast_funcall *e);
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e);

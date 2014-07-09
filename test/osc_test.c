@@ -19,11 +19,10 @@ int main(int argc, char **argv)
 		"aseq(1, 10, 1)",
 		"apply(aseq, 1, 10, 1)",
 		"apply(/func, 1, 10, 1)",
-		//"apply(lambda(a){aseq(a, 10, 1)}, 1)",
+		"apply(/aseq, 1, 10, 1)",
 		"apply(lambda([a], aseq(a, 10, 1)), 1)",
 		"/aseq(1, 10, 1)",
 		"suckit(1, 2, 3)",
-		//"apply(lambda(aseq){apply(aseq, 1, 2, 3)}, aseq)",
 		"apply(lambda(aseq, apply(aseq, 1, 2, 3)), aseq)",
 		"apply(lambda(aseq, apply(aseq, 1, 2)), lambda([a, b], a + b))",
 		"10 + 10",
@@ -32,7 +31,12 @@ int main(int argc, char **argv)
 		"10 + 10; 20 + 20",
 		"let([a = 1, b = 10, c = 1], aseq(a, b, c))",
 		"let(a = 1, aseq(a, 10, 1))",
+		"map(add, [1, 2, 3], [4, 5, 6])",
+		"map(add, 1, [4, 5, 6])",
+		"map(lambda([a, b, c], aseq(a, b, c)), [1, 2, 3], [4, 5, 6], 1)",
 	};
+	char *bndlstr = "/func \"aseq\"\n/aseq `lambda([a, b, c], aseq(a, b, c))`\n";
+	printf("%s\n", bndlstr);
 	for(int i = 0; i < sizeof(exprstrs) / sizeof(char*); i++){
 		printf("**************************************************\n");
 		char *exprstr = exprstrs[i];
@@ -50,7 +54,6 @@ int main(int argc, char **argv)
 		*/
 		t_osc_expr_ast_expr *_ast = ast;
 		while(ast){
-			char *bndlstr = "/func \"aseq\"\n/aseq `lambda([a, b, c], aseq(a, b, c))`\n";
 			t_osc_bndl_u *bndlu = NULL;
 			osc_parser_parseString(strlen(bndlstr), bndlstr, &bndlu);
 			long len = 0;
@@ -74,11 +77,11 @@ int main(int argc, char **argv)
 		}
 		osc_expr_ast_expr_free(_ast);
 	}
-	/*
+
 	while(1){
 		sleep(1);
 	}
-	*/
+
 	return 0;
 }
 

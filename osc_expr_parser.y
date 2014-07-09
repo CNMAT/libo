@@ -612,7 +612,7 @@ lambdavar:
 lambdalist: 
 	lambdavar
 	| lambdalist ',' lambdavar {
-		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
+		//osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
 		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)$3);
 		$$ = $1;
 	}
@@ -649,7 +649,7 @@ letvarlist:
 	letvar
 	//| letvarlist ',' OSC_EXPR_IDENTIFIER '=' expr {
 	| letvarlist ',' letvar {
-		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)$3))));
+		//osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)$3))));
 		//osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3), $5));
 		osc_expr_ast_expr_append($1, $3);
 		$$ = $1;

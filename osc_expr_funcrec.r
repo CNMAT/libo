@@ -49,7 +49,6 @@ struct _osc_expr_funcrec
 	int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
 	char **output_names; /**< Plural for possible future support of multiple return values. */
 	char *docstring;
-	int suppress_argument_evaluation;
 	t_osc_expr_builtin_funcptr func;
 	t_osc_expr_builtin_lvalfuncptr lval_func;
 	t_osc_expr_builtin_funcptr applicator;

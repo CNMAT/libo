@@ -29,6 +29,7 @@
 #include "osc_expr_ast_function.h"
 #include "osc_bundle_iterator_u.h"
 #include "osc_message_iterator_u.h"
+#include "osc_expr_parser.h"
 
 void osc_expr_ast_expr_init(t_osc_expr_ast_expr *e,
 			    int nodetype,

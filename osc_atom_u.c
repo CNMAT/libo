@@ -1479,3 +1479,11 @@ t_osc_atom_u *osc_atom_u_allocWithBndl_u(t_osc_bndl_u *b, int alloc)
 	}
 	return a;
 }
+
+void osc_atom_u_printf(t_osc_atom_u *a)
+{
+	long l = osc_atom_u_nformat(NULL, 0, a, 0);
+	char buf[l + 1];
+	osc_atom_u_nformat(buf, l + 1, a, 0);
+	printf("%s\n", buf);
+}

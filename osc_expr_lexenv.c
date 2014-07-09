@@ -21,6 +21,7 @@
 */
 
 #include <string.h>
+#include <stdio.h>
 #include "osc_expr_lexenv.h"
 #include "osc_hashtab.h"
 #include "osc_mem.h"

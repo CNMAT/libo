@@ -22,6 +22,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "osc.h"
 #include "osc_mem.h"
@@ -36,9 +37,6 @@
 #include "osc_message_iterator_u.h"
 #include "osc_expr_builtin.h"
 
-
-static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype);
-static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type);
 
 int osc_expr_ast_value_evalInLexEnv(t_osc_expr_ast_expr *ast,
 				    t_osc_expr_lexenv *lexenv,
@@ -358,7 +356,7 @@ t_osc_atom_ar_u *osc_expr_ast_value_getList(t_osc_expr_ast_value *v)
 	return (t_osc_atom_ar_u *)osc_expr_ast_value_getValue(v);
 }
 
-static void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype)
+void osc_expr_ast_value_setValue(t_osc_expr_ast_value *v, void *a, int valuetype)
 {
 	if(v){
 		v->value = a;
@@ -386,7 +384,7 @@ void osc_expr_ast_value_setList(t_osc_expr_ast_value *v, t_osc_atom_ar_u *a)
 	osc_expr_ast_value_setValue(v, a, OSC_EXPR_AST_VALUE_TYPE_LIST);
 }
 
-static t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type)
+t_osc_expr_ast_value *osc_expr_ast_value_alloc(void *a, int type)
 {
 	t_osc_expr_ast_value *v = osc_mem_alloc(sizeof(t_osc_expr_ast_value));
 	if(v){

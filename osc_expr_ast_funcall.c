@@ -190,9 +190,31 @@ int osc_expr_ast_funcall_evalInLexEnv(t_osc_expr_ast_expr *ast,
 		t_osc_expr_builtin_funcptr applicator = osc_expr_funcrec_getApplicator(r);
 		if(applicator){
 			return applicator(ast, lexenv, oscbndl, 0, NULL, out);
+		}else{
+			t_osc_expr_builtin_funcptr fp = osc_expr_funcrec_getFunc(r);
+			return fp(ast, lexenv, oscbndl, 0, NULL, out);
 		}
 	}else{
-		return osc_expr_builtin_apply(ast, lexenv, oscbndl, 0, NULL, out);
+		// this is /foo(1, 2, 3) or <lambda-bound-var>(1, 2, 3)
+		// either way, evalInLexEnv has to return a lambda
+		t_osc_expr_ast_value *ft = osc_expr_ast_funcall_getFunctionToken(f);
+		t_osc_atom_ar_u *ar = NULL;
+		osc_expr_ast_value_evalInLexEnv((t_osc_expr_ast_expr *)ft, lexenv, oscbndl, &ar);
+		if(ar){
+			t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+			t_osc_expr_ast_expr *e = NULL;
+			if(osc_atom_u_getTypetag(a) == OSC_EXPR_TYPETAG && 
+			   osc_expr_ast_expr_getNodetype((e = osc_atom_u_getExpr(a))) == OSC_EXPR_AST_NODETYPE_FUNCTION){
+				int ret = osc_expr_builtin_applyLambda(ast, (t_osc_expr_ast_function *)e, osc_expr_ast_funcall_getNumArgs(f), osc_expr_ast_funcall_getArgs(f), lexenv, oscbndl, 0, NULL, out);
+				osc_atom_array_u_free(ar);
+				return ret;
+			}
+			osc_atom_array_u_free(ar);
+		}
+		*out = osc_atom_array_u_alloc(1);
+		osc_atom_u_setExpr(osc_atom_array_u_get(*out, 0), osc_expr_ast_expr_copy(ast), 1);
+		return 0;
+		//return osc_expr_builtin_apply(ast, lexenv, oscbndl, 0, NULL, out);
 	}
 
 	//////////////////////////////////////////////////
@@ -388,10 +410,10 @@ long osc_expr_ast_funcall_format(char *buf, long n, t_osc_expr_ast_expr *e)
 		return 0;
 	}
 	//t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec((t_osc_expr_ast_funcall *)e);
-	t_osc_expr_ast_value *function_token = osc_expr_ast_funcall_getFunctionToken(e);
+	t_osc_expr_ast_value *function_token = osc_expr_ast_funcall_getFunctionToken((t_osc_expr_ast_funcall *)e);
         t_osc_expr_ast_expr *arg = osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e);
 	long offset = 0;
-	offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, function_token);
+	offset += osc_expr_ast_value_format(buf ? buf + offset : NULL, buf ? n - offset : 0, (t_osc_expr_ast_expr *)function_token);
 	offset += snprintf(buf ? buf + offset : NULL, buf ? n - offset : 0, "(");
 	while(arg){
 		offset += osc_expr_ast_expr_format(buf ? buf + offset : NULL, buf ? n - offset : 0, arg);
@@ -459,7 +481,7 @@ void osc_expr_ast_funcall_free(t_osc_expr_ast_expr *e)
 		osc_expr_ast_expr_free(osc_expr_ast_funcall_getArgs((t_osc_expr_ast_funcall *)e));
 		t_osc_expr_ast_value *v = osc_expr_ast_funcall_getFunctionToken((t_osc_expr_ast_funcall *)e);
 		if(v){
-			osc_expr_ast_value_free(v);
+			osc_expr_ast_value_free((t_osc_expr_ast_expr *)v);
 		}
 		osc_mem_free(e);
 	}
@@ -518,6 +540,13 @@ t_osc_expr_ast_value *osc_expr_ast_funcall_getFunctionToken(t_osc_expr_ast_funca
 		return e->function_token;
 	}
 	return NULL;
+}
+
+void osc_expr_ast_funcall_setFunctionToken(t_osc_expr_ast_funcall *e, t_osc_expr_ast_value *v)
+{
+	if(e){
+		e->function_token = v;
+	}
 }
 
 t_osc_expr_ast_expr *osc_expr_ast_funcall_getArgs(t_osc_expr_ast_funcall *e)

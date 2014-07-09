@@ -56,6 +56,7 @@ typedef t_osc_expr_builtin_funcptr t_osc_expr_builtin_lvalfuncptr;
 #include "osc_expr_parser.h"
 #include "osc_expr_funcrec.h"
 #include "osc_expr_ast_funcall.h"
+#include "osc_expr_ast_function.h"
 
 
 // built-in operators
@@ -86,6 +87,15 @@ int osc_expr_builtin_apply(t_osc_expr_ast_expr *f,
 			   long argc,
 			   t_osc_atom_ar_u **argv,
 			   t_osc_atom_ar_u **out);
+int osc_expr_builtin_applyLambda(t_osc_expr_ast_expr *ast,
+			         t_osc_expr_ast_function *lambda,
+				 long numargs,
+				 t_osc_expr_ast_expr *args,
+				 t_osc_expr_lexenv *lexenv,
+				 t_osc_bndl_u *oscbndl,
+				 long argc,
+				 t_osc_atom_ar_u **argv,
+				 t_osc_atom_ar_u **out);
 
 #ifdef _cplusplus
 }

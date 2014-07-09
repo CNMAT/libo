@@ -557,6 +557,8 @@ t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);
 t_osc_atom_u *osc_atom_u_allocWithString(char *s);
 t_osc_atom_u *osc_atom_u_allocWithBndl_u(t_osc_bndl_u *b, int alloc);
 
+void osc_atom_u_printf(t_osc_atom_u *a);
+
 #ifdef __cplusplus
 }
 #endif
