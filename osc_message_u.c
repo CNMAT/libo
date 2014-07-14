@@ -130,12 +130,32 @@ t_osc_err osc_message_u_deepCopy(t_osc_msg_u **dest, t_osc_msg_u *src)
 	return OSC_ERR_NONE;
 }
 
+t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m)
+{
+	if(m){
+		return m->next;
+	}else{
+		return NULL;
+	}
+}
+
 uint32_t osc_message_u_getSize(t_osc_msg_u *m)
 {
 	if(!m){
 		return 0;
 	}
 	return m->size;
+}
+
+void osc_message_u_append(t_osc_msg_u *m1, t_osc_msg_u *m2)
+{
+	if(!m1){
+		return;
+	}
+	while(m1->next){
+		m1 = m1->next;
+	}
+	m1->next = m2;
 }
 
 char *osc_message_u_getAddress(t_osc_msg_u *m)

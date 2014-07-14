@@ -54,6 +54,8 @@ void osc_message_u_clearArgs(t_osc_msg_u *m);
 void osc_message_u_copy(t_osc_msg_u **dest, t_osc_msg_u *src);
 t_osc_err osc_message_u_deepCopy(t_osc_msg_u **dest, t_osc_msg_u *src);
 uint32_t osc_message_u_getSize(t_osc_msg_u *m);
+void osc_message_u_append(t_osc_msg_u *m1, t_osc_msg_u *m2);
+t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m);
 char *osc_message_u_getAddress(t_osc_msg_u *m);
 t_osc_err osc_message_u_setAddress(t_osc_msg_u *m, const char *address);
 t_osc_err osc_message_u_setAddressPtr(t_osc_msg_u *m, char *newAddress, char **oldAddress);

@@ -114,6 +114,17 @@ void osc_atom_u_clear(t_osc_atom_u *a)
 	a->alloc = 0;
 }
 
+void osc_atom_u_append(t_osc_atom_u *a1, t_osc_atom_u *a2)
+{
+	if(!a1){
+		return;
+	}
+	while(a1->next){
+		a1 = a1->next;
+	}
+	a1->next = a2;
+}
+
 char osc_atom_u_getTypetag(t_osc_atom_u *a)
 {
 	if(!a){
@@ -1396,3 +1407,56 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 	}
 }
 
+t_osc_atom_u *osc_atom_u_allocWithString(char *string)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setString(a, string);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithDouble(double f)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setDouble(a, f);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithFloat(float f)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setFloat(a, f);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setInt32(a, i);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithTimetag(t_osc_timetag t)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setTimetag(a, t);
+	}
+	return a;
+}
+
+t_osc_atom_u *osc_atom_u_allocWithBndl(t_osc_bndl_u *b)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	if(a){
+		osc_atom_u_setBndl_u(a, b);
+	}
+	return a;
+}

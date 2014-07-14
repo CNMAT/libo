@@ -26,7 +26,7 @@ hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
 	//string [^ $\t\"\n\\]*
-string [^ \t\"\n\\]*
+string [^ \t\"\n\\\{\}\'\[\],]*
 quoted_string [^\"\\]
 
 %x quote escape
@@ -49,10 +49,11 @@ quoted_string [^\"\\]
 		*buflen += yyleng + 1;
 		strcat(*buf, yytext);
 	}else{
-		char *copy = osc_mem_alloc(yyleng + 1);
-		strncpy(copy, yytext, yyleng + 1);
-		yylval->string = copy;
-		return STRING;
+		//char *copy = osc_mem_alloc(yyleng + 1);
+		//strncpy(copy, yytext, yyleng + 1);
+		//yylval->string = copy;
+		yylval->atom = osc_atom_u_allocWithString(yytext);
+		return OSCVALUE;
 	}
 	//return STRING;
 }
@@ -60,10 +61,11 @@ quoted_string [^\"\\]
 <quote>\" {
 	BEGIN(0);
 	if(*buf){
-		yylval->string = *buf;
+		//yylval->string = *buf;
+		yylval->atom = osc_atom_u_allocWithString(*buf);
 		*buf = NULL;
 		*buflen = 0;
-		return STRING;
+		return OSCVALUE;
 	}
 }
 
@@ -106,18 +108,26 @@ quoted_string [^\"\\]
 					char *endp = NULL;
 					double d = strtod(yytext, &endp); 
 					//printf("float: %f\n", d);
-					yylval->f = d;
-					return OSCFLOAT;
+					//yylval->f = d;
+					yylval->atom = osc_atom_u_allocWithDouble(d);
+					return OSCVALUE;
 				}
 
 (true|True|TRUE)			{
-						yylval->b = 1;
-						return OSCBOOL;
+						//yylval->b = 1;
+						yylval->atom = osc_atom_u_alloc();
+						osc_atom_u_setTrue(yylval->atom);
+						return OSCVALUE;
 					}
 (false|False|FALSE)			{
-						yylval->b = 0;
-						return OSCBOOL;
+						//yylval->b = 0;
+						yylval->atom = osc_atom_u_alloc();
+						osc_atom_u_setTrue(yylval->atom);
+						return OSCVALUE;
 					}
+:|\{|\}|, {
+		return *yytext;
+	}
 
 \[|\]	{
 		return *yytext;
@@ -129,24 +139,28 @@ quoted_string [^\"\\]
 
 \'.\' {
 	//printf("char: %c\n", yytext[1]);
-	yylval->c = yytext[1];
-	return OSCCHAR;
+	//yylval->c = yytext[1];
+	yylval->atom = osc_atom_u_alloc();
+	osc_atom_u_setInt8(yylval->atom, yytext[1]);
+	return OSCVALUE;
 }
 
 (-?([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						char *endp = NULL;
 					        long i = strtol(yytext, &endp, 0);
 						//printf("int: %ld\n", l);
-						yylval->i = i;
-						return OSCINT32;
+						//yylval->i = i;
+						yylval->atom = osc_atom_u_allocWithInt32(i);
+						return OSCVALUE;
 					}
 
 \/[^ \t\n#\"]+	{
 			//printf("OSC address: %s\n", yytext);
-			int len = strlen(yytext) + 1;
-			char *copy = osc_mem_alloc(len);
-			memcpy(copy, yytext, len);
-			yylval->string = copy;
+			//int len = strlen(yytext) + 1;
+			//char *copy = osc_mem_alloc(len);
+			//memcpy(copy, yytext, len);
+			//yylval->string = copy;
+			yylval->atom = osc_atom_u_allocWithString(yytext);
 			return OSCADDRESS;
 		}
 
@@ -162,7 +176,7 @@ quoted_string [^\"\\]
 				char *copy = osc_mem_alloc(len);
 				memcpy(copy, yytext, len);
 				yylval->string = copy;
-				return STRING;
+				return OSCVALUE;
 			}
 			*/
 
@@ -171,17 +185,21 @@ quoted_string [^\"\\]
 (-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|0[1-9]|[1-2][0-9])?T(2[0-3]|[0-1][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)??(Z|[+-](?:2[0-3]|[0-1][0-9]):[0-5][0-9])? { /* ISO 8601 from Regular Expressions Cookbook */
 	t_osc_timetag t;
 	osc_timetag_fromISO8601(yytext, &t);
-	yylval->t = t;
-	return OSCTIMETAG;
+	//yylval->t = t;
+	yylval->atom = osc_atom_u_allocWithTimetag(t);
+	return OSCVALUE;
 }
 
 	/*{string}|$0	{*/
+
 {string}	{
-				int len = strlen(yytext) + 1;
-				char *copy = osc_mem_alloc(len);
-				memcpy(copy, yytext, len);
-				yylval->string = copy;
-				return STRING;
+				//int len = strlen(yytext) + 1;
+				//char *copy = osc_mem_alloc(len);
+				//memcpy(copy, yytext, len);
+				//yylval->string = copy;
+				yylval->atom = osc_atom_u_allocWithString(yytext);
+				//return OSCVALUE;
+				return OSCLEGACYSTRING;
 			}
 
 {string}*\\.	{
@@ -208,12 +226,12 @@ quoted_string [^\"\\]
 				//this is bad news
 			}
 			BEGIN(0);
-			yylval->string = *buf;
+			//yylval->string = *buf;
+			yylval->atom = osc_atom_u_allocWithString(*buf);
 			*buf = NULL;
 			*buflen = 0;
-			return STRING;
+			return OSCLEGACYSTRING;
 		}
-
 
 [ \t]+
 

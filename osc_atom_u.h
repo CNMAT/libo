@@ -155,6 +155,8 @@ void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int val);
 
 void osc_atom_u_clear(t_osc_atom_u *a);
 
+void osc_atom_u_append(t_osc_atom_u *a1, t_osc_atom_u *a2);
+
 /** \brief Get the OSC typetag associated with the #t_osc_atom_u
 
 \param a The #t_osc_atom_u whose typetag will be returned.
@@ -548,6 +550,13 @@ one will be created and must be freed by the caller using #osc_mem_free().
 */
 
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
+
+t_osc_atom_u *osc_atom_u_allocWithString(char *string);
+t_osc_atom_u *osc_atom_u_allocWithDouble(double f);
+t_osc_atom_u *osc_atom_u_allocWithFloat(float f);
+t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);
+t_osc_atom_u *osc_atom_u_allocWithTimetag(t_osc_timetag t);
+t_osc_atom_u *osc_atom_u_allocWithBndl(t_osc_bndl_u *b);
 
 
 #ifdef __cplusplus

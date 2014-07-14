@@ -305,6 +305,23 @@ t_osc_err osc_bundle_u_addMsgArrayCopy(t_osc_bndl_u *bndl, t_osc_msg_ar_u *ar)
 	return OSC_ERR_NONE;
 }
 
+t_osc_err osc_bundle_u_addMsgList(t_osc_bndl_u *bndl, t_osc_msg_u *msgs)
+{
+	if(!bndl){
+		return OSC_ERR_NOBUNDLE;
+	}
+	int n = 0;
+	t_osc_msg_u *last = msgs;
+	bndl->msghead = msgs;
+	while(msgs){
+		n++;
+		last = msgs;
+		msgs = osc_message_u_next(msgs);
+	}
+	bndl->msgcount = n;
+	bndl->msgtail = last;
+}
+
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m)
 {
 	if(!bndl || !m){
