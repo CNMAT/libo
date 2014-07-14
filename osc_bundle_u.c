@@ -320,6 +320,7 @@ t_osc_err osc_bundle_u_addMsgList(t_osc_bndl_u *bndl, t_osc_msg_u *msgs)
 	}
 	bndl->msgcount = n;
 	bndl->msgtail = last;
+	return 0;
 }
 
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m)
