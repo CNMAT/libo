@@ -595,11 +595,17 @@ long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int ninde
 		while(osc_bndl_it_s_hasNext(it)){
 			t_osc_msg_s *m = osc_bndl_it_s_next(it);
 			offset += osc_message_s_nformat(NULL, 0, m, nindent);
+			if(osc_bndl_it_s_hasNext(it)){
+				offset += snprintf(NULL, 0, ",\n");
+			}
 		}
 	}else{
 		while(osc_bndl_it_s_hasNext(it)){
 			t_osc_msg_s *m = osc_bndl_it_s_next(it);
 			offset += osc_message_s_nformat(buf + offset, n - offset, m, nindent);
+			if(osc_bndl_it_s_hasNext(it)){
+				offset += snprintf(buf + offset, n - offset, ",\n");
+			}
 		}
 	}
 	osc_bndl_it_s_destroy(it);
@@ -612,13 +618,18 @@ long osc_bundle_s_formatNestedBndl(char *buf, long n, long bndllen, char *bndl, 
 		return 0;
 	}
 	long offset = 0;
-	offset += snprintf(buf, n, "[\n");
+	char tabs[nindent + 1];
+	for(int i = 0; i < nindent; i++){
+		tabs[i] = '\t';
+	}
+	tabs[nindent] = '\0';
+	offset += snprintf(buf, n, "\n{\n");
 	if(!buf){
 		offset += osc_bundle_s_nformat(NULL, 0, bndllen, bndl, nindent);
-		offset += snprintf(NULL, 0, "]");
+		offset += snprintf(NULL, 0, "\n}");
 	}else{
 		offset += osc_bundle_s_nformat(buf + offset, n - offset, bndllen, bndl, nindent);
-		offset += snprintf(buf + offset, n - offset, "]");
+		offset += snprintf(buf + offset, n - offset, "\n}");
 	}
 	return offset;
 }

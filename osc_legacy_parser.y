@@ -41,10 +41,8 @@
 #include "osc_message_u.h"
 #include "osc_message_u.r"
 #include "osc_atom_u.h"
-#include "osc_atom_u.r"
-#include "osc_parser.h"
 #include "osc_legacy_parser.h"
-#include "osc_scanner.h"
+#include "osc_legacy_scanner.h"
 #include "osc_timetag.h"
 
 	//#define OSC_PARSER_DEBUG
@@ -55,9 +53,9 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
+extern "C" int osc_legacy_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
 #else
-int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
+int osc_legacy_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf);
 #endif
 
 %}
@@ -68,9 +66,9 @@ int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yysca
 #include "osc_message_u.h"
 
 #ifdef __cplusplus
-#define YY_DECL extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
+#define YY_DECL extern "C" int osc_legacy_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
 #else
-#define YY_DECL int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
+#define YY_DECL int osc_legacy_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
 #endif
 
 #ifndef __HAVE_OSC_BNDL_LIST__
@@ -86,7 +84,7 @@ typedef struct _osc_parser_bndl_list{
 #ifdef __cplusplus
 extern "C"{
 #endif
-t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl);
+t_osc_err osc_legacy_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl);
 #ifdef __cplusplus
 }
 #endif
@@ -95,41 +93,37 @@ t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bnd
 
 %{
 
-int osc_parser_lex(YYSTYPE * yylval_param,YYLTYPE * yylloc_param ,yyscan_t yyscanner, long *buflen, char **buf){
-	return osc_scanner_lex(yylval_param, yylloc_param, yyscanner, buflen, buf);
+int osc_legacy_parser_lex(YYSTYPE * yylval_param,YYLTYPE * yylloc_param ,yyscan_t yyscanner, long *buflen, char **buf){
+	return osc_legacy_scanner_lex(yylval_param, yylloc_param, yyscanner, buflen, buf);
 }
 
-t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl)
+t_osc_err osc_legacy_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl)
 {
-	t_osc_err e = osc_legacy_parser_parseString(len, ptr, bndl);
-	if(!e && *bndl){
-		return e;
-	}
 	yyscan_t scanner;
-	osc_scanner_lex_init(&scanner);
-	YY_BUFFER_STATE buf_state = osc_scanner__scan_string(ptr, scanner);
-	osc_scanner_set_out(NULL, scanner);
+	osc_legacy_scanner_lex_init(&scanner);
+	YY_BUFFER_STATE buf_state = osc_legacy_scanner__scan_string(ptr, scanner);
+	osc_legacy_scanner_set_out(NULL, scanner);
+	t_osc_msg_u *msg = NULL;
+	t_osc_parser_bndl_list *bl = NULL;
 	long buflen = 0;
 	char *buf = NULL;
-	int ret = osc_parser_parse(bndl, scanner, &buflen, &buf);
-	osc_scanner__delete_buffer(buf_state, scanner);
-	osc_scanner_lex_destroy(scanner);
-	/*
+	int ret = osc_legacy_parser_parse(&bl, &msg, scanner, &buflen, &buf);
+	osc_legacy_scanner__delete_buffer(buf_state, scanner);
+	osc_legacy_scanner_lex_destroy(scanner);
 	if(!ret){
 		*bndl = bl->bndl;
 	}
 	if(bl){
 		osc_mem_free(bl);
 	}
-	*/
 	if(ret){
 		return OSC_ERR_PARSER;
 	}
 	return OSC_ERR_NONE;
 }
 
-void yyerror (YYLTYPE *yylloc, t_osc_bndl_u **bndl, void *scanner, long *buflen, char **buf, char const *e){
-	printf("osc_parser: error: %s\n", e);
+void yyerror (YYLTYPE *yylloc, t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg, void *scanner, long *buflen, char **buf, char const *e){
+	printf("osc_legacy_parser: error: %s\n", e);
 	//printf("%d: %s at %s\n", yylineno, e, yytext);
 }
 
@@ -140,7 +134,8 @@ void yyerror (YYLTYPE *yylloc, t_osc_bndl_u **bndl, void *scanner, long *buflen,
 %require "2.4.2"
 
 
-%parse-param{t_osc_bndl_u **bndl}
+%parse-param{t_osc_parser_bndl_list **bndl}
+%parse-param{t_osc_msg_u **msg}
 %parse-param{void *scanner}
 %parse-param{long *buflen}
 %parse-param{char **buf}
@@ -149,108 +144,33 @@ void yyerror (YYLTYPE *yylloc, t_osc_bndl_u **bndl, void *scanner, long *buflen,
 %lex-param{long *buflen}
 %lex-param{char **buf}
 
-%union{
-	t_osc_bndl_u *bundle;
-	t_osc_msg_u *message;
-	t_osc_atom_u *atom;
+%union {
+	double f;
+	int32_t i;
+	uint32_t I;
+	int64_t h;
+	uint64_t H;
+	char c;
+	char *string;
+	char b;
+	t_osc_timetag t;
+	struct _osc_message_u *msg;
 }
 
+%token <f>OSCFLOAT 
+%token <i>OSCINT32 DOLLARSUB OSCADDRESS_DOLLARSUB
+%token <I>OSCUINT32
+%token <h>OSCINT64
+%token <H>OSCUINT64
+%token <c>OSCCHAR
+%token <string>STRING OSCADDRESS 
+%token <b>OSCBOOL
+%token <t>OSCTIMETAG
 
-%type <bundle>bundle 
-%type <message>message messages 
-%type <atom>data datum list subbundle 
-%token <atom>OSCADDRESS OSCVALUE 
+%type <msg>arglist msg 
 
 %%
 
-bundle: 
-	messages {
-		t_osc_bndl_u *b = osc_bundle_u_alloc();
-		t_osc_msg_u *m = $1;
-		osc_bundle_u_addMsgList(b, m);
-		$$ = b;
-		*bndl = b;
-	}
-;
-
-subbundle:
-	'{' messages '}' {
-		t_osc_bndl_u *b = osc_bundle_u_alloc();
-		t_osc_msg_u *m = $2;
-		osc_bundle_u_addMsgList(b, m);
-		$$ = osc_atom_u_allocWithBndl(b);
-	}
-;
-
-messages:
-	message
-	| messages ',' message {
-		osc_message_u_append($1, $3);
-		$$ = $1;
-  	}
-;
-
-message: 
-	OSCADDRESS {
- 		char *st = NULL;
-		osc_atom_u_getString($1, 0, &st);
-		$$ = osc_message_u_alloc();
-		osc_message_u_setAddressPtr($$, st, NULL);
-		osc_atom_u_free($1);
- 	}
-	| OSCADDRESS ':' datum {
- 		char *st = NULL;
-		osc_atom_u_getString($1, 0, &st);
-		$$ = osc_message_u_alloc();
-		osc_message_u_setAddressPtr($$, st, NULL);
-		osc_message_u_appendAtom($$, $3);
-		osc_atom_u_free($1);
-	}
-	| OSCADDRESS ':' list {
- 		char *st = NULL;
-		osc_atom_u_getString($1, 0, &st);
-		$$ = osc_message_u_alloc();
-		osc_message_u_setAddressPtr($$, st, NULL);
-		osc_atom_u_free($1);
-		$$->arghead = $3;
-		t_osc_atom_u *a = $3;
-		int i = 1;
-		while(a->next){
-			a = a->next;
-			i++;
-		}
-		$$->argtail = a;
-		$$->argc = i;
-  	}
-;
-
-data:
-	datum
-	| data ',' datum {
-		osc_atom_u_append($1, $3);
-		$$ = $1;
-	}
-;
-
-
-datum:
-	OSCADDRESS {
- 		$$ = $1;
- 	}
-	| OSCVALUE {
- 		$$ = $1;
- 	}
-	| subbundle
-;
-
-list:
-	'[' data ']' {
-		$$ = $2;
-	}
-;
-
-
-/*
 bundle: {
 		t_osc_parser_bndl_list *b = osc_mem_alloc(sizeof(t_osc_parser_bndl_list));
 		b->bndl = osc_bundle_u_alloc();
@@ -499,4 +419,5 @@ msg:
 		osc_message_u_setAddressPtr(*msg, $1, NULL);
  	}
 ;
-*/
+
+

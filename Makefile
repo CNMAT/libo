@@ -4,13 +4,13 @@ LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
 LIBO_OFILES = $(foreach F, $(LIBO_BASENAMES), $(F).o)
 
-LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner
+LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner osc_legacy_scanner
 LIBO_SCANNER_LFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).l)
 LIBO_SCANNER_CFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).c)
 LIBO_SCANNER_HFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).h)
 LIBO_SCANNER_OBJECTS = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).o)
 
-LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser
+LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser osc_legacy_parser
 LIBO_PARSER_YFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).y)
 LIBO_PARSER_CFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).c)
 LIBO_PARSER_HFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).h)

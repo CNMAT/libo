@@ -1,9 +1,9 @@
 %{
-#include "osc_parser.h"
+#include "osc_legacy_parser.h"
 #include "osc_mem.h"
 #include "osc_timetag.h"
 
-int osc_scanner_wrap(yyscan_t scanner){
+int osc_legacy_scanner_wrap(yyscan_t scanner){
 	return 1;
 }
 
@@ -26,7 +26,7 @@ hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
 	//string [^ $\t\"\n\\]*
-string [^ \t\"\n\\\{\}\'\[\],]*
+string [^ \t\"\n\\:\[\],\{\}]+
 quoted_string [^\"\\]
 
 %x quote escape
@@ -49,11 +49,10 @@ quoted_string [^\"\\]
 		*buflen += yyleng + 1;
 		strcat(*buf, yytext);
 	}else{
-		//char *copy = osc_mem_alloc(yyleng + 1);
-		//strncpy(copy, yytext, yyleng + 1);
-		//yylval->string = copy;
-		yylval->atom = osc_atom_u_allocWithString(yytext);
-		return OSCVALUE;
+		char *copy = osc_mem_alloc(yyleng + 1);
+		strncpy(copy, yytext, yyleng + 1);
+		yylval->string = copy;
+		return STRING;
 	}
 	//return STRING;
 }
@@ -61,11 +60,10 @@ quoted_string [^\"\\]
 <quote>\" {
 	BEGIN(0);
 	if(*buf){
-		//yylval->string = *buf;
-		yylval->atom = osc_atom_u_allocWithString(*buf);
+		yylval->string = *buf;
 		*buf = NULL;
 		*buflen = 0;
-		return OSCVALUE;
+		return STRING;
 	}
 }
 
@@ -88,119 +86,69 @@ quoted_string [^\"\\]
 		(*buf)[*buflen] = '\0';
 	}
 }
-	/*
-	$[1-9][0-9]?	{
-		//printf("sub\n");
-		char *endp = NULL;
-		yylval->i = strtol(yytext + 1, &endp, 0);
-		return DOLLARSUB;
-	}
-
-	\"$[1-9][0-9]?\"	{
-		//printf("sub\n");
-		char *endp = NULL;
-		yylval->i = strtol(yytext + 2, &endp, 0);
-		return DOLLARSUB;
-	}
-	*/
 
 -?{c99_floating_point_constant}	{
 					char *endp = NULL;
 					double d = strtod(yytext, &endp); 
 					//printf("float: %f\n", d);
-					//yylval->f = d;
-					yylval->atom = osc_atom_u_allocWithDouble(d);
-					return OSCVALUE;
+					yylval->f = d;
+					return OSCFLOAT;
 				}
 
 (true|True|TRUE)			{
-						//yylval->b = 1;
-						yylval->atom = osc_atom_u_alloc();
-						osc_atom_u_setTrue(yylval->atom);
-						return OSCVALUE;
+						yylval->b = 1;
+						return OSCBOOL;
 					}
 (false|False|FALSE)			{
-						//yylval->b = 0;
-						yylval->atom = osc_atom_u_alloc();
-						osc_atom_u_setTrue(yylval->atom);
-						return OSCVALUE;
+						yylval->b = 0;
+						return OSCBOOL;
 					}
-:|\{|\}|, {
+
+\{\}\[|\]:	{
 		return *yytext;
 	}
 
-\[|\]	{
-		return *yytext;
-	}
-	/*
-([[:space:]]*\n[[:space:]]*)+	{
+(\n[[:space:]]*)+	{
 		return '\n';
 	}
-	*/
 
 \'.\' {
 	//printf("char: %c\n", yytext[1]);
-	//yylval->c = yytext[1];
-	yylval->atom = osc_atom_u_alloc();
-	osc_atom_u_setInt8(yylval->atom, yytext[1]);
-	return OSCVALUE;
+	yylval->c = yytext[1];
+	return OSCCHAR;
 }
 
 (-?([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						char *endp = NULL;
 					        long i = strtol(yytext, &endp, 0);
-						//printf("int: %ld\n", l);
-						//yylval->i = i;
-						yylval->atom = osc_atom_u_allocWithInt32(i);
-						return OSCVALUE;
+						//printf("%s: int: %ld\n", __func__, i);
+						yylval->i = i;
+						return OSCINT32;
 					}
 
-\/[^ \t\n#\"]+	{
+\/[^ \t\n#\":]+	{
 			//printf("OSC address: %s\n", yytext);
-			//int len = strlen(yytext) + 1;
-			//char *copy = osc_mem_alloc(len);
-			//memcpy(copy, yytext, len);
-			//yylval->string = copy;
-			yylval->atom = osc_atom_u_allocWithString(yytext);
+			int len = strlen(yytext) + 1;
+			char *copy = osc_mem_alloc(len);
+			memcpy(copy, yytext, len);
+			yylval->string = copy;
 			return OSCADDRESS;
 		}
-
-			/*
-			\"(\\.|[^$\"\n])*\" 	{
-			*/
-			/*
-			(\"{quoted_string}\"|\"{quoted_string}|{quoted_string}\") {
-				int len = strlen(yytext) + 1; // includes quotes and null byte
-				//char *copy = osc_mem_alloc(len - 2); // don't need quotes
-				//memcpy(copy, yytext + 1, len - 3);
-				//copy[len - 3] = '\0';
-				char *copy = osc_mem_alloc(len);
-				memcpy(copy, yytext, len);
-				yylval->string = copy;
-				return OSCVALUE;
-			}
-			*/
-
-			/* [a-zA-Z0-9][^ \t\n]* */
 
 (-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|0[1-9]|[1-2][0-9])?T(2[0-3]|[0-1][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)??(Z|[+-](?:2[0-3]|[0-1][0-9]):[0-5][0-9])? { /* ISO 8601 from Regular Expressions Cookbook */
 	t_osc_timetag t;
 	osc_timetag_fromISO8601(yytext, &t);
-	//yylval->t = t;
-	yylval->atom = osc_atom_u_allocWithTimetag(t);
-	return OSCVALUE;
+	yylval->t = t;
+	return OSCTIMETAG;
 }
 
 	/*{string}|$0	{*/
-	/*
 {string}	{
-				//int len = strlen(yytext) + 1;
-				//char *copy = osc_mem_alloc(len);
-				//memcpy(copy, yytext, len);
-				//yylval->string = copy;
-				yylval->atom = osc_atom_u_allocWithString(yytext);
-				//return OSCVALUE;
-				return OSCLEGACYSTRING;
+				int len = strlen(yytext) + 1;
+				char *copy = osc_mem_alloc(len);
+				memcpy(copy, yytext, len);
+				yylval->string = copy;
+				return STRING;
 			}
 
 {string}*\\.	{
@@ -227,16 +175,16 @@ quoted_string [^\"\\]
 				//this is bad news
 			}
 			BEGIN(0);
-			//yylval->string = *buf;
-			yylval->atom = osc_atom_u_allocWithString(*buf);
+			yylval->string = *buf;
 			*buf = NULL;
 			*buflen = 0;
-			return OSCLEGACYSTRING;
+			return STRING;
 		}
-	*/
-[ \t\n]+
 
 
+[ \t]+
+
+. {return *yytext;}
 
 %%
 //\xc2\xac\n

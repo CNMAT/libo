@@ -359,6 +359,7 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 	if(!m){
 		return 0;
 	}
+	long numargs = osc_message_s_getArgCount(m);
 	long offset = 0;
 	t_osc_msg_it_s *it = osc_msg_it_s_get(m);
 	char tabs[nindent + 1];
@@ -367,21 +368,57 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 	}
 	tabs[nindent] = '\0';
 	if(!buf){
-		offset += snprintf(NULL, 0, "%s%s", tabs, osc_message_s_getAddress(m));
+		if(numargs){
+			if(numargs > 1){
+				offset += snprintf(NULL, 0, "%s%s : [", tabs, osc_message_s_getAddress(m));
+			}else{
+				offset += snprintf(NULL, 0, "%s%s : ", tabs, osc_message_s_getAddress(m));
+			}
+		}else{
+			offset += snprintf(NULL, 0, "%s%s", tabs, osc_message_s_getAddress(m));
+		}
 		while(osc_msg_it_s_hasNext(it)){
-			offset += snprintf(NULL, 0, " ");
+			//offset += snprintf(NULL, 0, " ");
 			t_osc_atom_s *a = osc_msg_it_s_next(it);
 			offset += osc_atom_s_nformat(NULL, 0, a, nindent);
+			if(osc_msg_it_s_hasNext(it)){
+				//if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				//offset += snprintf(NULL, 0, ",\n");
+					//}else{
+					offset += snprintf(NULL, 0, ", ");
+					//}
+			}
+		}		
+		if(numargs > 1){
+			offset += snprintf(NULL, 0, "]");
 		}
-		offset += snprintf(NULL, 0, "\n");
+		//offset += snprintf(NULL, 0, "\n");
 	}else{
-		offset += snprintf(buf, n, "%s%s", tabs, osc_message_s_getAddress(m));
+		if(numargs){
+			if(numargs > 1){
+				offset += snprintf(buf + offset, n - offset, "%s%s : [", tabs, osc_message_s_getAddress(m));
+			}else{
+				offset += snprintf(buf + offset, n - offset, "%s%s : ", tabs, osc_message_s_getAddress(m));
+			}
+		}else{
+			offset += snprintf(buf + offset, n - offset, "%s%s", tabs, osc_message_s_getAddress(m));
+		}
 		while(osc_msg_it_s_hasNext(it)){
-			offset += snprintf(buf + offset, n - offset, " ");
+			//offset += snprintf(NULL, 0, " ");
 			t_osc_atom_s *a = osc_msg_it_s_next(it);
 			offset += osc_atom_s_nformat(buf + offset, n - offset, a, nindent);
+			if(osc_msg_it_s_hasNext(it)){
+				//if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				//offset += snprintf(buf + offset, n - offset, ",\n");
+				//}else{
+					offset += snprintf(buf + offset, n - offset, ", ");
+					//}
+			}
+		}		
+		if(numargs > 1){
+			offset += snprintf(buf + offset, n - offset, "]");
 		}
-		offset += snprintf(buf + offset, n - offset, "\n");
+		//offset += snprintf(buf + offset, n - offset, "\n");
 	}
 	osc_msg_it_s_destroy(it);
 	return offset;
