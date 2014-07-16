@@ -113,16 +113,16 @@ quoted_string [^\"\\]
 					return OSCVALUE;
 				}
 
-(true|True|TRUE)			{
+true			{
 						//yylval->b = 1;
 						yylval->atom = osc_atom_u_alloc();
 						osc_atom_u_setTrue(yylval->atom);
 						return OSCVALUE;
 					}
-(false|False|FALSE)			{
+false			{
 						//yylval->b = 0;
 						yylval->atom = osc_atom_u_alloc();
-						osc_atom_u_setTrue(yylval->atom);
+						osc_atom_u_setFalse(yylval->atom);
 						return OSCVALUE;
 					}
 
@@ -243,7 +243,7 @@ nil					{
 	*/
 [ \t\n]+
 
-
+. {return *yytext;}
 
 %%
 //\xc2\xac\n
