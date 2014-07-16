@@ -461,10 +461,10 @@ t_osc_atom_u *osc_message_u_appendFalse(t_osc_msg_u *m)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_appendNull(t_osc_msg_u *m)
+t_osc_atom_u *osc_message_u_appendNil(t_osc_msg_u *m)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setNull(a);
+	osc_atom_u_setNil(a);
 	osc_message_u_appendAtom(m, a);
 	return a;
 }
@@ -630,10 +630,10 @@ t_osc_atom_u *osc_message_u_prependFalse(t_osc_msg_u *m)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_prependNull(t_osc_msg_u *m)
+t_osc_atom_u *osc_message_u_prependNil(t_osc_msg_u *m)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setNull(a);
+	osc_atom_u_setNil(a);
 	osc_message_u_prependAtom(m, a);
 	return a;
 }
@@ -799,10 +799,10 @@ t_osc_atom_u *osc_message_u_insertFalse(t_osc_msg_u *m, int pos)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_insertNull(t_osc_msg_u *m, int pos)
+t_osc_atom_u *osc_message_u_insertNil(t_osc_msg_u *m, int pos)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setNull(a);
+	osc_atom_u_setNil(a);
 	osc_message_u_insertAtom(m, a, pos);
 	return a;
 }

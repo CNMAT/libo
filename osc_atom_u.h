@@ -472,7 +472,7 @@ Note that the #t_osc_atom_u actually has no value, only the typetag is set to 'N
 
 \param a The #t_osc_atom_u
 */
-void osc_atom_u_setNull(t_osc_atom_u *a);
+void osc_atom_u_setNil(t_osc_atom_u *a);
 
 /** \brief Set the #t_osc_atom_s to point to a (serialized) #t_osc_bndl_s.
 

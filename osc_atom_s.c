@@ -881,7 +881,7 @@ void osc_atom_s_setFalse(t_osc_atom_s *a)
 	a->typetag = 'F';
 }
 
-void osc_atom_s_setNull(t_osc_atom_s *a)
+void osc_atom_s_setNil(t_osc_atom_s *a)
 {
 	if(!a){
 		return;
@@ -968,7 +968,7 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 		osc_atom_u_setFalse(atom_u);
 		break;
 	case 'N':
-		osc_atom_u_setNull(atom_u);
+		osc_atom_u_setNil(atom_u);
 		break;
 	case OSC_BUNDLE_TYPETAG:
 		{

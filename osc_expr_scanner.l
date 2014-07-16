@@ -266,7 +266,7 @@ quote[[:space:]]*\( {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
 						}
-						osc_atom_u_setNull(yylval->atom);
+						osc_atom_u_setNil(yylval->atom);
 						return OSC_EXPR_NUM;
 					}
 lambda				{

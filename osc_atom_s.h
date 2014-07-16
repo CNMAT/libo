@@ -113,7 +113,7 @@ void osc_atom_s_setUInt64(t_osc_atom_s *a, uint64_t v);
 void osc_atom_s_setString(t_osc_atom_s *a, char *v);
 void osc_atom_s_setTrue(t_osc_atom_s *a);
 void osc_atom_s_setFalse(t_osc_atom_s *a);
-void osc_atom_s_setNull(t_osc_atom_s *a);
+void osc_atom_s_setNil(t_osc_atom_s *a);
 void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t);
 
 size_t osc_atom_s_sizeof(t_osc_atom_s *a);

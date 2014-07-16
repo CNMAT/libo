@@ -125,6 +125,13 @@ quoted_string [^\"\\]
 						osc_atom_u_setTrue(yylval->atom);
 						return OSCVALUE;
 					}
+
+nil					{
+						yylval->atom = osc_atom_u_alloc();
+						osc_atom_u_setNil(yylval->atom);
+						return OSCVALUE;
+					}
+
 :|\{|\}|, {
 		return *yytext;
 	}

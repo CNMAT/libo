@@ -1166,7 +1166,7 @@ void osc_atom_u_setFalse(t_osc_atom_u *a)
 	a->typetag = 'F';
 }
 
-void osc_atom_u_setNull(t_osc_atom_u *a)
+void osc_atom_u_setNil(t_osc_atom_u *a)
 {
 	if(!a){
 		return;
