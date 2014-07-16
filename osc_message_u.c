@@ -1064,21 +1064,15 @@ long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent)
 			offset += snprintf(NULL, 0, "%s%s", tabs, osc_message_u_getAddress(m));
 		}
 		while(osc_msg_it_u_hasNext(it)){
-			//offset += snprintf(NULL, 0, " ");
 			t_osc_atom_u *a = osc_msg_it_u_next(it);
 			offset += osc_atom_u_nformat(NULL, 0, a, nindent);
 			if(osc_msg_it_u_hasNext(it)){
-				//if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
-				//offset += snprintf(NULL, 0, ",\n");
-				//}else{
-					offset += snprintf(NULL, 0, ", ");
-					//}
+				offset += snprintf(NULL, 0, ", ");
 			}
 		}		
 		if(numargs > 1){
 			offset += snprintf(NULL, 0, "]");
 		}
-		//offset += snprintf(NULL, 0, "\n");
 	}else{
 		if(numargs){
 			if(numargs > 1){
@@ -1090,21 +1084,15 @@ long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent)
 			offset += snprintf(buf + offset, n - offset, "%s%s", tabs, osc_message_u_getAddress(m));
 		}
 		while(osc_msg_it_u_hasNext(it)){
-			//offset += snprintf(NULL, 0, " ");
 			t_osc_atom_u *a = osc_msg_it_u_next(it);
 			offset += osc_atom_u_nformat(buf + offset, n - offset, a, nindent);
 			if(osc_msg_it_u_hasNext(it)){
-				//if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
-				//offset += snprintf(buf + offset, n - offset, ",\n");
-				//}else{
-					offset += snprintf(buf + offset, n - offset, ", ");
-					//}
+				offset += snprintf(buf + offset, n - offset, ", ");
 			}
 		}		
 		if(numargs > 1){
 			offset += snprintf(buf + offset, n - offset, "]");
 		}
-		//offset += snprintf(buf + offset, n - offset, "\n");
 	}
 	osc_msg_it_u_destroy(it);
 	return offset;

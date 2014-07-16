@@ -614,22 +614,22 @@ long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int ninde
 
 long osc_bundle_s_formatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent)
 {
-	if(!bndl){
+	if(!bndl || nindent < 1){
 		return 0;
 	}
 	long offset = 0;
-	char tabs[nindent + 1];
-	for(int i = 0; i < nindent; i++){
+	char tabs[nindent];
+	for(int i = 0; i < nindent - 1; i++){
 		tabs[i] = '\t';
 	}
-	tabs[nindent] = '\0';
-	offset += snprintf(buf, n, "\n{\n");
+	tabs[nindent - 1] = '\0';
+	offset += snprintf(buf, n, "{\n");
 	if(!buf){
 		offset += osc_bundle_s_nformat(NULL, 0, bndllen, bndl, nindent);
-		offset += snprintf(NULL, 0, "\n}");
+		offset += snprintf(NULL, 0, "\n%s}", tabs);
 	}else{
 		offset += osc_bundle_s_nformat(buf + offset, n - offset, bndllen, bndl, nindent);
-		offset += snprintf(buf + offset, n - offset, "\n}");
+		offset += snprintf(buf + offset, n - offset, "\n%s}", tabs);
 	}
 	return offset;
 }
