@@ -155,7 +155,7 @@ quoted_string [^\"\\]
 						return OSCVALUE;
 					}
 
-\/[^ \t\n#\"]+	{
+\/[^ \t\n#\",]+	{
 			//printf("OSC address: %s\n", yytext);
 			//int len = strlen(yytext) + 1;
 			//char *copy = osc_mem_alloc(len);
