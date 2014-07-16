@@ -1,3 +1,30 @@
+/*
+  Written by John MacCallum, The Center for New Music and Audio Technologies,
+  University of California, Berkeley.  Copyright (c) 2011-14, The Regents of
+  the University of California (Regents). 
+  Permission to use, copy, modify, distribute, and distribute modified versions
+  of this software and its documentation without fee and without a signed
+  licensing agreement, is hereby granted, provided that the above copyright
+  notice, this paragraph and the following two paragraphs appear in all copies,
+  modifications, and distributions.
+
+  IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+  SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
+  OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS
+  BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+  REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED
+  HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE
+  MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+*/
+
+/** 	\file osc_scanner.l
+	\author John MacCallum
+
+*/
+
 %{
 #include "osc_parser.h"
 #include "osc_mem.h"
@@ -25,7 +52,6 @@ dfc       (({frac}{exp_opt}{fsuff_opt})|({dseq}{exp}{fsuff_opt}))
 hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
-	//string [^ $\t\"\n\\]*
 string [^ \t\"\n\\\{\}\'\[\],]*
 quoted_string [^\"\\]
 
@@ -49,19 +75,14 @@ quoted_string [^\"\\]
 		*buflen += yyleng + 1;
 		strcat(*buf, yytext);
 	}else{
-		//char *copy = osc_mem_alloc(yyleng + 1);
-		//strncpy(copy, yytext, yyleng + 1);
-		//yylval->string = copy;
 		yylval->atom = osc_atom_u_allocWithString(yytext);
 		return OSCVALUE;
 	}
-	//return STRING;
 }
 
 <quote>\" {
 	BEGIN(0);
 	if(*buf){
-		//yylval->string = *buf;
 		yylval->atom = osc_atom_u_allocWithString(*buf);
 		*buf = NULL;
 		*buflen = 0;
@@ -72,55 +93,32 @@ quoted_string [^\"\\]
 <quote>{quoted_string}*\\. {
 	if(*buf){
 		*buf = osc_mem_resize(*buf, *buflen + yyleng);
-		//strcat(*buf, yytext);
 		memcpy(*buf + *buflen, yytext, yyleng - 1);
 		*buflen += yyleng - 1;
 		(*buf)[*buflen - 1] = yytext[yyleng - 1];
-		//(*buf)[*buflen - 3] = (*buf)[*buflen - 2];
 		(*buf)[*buflen] = '\0';
 	}else{
 		*buf = osc_mem_alloc(yyleng);
 		memcpy(*buf, yytext, yyleng - 1);
 		*buflen = yyleng - 1;
-		//(*buf)[*buflen - 2] = (*buf)[*buflen - 1];
-		//(*buf)[*buflen - 1] = '\0';
 		(*buf)[*buflen - 1] = yytext[yyleng - 1];
 		(*buf)[*buflen] = '\0';
 	}
 }
-	/*
-	$[1-9][0-9]?	{
-		//printf("sub\n");
-		char *endp = NULL;
-		yylval->i = strtol(yytext + 1, &endp, 0);
-		return DOLLARSUB;
-	}
-
-	\"$[1-9][0-9]?\"	{
-		//printf("sub\n");
-		char *endp = NULL;
-		yylval->i = strtol(yytext + 2, &endp, 0);
-		return DOLLARSUB;
-	}
-	*/
 
 -?{c99_floating_point_constant}	{
 					char *endp = NULL;
 					double d = strtod(yytext, &endp); 
-					//printf("float: %f\n", d);
-					//yylval->f = d;
 					yylval->atom = osc_atom_u_allocWithDouble(d);
 					return OSCVALUE;
 				}
 
 true			{
-						//yylval->b = 1;
 						yylval->atom = osc_atom_u_alloc();
 						osc_atom_u_setTrue(yylval->atom);
 						return OSCVALUE;
 					}
 false			{
-						//yylval->b = 0;
 						yylval->atom = osc_atom_u_alloc();
 						osc_atom_u_setFalse(yylval->atom);
 						return OSCVALUE;
@@ -139,15 +137,8 @@ nil					{
 \[|\]	{
 		return *yytext;
 	}
-	/*
-([[:space:]]*\n[[:space:]]*)+	{
-		return '\n';
-	}
-	*/
 
 \'.\' {
-	//printf("char: %c\n", yytext[1]);
-	//yylval->c = yytext[1];
 	yylval->atom = osc_atom_u_alloc();
 	osc_atom_u_setInt8(yylval->atom, yytext[1]);
 	return OSCVALUE;
@@ -156,117 +147,24 @@ nil					{
 (-?([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						char *endp = NULL;
 					        long i = strtol(yytext, &endp, 0);
-						//printf("int: %ld\n", l);
-						//yylval->i = i;
 						yylval->atom = osc_atom_u_allocWithInt32(i);
 						return OSCVALUE;
 					}
 
 \/[^ \t\n#\",]+	{
-			//printf("OSC address: %s\n", yytext);
-			//int len = strlen(yytext) + 1;
-			//char *copy = osc_mem_alloc(len);
-			//memcpy(copy, yytext, len);
-			//yylval->string = copy;
 			yylval->atom = osc_atom_u_allocWithString(yytext);
 			return OSCADDRESS;
 		}
 
-			/*
-			\"(\\.|[^$\"\n])*\" 	{
-			*/
-			/*
-			(\"{quoted_string}\"|\"{quoted_string}|{quoted_string}\") {
-				int len = strlen(yytext) + 1; // includes quotes and null byte
-				//char *copy = osc_mem_alloc(len - 2); // don't need quotes
-				//memcpy(copy, yytext + 1, len - 3);
-				//copy[len - 3] = '\0';
-				char *copy = osc_mem_alloc(len);
-				memcpy(copy, yytext, len);
-				yylval->string = copy;
-				return OSCVALUE;
-			}
-			*/
-
-			/* [a-zA-Z0-9][^ \t\n]* */
-
 (-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|0[1-9]|[1-2][0-9])?T(2[0-3]|[0-1][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)??(Z|[+-](?:2[0-3]|[0-1][0-9]):[0-5][0-9])? { /* ISO 8601 from Regular Expressions Cookbook */
 	t_osc_timetag t;
 	osc_timetag_fromISO8601(yytext, &t);
-	//yylval->t = t;
 	yylval->atom = osc_atom_u_allocWithTimetag(t);
 	return OSCVALUE;
 }
 
-	/*{string}|$0	{*/
-	/*
-{string}	{
-				//int len = strlen(yytext) + 1;
-				//char *copy = osc_mem_alloc(len);
-				//memcpy(copy, yytext, len);
-				//yylval->string = copy;
-				yylval->atom = osc_atom_u_allocWithString(yytext);
-				//return OSCVALUE;
-				return OSCLEGACYSTRING;
-			}
-
-{string}*\\.	{
-			if(*buf){
-				*buflen += yyleng + 1; // make room for the escaped char
-				*buf = osc_mem_resize(*buf, *buflen);
-				strcat(*buf, yytext);
-				(*buf)[*buflen - 1] = '\0';
-			}else{
-				*buf = osc_mem_alloc(yyleng + 1);
-				memcpy(*buf, yytext, yyleng);
-				*buflen = yyleng;
-				//(*buf)[*buflen - 2] = (*buf)[*buflen - 1];
-				(*buf)[*buflen - 1] = '\0';
-			}
-			BEGIN(escape);
-			yyless(1);
-		}
-
-<escape>.	{
-			if(*buf){
-				(*buf)[*buflen - 1] = *yytext;
-			}else{
-				//this is bad news
-			}
-			BEGIN(0);
-			//yylval->string = *buf;
-			yylval->atom = osc_atom_u_allocWithString(*buf);
-			*buf = NULL;
-			*buflen = 0;
-			return OSCLEGACYSTRING;
-		}
-	*/
 [ \t\n]+
 
 . {return *yytext;}
 
 %%
-//\xc2\xac\n
-/*
-int main(int argc, char **argv){
-	yyscan_t scanner;
-	char buf[128];
-	yylex_init(&scanner);
-	YY_BUFFER_STATE buf_state = yy_scan_string("/foo bar\n /bar foo\n", scanner);
-	yyset_out(NULL, scanner);
-	int ret = 1;
-	//while(ret){
-		//ret = yylex(scanner);
-		//printf("foo: %s\n", yyget_text(scanner));
-	//}
-
-	//buf_state = yy_scan_string("/foo bar\n /bar foo\n", scanner);
-	while(yylex(scanner)){
-		//printf("foo: %s\n", yyget_text(scanner));
-	}
-	yy_delete_buffer(buf_state, scanner);
-	yylex_destroy(scanner);
-}
-*/
-
-
