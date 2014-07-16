@@ -101,10 +101,12 @@ int osc_parser_lex(YYSTYPE * yylval_param,YYLTYPE * yylloc_param ,yyscan_t yysca
 
 t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl)
 {
+	/*
 	t_osc_err e = osc_legacy_parser_parseString(len, ptr, bndl);
 	if(!e && *bndl){
 		return e;
 	}
+	*/
 	yyscan_t scanner;
 	osc_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_scanner__scan_string(ptr, scanner);
