@@ -1212,6 +1212,11 @@ static int osc_expr_specFunc_value(t_osc_expr *f,
 		}else{
 			if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg, 0)) == 's'){
 				address = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg, 0));
+				/*
+			}else{
+				*out = arg;
+				return 0;
+				*/
 			}
 		}
 		if(address){

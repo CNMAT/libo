@@ -163,10 +163,10 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 	// expressions really have to end with a semicolon, but it's nice to write single
 	// expressions without one (or to leave it off the last one), so we add one to the
 	// end of the string here just in case.
-	if(ptr[len - 1] != ';'){
+	if(ptr[len - 1] != ','){
 		char *tmp = osc_mem_alloc(len + 2);
 		memcpy(tmp, ptr, len + 1);
-		tmp[len] = ';';
+		tmp[len] = ',';
 		tmp[len + 1] = '\0';
 		ptr = tmp;
 		alloc = 1;
@@ -603,8 +603,8 @@ expns:  {
 			*tmp_exprstack = NULL;
 		}
  	}
-	| expns ';' {;}// can this really ever happen?
-	| expns expr ';' {
+	| expns ',' {;}// can this really ever happen?
+	| expns expr ',' {
 		if(*tmp_exprstack){
 			osc_expr_appendExpr(*tmp_exprstack, $2);
 		}else{
@@ -714,13 +714,104 @@ function:
 		t_osc_expr_arg *old = aaa;
 		aaa = osc_expr_arg_next(aaa);
 		osc_expr_arg_free(old);
+		int i = 1;
 		while(aaa){
+			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
+				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
+				return 1;
+			}
 			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
 			osc_expr_appendExpr(exprlist, e);
 			osc_expr_arg_setExpr(aaa, NULL);
 			t_osc_expr_arg *old = aaa;
 			aaa = osc_expr_arg_next(aaa);
 			osc_expr_arg_free(old);
+			i++;
+		}
+		osc_expr_rec_setExtra(func, exprlist);
+		//osc_expr_rec_setExtra(func, *tmp_exprstack);
+		$$ = func;
+		if(startcond == START_EXPNS){
+			*tmp_exprstack = NULL;
+		}else if(startcond == START_FUNCTION){
+			*rec = func;
+		}
+// go through and make sure the parameters are unique
+/*
+		t_osc_expr_rec *r = osc_expr_lookupFunction("lambda");
+		t_osc_expr *e = osc_expr_alloc();
+		osc_expr_setRec(e, r);
+		t_osc_expr *expns_copy = NULL;
+		t_osc_expr *ee = $<expr>6;
+		while(ee){
+			t_osc_expr *copy = osc_expr_copy(ee);
+			if(expns_copy){
+				osc_expr_appendExpr(expns_copy, copy);
+			}else{
+				expns_copy = copy;
+			}
+			ee = osc_expr_next(ee);
+		}
+		t_osc_expr_arg *expns = osc_expr_arg_alloc();
+		osc_expr_arg_setExpr(expns, expns_copy);
+		osc_expr_arg_append($3, expns);
+		osc_expr_setArg(e, $3);
+*/
+//osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
+//$$ = e;
+	}
+	| OSC_EXPR_LAMBDA '(' parameter ',' args ')' {
+		int n = 0;
+		t_osc_atom_u *a = $3;
+		while(a){
+			n++;
+			a = a->next;
+		}
+		char *params[n];
+		a = $3;
+		for(int i = n - 1; i >= 0; i--){
+			char *st = osc_atom_u_getStringPtr(a);
+			int len = strlen(st) + 1;
+			params[i] = (char *)osc_mem_alloc(len);
+			strncpy(params[i], st, len);
+			t_osc_atom_u *killme = a;
+			a = a->next;
+			osc_atom_u_free(killme);
+		}
+		t_osc_expr_rec *func = osc_expr_rec_alloc();
+		osc_expr_rec_setName(func, "lambda");
+		osc_expr_rec_setRequiredArgs(func, n, params, NULL);
+		for(int i = 0; i < n; i++){
+			if(params[i]){
+				osc_mem_free(params[i]);
+			}
+		}
+		/*
+		t_osc_expr *e = *tmp_exprstack;
+		while(e){
+			e = osc_expr_next(e);
+		}
+		*/
+		osc_expr_rec_setFunction(func, osc_expr_lambda);
+		t_osc_expr_arg *aaa = $5;
+		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		osc_expr_arg_setExpr(aaa, NULL);
+		t_osc_expr_arg *old = aaa;
+		aaa = osc_expr_arg_next(aaa);
+		osc_expr_arg_free(old);
+		int i = 1;
+		while(aaa){
+			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
+				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
+				return 1;
+			}
+			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+			osc_expr_appendExpr(exprlist, e);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+			i++;
 		}
 		osc_expr_rec_setExtra(func, exprlist);
 		//osc_expr_rec_setExtra(func, *tmp_exprstack);
