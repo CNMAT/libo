@@ -1104,6 +1104,9 @@ expr:
 	| '[' args ']' %prec OSC_EXPR_FUNC_CALL {
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", $2);
 	}
+	| '['  ']' %prec OSC_EXPR_FUNC_CALL {
+		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", NULL);
+	}
 // array lookup
 	| arg OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS {
 		osc_expr_arg_setNext($1, $3);
