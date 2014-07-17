@@ -2018,7 +2018,6 @@ int osc_expr_add(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) + osc_atom_u_getDouble(f2));
 		}else{
 			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
-			printf("tt = %c\n", tt);
 			switch(tt){
 			case 'i':
 				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) + osc_atom_u_getInt32(f2));
@@ -2120,7 +2119,6 @@ int osc_expr_multiply(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 			osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) * osc_atom_u_getDouble(f2));
 		}else{
 			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
-			printf("tt = %c\n", tt);
 			switch(tt){
 			case 'i':
 				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) * osc_atom_u_getInt32(f2));
@@ -5635,7 +5633,6 @@ t_osc_err osc_expr_formatFunctionDoc(t_osc_expr_rec *rec, t_osc_bndl_u **bndl)
 	osc_message_u_setAddress(categories, "/doc/function/categories");
 	i = 0;
 	while(rec->categories[i]){
-		printf("%d: %d\n", __LINE__, i);
 		osc_message_u_appendString(categories, rec->categories[i++]);
 	}
 	osc_bundle_u_addMsg(b, categories);
