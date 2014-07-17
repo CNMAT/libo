@@ -674,15 +674,16 @@ arg:    OSC_EXPR_NUM {
 ;
 
 function: 
-	OSC_EXPR_LAMBDA '(' parameters ')' '{' expns '}' {
+//OSC_EXPR_LAMBDA '(' parameters ')' '{' expns '}' {
+	OSC_EXPR_LAMBDA '(' '[' parameters ']' ',' args ')' {
 		int n = 0;
-		t_osc_atom_u *a = $3;
+		t_osc_atom_u *a = $4;
 		while(a){
 			n++;
 			a = a->next;
 		}
 		char *params[n];
-		a = $3;
+		a = $4;
 		for(int i = n - 1; i >= 0; i--){
 			char *st = osc_atom_u_getStringPtr(a);
 			int len = strlen(st) + 1;
@@ -707,7 +708,22 @@ function:
 		}
 		*/
 		osc_expr_rec_setFunction(func, osc_expr_lambda);
-		osc_expr_rec_setExtra(func, *tmp_exprstack);
+		t_osc_expr_arg *aaa = $7;
+		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		osc_expr_arg_setExpr(aaa, NULL);
+		t_osc_expr_arg *old = aaa;
+		aaa = osc_expr_arg_next(aaa);
+		osc_expr_arg_free(old);
+		while(aaa){
+			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+			osc_expr_appendExpr(exprlist, e);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+		}
+		osc_expr_rec_setExtra(func, exprlist);
+		//osc_expr_rec_setExtra(func, *tmp_exprstack);
 		$$ = func;
 		if(startcond == START_EXPNS){
 			*tmp_exprstack = NULL;
