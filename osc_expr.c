@@ -3118,7 +3118,15 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	int n = osc_atom_u_getInt(osc_atom_array_u_get(*argv, 0));
 	t_osc_atom_u *val = NULL;
 	*out = osc_atom_array_u_alloc(n);
-		
+
+	int outlen = n * osc_atom_array_u_getLen(argv[1]);
+	*out = osc_atom_array_u_alloc(outlen);
+	int j = 0;
+	for(int i = 0; i < n; i++){
+		osc_atom_array_u_copyInto(out, argv[1], j);
+		j += osc_atom_array_u_getLen(argv[1]);
+	}
+	/*		
 	int alloc = 0;
 	if(argc == 2){
 		val = osc_atom_array_u_get(argv[1], 0);
@@ -3136,6 +3144,7 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	if(alloc){
 		osc_atom_u_free(val);
 	}
+	*/
 	return 0;
 }
 

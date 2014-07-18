@@ -165,11 +165,12 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 	// end of the string here just in case.
 	if(ptr[len - 1] != ','){
 		char *tmp = osc_mem_alloc(len + 2);
-		memcpy(tmp, ptr, len + 1);
+		memcpy(tmp, ptr, len);
 		tmp[len] = ',';
 		tmp[len + 1] = '\0';
 		ptr = tmp;
 		alloc = 1;
+		len++;
 	}
 
 	yyscan_t scanner;
@@ -605,6 +606,7 @@ expns:  {
  	}
 	| expns ',' {;}// can this really ever happen?
 	| expns expr ',' {
+//| expns ',' expr {
 		if(*tmp_exprstack){
 			osc_expr_appendExpr(*tmp_exprstack, $2);
 		}else{
