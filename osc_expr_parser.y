@@ -163,6 +163,7 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 	// expressions really have to end with a semicolon, but it's nice to write single
 	// expressions without one (or to leave it off the last one), so we add one to the
 	// end of the string here just in case.
+	/*
 	if(ptr[len - 1] != ','){
 		char *tmp = osc_mem_alloc(len + 2);
 		memcpy(tmp, ptr, len);
@@ -172,7 +173,7 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
 		alloc = 1;
 		len++;
 	}
-
+	*/
 	yyscan_t scanner;
 	osc_expr_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
@@ -604,13 +605,20 @@ expns:  {
 			*tmp_exprstack = NULL;
 		}
  	}
-	| expns ',' {;}// can this really ever happen?
-	| expns expr ',' {
-//| expns ',' expr {
+//| expns ',' {;}// can this really ever happen?
+//| expns expr ',' {
+	| expr {
 		if(*tmp_exprstack){
-			osc_expr_appendExpr(*tmp_exprstack, $2);
+			osc_expr_appendExpr(*tmp_exprstack, $1);
 		}else{
-			*tmp_exprstack = $2;
+			*tmp_exprstack = $1;
+		}
+        }
+	| expns ',' expr  {
+		if(*tmp_exprstack){
+			osc_expr_appendExpr(*tmp_exprstack, $3);
+		}else{
+			*tmp_exprstack = $3;
 		}
  	}
 ;
