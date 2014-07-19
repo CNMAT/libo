@@ -621,6 +621,7 @@ expns:  {
 			*tmp_exprstack = $3;
 		}
  	}
+//| expns ','
 ;
 
 args:   arg 
@@ -913,6 +914,9 @@ expr:
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAtom(arg, $1);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "quote", arg);
+	}
+	| OSC_EXPR_OSCADDRESS '(' args ')' %prec OSC_EXPR_FUNC_CALL {
+		printf("hi!\n");
 	}
 // Infix operators
 	| arg '+' arg {
