@@ -550,7 +550,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %type <expr>expr 
 %type <func>function
 %type <arg>arg args 
-%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter
+%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter number
 %nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
 // low to high precedence
@@ -623,7 +623,14 @@ expns:  {
  	}
 //| expns ','
 ;
-
+/*
+number: OSC_EXPR_NUM
+	| '-' OSC_EXPR_NUM {
+		osc_atom_u_negate($2);
+		$$ = $2;
+ 	}
+;
+*/
 args:   arg 
 	| args ',' arg {
 		osc_expr_arg_append($$, $3);
@@ -1001,6 +1008,14 @@ expr:
 		$$ = osc_expr_alloc();
 		osc_expr_setRec($$, osc_expr_lookupFunction("!"));
 		osc_expr_setArg($$, $2);
+	}
+	| '-' arg {
+		$$ = osc_expr_alloc();
+		osc_expr_setRec($$, osc_expr_lookupFunction("-"));
+		t_osc_expr_arg *zero = osc_expr_arg_alloc();
+		osc_expr_arg_setOSCAtom(zero, osc_atom_u_allocWithInt32(0));
+		osc_expr_arg_setNext(zero, $2);
+		osc_expr_setArg($$, zero);
 	}
 // prefix inc/dec
 	| OSC_EXPR_INC OSC_EXPR_OSCADDRESS %prec OSC_EXPR_PREFIX_INC {

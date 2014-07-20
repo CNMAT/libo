@@ -519,6 +519,8 @@ including the first 4 bytes which contain its size.
  */
 size_t osc_atom_u_sizeof(t_osc_atom_u *a);
 
+void osc_atom_u_negate(t_osc_atom_u *a);
+
 size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a);
 
 /** \brief Serialize a #t_osc_atom_u

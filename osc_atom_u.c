@@ -1243,6 +1243,45 @@ void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob)
 	a->typetag = 'b';
 }
 
+void osc_atom_u_negate(t_osc_atom_u *a)
+{
+	if(!a){
+		return;
+	}
+	switch(osc_atom_u_getTypetag(a)){
+	case 'c':
+		osc_atom_u_setInt8(a, -osc_atom_u_getInt8(a));
+		break;
+	case 'u':
+		osc_atom_u_setInt16(a, -osc_atom_u_getInt16(a));
+		break;
+	case 'i':
+		osc_atom_u_setInt32(a, -osc_atom_u_getInt32(a));
+		break;
+	case 'h':
+		osc_atom_u_setInt64(a, -osc_atom_u_getInt64(a));
+		break;
+	case 'C':
+		osc_atom_u_setInt8(a, -osc_atom_u_getUInt8(a));
+		break;
+	case 'U':
+		osc_atom_u_setInt16(a, -osc_atom_u_getUInt16(a));
+		break;
+	case 'I':
+		osc_atom_u_setInt32(a, -osc_atom_u_getUInt32(a));
+		break;
+	case 'H':
+		osc_atom_u_setInt64(a, -osc_atom_u_getUInt64(a));
+		break;
+	case 'f':
+		osc_atom_u_setFloat(a, -osc_atom_u_getFloat(a));
+		break;
+	case 'd':
+		osc_atom_u_setDouble(a, -osc_atom_u_getDouble(a));
+		break;
+	}
+}
+
 size_t osc_atom_u_sizeof(t_osc_atom_u *a)
 {
 	if(!a){

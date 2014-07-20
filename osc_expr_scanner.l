@@ -220,7 +220,7 @@ quote[[:space:]]*\( {
 	}
 }
 
-(-?([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
+(([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						// int 
 						char *endptr = NULL;
 						int32_t i = strtol(yytext, &endptr, 0);
@@ -230,7 +230,7 @@ quote[[:space:]]*\( {
 						osc_atom_u_setInt32(yylval->atom, i);
 						return OSC_EXPR_NUM;
 					}
--?{c99_floating_point_constant}		{
+{c99_floating_point_constant}		{
 						// floating point number
 						char *endptr = NULL;
 						double f = strtod(yytext, &endptr);

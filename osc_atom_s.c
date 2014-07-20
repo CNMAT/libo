@@ -902,6 +902,45 @@ void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t)
 	a->typetag = OSC_TIMETAG_TYPETAG;
 }
 
+void osc_atom_s_negate(t_osc_atom_s *a)
+{
+	if(!a){
+		return;
+	}
+	switch(osc_atom_s_getTypetag(a)){
+	case 'c':
+		osc_atom_s_setInt8(a, -osc_atom_s_getInt8(a));
+		break;
+	case 'u':
+		osc_atom_s_setInt16(a, -osc_atom_s_getInt16(a));
+		break;
+	case 'i':
+		osc_atom_s_setInt32(a, -osc_atom_s_getInt32(a));
+		break;
+	case 'h':
+		osc_atom_s_setInt64(a, -osc_atom_s_getInt64(a));
+		break;
+	case 'C':
+		osc_atom_s_setInt8(a, -osc_atom_s_getUInt8(a));
+		break;
+	case 'U':
+		osc_atom_s_setInt16(a, -osc_atom_s_getUInt16(a));
+		break;
+	case 'I':
+		osc_atom_s_setInt32(a, -osc_atom_s_getUInt32(a));
+		break;
+	case 'H':
+		osc_atom_s_setInt64(a, -osc_atom_s_getUInt64(a));
+		break;
+	case 'f':
+		osc_atom_s_setFloat(a, -osc_atom_s_getFloat(a));
+		break;
+	case 'd':
+		osc_atom_s_setDouble(a, -osc_atom_s_getDouble(a));
+		break;
+	}
+}
+
 size_t osc_atom_s_sizeof(t_osc_atom_s *a)
 {
 	if(!a){
