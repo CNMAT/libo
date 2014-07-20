@@ -38,6 +38,8 @@ byte of the counter and then count down as we pass through the rest of the messa
 gone off the end of the buffer or started a new message.
  */
 
+#include <inttypes.h>
+
 #define OSC_SERIAL_INIT 0ull
 
 // macro states
