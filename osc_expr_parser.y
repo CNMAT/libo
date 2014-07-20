@@ -863,6 +863,70 @@ function:
 //osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
 //$$ = e;
 	}
+	| OSC_EXPR_LAMBDA '(' '[' ']' ',' args ')' {
+		int n = 0;
+		t_osc_expr_rec *func = osc_expr_rec_alloc();
+		osc_expr_rec_setName(func, "lambda");
+		osc_expr_rec_setRequiredArgs(func, 0, NULL, NULL);
+		/*
+		t_osc_expr *e = *tmp_exprstack;
+		while(e){
+			e = osc_expr_next(e);
+		}
+		*/
+		osc_expr_rec_setFunction(func, osc_expr_lambda);
+		t_osc_expr_arg *aaa = $6;
+		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		osc_expr_arg_setExpr(aaa, NULL);
+		t_osc_expr_arg *old = aaa;
+		aaa = osc_expr_arg_next(aaa);
+		osc_expr_arg_free(old);
+		int i = 1;
+		while(aaa){
+			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
+				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
+				return 1;
+			}
+			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+			osc_expr_appendExpr(exprlist, e);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+			i++;
+		}
+		osc_expr_rec_setExtra(func, exprlist);
+		//osc_expr_rec_setExtra(func, *tmp_exprstack);
+		$$ = func;
+		if(startcond == START_EXPNS){
+			*tmp_exprstack = NULL;
+		}else if(startcond == START_FUNCTION){
+			*rec = func;
+		}
+// go through and make sure the parameters are unique
+/*
+		t_osc_expr_rec *r = osc_expr_lookupFunction("lambda");
+		t_osc_expr *e = osc_expr_alloc();
+		osc_expr_setRec(e, r);
+		t_osc_expr *expns_copy = NULL;
+		t_osc_expr *ee = $<expr>6;
+		while(ee){
+			t_osc_expr *copy = osc_expr_copy(ee);
+			if(expns_copy){
+				osc_expr_appendExpr(expns_copy, copy);
+			}else{
+				expns_copy = copy;
+			}
+			ee = osc_expr_next(ee);
+		}
+		t_osc_expr_arg *expns = osc_expr_arg_alloc();
+		osc_expr_arg_setExpr(expns, expns_copy);
+		osc_expr_arg_append($3, expns);
+		osc_expr_setArg(e, $3);
+*/
+//osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
+//$$ = e;
+	}
 ;
 
 parameters: parameter
@@ -923,7 +987,27 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "quote", arg);
 	}
 	| OSC_EXPR_OSCADDRESS '(' args ')' %prec OSC_EXPR_FUNC_CALL {
-		printf("hi!\n");
+		t_osc_expr *e = osc_expr_alloc();
+		t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
+		osc_expr_setRec(e, r);
+		t_osc_expr_arg *a = osc_expr_arg_alloc();
+		char *address = NULL;
+		osc_atom_u_getString($1, 0, &address);
+		osc_expr_arg_setOSCAddress(a, address);
+		osc_expr_arg_append(a, $3);
+		osc_expr_setArg(e, a);
+		$$ = e;
+	}
+	| OSC_EXPR_OSCADDRESS '(' ')' %prec OSC_EXPR_FUNC_CALL {
+		t_osc_expr *e = osc_expr_alloc();
+		t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
+		osc_expr_setRec(e, r);
+		t_osc_expr_arg *a = osc_expr_arg_alloc();
+		char *address = NULL;
+		osc_atom_u_getString($1, 0, &address);
+		osc_expr_arg_setOSCAddress(a, address);
+		osc_expr_setArg(e, a);
+		$$ = e;
 	}
 // Infix operators
 	| arg '+' arg {
