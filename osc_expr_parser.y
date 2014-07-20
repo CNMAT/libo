@@ -550,7 +550,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %type <expr>expr 
 %type <func>function
 %type <arg>arg args 
-%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter number
+%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter 
 %nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
 // low to high precedence
