@@ -821,20 +821,7 @@ int osc_atom_u_getBool(t_osc_atom_u *a){
 	case 'd':
 		return !(a->w.d == 0);
 	case 's':
-		// not sure what to do here...
-		if(a->w.s){
-			if(!strcmp(a->w.s, "true") || !strcmp(a->w.s, "True") || 
-			   !strcmp(a->w.s, "TRUE") || (a->w.s[0] == 't' && a->w.s[1] == '\0') || 
-			   (a->w.s[0] == 'T' && a->w.s[1] == '\0')){
-				return 1;
-			}else if(!strcmp(a->w.s, "false") || !strcmp(a->w.s, "False") || 
-				 !strcmp(a->w.s, "FALSE") || (a->w.s[0] == 'f' && a->w.s[1] == '\0') || 
-				 (a->w.s[0] == 'F' && a->w.s[1] == '\0')){
-				return 0;
-			}
-		}else{
-			return 0;
-		}
+		return 0;
 	case 'c':
 		return !(a->w.c == 0);
 	case 'C':

@@ -609,20 +609,7 @@ int osc_atom_s_getBool(t_osc_atom_s *a)
 			return !(*((double *)&i) == 0);
 		}
 	case 's':
-		// not sure what to do here...
-		if(a->data){
-			if(!strcmp(a->data, "true") || !strcmp(a->data, "True") || 
-			   !strcmp(a->data, "TRUE") || (a->data[0] == 't' && a->data[1] == '\0') || 
-			   (a->data[0] == 'T' && a->data[1] == '\0')){
-				return 1;
-			}else if(!strcmp(a->data, "false") || !strcmp(a->data, "False") || 
-				 !strcmp(a->data, "FALSE") || (a->data[0] == 'f' && a->data[1] == '\0') || 
-				 (a->data[0] == 'F' && a->data[1] == '\0')){
-				return 0;
-			}
-		}else{
-			return 0;
-		}
+		return 0;
 	case OSC_BUNDLE_TYPETAG:
 		return 0;
 	}
