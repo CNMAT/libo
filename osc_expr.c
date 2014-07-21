@@ -364,6 +364,13 @@ static int osc_expr_specFunc_apply(t_osc_expr *f,
 				//error
 				return 1;
 			}
+			/*
+			t_osc_atom_ar_u *a = NULL;
+			osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &a);
+			if(a){
+				t_osc_atom_u *aa = osc_atom_array_u_get(a, 0);
+			}
+			*/
 			r = osc_expr_lookupFunction(osc_atom_u_getStringPtr(osc_expr_arg_getOSCAtom(f_argv)));
 		}else{
 			t_osc_atom_ar_u *ar = NULL;
