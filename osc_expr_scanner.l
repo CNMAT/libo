@@ -93,10 +93,10 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 == {
 	return OSC_EXPR_EQ;
 }
-\&\& {
+\& {
 	return OSC_EXPR_AND;
 }
-\|\| {
+\| {
 	return OSC_EXPR_OR;
 }
 \+\+ {
