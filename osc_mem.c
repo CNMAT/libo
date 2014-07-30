@@ -51,6 +51,7 @@ void *osc_mem_resize(void *ptr, size_t size)
 
 void osc_mem_free(void *ptr)
 {
+	OSC_MEM_INVALIDATE(ptr);
 	osc_mem_free_fp(ptr);
 }
 

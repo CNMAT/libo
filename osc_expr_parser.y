@@ -1282,6 +1282,7 @@ expr:
  	}
 */
 // shorthand constructions
+/*
 	| '[' arg ':' arg ']' %prec OSC_EXPR_FUNC_CALL {
 		// matlab-style range
 		osc_expr_arg_append($2, $4);
@@ -1293,6 +1294,7 @@ expr:
 		osc_expr_arg_append($2, $4);
 		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $2);
  	}
+*/
 	| arg '?' arg ':' arg %prec OSC_EXPR_TERNARY_COND {
 		// ternary conditional
 		osc_expr_arg_append($1, $3);
