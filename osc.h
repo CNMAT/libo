@@ -54,6 +54,8 @@ extern "C" {
 
 #define OSC_ARRAY_CLEAR_ON_ALLOC 1
 
+#define OSC_INVALIDATE_PTR
+#define OSC_VALIDATE_PTR
 
 #ifdef __cplusplus
 }

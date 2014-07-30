@@ -118,6 +118,19 @@ t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out)
  */
 t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out);
 
+// #define this in osc.h
+#ifdef OSC_INVALIDATE_PTR
+#define OSC_MEM_INVALIDATE(ptr) if(ptr){*ptr = '\0';}
+#else
+#define OSC_MEM_INVALIDATE(ptr)
+#endif
+
+#ifdef OSC_VALIDATE_PTR
+#define OSC_MEM_VALIDATE(ptr) ((ptr) ? !(*ptr == '#' || *ptr == '/') : 1)
+#else
+#define OSC_MEM_VALIDATE(ptr) (0)
+#endif
+
 #ifdef __cplusplus
 }
 #endif
