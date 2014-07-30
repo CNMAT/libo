@@ -120,7 +120,7 @@ t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out)
 
 // #define this in osc.h
 #ifdef OSC_INVALIDATE_PTR
-#define OSC_MEM_INVALIDATE(ptr) if(ptr){*ptr = '\0';}
+#define OSC_MEM_INVALIDATE(ptr) if(ptr){*((char *)ptr) = '\0';}
 #else
 #define OSC_MEM_INVALIDATE(ptr)
 #endif
