@@ -555,25 +555,12 @@ t_osc_err osc_bundle_s_format(long len, char *bndl, long *buflen, char **buf)
 	if(!bndl){
 		return OSC_ERR_NOBUNDLE;
 	}
-#ifdef OSC_SAFESTRINGS
 	if(!(*buf)){
 		*buflen = osc_bundle_s_nformat(NULL, 0, len, bndl, 0) + 1;
 		*buf = osc_mem_alloc(*buflen);
 	}
 	osc_bundle_s_nformat(*buf, *buflen, len, bndl, 0);
 	return OSC_ERR_NONE;
-#else
-	long mybuflen = 0, mybufpos = 0;
-	if(*buflen > 0){
-		if(*buf){
-			mybuflen = *buflen;
-		}
-	}
-	t_osc_err e = osc_bundle_s_doFormat(len, bndl, &mybuflen, &mybufpos, buf);
-	// don't return the actual buffer length since it may be longer than the number of bytes used
-	*buflen = mybufpos;
-	return e;
-#endif
 }
 
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent)

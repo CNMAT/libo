@@ -1045,11 +1045,7 @@ t_osc_err osc_atom_s_doFormat(t_osc_atom_s *a, long *buflen, long *bufpos, char 
 		char *stringptr = osc_atom_s_getData(a);
 		int stringlen = strlen(stringptr);
 
-#ifdef OSC_QUOTE_STRINGS
 		int n = stringlen + 4 + osc_strfmt_countMeta(stringlen, stringptr);
-#else
-		int n = stringlen + 2;
-#endif
 		if((*buflen - *bufpos) < n){
 			*buf = osc_mem_resize(*buf, *buflen + n);
 			if(!(*buf)){
@@ -1058,11 +1054,7 @@ t_osc_err osc_atom_s_doFormat(t_osc_atom_s *a, long *buflen, long *bufpos, char 
 			*buflen += n;
 		}
 		char *b = *buf + *bufpos;
-#ifdef OSC_QUOTE_STRINGS
 		(*bufpos) += osc_strfmt_addQuotesAndQuoteMeta(stringlen, stringptr, &b);
-#else
-		(*bufpos) += osc_atom_s_getString(a, *buflen - *bufpos, &b);
-#endif
 		(*buf)[(*bufpos)++] = ' ';
 		(*buf)[(*bufpos)] = '\0';
 	}else{
