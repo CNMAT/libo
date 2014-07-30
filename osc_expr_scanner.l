@@ -78,7 +78,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 
 #.*
 
-\+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\. {
+\+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\.|&|\| {
 	return *yytext;
 }
 \<= {
@@ -93,11 +93,11 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 == {
 	return OSC_EXPR_EQ;
 }
-\& {
-	return OSC_EXPR_AND;
+\&\& {
+	return OSC_EXPR_ANDAND;
 }
-\| {
-	return OSC_EXPR_OR;
+\|\| {
+	return OSC_EXPR_OROR;
 }
 \+\+ {
 	return OSC_EXPR_INC;

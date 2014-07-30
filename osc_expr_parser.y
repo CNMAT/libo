@@ -563,10 +563,10 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %right OSC_EXPR_TERNARY_COND '?' ':'
 
 // level 14
-%left OSC_EXPR_OR
+%left '|' OSC_EXPR_OROR
 
 // level 13
-%left OSC_EXPR_AND
+%left '&' OSC_EXPR_ANDAND
 
 // level 9
 %left OSC_EXPR_EQ OSC_EXPR_NEQ
@@ -1046,10 +1046,16 @@ expr:
 	| arg OSC_EXPR_GTE arg {
 		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ">=", $1, $3);
  	}
-	| arg OSC_EXPR_AND arg {
+	| arg '&' arg {
+		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "&", $1, $3);
+ 	}
+	| arg OSC_EXPR_ANDAND arg {
 		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "&&", $1, $3);
  	}
-	| arg OSC_EXPR_OR arg {
+	| arg '|' arg {
+		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "|", $1, $3);
+ 	}
+	| arg OSC_EXPR_OROR arg {
 		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "||", $1, $3);
  	}
 	| arg OSC_EXPR_PLUSEQ arg {

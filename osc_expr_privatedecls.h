@@ -161,3 +161,15 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out);
+
+static int osc_expr_specFunc_andalso(t_osc_expr *f,
+				   t_osc_expr_lexenv *lexenv,
+				   long *len,
+				   char **oscbndl,
+				   t_osc_atom_ar_u **out);
+
+static int osc_expr_specFunc_orelse(t_osc_expr *f,
+				   t_osc_expr_lexenv *lexenv,
+				   long *len,
+				   char **oscbndl,
+				   t_osc_atom_ar_u **out);

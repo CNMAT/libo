@@ -140,6 +140,8 @@ int osc_expr_getbundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_
 int osc_expr_assigntobundlemember(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_bitand(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_bitor(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_andalso(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_orelse(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
@@ -315,8 +317,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_2arg,
 	 (void *)osc_expr_neq},
 	//////////////////////////////////////////////////
-	{"&&",
-	 "/result = $1 && $2",
+	{"&",
+	 "/result = $1 & $2",
 	 2,
 	 0,
 	 (char *[]){"left operand", "right operand"},
@@ -328,8 +330,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_2arg,
 	 (void *)osc_expr_and},
 	//////////////////////////////////////////////////
-	{"||",
-	 "/result = $1 || $2",
+	{"|",
+	 "/result = $1 | $2",
 	 2,
 	 0,
 	 (char *[]){"left operand", "right operand"},
@@ -340,6 +342,32 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "Logical or",
 	 osc_expr_2arg,
 	 (void *)osc_expr_or},
+	//////////////////////////////////////////////////
+	{"&&",
+	 "/result = $1 && $2",
+	 2,
+	 0,
+	 (char *[]){"left operand", "right operand"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/operator/logical", NULL},
+	 "Logical short-circuit and",
+	 osc_expr_andalso,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"||",
+	 "/result = $1 || $2",
+	 2,
+	 0,
+	 (char *[]){"left operand", "right operand"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/operator/logical", NULL},
+	 "Logical short-circuit or",
+	 osc_expr_orelse,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"%",
 	 "/result = $1 % $2",
@@ -641,6 +669,32 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "Logical or",
 	 osc_expr_2arg,
 	 (void *)osc_expr_or},
+	//////////////////////////////////////////////////
+	{"andalso",
+	 "/result = andalso($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"arg 1", "arg 2"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/arithmetic", NULL},
+	 "Logical short-circuit and",
+	 osc_expr_andalso,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"orelse",
+	 "/result = orelse($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"arg 1", "arg 2"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR, OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/arithmetic", NULL},
+	 "Logical short-circuit or",
+	 osc_expr_orelse,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"mod",
 	 "/result = mod($1, $2)",

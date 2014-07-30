@@ -160,6 +160,10 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_getBundleMember(f, lexenv, len, oscbndl, out);
 	}else if(f->rec->func == osc_expr_assigntobundlemember){
 		return osc_expr_specFunc_assignToBundleMember(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_andalso){
+		return osc_expr_specFunc_andalso(f, lexenv, len, oscbndl, out);
+	}else if(f->rec->func == osc_expr_orelse){
+		return osc_expr_specFunc_orelse(f, lexenv, len, oscbndl, out);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -1728,10 +1732,10 @@ t_osc_err osc_expr_lex(char *str, t_osc_atom_array_u **ar){
 		case OSC_EXPR_DBLQMARK:
 			st = "??";
 			break;
-		case OSC_EXPR_OR:
+		case OSC_EXPR_OROR:
 			st = "||";
 			break;
-		case OSC_EXPR_AND:
+		case OSC_EXPR_ANDAND:
 			st = "&&";
 			break;
 		case OSC_EXPR_NEQ:
@@ -2424,6 +2428,123 @@ int osc_expr_or(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 	}
 	osc_atom_u_setBool(*result, ff1 || ff2);
 	return 0;
+}
+
+int osc_expr_andalso(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){return 0;}
+int osc_expr_orelse(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out){return 0;}
+
+static int osc_expr_specFunc_andalso(t_osc_expr *f,
+				   t_osc_expr_lexenv *lexenv,
+				   long *len,
+				   char **oscbndl,
+				   t_osc_atom_ar_u **out)
+{
+	long argc = osc_expr_getArgCount(f);
+	if(argc != 2){
+		osc_expr_err_argnum(2, argc, 0, "andalso");
+		return 1;
+	}
+	t_osc_atom_ar_u *lhs = NULL, *rhs = NULL;
+	int ret = osc_expr_evalArgInLexEnv(f->argv, lexenv, len, oscbndl, &lhs);
+	if(!lhs || ret){
+		return ret;
+	}
+	char lhstt = osc_atom_u_getTypetag(osc_atom_array_u_get(lhs, 0));
+	if(lhstt == 'T' || lhstt == 'F'){
+		if(lhstt == 'F'){
+			*out = osc_atom_array_u_alloc(1);
+			osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+			goto out;
+		}
+	}else{
+		// post an error about type mismatch
+		ret = 1;
+		goto out;
+	}
+
+	ret = osc_expr_evalArgInLexEnv(f->argv->next, lexenv, len, oscbndl, &rhs);
+	if(!rhs || ret){
+		goto out;
+	}
+	char rhstt = osc_atom_u_getTypetag(osc_atom_array_u_get(rhs, 0));
+	if(rhstt == 'T' || rhstt == 'F'){
+		*out = osc_atom_array_u_alloc(1);
+		if(rhstt == 'F'){
+			osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+		}else{
+			osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+		}
+		goto out;
+	}else{
+		// post an error about type mismatch
+		ret = 1;
+		goto out;
+	}
+ out: 
+	if(lhs){
+		osc_atom_array_u_free(lhs);
+	}
+	if(rhs){
+		osc_atom_array_u_free(rhs);
+	}
+	return ret;
+}
+
+static int osc_expr_specFunc_orelse(t_osc_expr *f,
+				   t_osc_expr_lexenv *lexenv,
+				   long *len,
+				   char **oscbndl,
+				   t_osc_atom_ar_u **out)
+{
+	long argc = osc_expr_getArgCount(f);
+	if(argc != 2){
+		osc_expr_err_argnum(2, argc, 0, "orelse");
+		return 1;
+	}
+	t_osc_atom_ar_u *lhs = NULL, *rhs = NULL;
+	int ret = osc_expr_evalArgInLexEnv(f->argv, lexenv, len, oscbndl, &lhs);
+	if(!lhs || ret){
+		return ret;
+	}
+	char lhstt = osc_atom_u_getTypetag(osc_atom_array_u_get(lhs, 0));
+	if(lhstt == 'T' || lhstt == 'F'){
+		if(lhstt == 'T'){
+			*out = osc_atom_array_u_alloc(1);
+			osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+			goto out;
+		}
+	}else{
+		// post an error about type mismatch
+		ret = 1;
+		goto out;
+	}
+
+	ret = osc_expr_evalArgInLexEnv(f->argv->next, lexenv, len, oscbndl, &rhs);
+	if(!rhs || ret){
+		goto out;
+	}
+	char rhstt = osc_atom_u_getTypetag(osc_atom_array_u_get(rhs, 0));
+	if(rhstt == 'T' || rhstt == 'F'){
+		*out = osc_atom_array_u_alloc(1);
+		if(rhstt == 'F'){
+			osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+		}else{
+			osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+		}
+		goto out;
+	}else{
+		// post an error about type mismatch
+		ret = 1;
+		goto out;
+	}
+ out: 
+	if(lhs){
+		osc_atom_array_u_free(lhs);
+	}
+	if(rhs){
+		osc_atom_array_u_free(rhs);
+	}
+	return ret;
 }
 
 double _osc_expr_fmod(double x, double m)
