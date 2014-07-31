@@ -338,6 +338,9 @@ t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 	int32_t old_size = ntoh32(*((int32_t *)om));
 	int32_t new_size = ntoh32(*((int32_t *)nm));
 	long newbuflen = *bufpos - (old_size + 4) + (new_size + 4);
+	if(newbuflen < 0){
+		return OSC_ERR_INVAL;
+	}
 	char copy[newbuflen];// = (char *)osc_mem_alloc(buflen * 2);
 	char *oldptr = *bndl, *newptr = copy;
 

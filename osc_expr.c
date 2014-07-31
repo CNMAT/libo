@@ -765,7 +765,6 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 	if((err = osc_error_validateAddress(address))){
 		return err;
 	}
-	osc_bundle_s_lookupAddress(*len, *oscbndl, address, &msg_ar, 1);
 
 	t_osc_msg_u *mm = osc_message_u_alloc();
 	osc_message_u_setAddress(mm, address);
@@ -775,9 +774,6 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		osc_error(OSC_ERR_EXPR_EVAL, NULL);
 		if(address){
 			osc_mem_free(address);
-		}
-		if(msg_ar){
-			osc_message_array_s_free(msg_ar);
 		}
 		osc_message_u_free(mm);
 		return ret;
@@ -795,15 +791,16 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
         osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
 	osc_message_s_wrap((t_osc_msg_s *)osc_msg_s, msg_s);
 
-	int mc = 0;
-	err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+	//int mc = 0;
+	//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+	osc_bundle_s_lookupAddress(*len, *oscbndl, address, &msg_ar, 1);
         if(msg_ar){
                 osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
                 osc_message_array_s_free(msg_ar);
         }else{
                 osc_bundle_s_appendMessage(len, oscbndl, (t_osc_msg_s *)osc_msg_s);
         }
-	err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+	//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
 
         if(address){
                 osc_mem_free(address);
