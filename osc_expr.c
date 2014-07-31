@@ -949,7 +949,8 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 	t_osc_atom_ar_u *boolvec[test_result_len];
 	memset(boolvec, '\0', test_result_len * sizeof(t_osc_atom_ar_u *));
 	int outlen = 0;
-	for(int j = 0; j < osc_atom_array_u_getLen(argv); j++){
+	int j = 0;
+	//for(int j = 0; j < osc_atom_array_u_getLen(argv); j++){
 		if(osc_atom_u_getInt32(osc_atom_array_u_get(argv, j))){
 			err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, boolvec + j);
 			if(err){
@@ -967,9 +968,8 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 				outlen += osc_atom_array_u_getLen(boolvec[j]);
 			}
 		}
-	}
+		//}
 	*out = osc_atom_array_u_alloc(outlen);
-	int j = 0;
 	for(int i = 0; i < test_result_len; i++){
 		osc_atom_array_u_copyInto(out, boolvec[i], j);
 		j += osc_atom_array_u_getLen(boolvec[i]);
