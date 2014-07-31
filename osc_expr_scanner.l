@@ -195,8 +195,9 @@ quote[[:space:]]*\( {
 	BEGIN(0);
 	if(*buf){
 		t_osc_atom_u *a = osc_atom_u_alloc();
-		osc_atom_u_setStringPtr(a, *buf);
-		osc_atom_u_setShouldFreePtr(a, 1);
+		//osc_atom_u_setStringPtr(a, *buf);
+		//osc_atom_u_setShouldFreePtr(a, 1);
+		yylval->atom = osc_atom_u_allocWithString(*buf);
 		//yylval->string = *buf;
 		*buf = NULL;
 		*buflen = 0;
@@ -206,17 +207,17 @@ quote[[:space:]]*\( {
 
 <quote>{quoted_string}*\\. {
 	if(*buf){
-		*buflen += yyleng;
-		*buf = osc_mem_resize(*buf, *buflen);
-		strcat(*buf, yytext);
-		(*buf)[*buflen - 3] = (*buf)[*buflen - 2];
-		(*buf)[*buflen - 2] = '\0';
+		*buf = osc_mem_resize(*buf, *buflen + yyleng);
+		memcpy(*buf + *buflen, yytext, yyleng - 1);
+		*buflen += yyleng - 1;
+		(*buf)[*buflen - 1] = yytext[yyleng - 1];
+		(*buf)[*buflen] = '\0';
 	}else{
 		*buf = osc_mem_alloc(yyleng);
-		memcpy(*buf, yytext, yyleng);
-		*buflen = yyleng;
-		(*buf)[*buflen - 2] = (*buf)[*buflen - 1];
-		(*buf)[*buflen - 1] = '\0';
+		memcpy(*buf, yytext, yyleng - 1);
+		*buflen = yyleng - 1;
+		(*buf)[*buflen - 1] = yytext[yyleng - 1];
+		(*buf)[*buflen] = '\0';
 	}
 }
 
