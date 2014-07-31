@@ -2702,6 +2702,12 @@ int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
                         for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
                                 osc_atom_u_setInt8(osc_atom_array_u_get(*out, k), 0.);
                                 int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
+				if(l < 0){
+                                        osc_atom_array_u_free(*out);
+                                        *out = NULL;
+                                        osc_error(OSC_ERR_EXPR_EVAL, "index %d is negative", l);
+                                        return 1;
+				}
                                 if(l > nbytes - 1){
                                         osc_atom_array_u_free(*out);
                                         *out = NULL;
@@ -2718,6 +2724,12 @@ int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
                         for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
                                 osc_atom_u_setDouble(osc_atom_array_u_get(*out, k), 0.);
                                 int32_t l = osc_atom_u_getInt32(osc_atom_array_u_get(argv[j], i));
+				if(l < 0){
+                                        osc_atom_array_u_free(*out);
+                                        *out = NULL;
+                                        osc_error(OSC_ERR_EXPR_EVAL, "index %d is negative", l);
+                                        return 1;
+				}
                                 if(l > argv0len - 1){
                                         osc_atom_array_u_free(*out);
                                         *out = NULL;
