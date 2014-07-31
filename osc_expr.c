@@ -337,7 +337,7 @@ static int osc_expr_specFunc_apply(t_osc_expr *f,
 		t_osc_expr_arg *arg = f_argv->next;
 		for(int i = 0; (i < nparams) && arg; i++){
 			t_osc_atom_ar_u *atoms = NULL;
-			t_osc_err e = osc_expr_evalArgInLexEnv(arg, lexenv_copy, len, oscbndl, &atoms);
+			t_osc_err e = osc_expr_evalArgInLexEnv(arg, lexenv, len, oscbndl, &atoms);
 			if(e == OSC_ERR_EXPR_ADDRESSUNBOUND){
 				osc_expr_err_unbound(osc_expr_arg_getOSCAddress(arg), "apply");
 				return e;
