@@ -184,6 +184,7 @@ int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	// infix
@@ -2565,6 +2566,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "convert a 64-bit integer from network to host byte order.",
 	 osc_expr_ntoh64,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"readstring",
+	 "/result = readstring($1)",
+	 1,
+	 0,
+	 (char *[]){"String or address"},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_STRING},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Converts the contents of a string to an expression.",
+	 osc_expr_readstring,
 	 NULL},
 };
 

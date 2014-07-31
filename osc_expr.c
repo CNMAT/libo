@@ -5123,6 +5123,27 @@ int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	return 0;
 }
 
+int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc > 1){
+		osc_expr_err_argnum(1, argc, 0, "readstring");
+		return 1;
+	}
+	if(osc_atom_array_u_getLen(argv[0]) > 1){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "readstring takes a single string or address as an argument. found a list\n");
+		return 1;
+	}
+	t_osc_atom_u *a = osc_atom_array_u_get(argv[0], 0);
+	if(osc_atom_u_getTypetag(a) != 's'){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "argument to readstring must be a string\n");
+		return 1;
+	}
+	char *st = osc_atom_u_getStringPtr(a);
+	*out = osc_atom_array_u_alloc(1);
+	osc_atom_u_setString(osc_atom_array_u_get(*out, 0), st);
+	return 0;
+}
+
 t_osc_expr *osc_expr_alloc(void)
 {
 	t_osc_expr *expr = (t_osc_expr *)osc_mem_alloc(sizeof(t_osc_expr));
