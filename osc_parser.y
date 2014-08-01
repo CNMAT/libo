@@ -46,6 +46,8 @@
 #include "osc_legacy_parser.h"
 #include "osc_scanner.h"
 #include "osc_timetag.h"
+#include "osc_expr_ast_expr.h"
+#include "osc_expr_parser.h"
 
 	//#define OSC_PARSER_DEBUG
 #ifdef OSC_PARSER_DEBUG
@@ -66,6 +68,7 @@ int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yysca
 #include "osc.h"
 #include "osc_error.h"
 #include "osc_message_u.h"
+#include "osc_expr_ast_expr.h"
 
 #ifdef __cplusplus
 #define YY_DECL extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
@@ -156,7 +159,6 @@ void yyerror (YYLTYPE *yylloc, t_osc_bndl_u **bndl, void *scanner, long *buflen,
 	t_osc_msg_u *message;
 	t_osc_atom_u *atom;
 }
-
 
 %type <bundle>bundle 
 %type <message>message messages 
@@ -360,6 +362,14 @@ arglist:
 		*msg = m;
 		osc_message_u_appendTimetag(*msg, $1);
 	  }
+	| OSCEXPR {
+		t_osc_msg_u *m = osc_message_u_alloc();
+		PP("push MSG %p->%p\n", m, *msg);
+		PP("add OSCTIMETAG to MSG %p := %llu\n", m, $1);
+		m->next = *msg;
+		*msg = m;
+		osc_message_u_appendExpr(*msg, $1, 1);
+	  }
 	| arglist STRING {
 		PP("add STRING to MSG %p := %s\n", *msg, $2);
 		osc_message_u_appendStringPtr(*msg, $2);
@@ -399,6 +409,10 @@ arglist:
 	| arglist OSCTIMETAG {
 		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
 		osc_message_u_appendTimetag(*msg, $2);
+ 	}
+	| arglist OSCEXPR {
+		PP("add OSCTIMETAG to MSG %p := %llu\n", *msg, $2);
+		osc_message_u_appendExpr(*msg, $2, 1);
  	}
 	| '[' bundle ']' {
 		//if(!(*msg)){

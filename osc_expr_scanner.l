@@ -27,7 +27,6 @@
 %{
 #include "osc.h"
 #include "osc_expr_parser.h"
-#include "osc_expr.h"
 
 int colnum;
 
@@ -69,12 +68,13 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 %x quote quote_function escape
 
 %%
-%{
-	if(!(*started)){
-		*started = 1;
-		return startcond;
-	}
-%}
+	//%{
+	//if(!(*started)){
+		//*started = 1;
+		//return startcond;
+	//}
+	//%}
+
 
 #.*
 
@@ -106,47 +106,51 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	return OSC_EXPR_DEC;
 }
 \+= {
-	return OSC_EXPR_PLUSEQ;
+	return OSC_EXPR_ADDASSIGN;
 }
 \-= {
-	return OSC_EXPR_MINUSEQ;
+	return OSC_EXPR_SUBASSIGN;
 }
 \*= {
-	return OSC_EXPR_MULTEQ;
+	return OSC_EXPR_MULASSIGN;
 }
 \/= {
-	return OSC_EXPR_DIVEQ;
+	return OSC_EXPR_DIVASSIGN;
 }
 %= {
-	return OSC_EXPR_MODEQ;
+	return OSC_EXPR_MODASSIGN;
 }
 \^= {
-	return OSC_EXPR_POWEQ;
+	return OSC_EXPR_POWASSIGN;
 }
 \?\? {
-	return OSC_EXPR_DBLQMARK;
+	return OSC_EXPR_NULLCOALESCE;
 }
 \?\?= {
-	return OSC_EXPR_DBLQMARKEQ;
+	return OSC_EXPR_NULLCOALESCEASSIGN;
 }
 
-,|;|\(|\)|\{|\}				{
+
+,|;|\(|\)|\{|\}|\[|\]				{
 						return *yytext;
 					}
-\[\[					{
+	/*
+	\[\[					{
 						//printf("open double brackets\n");
 						return OPEN_DBL_BRKTS;
 					}
-\]\]					{
+	\]\]					{
 						//printf("close double brackets\n");
 						return CLOSE_DBL_BRKTS;
 					}
+	*/
 
-quote[[:space:]]*\( {
+	/*
+	quote[[:space:]]*\( {
 	BEGIN(quote_function);
 	}
 
-<quote_function>.* {
+	<quote_function>.* {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
@@ -168,6 +172,7 @@ quote[[:space:]]*\( {
 	BEGIN(0);
 	return OSC_EXPR_QUOTED_EXPR;
 	}
+	*/
 
 \" {
 	BEGIN(quote);
@@ -274,6 +279,10 @@ lambda				{
 						return OSC_EXPR_LAMBDA;
 					}
 
+let				{
+						return OSC_EXPR_LET;
+					}
+
 \/[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
@@ -281,15 +290,22 @@ lambda				{
 						osc_atom_u_setString(yylval->atom, yytext);
 						return OSC_EXPR_OSCADDRESS;
 				 	}
-
-[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
+	/*
+	[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
 						}
 						osc_atom_u_setString(yylval->atom, yytext);
 						return OSC_EXPR_STRING;
 					}
-
+	*/
+[_a-zA-Z][_a-zA-Z0-9]* {
+	if(alloc_atom){
+		yylval->atom = osc_atom_u_alloc();
+	}
+	osc_atom_u_setString(yylval->atom, yytext);
+	return OSC_EXPR_IDENTIFIER;
+}
 
 ;+|(;[[:space:]]*)+			{
 						// attempt to get rid of repeated semicolons

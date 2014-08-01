@@ -36,15 +36,18 @@ extern "C" {
 
 typedef struct _osc_message_u t_osc_message_u, t_osc_msg_u;
 
+#include "osc_array.h"
+typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+
 #include <stdint.h>
 #include "osc_bundle_u.h"
 #include "osc_bundle_s.h"
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
-#include "osc_array.h"
 #include "osc_timetag.h"
 
-typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+//typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
+struct _osc_expr_ast_expr;
 
 t_osc_msg_u *osc_message_u_alloc(void);
 size_t osc_message_u_getStructSize(void);
@@ -61,6 +64,9 @@ t_osc_err osc_message_u_setAddress(t_osc_msg_u *m, const char *address);
 t_osc_err osc_message_u_setAddressPtr(t_osc_msg_u *m, char *newAddress, char **oldAddress);
 int osc_message_u_getArgCount(t_osc_msg_u *m);
 void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom);
+
+t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m);
+void osc_message_u_setNext(t_osc_msg_u *m, t_osc_msg_u *next);
 
 t_osc_err osc_message_u_appendAtom(t_osc_msg_u *m, t_osc_atom_u *a);
 t_osc_err osc_message_u_prependAtom(t_osc_msg_u *m, t_osc_atom_u *a);
@@ -85,7 +91,8 @@ t_osc_atom_u *osc_message_u_appendFalse(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_appendNil(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_appendBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl);
-t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
+t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc);
+t_osc_atom_u *osc_message_u_appendExpr(t_osc_msg_u *m, struct _osc_expr_ast_expr *b, int alloc);
 t_osc_atom_u *osc_message_u_appendTimetag(t_osc_msg_u *m, t_osc_timetag t);
 t_osc_atom_u *osc_message_u_appendBlob(t_osc_msg_u *m, char *b);
 
@@ -107,7 +114,7 @@ t_osc_atom_u *osc_message_u_prependFalse(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_prependNil(t_osc_msg_u *m);
 t_osc_atom_u *osc_message_u_prependBndl(t_osc_msg_u *m, long len, char *bndl);
 t_osc_atom_u *osc_message_u_prependBndl_s(t_osc_msg_u *m, long len, char *bndl);
-t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b);
+t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc);
 t_osc_atom_u *osc_message_u_prependTimetag(t_osc_msg_u *m, t_osc_timetag t);
 t_osc_atom_u *osc_message_u_prependBlob(t_osc_msg_u *m, char *b);
 
@@ -129,7 +136,7 @@ t_osc_atom_u *osc_message_u_insertFalse(t_osc_msg_u *m, int pos);
 t_osc_atom_u *osc_message_u_insertNil(t_osc_msg_u *m, int pos);
 t_osc_atom_u *osc_message_u_insertBndl(t_osc_msg_u *m, long len, char *bndl, int pos);
 t_osc_atom_u *osc_message_u_insertBndl_s(t_osc_msg_u *m, long len, char *bndl, int pos);
-t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos);
+t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos, int alloc);
 t_osc_atom_u *osc_message_u_insertTimetag(t_osc_msg_u *m, t_osc_timetag t, int pos);
 t_osc_atom_u *osc_message_u_insertBlob(t_osc_msg_u *m, char *b, int pos);
 
@@ -140,7 +147,8 @@ t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf);
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 
 t_osc_message_array_u *osc_message_array_u_alloc(long len);
-void osc_message_array_u_free(t_osc_msg_ar_u *ar);//#define osc_message_array_u_free(ar) osc_array_free((ar))
+void osc_message_array_u_deepFree(t_osc_msg_ar_u *ar);
+void osc_message_array_u_free(t_osc_msg_ar_u *ar);
 #define osc_message_array_u_clear(ar) osc_array_clear((ar))
 #define osc_message_array_u_get(ar, idx) osc_array_get((ar), (idx))
 #define osc_message_array_u_getLen(ar) osc_array_getLen((ar))
@@ -151,10 +159,17 @@ t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg);
 t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_array *ar);
 
 t_osc_msg_u *osc_message_u_allocWithAddress(char *address);
+t_osc_msg_u *osc_message_u_allocWithAtom(char *address, t_osc_atom_u *a);
+t_osc_msg_u *osc_message_u_allocWithUInt8(char *address, uint8_t i);
+t_osc_msg_u *osc_message_u_allocWithInt32(char *address, int32_t f);
 t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f);
+t_osc_msg_u *osc_message_u_allocWithBool(char *address, int b);
 t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s);
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
 t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_array *ar);
+t_osc_msg_u *osc_message_u_allocWithBndl_u(char *address, t_osc_bndl_u *b, int alloc);
+struct _osc_expr_ast_expr;
+t_osc_msg_u *osc_message_u_allocWithExpr(char *address, struct _osc_expr_ast_expr *e);
 t_osc_msg_u *osc_message_u_allocWithBlob(char *address, char *blob);
 
 #ifdef __cplusplus

@@ -174,17 +174,55 @@ t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int full
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_osc_array **osc_msg_u_array, int fullmatch)
+t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, long *nmsgs, t_osc_msg_u ***msgs, int fullmatch)
 {
 	int matchbuflen = 16, n = 0;
-	//t_osc_msg_u **matches = osc_mem_alloc(matchbuflen * sizeof(t_osc_msg_u *));
-	t_osc_msg_ar_u *ar = osc_message_array_u_alloc(matchbuflen);
-	osc_array_clear(ar);
-	//memset(matches, '\0', matchbuflen * sizeof(t_osc_msg_u *));
+	t_osc_msg_u **ar = (t_osc_msg_u **)osc_mem_alloc(matchbuflen * sizeof(t_osc_msg_u*));
+	memset(ar, '\0', matchbuflen * sizeof(t_osc_msg_u *));
 	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
 	while(osc_bndl_it_u_hasNext(it)){
 		if(n >= matchbuflen){
-			//matches = osc_mem_resize(matches, (matchbuflen + 16) * sizeof(t_osc_msg_u *));
+			//t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
+			ar = osc_mem_resize(ar, (matchbuflen + 16) * sizeof(t_osc_msg_u*));
+			if(!ar){
+				return OSC_ERR_OUTOFMEM;
+			}
+			matchbuflen += 16;
+		}
+		t_osc_msg_u *current_message = osc_bndl_it_u_next(it);
+		int po, ao;
+		int r = osc_match(address, osc_message_u_getAddress(current_message), &po, &ao);
+		if(fullmatch){
+			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+				continue;
+			}
+		}else{
+			if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
+				continue;
+			}
+		}
+		//t_osc_msg_u *p = osc_array_get(ar, n++);
+		//osc_message_u_copy(&p, current_message);
+		ar[n++] = current_message;
+	}
+	osc_bndl_it_u_destroy(it);
+	*nmsgs = n;
+	if(n == 0){
+		osc_mem_free(ar);
+	}else{
+		*msgs = ar;
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_lookupAddress_copy(t_osc_bndl_u *bndl, const char *address, t_osc_msg_ar_u **osc_msg_u_array, int fullmatch)
+{
+	int matchbuflen = 16, n = 0;
+	t_osc_msg_ar_u *ar = osc_message_array_u_alloc(matchbuflen);
+	osc_array_clear(ar);
+	t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
+	while(osc_bndl_it_u_hasNext(it)){
+		if(n >= matchbuflen){
 			t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
 			if(e){
 				return e;
@@ -203,7 +241,6 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 				continue;
 			}
 		}
-		//osc_message_u_copy(matches + n++, current_message);
 		t_osc_msg_u *p = osc_array_get(ar, n++);
 		osc_message_u_deepCopy(&p, current_message);
 	}
@@ -213,7 +250,8 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 	return OSC_ERR_NONE;
 }
 
-static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, int remove_dups)
+static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *_msg, int remove_dups)
+/*
 {
 	if(!bndl || !msg){
 		return OSC_ERR_NONE;
@@ -251,6 +289,59 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
 	msg->next = NULL;
 	bndl->msgtail->next = msg;
 	bndl->msgtail = msg;
+	return OSC_ERR_NONE;
+}
+*/
+{
+	if(!bndl || !_msg){
+		return OSC_ERR_NONE;
+	}
+	t_osc_msg_u *msg = _msg;
+	t_osc_msg_u *lastmsg = msg;
+	int nmsgs = 0;
+	if(remove_dups){
+		while(msg){
+			char *address = osc_message_u_getAddress(msg);
+			if(address){
+				t_osc_msg_u *m = bndl->msghead;
+				while(m){
+					t_osc_msg_u *next = m->next;
+					if(!strcmp(address, osc_message_u_getAddress(m))){
+						osc_bundle_u_removeMsg(bndl, m);
+						osc_message_u_free(m);
+						bndl->msgcount--;
+					}
+					m = next;
+				}
+			}
+			lastmsg = msg;
+			msg = osc_message_u_next(msg);
+			nmsgs++;
+		}
+	}
+	msg = _msg;
+	bndl->msgcount += nmsgs;
+	if(!(bndl->msghead)){
+		bndl->msghead = msg;
+		if(msg == lastmsg){
+			bndl->msgtail = NULL;
+		}else{
+			bndl->msgtail = lastmsg;
+		}
+		msg->prev = lastmsg->next = NULL;
+		return OSC_ERR_NONE;
+	}
+	if(bndl->msghead && !(bndl->msgtail)){
+		bndl->msghead->next = msg;
+		msg->prev = bndl->msghead;
+		lastmsg->next = NULL;
+		bndl->msgtail = lastmsg;
+		return OSC_ERR_NONE;
+	}
+	msg->prev = bndl->msgtail;
+	lastmsg->next = NULL;
+	bndl->msgtail->next = msg;
+	bndl->msgtail = lastmsg;
 	return OSC_ERR_NONE;
 }
 
@@ -321,6 +412,29 @@ t_osc_err osc_bundle_u_addMsgList(t_osc_bndl_u *bndl, t_osc_msg_u *msgs)
 	bndl->msgcount = n;
 	bndl->msgtail = last;
 	return 0;
+}
+t_osc_err osc_bundle_u_addMsgArray(t_osc_bndl_u *bndl, t_osc_msg_ar_u *ar)
+{
+	if(!bndl){
+		return OSC_ERR_NOBUNDLE;
+	}
+	if(!ar){
+		return OSC_ERR_NONE;
+	}
+	int len = osc_message_array_u_getLen(ar);
+	if(len == 0){
+		return OSC_ERR_NONE;
+	}
+	int i;
+	for(i = 0; i < len; i++){
+		osc_bundle_u_addMsg(bndl, osc_message_array_u_get(ar, i));
+	}
+	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_bundle_u_addMsgListWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msglist)
+{
+	return osc_bundle_u_addMsg_impl(bndl, msglist, 1);
 }
 
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m)

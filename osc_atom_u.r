@@ -34,6 +34,7 @@ extern "C" {
 
 #include "osc_bundle_u.h"
 #include "osc_timetag.h"
+#include "osc_expr_ast_expr.h"
 
 #pragma pack(push)
 #pragma pack(4)
@@ -54,6 +55,7 @@ struct _osc_atom_u{
 		char *s;
 		t_osc_bndl_u *bndl;
 		t_osc_timetag t;
+		t_osc_expr_ast_expr *expr;
 		char *b;
 	} w;
 	int typetag;

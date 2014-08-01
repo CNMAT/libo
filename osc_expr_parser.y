@@ -37,15 +37,25 @@
 	//#include <Carbon.h>
 	//#include <CoreServices.h>
 	//#endif
-#include "osc_expr.h"
-#include "osc_expr_rec.h"
-#include "osc_expr_rec.r"
-#include "osc_expr_func.h"
+#include "osc_expr_builtin.h"
+#include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_funcall.h"
+#include "osc_expr_ast_function.h"
+#include "osc_expr_ast_unaryop.h"
+#include "osc_expr_ast_binaryop.h"
+#include "osc_expr_ast_value.h"
+#include "osc_expr_ast_arraysubscript.h"
+#include "osc_expr_ast_aseq.h"
+#include "osc_expr_ast_ternarycond.h"
+	//#include "osc_expr_ast_sugar.h"
+#include "osc_expr_ast_let.h"
+#include "osc_expr_ast_list.h"
 #include "osc_error.h"
 #include "osc_expr_parser.h"
 #include "osc_expr_scanner.h"
 #include "osc_util.h"
 #include "osc_atom_u.r"
+#include "osc_hashtab.h"
 
 	//#define OSC_EXPR_PARSER_DEBUG
 #ifdef OSC_EXPR_PARSER_DEBUG
@@ -55,9 +65,9 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
+extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf);
 #else
-int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started);
+int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf);
 #endif
 
 }
@@ -65,19 +75,26 @@ int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan
 #include "osc.h"
 #include "osc_mem.h"
 #include "osc_atom_u.h"
-#include "osc_expr.h"
+#include "osc_expr_ast_expr.h"
+#include "osc_expr_ast_value.h"
+
+#define OSC_EXPR_PARSER_ASSOC_LEFT -1
+#define OSC_EXPR_PARSER_ASSOC_NONE 0
+#define OSC_EXPR_PARSER_ASSOC_RIGHT 1
 
 #ifdef __cplusplus
-#define YY_DECL extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#define YY_DECL extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf)
 #else
-#define YY_DECL int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
+#define YY_DECL int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf)
 #endif
 	//t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f);
 #ifdef __cplusplus
 extern "C"{
 #endif
-t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f);
-t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
+//t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f);
+t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast);
+void osc_expr_parser_printlexenv(char *key, void *val, void *context);
+//t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
 #ifdef __cplusplus
 }
 #endif
@@ -85,148 +102,35 @@ t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f);
 
 %{
 
+	//#define YYDEBUG 1
+	//int yydebug = 1;
+
 // this is a dummy so that the compiler won't complain.  we pass the hard-coded
 // value of 1 to osc_expr_scanner_lex() inside of osc_expr_parser_lex() down below.
 int alloc_atom = 1;
 
-
-int osc_expr_parser_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started){
-	return osc_expr_scanner_lex(yylval_param, llocp, yyscanner, 1, buflen, buf, startcond, started);
+int osc_expr_parser_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf){
+	return osc_expr_scanner_lex(yylval_param, llocp, yyscanner, 1, buflen, buf);
 }
 
-/*
-static t_osc_atom_ar_u *osc_expr_parser_foldConstants_impl(t_osc_expr *expr, t_osc_expr_lexenv *lexenv)
-{
-	printf("%s: %s\n", __func__, osc_expr_rec_getName(osc_expr_getRec(expr)));
-	t_osc_expr *e = expr;
-	while(e){
-		t_osc_expr_arg *a = osc_expr_getArgs(e);
-		int eval = 1;
-		while(a){
-			int type = osc_expr_arg_getType(a);
-			switch(type){
-			case OSC_EXPR_ARG_TYPE_OSCADDRESS:
-				// we can't eval this expression, but we want to continue to see if we can 
-				// reduce any of the other args
-				printf("address\n");
-				eval = 0;
-				break;
-			case OSC_EXPR_ARG_TYPE_EXPR:
-				printf("expr\n");
-				{
-					t_osc_expr *ee = osc_expr_arg_getExpr(a);
-					t_osc_atom_ar_u *ar = osc_expr_parser_foldConstants_impl(ee,
-												 lexenv);
-					if(ar){
-						osc_expr_free(ee);
-						printf("reduced\n");
-						if(osc_atom_array_u_getLen(ar) == 1){
-							osc_expr_arg_setOSCAtom(a, osc_atom_array_u_get(ar, 0));
-						}else{
-							osc_expr_arg_setList(a, ar);
-						}
-					}
-				}
-			default:
-				printf("default\n");
-			}
-			a = osc_expr_arg_next(a);
-		}
-		if(eval > 0){
-			printf("eval = %d\n", eval);
-			t_osc_atom_ar_u *res = NULL;
-			int ret = osc_expr_eval(e, NULL, NULL, &res);
-			if(ret){
-				return NULL;
-			}else{
-				return res;
-			}
-		}else{
-			return NULL;
-		}
-		e = osc_expr_next(e);
-	}
-}
-
-static void osc_expr_parser_foldConstants(t_osc_expr *expr)
-{
-	osc_expr_parser_foldConstants_impl(expr, NULL);
-}
-*/
-
-t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f)
-{
-	//printf("parsing %s\n", ptr);
-	int len = strlen(ptr);
-	int alloc = 0;
-
-	// expressions really have to end with a semicolon, but it's nice to write single
-	// expressions without one (or to leave it off the last one), so we add one to the
-	// end of the string here just in case.
-	/*
-	if(ptr[len - 1] != ','){
-		char *tmp = osc_mem_alloc(len + 2);
-		memcpy(tmp, ptr, len);
-		tmp[len] = ',';
-		tmp[len + 1] = '\0';
-		ptr = tmp;
-		alloc = 1;
-		len++;
-	}
-	*/
-	yyscan_t scanner;
-	osc_expr_scanner_lex_init(&scanner);
-	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
-	osc_expr_scanner_set_out(NULL, scanner);
-	t_osc_expr *exprstack = NULL;
-	t_osc_expr *tmp_exprstack = NULL;
-	long buflen = 0;
-	char *buf = NULL;
-	int startcond = START_EXPNS;
-	int started = 0;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, NULL, scanner, ptr, &buflen, &buf, startcond, &started);
-	osc_expr_scanner__delete_buffer(buf_state, scanner);
-	osc_expr_scanner_lex_destroy(scanner);
-	if(tmp_exprstack){
-		if(exprstack){
-			osc_expr_appendExpr(exprstack, tmp_exprstack);
-		}else{
-			exprstack = tmp_exprstack;
-		}
-	}
-	//osc_expr_parser_foldConstants(exprstack);
-	*f = exprstack;
-	if(alloc){
-		osc_mem_free(ptr);
-	}
-	return ret;
-}
-
-t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f)
+t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast)
 {
 	yyscan_t scanner;
 	osc_expr_scanner_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_expr_scanner__scan_string(ptr, scanner);
 	osc_expr_scanner_set_out(NULL, scanner);
-	t_osc_expr *exprstack = NULL;
-	t_osc_expr *tmp_exprstack = NULL;
+	t_osc_expr_ast_expr *exprstack = NULL;
+	t_osc_hashtab *lexenv = osc_hashtab_new(0, NULL);
 	long buflen = 0;
 	char *buf = NULL;
-	int startcond = START_FUNCTION;
-	int started = 0;
-	t_osc_err ret = osc_expr_parser_parse(&exprstack, &tmp_exprstack, f, scanner, ptr, &buflen, &buf, startcond, &started);
-
+	t_osc_expr_ast_value *freevars = NULL;
+	t_osc_err ret = osc_expr_parser_parse(&exprstack, lexenv, &freevars, scanner, ptr, &buflen, &buf);
 	osc_expr_scanner__delete_buffer(buf_state, scanner);
 	osc_expr_scanner_lex_destroy(scanner);
+	osc_hashtab_destroy(lexenv);
+	*ast = exprstack;
 	return ret;
 }
-
-/*
-t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f)
-{
-	return osc_expr_parser_parseExpr(ptr, f);
-}
-*/
 
 void osc_expr_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
 {
@@ -296,57 +200,7 @@ void osc_expr_error(YYLTYPE *llocp,
 	}
 }
 
-int osc_expr_parser_checkArity(YYLTYPE *llocp, char *input_string, t_osc_expr_rec *r, t_osc_expr_arg *arglist)
-{
-	if(!r){
-		return 1;
-	}
-	/*
-	if(r->arity < 0){
-		// variable number of arguments
-		return 0;
-	}
-	*/
-	int i = 0;
-	t_osc_expr_arg *a = arglist;
-	while(a){
-		i++;
-		a = osc_expr_arg_next(a);
-	}
-	if(i == r->num_required_args){
-		return 0;
-	}
-	if(i < r->num_required_args){
-		osc_expr_error(llocp,
-			       input_string,
-			       OSC_ERR_EXPPARSE,
-			       "expected %d %s for function %s but found %d.",
-			       r->num_required_args,
-			       r->num_required_args == 1 ? "argument" : "arguments",
-			       r->name,
-			       i);
-		return 1;
-	}
-
-	// i is more than the num of required args.
- 	if(r->num_optional_args < 0){
-		return 0;
-	}
-	if(r->num_optional_args == 0 || (i - r->num_required_args) > r->num_optional_args){
-		osc_expr_error(llocp,
-			       input_string,
-			       OSC_ERR_EXPPARSE,
-			       "expected %d %s for function %s but found %d.",
-			       r->num_required_args + r->num_optional_args,
-			       (r->num_required_args + r->num_optional_args) == 1 ? "argument" : "arguments",
-			       r->name,
-			       i);
-		return 1;
-	}
-	return 0;
-}
-
- void yyerror(YYLTYPE *llocp, t_osc_expr **exprstack, t_osc_expr **tmp_exprstack, t_osc_expr_rec **rec, void *scanner, char *input_string, long *buflen, char **buf, int startcond, int *started, char const *e)
+void yyerror(YYLTYPE *llocp, t_osc_expr_ast_expr **exprstack, t_osc_hashtab *lexenv, t_osc_expr_ast_value **freevars, void *scanner, char *input_string, long *buflen, char **buf, char const *e)
 {
 	osc_expr_error(llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
@@ -373,147 +227,160 @@ void osc_expr_parser_reportInvalidLvalError(YYLTYPE *llocp,
 		       lvalue);
 }
 
-t_osc_expr *osc_expr_parser_reduce_PrefixFunction(YYLTYPE *llocp,
-						  char *input_string,
-						  char *function_name,
-						  t_osc_expr_arg *arglist);
-
-t_osc_expr *osc_expr_parser_reduce_InfixOperator(YYLTYPE *llocp,
-						char *input_string,
-						char *function_name,
-						t_osc_expr_arg *left,
-						t_osc_expr_arg *right)
+t_osc_expr_ast_expr *osc_expr_parser_reduceBinaryOp(YYLTYPE *llocp,
+						    char *input_string,
+						    t_osc_expr_ast_expr *left,
+						    char opcode,
+						    t_osc_expr_ast_expr *right)
 {
-	t_osc_expr_rec *r = osc_expr_lookupFunction(function_name);
+	t_osc_expr_oprec *r = osc_expr_builtin_lookupOperatorForOpcode(opcode);
 	if(!r){
-		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
 		return NULL;
 	}
-	t_osc_expr *e = osc_expr_alloc();
-	osc_expr_setRec(e, r);
-	osc_expr_prependArg(e, right);
-	osc_expr_prependArg(e, left);
-	return e;
+
+	// check types against entries in the vtab
+	/* this assumes that all operators are typed and that's not true for = and a few others
+	t_osc_expr_ast_expr *args[] = {left, right};
+	for(int i = 0; i < 2; i++){
+		printf("i = %d\n", i);
+		if(osc_expr_ast_expr_getNodetype(args[i]) == OSC_EXPR_AST_NODETYPE_VALUE &&
+		   osc_expr_ast_value_getValueType((t_osc_expr_ast_value *)args[i]) == OSC_EXPR_AST_VALUE_TYPE_LITERAL){
+			char tt = osc_atom_u_getTypetag(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)args[i]));
+			printf("checking typetag %c\n", tt);
+			t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunctionForOpcode(opcode);
+			printf("funcrec = %p\n", r);
+			if(!osc_expr_funcrec_getFuncForTypetag(r, tt)){
+				printf("type error %d\n", i);
+			}
+		}
+	}
+	*/
+	t_osc_expr_ast_expr *b = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(r, left, right);
+	return b;
 }
 
-t_osc_expr *osc_expr_parser_reduce_InfixAssignmentOperator(YYLTYPE *llocp,
+t_osc_expr_ast_expr *osc_expr_parser_reduceCompoundAssign(YYLTYPE *llocp,
 							  char *input_string,
-							  char *function_name,
-							  t_osc_expr_arg *left,
-							  t_osc_expr_arg *right)
+							  t_osc_expr_ast_expr *left,
+							  char compound_assign_opcode,
+							  t_osc_expr_ast_expr *right,
+							  char opcode)
 {
-	t_osc_expr *infix = osc_expr_parser_reduce_InfixOperator(llocp, input_string, function_name, left, right);
-	t_osc_expr_arg *assign_target = NULL;
-	osc_expr_arg_copy(&assign_target, left);
-	t_osc_expr_arg *assign_arg = osc_expr_arg_alloc();
-	osc_expr_arg_setExpr(assign_arg, infix);
-	osc_expr_arg_setNext(assign_target, assign_arg);
-	t_osc_expr *assign = osc_expr_parser_reduce_PrefixFunction(llocp, input_string, "assign", assign_target);
-	return assign;
+	/*
+	t_osc_expr_rec *r = osc_expr_func_opcodeToOpRec[(int)compound_assign_opcode];
+	if(!r){
+		// this should _never_ happen since this function is only called with a hard coded 
+		// opcode identified by the grammar
+		return NULL;
+	}
+	t_osc_expr_ast_binaryop *bo = osc_expr_ast_binaryop_alloc(r, left, right);
+	t_osc_expr_ast_funcall *fc = osc_expr_ast_binaryop_toFuncall(osc_expr_func_opcodeToOpRec[(int)opcode], left, right);
+	t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy(left), fc);
+	return (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)bo, (t_osc_expr_ast_expr *)assign);
+	*/
+	return NULL;
 }
 
-t_osc_expr *osc_expr_parser_reduce_PrefixFunction(YYLTYPE *llocp,
-						 char *input_string,
-						 char *function_name,
-						 t_osc_expr_arg *arglist)
+t_osc_expr_ast_expr *osc_expr_parser_reducePrefixFunction(YYLTYPE *llocp,
+							  char *input_string,
+							  t_osc_atom_u *function_token,
+							  t_osc_expr_ast_expr *arglist)
 {
-	t_osc_expr_rec *r = osc_expr_lookupFunction(function_name);
+	t_osc_expr_funcrec *r = osc_expr_builtin_lookupFunction(osc_atom_u_getStringPtr(function_token));
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocIdentifier(function_token);
+	/*
 	if(!r){
 		osc_expr_parser_reportUnknownFunctionError(llocp, input_string, function_name);
 		return NULL;
 	}
-	if(osc_expr_parser_checkArity(llocp, input_string, r, arglist)){
-		return NULL;
-	}
-	t_osc_expr *e = osc_expr_alloc();
-	osc_expr_setRec(e, r);
-	if(arglist){
-		osc_expr_setArg(e, arglist);
-	}
-	return e;
+	*/
+	return (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(r, v, arglist);
 }
 
-t_osc_expr *osc_expr_parser_reduce_PrefixUnaryOperator(YYLTYPE *llocp,
-						      char *input_string,
-						      char *oscaddress,
-						      char *op)
+void osc_expr_parser_printlexenv(char *key, void *val, void *context)
 {
-	char *ptr = oscaddress;
-	if(*ptr != '/'){
-		osc_expr_error(llocp,
-			       input_string,
-			       OSC_ERR_EXPPARSE,
-			       "\"%s\" is not a valid target for assignment\nexpected \"%s\" in \"%s%s\" to be an OSC address\n",
-			       oscaddress,
-			       oscaddress,
-			       op,
-			       oscaddress);
-		return NULL;
-	}
-	t_osc_expr_arg *arg = osc_expr_arg_alloc();
-	osc_expr_arg_setOSCAddress(arg, ptr);
-	t_osc_expr *pfu = osc_expr_parser_reduce_PrefixFunction(llocp, input_string, op, arg);
-
-	t_osc_expr_arg *assign_target = NULL;
-	osc_expr_arg_copy(&assign_target, arg);
-	t_osc_expr_arg *assign_arg = osc_expr_arg_alloc();
-	osc_expr_arg_setExpr(assign_arg, pfu);
-	osc_expr_arg_setNext(assign_target, assign_arg);
-	t_osc_expr *assign = osc_expr_parser_reduce_PrefixFunction(llocp, input_string, "assign", assign_target);
-	return assign;
+	printf("%s: %d\n", key, (int)val);
 }
 
-t_osc_expr *osc_expr_parser_reduce_PostfixUnaryOperator(YYLTYPE *llocp,
-						       char *input_string,
-						       char *oscaddress,
-						       char *op)
+void osc_expr_parser_changeCountForVarInLexEnv(t_osc_hashtab *lexenv, char *var, int incdec)
 {
-	t_osc_expr *incdec = osc_expr_parser_reduce_PrefixUnaryOperator(llocp, input_string, oscaddress, op);
-	if(!incdec){
-		return NULL;
+	int varlen = strlen(var);
+	void *count = osc_hashtab_lookup(lexenv, varlen, var);
+	if(count){
+		osc_hashtab_store(lexenv, varlen, var, (void *)(((int)count) + incdec));
+	}else{
+		if(incdec < 0){
+			printf("%s:%d: just tried to unbind a lexical var that doesn't exist!\n", __func__, __LINE__);
+		}else{
+			osc_hashtab_store(lexenv, varlen, var, (void *)1);
+		}
 	}
-	t_osc_expr_arg *arg1 = osc_expr_arg_alloc();
-	osc_expr_arg_setExpr(arg1, incdec);
-	char *oscaddress_copy = NULL;
-	osc_util_strdup(&oscaddress_copy, oscaddress);
-	t_osc_expr_arg *arg2 = osc_expr_arg_alloc();
-	osc_expr_arg_setOSCAddress(arg2, oscaddress_copy);
-	osc_expr_arg_setNext(arg2, arg1);
-	t_osc_expr *prog1 = osc_expr_parser_reduce_PrefixFunction(llocp, input_string, "prog1", arg2);
-	return prog1;
 }
 
-t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
-							 char *input_string,
-							 t_osc_atom_u *address_to_check,
-							 t_osc_expr_arg *arg_if_null)
+void osc_expr_parser_addVarToLexEnv(t_osc_hashtab *lexenv, char *var)
 {
-	char *address = NULL;
-	osc_atom_u_getString(address_to_check, 0, &address);
-	if(*address != '/'){
-		osc_expr_error(llocp,
-			       input_string,
-			       OSC_ERR_EXPPARSE,
-			       "\"%s\" is not a valid target for assignment\nexpected \"%s\" to be an OSC address\n",
-			       address,
-			       address);
-		osc_mem_free(address);
-		return NULL;
-	}
-	t_osc_expr *expr_def = osc_expr_alloc();
-	osc_expr_setRec(expr_def, osc_expr_lookupFunction("bound"));
-	t_osc_expr_arg *def_arg = osc_expr_arg_alloc();
+	osc_expr_parser_changeCountForVarInLexEnv(lexenv, var, 1);
+}
 
-	osc_expr_arg_setOSCAddress(def_arg, address);
-	osc_expr_setArg(expr_def, def_arg);
-	t_osc_expr_arg *arg1 = osc_expr_arg_alloc();
-	osc_expr_arg_setExpr(arg1, expr_def);
-	t_osc_expr_arg *arg2 = NULL;
-	osc_expr_arg_copy(&arg2, def_arg);
-	t_osc_expr_arg *arg3 = arg_if_null;
-	osc_expr_arg_setNext(arg1, arg2);
-	osc_expr_arg_setNext(arg2, arg3);
-	return osc_expr_parser_reduce_PrefixFunction(llocp, input_string, "if", arg1);
+void osc_expr_parser_removeVarFromLexEnv(t_osc_hashtab *lexenv, char *var)
+{
+	osc_expr_parser_changeCountForVarInLexEnv(lexenv, var, -1);
+}
+
+int osc_expr_parser_varIsBoundInLexEnv(t_osc_hashtab *lexenv, char *var)
+{
+	int varlen = strlen(var);
+	void *count = osc_hashtab_lookup(lexenv, varlen, var);
+	return (int)count;
+}
+
+t_osc_expr_ast_expr *osc_expr_parser_bindFreeVars(t_osc_expr_ast_value **freevars, t_osc_expr_ast_expr *expr)
+{
+	t_osc_expr_ast_expr *ret = NULL;
+	if(*freevars){
+		switch(osc_expr_ast_expr_getNodetype(expr)){
+		case OSC_EXPR_AST_NODETYPE_BINARYOP:
+			{
+				t_osc_expr_oprec *r = osc_expr_ast_binaryop_getOpRec(expr);
+				if(r == osc_expr_builtin_op_assign){
+					t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs(expr)));
+					osc_expr_ast_binaryop_setRightArg(expr, f);
+					t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs(expr);
+					osc_expr_ast_expr_setNext(lval, f);
+					//osc_expr_ast_funcall_setArgs(expr, f);
+					ret = expr;
+				}else{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+					ret = f;
+				}
+			}
+			break;
+		case OSC_EXPR_AST_NODETYPE_FUNCALL:
+			{
+				t_osc_expr_funcrec *r = osc_expr_ast_funcall_getFuncRec(expr);
+				if(r == osc_expr_builtin_func_assign){
+					t_osc_expr_ast_expr *f = osc_expr_ast_function_alloc(*freevars, osc_expr_ast_expr_next(osc_expr_ast_funcall_getArgs(expr)));
+					t_osc_expr_ast_expr *lval = osc_expr_ast_funcall_getArgs(expr);
+					osc_expr_ast_expr_setNext(lval, f);
+					ret = expr;
+				}else{
+					t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+					ret = f;
+				}
+			}
+			break;
+		default:
+			{
+				t_osc_expr_ast_expr *f = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc(*freevars, expr);
+				ret = f;
+			}
+			break;
+		}
+		*freevars = NULL;
+	}else{
+		ret = expr;
+	}
+	return ret;
 }
 
 %}
@@ -523,56 +390,54 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %require "2.4.2"
 
 // replace this bullshit with a struct...
-%parse-param{t_osc_expr **exprstack}
-%parse-param{t_osc_expr **tmp_exprstack}
-%parse-param{t_osc_expr_rec **rec}
+%parse-param{t_osc_expr_ast_expr **exprstack}
+%parse-param{t_osc_hashtab *lexenv}
+%parse-param{t_osc_expr_ast_value **freevars}
 %parse-param{void *scanner}
 %parse-param{char *input_string}
 %parse-param{long *buflen}
 %parse-param{char **buf}
-%parse-param{int startcond}
-%parse-param{int *started}
 
 %lex-param{void *scanner}
 %lex-param{int alloc_atom}
 %lex-param{long *buflen}
 %lex-param{char **buf}
-%lex-param{int startcond}
-%lex-param{int *started}
 
 %union {
+	t_osc_expr_ast_expr *expr;
 	t_osc_atom_u *atom;
-	t_osc_expr *expr;
-	t_osc_expr_rec *func;
-	t_osc_expr_arg *arg;
+	//t_osc_msg_u *msg;
+	//t_osc_bndl_u *bndl;
 }
 
-%type <expr>expr 
-%type <func>function
-%type <arg>arg args 
-%type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter 
-%nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
+%precedence lowest
+
+%type <expr>expr expns function funcall oscaddress literal aseq unaryop binaryop ternarycond exprlist_zero_or_more exprlist_one_or_more exprlist_more_than_one value lambdavar lambdalist let letvar letvarlist arraysubscript list message messages bundle
+%token <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_IDENTIFIER
+%nonassoc OSC_EXPR_LAMBDA OSC_EXPR_LET
 
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
 
+%precedence oscaddress_prec 
+
 // level 16
-%right '=' OSC_EXPR_PLUSEQ OSC_EXPR_MINUSEQ OSC_EXPR_MULTEQ OSC_EXPR_DIVEQ OSC_EXPR_MODEQ OSC_EXPR_POWEQ
+%right '=' OSC_EXPR_ADDASSIGN 8 OSC_EXPR_SUBASSIGN 9 OSC_EXPR_MULASSIGN 10 OSC_EXPR_DIVASSIGN 11 OSC_EXPR_MODASSIGN 12 OSC_EXPR_POWASSIGN 13
 
 // level 15
 %right OSC_EXPR_TERNARY_COND '?' ':'
 
 // level 14
-%left '|' OSC_EXPR_OROR
+%left '|' OSC_EXPR_OR 124
 
 // level 13
-%left '&' OSC_EXPR_ANDAND
+%left '&' OSC_EXPR_AND 38
 
 // level 9
-%left OSC_EXPR_EQ OSC_EXPR_NEQ
+%left OSC_EXPR_EQ 1 OSC_EXPR_NEQ 2
 
 // level 8
-%left '<' '>' OSC_EXPR_LTE OSC_EXPR_GTE 
+%left '<' '>' OSC_EXPR_LTE 3 OSC_EXPR_GTE 4
 
 // level 6
 %left '+' '-'
@@ -582,814 +447,480 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(YYLTYPE *llocp,
 %left '^' 
 
 // level 3
-%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!' OSC_EXPR_DBLQMARK OSC_EXPR_DBLQMARKEQ
+%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC  '!' OSC_EXPR_NULLCOALESCE 5 OSC_EXPR_NULLCOALESCEASSIGN 14 
 
 // level 2
-%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
+%left OSC_EXPR_INC 6 OSC_EXPR_DEC 7 OSC_EXPR_FUNCALL '(' ')' '[' ']' '.'
 
-%token START_EXPNS START_FUNCTION
-%start start
+//%precedence highest
+
+%start expns
 
 %%
 
-start: START_EXPNS expns
-       | START_FUNCTION function;
-
-expns:  {
-		if(*tmp_exprstack){
-			if(*exprstack){
-				osc_expr_appendExpr(*exprstack, *tmp_exprstack);
-			}else{
-				*exprstack = *tmp_exprstack;
-			}
-			*tmp_exprstack = NULL;
-		}
- 	}
-//| expns ',' {;}// can this really ever happen?
-//| expns expr ',' {
-	| expr {
-		if(*tmp_exprstack){
-			osc_expr_appendExpr(*tmp_exprstack, $1);
-		}else{
-			*tmp_exprstack = $1;
-		}
-        }
-	| expns ',' expr  {
-		if(*tmp_exprstack){
-			osc_expr_appendExpr(*tmp_exprstack, $3);
-		}else{
-			*tmp_exprstack = $3;
-		}
- 	}
-//| expns ','
-;
-/*
-number: OSC_EXPR_NUM
-	| '-' OSC_EXPR_NUM {
-		osc_atom_u_negate($2);
-		$$ = $2;
- 	}
-;
-*/
-args:   arg 
-	| args ',' arg {
-		osc_expr_arg_append($$, $3);
- 	}
-;
-
-arg:    OSC_EXPR_NUM {
-		$$ = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom($$, $1);
- 	}
+literal:    
+	OSC_EXPR_NUM {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
+	}
 	| OSC_EXPR_STRING {
-		$$ = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom($$, $1);
- 	}
-	| OSC_EXPR_OSCADDRESS {
-		$$ = osc_expr_arg_alloc();
-		char *st = osc_atom_u_getStringPtr($1);
-		int len = strlen(st) + 1;
-		char *buf = osc_mem_alloc(len);
-		memcpy(buf, st, len);
-		osc_expr_arg_setOSCAddress($$, buf);
-		osc_atom_u_free($1);
-  	}
-	| expr {
-		t_osc_expr *e = $1;
-		//t_osc_expr_arg *a = osc_expr_getArgs(e);
-		$$ = osc_expr_arg_alloc();
-		/*
-		int eval = 1;
-		while(a){
-			int type = osc_expr_arg_getType(a);
-			if(type == OSC_EXPR_ARG_TYPE_OSCADDRESS ||
-			   type == OSC_EXPR_ARG_TYPE_EXPR ||
-			   type == OSC_EXPR_ARG_TYPE_FUNCTION){
-				eval = 0;
-				break;
-			}
-			a = osc_expr_arg_next(a);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral($1);
+	}
+	| bundle
+	| function
+	| list
+;
+
+list:
+/*
+	'[' expr ']' {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
+	}
+	| */'[' exprlist_zero_or_more ']'  {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($2);
+		osc_expr_ast_expr_setBrackets($$, '[', ']');
+	}
+	| '[' aseq ']'  {// %prec oscaddress_prec //{
+		$$ = $2;
+		osc_expr_ast_expr_setBrackets($$, '[', ']');
+	}
+;
+
+arraysubscript:
+/*
+	expr '[' expr ']' %prec OSC_EXPR_FUNCALL{
+		printf("expr\n");
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $3);
+	}
+	| expr '[' '[' expr ']' ']' %prec OSC_EXPR_FUNCALL{
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+	}
+	| */expr '[' '[' exprlist_one_or_more ']' ']' %prec OSC_EXPR_FUNCALL{
+		t_osc_expr_ast_expr *tmp = $4;
+		if(osc_expr_ast_expr_next(tmp)){
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
 		}
-		if(eval){
-			t_osc_atom_ar_u *res = NULL;
-			int ret = osc_expr_eval(e, NULL, NULL, &res);
-			if(ret){
-				osc_expr_arg_setExpr($$, e);
-			}else{
-				// assume that this is a special function like value() or bound() that
-				// needs an OSC bundle to return a value
-				osc_expr_arg_setList($$, res);
-			}
-		}else{
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
+	}
+	| expr '[' '[' aseq ']' ']' {
+		/*
+		if(osc_expr_ast_expr_next($4)){
+			$4 = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
 		*/
-			osc_expr_arg_setExpr($$, e);
-			//}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, $4);
+	}
+;
+
+// these are the only allowable lvalues 
+oscaddress:
+	OSC_EXPR_OSCADDRESS %prec oscaddress_prec{
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
+	}
+	| oscaddress '.' OSC_EXPR_OSCADDRESS {
+		//| OSC_EXPR_OSCADDRESS '.' oscaddress {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '.', (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($3));
+		//$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1), '.', $3);
   	}
-	| function {
-		$$ = osc_expr_arg_alloc();
-		osc_expr_arg_setFunction($$, $1);
+	| oscaddress '[' '[' exprlist_one_or_more ']' ']' {
+		t_osc_expr_ast_expr *tmp = $4;
+		if(osc_expr_ast_expr_next($4)){
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
+	}
+	| oscaddress '[' '[' aseq ']' ']' {
+		t_osc_expr_ast_expr *tmp = $4;
+		if(osc_expr_ast_expr_next($4)){
+			tmp = (t_osc_expr_ast_expr *)osc_expr_ast_list_alloc($4);
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_arraysubscript_alloc($1, tmp);
+	}
+;
+
+value:
+	literal
+	| oscaddress %prec oscaddress_prec
+	| OSC_EXPR_IDENTIFIER %prec oscaddress_prec {
+		char *str = osc_atom_u_getStringPtr($1);
+		if(!osc_expr_parser_varIsBoundInLexEnv(lexenv, str) &&
+		   !osc_expr_builtin_lookupFunction(str) &&
+		   !osc_expr_builtin_lookupOperator(str)){
+			//printf("undefined variable %s\n", osc_atom_u_getStringPtr($1));
+			//return 1;
+			int unique = 1;
+			t_osc_expr_ast_value *_fv = *freevars;
+			while(_fv){
+				if(!strcmp(osc_atom_u_getStringPtr(osc_expr_ast_value_getValue(_fv)), str)){
+					unique = 0;
+				}
+				_fv = osc_expr_ast_expr_next((t_osc_expr_ast_expr *)_fv);
+			}
+			if(unique){
+				t_osc_atom_u *a = NULL;
+				osc_atom_u_copy(&a, $1);
+				t_osc_expr_ast_value *fv = osc_expr_ast_value_allocIdentifier(a);
+				if(*freevars){
+					osc_expr_ast_expr_append((t_osc_expr_ast_expr *)*freevars, (t_osc_expr_ast_expr *)fv);
+				}else{
+					*freevars = fv;
+				}
+			}
+		}
+		// make lambda if this is a function or operator
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	}
+//| list
+//| arraysubscript
+;
+
+aseq:
+	expr ':' expr {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_aseq_alloc($1, $3, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocLiteral(osc_atom_u_allocWithInt32(1)));
+		osc_expr_ast_aseq_setStepIsImplicit((t_osc_expr_ast_aseq *)$$, 1);
+	}
+	| expr ':' expr ':' expr {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_aseq_alloc($1, $5, $3);
 	}
 ;
 
 function: 
-//OSC_EXPR_LAMBDA '(' parameters ')' '{' expns '}' {
-	OSC_EXPR_LAMBDA '(' '[' parameters ']' ',' args ')' {
-		int n = 0;
-		t_osc_atom_u *a = $4;
-		while(a){
-			n++;
-			a = a->next;
+	//OSC_EXPR_LAMBDA '(' lambdalist ')' '{' expns '}' {
+	OSC_EXPR_LAMBDA '(' '[' lambdalist ']' ',' expns ')'{
+		//osc_hashtab_foreach(lexenv, osc_expr_parser_printlexenv, NULL);
+		t_osc_expr_ast_expr *v = $4;
+		while(v){
+			osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)v)));
+			v = osc_expr_ast_expr_next(v);
 		}
-		char *params[n];
-		a = $4;
-		for(int i = n - 1; i >= 0; i--){
-			char *st = osc_atom_u_getStringPtr(a);
-			int len = strlen(st) + 1;
-			params[i] = (char *)osc_mem_alloc(len);
-			strncpy(params[i], st, len);
-			t_osc_atom_u *killme = a;
-			a = a->next;
-			osc_atom_u_free(killme);
-		}
-		t_osc_expr_rec *func = osc_expr_rec_alloc();
-		osc_expr_rec_setName(func, "lambda");
-		osc_expr_rec_setRequiredArgs(func, n, params, NULL);
-		for(int i = 0; i < n; i++){
-			if(params[i]){
-				osc_mem_free(params[i]);
-			}
-		}
-		/*
-		t_osc_expr *e = *tmp_exprstack;
-		while(e){
-			e = osc_expr_next(e);
-		}
-		*/
-		osc_expr_rec_setFunction(func, osc_expr_lambda);
-		t_osc_expr_arg *aaa = $7;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
-		int i = 1;
-		while(aaa){
-			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
-				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
-				return 1;
-			}
-			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
-			osc_expr_appendExpr(exprlist, e);
-			osc_expr_arg_setExpr(aaa, NULL);
-			t_osc_expr_arg *old = aaa;
-			aaa = osc_expr_arg_next(aaa);
-			osc_expr_arg_free(old);
-			i++;
-		}
-		osc_expr_rec_setExtra(func, exprlist);
-		//osc_expr_rec_setExtra(func, *tmp_exprstack);
-		$$ = func;
-		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
-		}else if(startcond == START_FUNCTION){
-			*rec = func;
-		}
-// go through and make sure the parameters are unique
-/*
-		t_osc_expr_rec *r = osc_expr_lookupFunction("lambda");
-		t_osc_expr *e = osc_expr_alloc();
-		osc_expr_setRec(e, r);
-		t_osc_expr *expns_copy = NULL;
-		t_osc_expr *ee = $<expr>6;
-		while(ee){
-			t_osc_expr *copy = osc_expr_copy(ee);
-			if(expns_copy){
-				osc_expr_appendExpr(expns_copy, copy);
-			}else{
-				expns_copy = copy;
-			}
-			ee = osc_expr_next(ee);
-		}
-		t_osc_expr_arg *expns = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(expns, expns_copy);
-		osc_expr_arg_append($3, expns);
-		osc_expr_setArg(e, $3);
-*/
-//osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
-//$$ = e;
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$4, $7);
 	}
-	| OSC_EXPR_LAMBDA '(' parameter ',' args ')' {
-		int n = 0;
-		t_osc_atom_u *a = $3;
-		while(a){
-			n++;
-			a = a->next;
-		}
-		char *params[n];
-		a = $3;
-		for(int i = n - 1; i >= 0; i--){
-			char *st = osc_atom_u_getStringPtr(a);
-			int len = strlen(st) + 1;
-			params[i] = (char *)osc_mem_alloc(len);
-			strncpy(params[i], st, len);
-			t_osc_atom_u *killme = a;
-			a = a->next;
-			osc_atom_u_free(killme);
-		}
-		t_osc_expr_rec *func = osc_expr_rec_alloc();
-		osc_expr_rec_setName(func, "lambda");
-		osc_expr_rec_setRequiredArgs(func, n, params, NULL);
-		for(int i = 0; i < n; i++){
-			if(params[i]){
-				osc_mem_free(params[i]);
-			}
-		}
-		/*
-		t_osc_expr *e = *tmp_exprstack;
-		while(e){
-			e = osc_expr_next(e);
-		}
-		*/
-		osc_expr_rec_setFunction(func, osc_expr_lambda);
-		t_osc_expr_arg *aaa = $5;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
-		int i = 1;
-		while(aaa){
-			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
-				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
-				return 1;
-			}
-			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
-			osc_expr_appendExpr(exprlist, e);
-			osc_expr_arg_setExpr(aaa, NULL);
-			t_osc_expr_arg *old = aaa;
-			aaa = osc_expr_arg_next(aaa);
-			osc_expr_arg_free(old);
-			i++;
-		}
-		osc_expr_rec_setExtra(func, exprlist);
-		//osc_expr_rec_setExtra(func, *tmp_exprstack);
-		$$ = func;
-		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
-		}else if(startcond == START_FUNCTION){
-			*rec = func;
-		}
-// go through and make sure the parameters are unique
-/*
-		t_osc_expr_rec *r = osc_expr_lookupFunction("lambda");
-		t_osc_expr *e = osc_expr_alloc();
-		osc_expr_setRec(e, r);
-		t_osc_expr *expns_copy = NULL;
-		t_osc_expr *ee = $<expr>6;
-		while(ee){
-			t_osc_expr *copy = osc_expr_copy(ee);
-			if(expns_copy){
-				osc_expr_appendExpr(expns_copy, copy);
-			}else{
-				expns_copy = copy;
-			}
-			ee = osc_expr_next(ee);
-		}
-		t_osc_expr_arg *expns = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(expns, expns_copy);
-		osc_expr_arg_append($3, expns);
-		osc_expr_setArg(e, $3);
-*/
-//osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
-//$$ = e;
-	}
-	| OSC_EXPR_LAMBDA '(' '[' ']' ',' args ')' {
-		int n = 0;
-		t_osc_expr_rec *func = osc_expr_rec_alloc();
-		osc_expr_rec_setName(func, "lambda");
-		osc_expr_rec_setRequiredArgs(func, 0, NULL, NULL);
-		/*
-		t_osc_expr *e = *tmp_exprstack;
-		while(e){
-			e = osc_expr_next(e);
-		}
-		*/
-		osc_expr_rec_setFunction(func, osc_expr_lambda);
-		t_osc_expr_arg *aaa = $6;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
-		int i = 1;
-		while(aaa){
-			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
-				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
-				return 1;
-			}
-			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
-			osc_expr_appendExpr(exprlist, e);
-			osc_expr_arg_setExpr(aaa, NULL);
-			t_osc_expr_arg *old = aaa;
-			aaa = osc_expr_arg_next(aaa);
-			osc_expr_arg_free(old);
-			i++;
-		}
-		osc_expr_rec_setExtra(func, exprlist);
-		//osc_expr_rec_setExtra(func, *tmp_exprstack);
-		$$ = func;
-		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
-		}else if(startcond == START_FUNCTION){
-			*rec = func;
-		}
-// go through and make sure the parameters are unique
-/*
-		t_osc_expr_rec *r = osc_expr_lookupFunction("lambda");
-		t_osc_expr *e = osc_expr_alloc();
-		osc_expr_setRec(e, r);
-		t_osc_expr *expns_copy = NULL;
-		t_osc_expr *ee = $<expr>6;
-		while(ee){
-			t_osc_expr *copy = osc_expr_copy(ee);
-			if(expns_copy){
-				osc_expr_appendExpr(expns_copy, copy);
-			}else{
-				expns_copy = copy;
-			}
-			ee = osc_expr_next(ee);
-		}
-		t_osc_expr_arg *expns = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(expns, expns_copy);
-		osc_expr_arg_append($3, expns);
-		osc_expr_setArg(e, $3);
-*/
-//osc_expr_parser_bindParameters(&yylloc, input_string, e, $3, expns_copy);
-//$$ = e;
+	| OSC_EXPR_LAMBDA '(' lambdavar ',' expns ')'{
+		//osc_hashtab_foreach(lexenv, osc_expr_parser_printlexenv, NULL);
+		osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_function_alloc((t_osc_expr_ast_value *)$3, $5);
 	}
 ;
 
-parameters: parameter
-	| parameters ',' parameter {
-		$3->next = $1;
-		$$ = $3;
+lambdavar:
+	{$$ = NULL;}
+	| OSC_EXPR_IDENTIFIER {
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($1));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1);
+	}
+;
+
+lambdalist: 
+	lambdavar
+	| lambdalist ',' lambdavar {
+		//osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)$3)));
+		osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)$3);
+		$$ = $1;
+	}
+;
+
+let:
+//OSC_EXPR_LET '(' letvarlist ')' '{' expns '}' {
+	OSC_EXPR_LET '(' '[' letvarlist ']' ',' expns ')' {
+		t_osc_expr_ast_expr *v = $4;
+		while(v){
+			t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)v;
+			osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg(b))));
+			v = osc_expr_ast_expr_next(v);
+		}
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_let_alloc($4, $7);
+	}
+	| OSC_EXPR_LET '(' letvar ',' expns ')' {
+		t_osc_expr_ast_expr *v = $3;
+		t_osc_expr_ast_binaryop *b = (t_osc_expr_ast_binaryop *)v;
+		osc_expr_parser_removeVarFromLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg(b))));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_let_alloc($3, $5);
+	}
+;
+
+letvar:
+	{$$ = NULL;}
+	| OSC_EXPR_IDENTIFIER '=' expr {
+		osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr($1));
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($1), $3);
+  	}
+;
+
+letvarlist:
+	letvar
+	//| letvarlist ',' OSC_EXPR_IDENTIFIER '=' expr {
+	| letvarlist ',' letvar {
+		//osc_expr_parser_addVarToLexEnv(lexenv, osc_atom_u_getStringPtr(osc_expr_ast_value_getValue((t_osc_expr_ast_value *)osc_expr_ast_binaryop_getLeftArg((t_osc_expr_ast_binaryop *)$3))));
+		//osc_expr_ast_expr_append($1, (t_osc_expr_ast_expr *)osc_expr_ast_binaryop_alloc(osc_expr_builtin_op_assign, (t_osc_expr_ast_expr *)osc_expr_ast_value_allocIdentifier($3), $5));
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
+  	}
+;
+	
+
+message:
+OSC_EXPR_OSCADDRESS {
+	//$$ = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr($1));
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_message, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("message")), 1, (t_osc_expr_ast_expr *)v);
+	//if(alloc_atom){
+	//osc_mem_free($1);
+	//}
+}
+| OSC_EXPR_OSCADDRESS ':' expns {
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocOSCAddress($1);
+	osc_expr_ast_expr_append((t_osc_expr_ast_expr *)v, $3);
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_message, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("message")), (t_osc_expr_ast_expr *)v);
+  }
+;
+
+messages:
+	message
+	| messages ',' message {
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
+	}
+;
+
+bundle:
+'{' '}' { 
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	t_osc_atom_u *a = osc_atom_u_allocWithBndl_u(b, 1);
+	t_osc_expr_ast_value *v = osc_expr_ast_value_allocLiteral(a);
+	$$ = (t_osc_expr_ast_expr *)v;
+	//$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_alloc(osc_expr_builtin_func_bundle, 0);
+}
+| '{' messages '}' {
+	$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(osc_expr_builtin_func_bundle, osc_expr_ast_value_allocIdentifier(osc_atom_u_allocWithString("bundle")), $2);
+  }
+;
+
+unaryop:
+// prefix not
+	'!' expr {
+		/*
+		t_osc_expr_ast_unaryop *parsed = osc_expr_ast_unaryop_allocLeft(&osc_expr_rec_op_not, $2);
+		t_osc_expr_ast_funcall *func = osc_expr_ast_funcall_alloc(&osc_expr_rec_not, 1, $2);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)func);
+		*/
+		$$ = NULL;
+	}
+// prefix inc/dec
+	| OSC_EXPR_INC oscaddress %prec OSC_EXPR_PREFIX_INC {
+		/*
+		t_osc_expr_ast_unaryop *parsed = osc_expr_ast_unaryop_allocLeft(&osc_expr_rec_op_add1, (t_osc_expr_ast_expr *)$2);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_add1, 1, (t_osc_expr_ast_expr *)$2);
+		t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$2), fc);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)assign);
+		*/
+		$$ = NULL;
+	}
+	| OSC_EXPR_DEC oscaddress %prec OSC_EXPR_PREFIX_DEC {
+		/*
+		t_osc_expr_ast_unaryop *parsed = osc_expr_ast_unaryop_allocLeft(&osc_expr_rec_op_sub1, (t_osc_expr_ast_expr *)$2);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_sub1, 1, (t_osc_expr_ast_expr *)$2);
+		t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$2), fc);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)assign);
+		*/
+		$$ = NULL;
+	}
+// postfix inc/dec
+	| oscaddress OSC_EXPR_INC {
+		/*
+		t_osc_expr_ast_unaryop *parsed = osc_expr_ast_unaryop_allocRight(&osc_expr_rec_op_add1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_add1, 1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), fc);
+		t_osc_expr_ast_funcall *prog1 = osc_expr_ast_funcall_alloc(&osc_expr_rec_prog1, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), assign);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)prog1);
+		*/
+		$$ = NULL;
+	}
+	| oscaddress OSC_EXPR_DEC {
+		/*
+		t_osc_expr_ast_unaryop *parsed = osc_expr_ast_unaryop_allocRight(&osc_expr_rec_op_sub1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_sub1, 1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), fc);
+		t_osc_expr_ast_funcall *prog1 = osc_expr_ast_funcall_alloc(&osc_expr_rec_prog1, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), assign);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)parsed, (t_osc_expr_ast_expr *)prog1);
+		*/
+		$$ = NULL;
+	}
+;
+
+binaryop:
+	// Infix operators
+	expr '=' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '=', $3);
+ 	}
+	| expr '+' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '+', $3);
+ 	}
+	| expr '-' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '-', $3);
+ 	}
+	| expr '*' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '*', $3);
+ 	}
+	| expr '/' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '/', $3);
+ 	}
+	| expr '%' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '%', $3);
+ 	}
+	| expr '^' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '^', $3);
+ 	}
+	| expr OSC_EXPR_EQ expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_EQ, $3);
+ 	}
+	| expr OSC_EXPR_NEQ expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_NEQ, $3);
+ 	}
+	| expr '<' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '<', $3);
+ 	}
+	| expr OSC_EXPR_LTE expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_LTE, $3);
+ 	}
+	| expr '>' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '>', $3);
+ 	}
+	| expr OSC_EXPR_GTE expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_GTE, $3);
+ 	}
+	| expr OSC_EXPR_AND expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_AND, $3);
+ 	}
+	| expr OSC_EXPR_OR expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_OR, $3);
+ 	}
+	| oscaddress OSC_EXPR_NULLCOALESCE expr {
+		/*
+		t_osc_expr_ast_binaryop *bo = osc_expr_ast_binaryop_alloc(osc_expr_func_opcodeToOpRec[(int)OSC_EXPR_NULLCOALESCE], (t_osc_expr_ast_expr *)$1, $3);
+		t_osc_expr_ast_funcall *bound = osc_expr_ast_funcall_alloc(&osc_expr_rec_bound, 1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, (t_osc_expr_ast_expr *)bound, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), $3);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)bo, (t_osc_expr_ast_expr *)fc);
+		*/
+		$$ = NULL;
+	}
+	| oscaddress OSC_EXPR_ADDASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_ADDASSIGN, $3, '+');
+ 	}
+	| oscaddress OSC_EXPR_SUBASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_SUBASSIGN, $3, '-');
+ 	}
+	| oscaddress OSC_EXPR_MULASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_MULASSIGN, $3, '*');
+ 	}
+	| oscaddress OSC_EXPR_DIVASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_DIVASSIGN, $3, '/');
+ 	}
+	| oscaddress OSC_EXPR_MODASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_MODASSIGN, $3, '%');
+ 	}
+	| oscaddress OSC_EXPR_POWASSIGN expr {
+		$$ = osc_expr_parser_reduceCompoundAssign(&yylloc, input_string, $1, OSC_EXPR_POWASSIGN, $3, '^');
+ 	}
+ 	| oscaddress OSC_EXPR_NULLCOALESCEASSIGN expr {
+		/*
+		t_osc_expr_ast_binaryop *bo = osc_expr_ast_binaryop_alloc(osc_expr_func_opcodeToOpRec[(int)OSC_EXPR_NULLCOALESCEASSIGN], (t_osc_expr_ast_expr *)$1, $3);
+		t_osc_expr_ast_funcall *bound = osc_expr_ast_funcall_alloc(&osc_expr_rec_bound, 1, (t_osc_expr_ast_expr *)$1);
+		t_osc_expr_ast_funcall *fc = osc_expr_ast_funcall_alloc(&osc_expr_rec_if, 3, (t_osc_expr_ast_expr *)bound, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), $3);
+		t_osc_expr_ast_funcall *assign = osc_expr_ast_funcall_alloc(&osc_expr_rec_assign, 2, osc_expr_ast_expr_copy((t_osc_expr_ast_expr *)$1), fc);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_sugar_alloc((t_osc_expr_ast_expr *)bo, (t_osc_expr_ast_expr *)assign);
+		*/
+		$$ = NULL;
  	}
 ;
 
-parameter: OSC_EXPR_STRING {
-		if(osc_atom_u_getTypetag($1) == 's'){
-			char *st = osc_atom_u_getStringPtr($1);
-			if(st){
-				if(*st == '/' && st[1] != '\0'){
-					// this is an OSC address
-					//error
-				}else{
-					$$ = $1;
-				}
-			}else{
-				//error
-			}
-		}else{
-			//error
-		}
+ternarycond:
+	expr '?' expr ':' expr %prec OSC_EXPR_TERNARY_COND {
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_ternarycond_alloc($1, $3, $5);
 	}
+;
+
+funcall:
+// prefix function call
+	OSC_EXPR_IDENTIFIER '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
+		t_osc_expr_ast_funcall *fc = osc_expr_parser_reducePrefixFunction(&yylloc,
+										  input_string,
+										  $1,
+										  $3);
+		$$ = (t_osc_expr_ast_expr *)fc;
+  	}
+	| OSC_EXPR_OSCADDRESS '(' exprlist_zero_or_more ')' %prec OSC_EXPR_FUNCALL {
+		t_osc_expr_ast_expr *v = (t_osc_expr_ast_expr *)osc_expr_ast_value_allocOSCAddress($1);
+		//osc_expr_ast_expr_append(v, $3);
+		//$$ = osc_expr_parser_reducePrefixFunction(&yylloc,
+		//input_string,
+		//"apply",
+		//v);
+		$$ = (t_osc_expr_ast_expr *)osc_expr_ast_funcall_allocWithList(NULL, v, $3);
+        }
 ;
 
 expr:
-	'(' expr ')' {
+/*
+	';' {
+		//osc_expr_ast_expr_setSemicolonTerminated($1, 1);
+		//$$ = $1;
+		if(*exprstack){
+			osc_expr_ast_expr_setSemicolonTerminated(*exprstack, 1);
+		}else{
+			*exprstack = osc_expr_ast_expr_alloc();
+		}
+	}
+*/
+	value
+	  //| function
+	| funcall
+	| unaryop 
+	| binaryop
+	| ternarycond
+	| '(' expr ')' {
 		$$ = $2;
+		osc_expr_ast_expr_setBrackets($$, '(', ')');
   	}
-// prefix function call
-	| OSC_EXPR_STRING '(' args ')' %prec OSC_EXPR_FUNC_CALL {
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc,
-								     input_string,
-								     osc_atom_u_getStringPtr($1),
-								     $3);
-		if(!e){
-			osc_atom_u_free($1);
-			return 1;
-		}
-		$$ = e;
-		osc_atom_u_free($1);
-  	}
-	| OSC_EXPR_STRING '(' ')' %prec OSC_EXPR_FUNC_CALL {
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, osc_atom_u_getStringPtr($1), NULL);
-		if(!e){
-			osc_atom_u_free($1);
-			return 1;
-		}
-		$$ = e;
-		osc_atom_u_free($1);
-  	}
-	| OSC_EXPR_QUOTED_EXPR {
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(arg, $1);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "quote", arg);
-	}
-	| OSC_EXPR_OSCADDRESS '(' args ')' %prec OSC_EXPR_FUNC_CALL {
-		t_osc_expr *e = osc_expr_alloc();
-		t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
-		osc_expr_setRec(e, r);
-		t_osc_expr_arg *a = osc_expr_arg_alloc();
-		char *address = NULL;
-		osc_atom_u_getString($1, 0, &address);
-		osc_expr_arg_setOSCAddress(a, address);
-		osc_expr_arg_append(a, $3);
-		osc_expr_setArg(e, a);
-		$$ = e;
-	}
-	| OSC_EXPR_OSCADDRESS '(' ')' %prec OSC_EXPR_FUNC_CALL {
-		t_osc_expr *e = osc_expr_alloc();
-		t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
-		osc_expr_setRec(e, r);
-		t_osc_expr_arg *a = osc_expr_arg_alloc();
-		char *address = NULL;
-		osc_atom_u_getString($1, 0, &address);
-		osc_expr_arg_setOSCAddress(a, address);
-		osc_expr_setArg(e, a);
-		$$ = e;
-	}
-// Infix operators
-	| arg '+' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "+", $1, $3);
- 	}
-	| arg '-' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "-", $1, $3);
- 	}
-	| arg '*' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "*", $1, $3);
- 	}
-	| arg '/' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "/", $1, $3);
- 	}
-	| arg '%' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "%", $1, $3);
- 	}
-	| arg '^' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "^", $1, $3);
- 	}
-	| arg OSC_EXPR_EQ arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "==", $1, $3);
- 	}
-	| arg OSC_EXPR_NEQ arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "!=", $1, $3);
- 	}
-	| arg '<' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "<", $1, $3);
- 	}
-	| arg OSC_EXPR_LTE arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "<=", $1, $3);
- 	}
-	| arg '>' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ">", $1, $3);
- 	}
-	| arg OSC_EXPR_GTE arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ">=", $1, $3);
- 	}
-	| arg '&' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "&", $1, $3);
- 	}
-	| arg OSC_EXPR_ANDAND arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "&&", $1, $3);
- 	}
-	| arg '|' arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "|", $1, $3);
- 	}
-	| arg OSC_EXPR_OROR arg {
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "||", $1, $3);
- 	}
-	| arg OSC_EXPR_PLUSEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "+", $1, $3);
- 	}
-	| arg OSC_EXPR_MINUSEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "-", $1, $3);
- 	}
-	| arg OSC_EXPR_MULTEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "*", $1, $3);
- 	}
-	| arg OSC_EXPR_DIVEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "/", $1, $3);
- 	}
-	| arg OSC_EXPR_MODEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "%", $1, $3);
- 	}
-	| arg OSC_EXPR_POWEQ arg {
-		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(&yylloc, input_string, "^", $1, $3);
- 	}
-	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS {
-		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a1, ptr);
-		ptr = NULL;
-		osc_atom_u_getString($3, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a2, ptr);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ".", a1, a2);
-		osc_mem_free($1);
-		osc_mem_free($3);
-	}
-	/* | OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg CLOSE_DBL_BRKTS '.' OSC_EXPR_OSCADDRESS{ */
-	/* 	printf("here\n"); */
-	/* } */
+//| bundle 
+	| let
+	  //| list %prec lowest
+	| arraysubscript %prec lowest
+;
 
-// prefix not
-	| '!' arg {
-		$$ = osc_expr_alloc();
-		osc_expr_setRec($$, osc_expr_lookupFunction("!"));
-		osc_expr_setArg($$, $2);
-	}
-	| '-' arg {
-		$$ = osc_expr_alloc();
-		osc_expr_setRec($$, osc_expr_lookupFunction("-"));
-		t_osc_expr_arg *zero = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(zero, osc_atom_u_allocWithInt32(0));
-		osc_expr_arg_setNext(zero, $2);
-		osc_expr_setArg($$, zero);
-	}
-// prefix inc/dec
-	| OSC_EXPR_INC OSC_EXPR_OSCADDRESS %prec OSC_EXPR_PREFIX_INC {
-		char *copy = NULL;
-		osc_atom_u_getString($2, 0, &copy);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixUnaryOperator(&yylloc, input_string, copy, "plus1");
-		if(!e){
-			osc_mem_free(copy);
-			osc_atom_u_free($2);
-			return 1;
-		}
-		osc_atom_u_free($2);
-		$$ = e;
-	}
-	| OSC_EXPR_DEC OSC_EXPR_OSCADDRESS %prec OSC_EXPR_PREFIX_DEC {
-		char *copy = NULL;
-		osc_atom_u_getString($2, 0, &copy);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixUnaryOperator(&yylloc, input_string, copy, "minus1");
-		if(!e){
-			osc_mem_free(copy);
-			osc_atom_u_free($2);
-			return 1;
-		}
-		osc_atom_u_free($2);
-		$$ = e;
-	}
-// postfix inc/dec
-	| OSC_EXPR_OSCADDRESS OSC_EXPR_INC {
-		char *copy = NULL;
-		osc_atom_u_getString($1, 0, &copy);
-		t_osc_expr *e = osc_expr_parser_reduce_PostfixUnaryOperator(&yylloc, input_string, copy, "plus1");
-		if(!e){
-			osc_mem_free(copy);
-			osc_atom_u_free($1);
-			return 1;
-		}
-		osc_atom_u_free($1);
-		$$ = e;
-	}
-	| OSC_EXPR_OSCADDRESS OSC_EXPR_DEC {
-		char *copy = NULL;
-		osc_atom_u_getString($1, 0, &copy);
-		t_osc_expr *e = osc_expr_parser_reduce_PostfixUnaryOperator(&yylloc, input_string, copy, "minus1");
-		if(!e){
-			osc_mem_free(copy);
-			osc_atom_u_free($1);
-			return 1;
-		}
-		osc_atom_u_free($1);
-		$$ = e;
-	}
-// assignment
-/*
-| OSC_EXPR_OSCADDRESS '=' {
-	printf("just an address...\n");
-  }
-*/
+exprlist_zero_or_more:
+	{ $$ = NULL;}
+	| exprlist_one_or_more
+;
 
-	| OSC_EXPR_OSCADDRESS '=' arg {
-		// basic assignment 
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "assign", arg, $3);
-		osc_atom_u_free($1);
- 	}
-	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS '=' arg{
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		t_osc_expr_arg *indexes = $3;
-		if(osc_expr_arg_next($3)){
-			// /foo[[1, 2, 3]] = ...
-			t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", $3);
-			indexes = NULL;
-			indexes = osc_expr_arg_alloc();
-			osc_expr_arg_setExpr(indexes, e);
-		}
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $6);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
-	}
-	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS '=' arg{
-		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a1, ptr);
-		ptr = NULL;
-		osc_atom_u_getString($3, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a2, ptr);
-		osc_expr_arg_append(a1, a2);
-		osc_expr_arg_append(a1, $5);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assigntobundlemember", a1);
-		osc_mem_free($1);
-		osc_mem_free($3);
-	}
-	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg ':' arg CLOSE_DBL_BRKTS '=' arg{
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
+exprlist_one_or_more:
+	expr //%prec lowest
+	| exprlist_more_than_one
+;
 
-		osc_expr_arg_append($3, $5);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $3);
-		t_osc_expr_arg *indexes = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(indexes, e);
-
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $8);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
+exprlist_more_than_one:
+	expr ',' expr {
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
 	}
-	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg ':' arg ':' arg CLOSE_DBL_BRKTS '=' arg{
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-
-		osc_expr_arg_append($3, $7);
-		osc_expr_arg_append($3, $5);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $3);
-		t_osc_expr_arg *indexes = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(indexes, e);
-
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_append(arg, indexes);
-		osc_expr_arg_append(arg, $10);
-		//$$ = osc_expr_parser_infix("=", arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "assign_to_index", arg);
-		osc_atom_u_free($1);
-	}
-/*
-	| OSC_EXPR_OSCADDRESS '=' arg {
-		// basic assignment 
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		if(*ptr != '/'){
-			osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "assign", arg, $3);
-		osc_atom_u_free($1);
- 	}
-*/
-/*
-	| OSC_EXPR_STRING '=' '[' args ']' {
-		// assign a list of stuff
-		char *ptr = osc_atom_u_getStringPtr($1);
-		if(*ptr != '/'){
-			yyerror(exprstack, scanner, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
-			return 1;
-		}
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		$$ = osc_expr_parser_infix("=", arg, $4);
-		osc_expr_setAssignResultToAddress($$, 1);
- 	}
-*/
-// shorthand constructions
-/*
-	| '[' arg ':' arg ']' %prec OSC_EXPR_FUNC_CALL {
-		// matlab-style range
-		osc_expr_arg_append($2, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $2);
- 	}
-	| '[' arg ':' arg ':' arg ']' %prec OSC_EXPR_FUNC_CALL {
-		// matlab-style range
-		osc_expr_arg_append($2, $6);
-		osc_expr_arg_append($2, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "aseq", $2);
- 	}
-*/
-	| arg '?' arg ':' arg %prec OSC_EXPR_TERNARY_COND {
-		// ternary conditional
-		osc_expr_arg_append($1, $3);
-		osc_expr_arg_append($1, $5);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "if", $1);
-  	}
-	| OSC_EXPR_OSCADDRESS OSC_EXPR_DBLQMARK arg {
-		// null coalescing operator from C#.  
-		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
-		$$ = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
-		osc_atom_u_free($1); // the above function will copy that
-	}
-	| OSC_EXPR_OSCADDRESS OSC_EXPR_DBLQMARKEQ arg {
-		// null coalescing operator from C#.  
-		// /foo ?? 10 means /foo if /foo is in the bundle, otherwise 10
-		t_osc_expr *if_expr = osc_expr_parser_reduce_NullCoalescingOperator(&yylloc, input_string, $1, $3);
-		if(!if_expr){
-			return 1;
-		}
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		t_osc_expr_arg *arg2 = osc_expr_arg_alloc();
-		osc_expr_arg_setExpr(arg2, if_expr);
-		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, "=", arg, arg2);
-		osc_atom_u_free($1);
-	}
-	| '[' args ']' %prec OSC_EXPR_FUNC_CALL {
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", $2);
-	}
-	| '['  ']' %prec OSC_EXPR_FUNC_CALL {
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "list", NULL);
-	}
-// array lookup
-	| arg OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS {
-		osc_expr_arg_setNext($1, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "nth", $1);
-	}
-	| OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS args CLOSE_DBL_BRKTS {
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, ptr);
-		osc_expr_arg_setNext(arg, $3);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "nth", arg);
-		osc_atom_u_free($1);
-	}
-// shorthand apply
-	| '(' function ',' args ')' {
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setFunction(arg, $2);
-		osc_expr_arg_append(arg, $4);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "apply", arg);
-	}
-// shorthand value()
-	| '`' OSC_EXPR_STRING '`' {
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAtom(arg, $2);
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
-	}
-	| '`' OSC_EXPR_OSCADDRESS '`' {
-		t_osc_expr_arg *arg = osc_expr_arg_alloc();
-		osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr($2));
-		$$ = osc_expr_parser_reduce_PrefixFunction(&yylloc, input_string, "value", arg);
-	}
-// invalid constructs that result in errors
-	| OSC_EXPR_STRING OSC_EXPR_INC '=' arg {
-		char buf[strlen(osc_atom_u_getStringPtr($1)) + 3];
-		sprintf(buf, "%s++", osc_atom_u_getStringPtr($1));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		return 1;
-	}
-	| OSC_EXPR_STRING OSC_EXPR_DEC '=' arg {
-		char buf[strlen(osc_atom_u_getStringPtr($1)) + 3];
-		sprintf(buf, "%s--", osc_atom_u_getStringPtr($1));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		return 1;
-	}
-	| OSC_EXPR_INC OSC_EXPR_STRING '=' arg %prec OSC_EXPR_PREFIX_INC {
-		char buf[strlen(osc_atom_u_getStringPtr($2)) + 3];
-		sprintf(buf, "++%s", osc_atom_u_getStringPtr($2));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		return 1;
-	}
-	| OSC_EXPR_DEC OSC_EXPR_STRING '=' arg %prec OSC_EXPR_PREFIX_DEC {
-		char buf[strlen(osc_atom_u_getStringPtr($2)) + 3];
-		sprintf(buf, "--%s", osc_atom_u_getStringPtr($2));
-		osc_expr_parser_reportInvalidLvalError(&yylloc, input_string, buf);
-		return 1;
+	| exprlist_more_than_one ',' expr {//%prec lowest {
+		osc_expr_ast_expr_append($1, $3);
+		$$ = $1;
 	}
 ;
+
+expns: 
+	expr ';' {
+		$$ = osc_expr_parser_bindFreeVars(freevars, $1);
+		*exprstack = $$;
+	}
+	| expr %prec lowest {
+		$$ = osc_expr_parser_bindFreeVars(freevars, $1);
+		*exprstack = $$;
+	}
+	| expns expr %prec lowest{
+		$$ = osc_expr_parser_bindFreeVars(freevars, $2);
+		osc_expr_ast_expr_append($1, $$);
+		*exprstack = $1;
+		$$ = $1;
+ 	}
+;
+

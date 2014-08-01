@@ -66,7 +66,6 @@ static uint32_t osc_hash(int len, char *key){
 		}
 		hash &= ~x;
 	}
-
 	return hash;
 #elif defined __DJBHASH__
 	OSC_HASHTYPE hash = 5381;

@@ -31,10 +31,26 @@ extern "C" {
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
 
+// define the least upper bound for a number of type classes
+#define OSC_TYPETAG_CLASS_NUMERIC 'd'
+#define OSC_TYPETAG_CLASS_FLOAT 'd'
+#define OSC_TYPETAG_CLASS_INTEGER 'h'
+#define OSC_TYPETAG_CLASS_BOOLEAN 'O'
+
+typedef struct _osc_typetag_type t_osc_typetag_type;
+char osc_typetag_findLUB(char t1, char t2);
+char osc_typetag_isSubtype(char t1, char t2);
+char *osc_typetag_name(char typetag);
+void osc_typetag_formatTypeLattice_dot(void);
+
+//////////////////////////////////////////////////
+// old
+//////////////////////////////////////////////////
+
 enum{
 	OSC_TYPES_NULL = 0,
-	OSC_TYPES_TRUE,
 	OSC_TYPES_FALSE,
+	OSC_TYPES_TRUE,
 	OSC_TYPES_INT8,
 	OSC_TYPES_UINT8,
 	OSC_TYPES_INT16,
@@ -45,6 +61,7 @@ enum{
 	OSC_TYPES_UINT64,
 	OSC_TYPES_FLOAT32,
 	OSC_TYPES_FLOAT64,
+	OSC_TYPES_TIMETAG,
 	OSC_TYPES_STRING
 };
 
@@ -56,7 +73,7 @@ enum{
 
 char *osc_typetag_str(int8_t tt);
 int osc_typetag_compare(char tt1, char tt2);
-char osc_typetag_getLargestType(int argc, t_osc_atom_array_u **argv);
+char osc_typetag_getLargestType(int argc, t_osc_atom_u **argv);
 
 #ifdef __cplusplus
 }

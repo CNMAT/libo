@@ -33,6 +33,8 @@ extern "C" {
 
 #include "osc_expr.h"
 
+#pragma pack(push)
+#pragma pack(4)
 
 /** \struct t_osc_expr_rec
     A record that associates a function name (string) with a function pointer.
@@ -50,7 +52,27 @@ struct _osc_expr_rec{
 	char *docstring;
 	t_osc_expr_funcptr func;//int (*func)(t_osc_expr*, int, t_osc_atom_ar_u**, t_osc_atom_ar_u**); /**< Function pointer */
 	void *extra; /**< Extra field that can contain anything. */
+	uint8_t opcode;
 };
+
+// struct _osc_expr_rec
+// {
+// char *name; /**< Name of the function as a C string. */
+// int input_arity;
+// char **param_names;
+// char *param_types;
+// int output_arity; /**< All will be set to 1---this is here just in case we want to support this in the future. */
+// char **output_names; /**< Plural for possible future support of multiple return values. */
+// char *output_types; /**< Plural for possible future support of multiple return values. */
+// char *docstring;
+// t_osc_expr_funcptr func;
+// unsigned int *scalar_expansion_args;
+// uint32_t scalar_expansion_flags;
+// unsigned int *type_promotion_args;
+// uint32_t type_promotion_flags;
+// };
+#pragma pack(pop)
+
 
 #ifdef _cplusplus
 }

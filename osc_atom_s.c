@@ -33,6 +33,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_atom_s.r"
 #include "osc_atom_u.h"
 #include "osc_strfmt.h"
+#include "osc_expr_ast_expr.h"
 
 t_osc_atom_s *osc_atom_s_alloc(char typetag, char *ptr)
 {
@@ -621,7 +622,7 @@ t_osc_err osc_atom_s_getBndl(t_osc_bndl_s **b, t_osc_atom_s *a)
 	if(!a){
 		return OSC_ERR_INVAL;
 	}
-	if(a->typetag != OSC_BUNDLE_TYPETAG){
+	if(a->typetag != OSC_BUNDLE_TYPETAG && a->typetag != OSC_EXPR_TYPETAG){
 		return OSC_ERR_BADTYPETAG;
 	}
 	if(!(a->data)){
@@ -649,6 +650,11 @@ t_osc_err osc_atom_s_getBndlCopy(t_osc_bndl_s **b, t_osc_atom_s *a)
 	memcpy(ptr, osc_bundle_s_getPtr(*b), len);
 	osc_bundle_s_setPtr(*b, ptr);
 	return OSC_ERR_NONE;
+}
+
+t_osc_err osc_atom_s_getExpr(t_osc_bndl_s **b, t_osc_atom_s *a)
+{
+	return osc_atom_s_getBndl(b, a);
 }
 
 t_osc_timetag osc_atom_s_getTimetag(t_osc_atom_s *a)
@@ -996,6 +1002,19 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 	case 'N':
 		osc_atom_u_setNil(atom_u);
 		break;
+	case OSC_EXPR_TYPETAG:
+		{
+			char bndl[osc_bundle_s_getStructSize()];
+			t_osc_bndl_s *bs = (t_osc_bndl_s *)bndl;
+			osc_atom_s_getExpr(&bs, a);
+			t_osc_bndl_u *bu = NULL;
+			osc_bundle_s_deserialize(osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs), &bu);
+			if(bu){
+				osc_atom_u_setExpr(atom_u, osc_expr_ast_expr_fromBndl(bu), 1);
+				osc_bundle_u_free(bu);
+			}
+		}
+		break;
 	case OSC_BUNDLE_TYPETAG:
 		{
 			char bndl[osc_bundle_s_getStructSize()];
@@ -1097,6 +1116,19 @@ long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
 			return osc_bundle_s_formatNestedBndl(NULL, 0, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_s_getData(a));
+		}else if(tt == OSC_EXPR_TYPETAG){
+			char *b = osc_atom_s_getData(a);
+			long l = ntoh32(*((int32_t *)b));
+			char *ptr = b + 4;
+			t_osc_msg_ar_s *ar = NULL;
+			osc_bundle_s_lookupAddress(l, ptr, "/text", &ar, 1);
+			if(ar){
+				t_osc_msg_s *m = osc_message_array_s_get(ar, 0);
+				char *str = osc_message_s_getData(m);
+				osc_message_array_s_free(ar);
+				return strlen(str) + 2; // surrounding backticks
+			}
+			return 0;
 		}else{
 			return osc_atom_s_getStringLen(a);
 		}
@@ -1106,6 +1138,25 @@ long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
 			return osc_bundle_s_formatNestedBndl(buf, n, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_s_getData(a));
+		}else if(tt == OSC_EXPR_TYPETAG){
+			char *b = osc_atom_s_getData(a);
+			long l = ntoh32(*((int32_t *)b));
+			char *ptr = b + 4;
+			t_osc_msg_ar_s *ar = NULL;
+			osc_bundle_s_lookupAddress(l, ptr, "/text", &ar, 1);
+			if(ar){
+				t_osc_msg_s *m = osc_message_array_s_get(ar, 0);
+				char *str = osc_message_s_getData(m);
+				int slen = strlen(str);
+				char *ptr = buf;
+				*ptr++ = '`';
+				strncpy(ptr, str, slen);
+				ptr += slen;
+				*ptr = '`';
+				osc_message_array_s_free(ar);
+				return slen + 2;
+			}
+			return 0;
 		}else{
 			return osc_atom_s_getString(a, n, &buf);
 		}

@@ -1,4 +1,4 @@
-	/*
+/*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
 University of California, Berkeley.  Copyright (c) 2009-ll, The Regents of
 the University of California (Regents). 
@@ -33,6 +33,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_mem.h"
 #include "osc_byteorder.h"
 #include "osc_util.h"
+#include "osc_expr_ast_expr.h"
 
 t_osc_msg_u *osc_message_u_alloc()
 {
@@ -237,6 +238,22 @@ void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom)
 		}
 	}
 	*atom = a;
+}
+
+t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m)
+{
+	if(m){
+		return m->next;
+	}else{
+		return NULL;
+	}
+}
+
+void osc_message_u_setNext(t_osc_msg_u *m, t_osc_msg_u *next)
+{
+	if(m){
+		m->next = next;
+	}
 }
 
 t_osc_err osc_message_u_appendAtom(t_osc_msg_u *m, t_osc_atom_u *a)
@@ -482,10 +499,18 @@ t_osc_atom_u *osc_message_u_appendBndl_s(t_osc_msg_u *m, long len, char *bndl)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b)
+t_osc_atom_u *osc_message_u_appendBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
+	osc_message_u_appendAtom(m, a);
+	return a;
+}
+
+t_osc_atom_u *osc_message_u_appendExpr(t_osc_msg_u *m, t_osc_expr_ast_expr *b, int alloc)
+{
+	t_osc_atom_u *a = osc_atom_u_alloc();
+	osc_atom_u_setExpr(a, b, alloc);
 	osc_message_u_appendAtom(m, a);
 	return a;
 }
@@ -651,10 +676,10 @@ t_osc_atom_u *osc_message_u_prependBndl_s(t_osc_msg_u *m, long len, char *bndl)
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b)
+t_osc_atom_u *osc_message_u_prependBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
 	osc_message_u_prependAtom(m, a);
 	return a;
 }
@@ -820,11 +845,12 @@ t_osc_atom_u *osc_message_u_insertBndl_s(t_osc_msg_u *m, long len, char *bndl, i
 	return a;
 }
 
-t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos)
+t_osc_atom_u *osc_message_u_insertBndl_u(t_osc_msg_u *m, t_osc_bndl_u *b, int pos, int alloc)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
-	osc_atom_u_setBndl_u(a, b);
+	osc_atom_u_setBndl_u(a, b, alloc);
 	osc_message_u_insertAtom(m, a, pos);
+	osc_atom_u_setShouldFreePtr(a, alloc);
 	return a;
 }
 
@@ -875,7 +901,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			return OSC_ERR_NONE;
 		}else{
 			t_osc_msg_ar_u *ar = NULL;
-			osc_bundle_u_lookupAddress(dest, a1, &ar, 1);
+			osc_bundle_u_lookupAddress_copy(dest, a1, &ar, 1);
 			t_osc_msg_u *m = NULL;
 			t_osc_bndl_u *b = NULL;
 			osc_message_u_deepCopy(&m, osc_message_array_u_get(ar, 0));
@@ -927,7 +953,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			osc_bundle_u_serialize(b, &len, &b_s);
 			if(b_s){
 */
-				osc_message_u_appendBndl_u(m, b);
+			osc_message_u_appendBndl_u(m, b, 1);
 				osc_bundle_u_addMsgWithoutDups(dest, m);
 //osc_mem_free(b_s);
 //}
@@ -962,7 +988,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			osc_bundle_u_serialize(b, &len, &b_s);
 			if(b_s){
 			*/
-				osc_message_u_appendBndl_u(m, b);
+			osc_message_u_appendBndl_u(m, b, 1);
 				osc_bundle_u_addMsgWithoutDups(dest, m);
 				//osc_mem_free(b_s);
 				//}
@@ -1107,7 +1133,7 @@ t_osc_array *osc_message_array_u_alloc(long len)
 	return ar;
 }
 
-void osc_message_array_u_free(t_osc_msg_ar_u *ar)
+void osc_message_array_u_deepFree(t_osc_msg_ar_u *ar)
 {
 	if(ar){
 		int i;
@@ -1121,6 +1147,13 @@ void osc_message_array_u_free(t_osc_msg_ar_u *ar)
 				}
 			}
 		}
+		osc_array_free((t_osc_array *)ar);
+	}
+}
+
+void osc_message_array_u_free(t_osc_msg_ar_u *ar)
+{
+	if(ar){
 		osc_array_free((t_osc_array *)ar);
 	}
 }
@@ -1163,11 +1196,47 @@ t_osc_msg_u *osc_message_u_allocWithAddress(char *address)
 	return m;
 }
 
+t_osc_msg_u *osc_message_u_allocWithAtom(char *address, t_osc_atom_u *a)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendAtom(m, a);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithUInt8(char *address, uint8_t i)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendUInt8(m, i);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithInt32(char *address, int32_t i)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendInt32(m, i);
+	}
+	return m;
+}
+
 t_osc_msg_u *osc_message_u_allocWithFloat(char *address, float f)
 {
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_appendFloat(m, f);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithBool(char *address, int b)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendBool(m, b);
 	}
 	return m;
 }
@@ -1195,6 +1264,24 @@ t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_atom_ar_u *ar)
 	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
 	if(m){
 		osc_message_u_setArgArrayCopy(m, ar);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithBndl_u(char *address, t_osc_bndl_u *b, int alloc)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendBndl_u(m, b, alloc);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithExpr(char *address, t_osc_expr_ast_expr *e)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendExpr(m, e, 0);
 	}
 	return m;
 }

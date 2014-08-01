@@ -29,6 +29,9 @@
 #include "osc_parser.h"
 #include "osc_mem.h"
 #include "osc_timetag.h"
+#include "osc_expr_ast_expr.h"
+
+extern t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr_ast_expr **ast);
 
 int osc_scanner_wrap(yyscan_t scanner){
 	return 1;
