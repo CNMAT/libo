@@ -1490,15 +1490,6 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 	}
 }
 
-t_osc_atom_u *osc_atom_u_allocWithString(char *string)
-{
-	t_osc_atom_u *a = osc_atom_u_alloc();
-	if(a){
-		osc_atom_u_setString(a, string);
-	}
-	return a;
-}
-
 t_osc_atom_u *osc_atom_u_allocWithDouble(double f)
 {
 	t_osc_atom_u *a = osc_atom_u_alloc();
@@ -1549,15 +1540,6 @@ t_osc_atom_u *osc_atom_u_allocWithBndl_u(t_osc_bndl_u *b, int alloc)
 	t_osc_atom_u *a = osc_atom_u_alloc();
 	if(a){
 		osc_atom_u_setBndl_u(a, b, 1);
-	}
-	return a;
-}
-
-t_osc_atom_u *osc_atom_u_allocWithBndl(t_osc_bndl_u *b)
-{
-	t_osc_atom_u *a = osc_atom_u_alloc();
-	if(a){
-		osc_atom_u_setBndl_u(a, b);
 	}
 	return a;
 }

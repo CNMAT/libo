@@ -131,15 +131,6 @@ t_osc_err osc_message_u_deepCopy(t_osc_msg_u **dest, t_osc_msg_u *src)
 	return OSC_ERR_NONE;
 }
 
-t_osc_msg_u *osc_message_u_next(t_osc_msg_u *m)
-{
-	if(m){
-		return m->next;
-	}else{
-		return NULL;
-	}
-}
-
 uint32_t osc_message_u_getSize(t_osc_msg_u *m)
 {
 	if(!m){

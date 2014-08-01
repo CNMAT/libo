@@ -566,7 +566,6 @@ t_osc_atom_u *osc_atom_u_allocWithDouble(double f);
 t_osc_atom_u *osc_atom_u_allocWithFloat(float f);
 t_osc_atom_u *osc_atom_u_allocWithInt32(int32_t i);
 t_osc_atom_u *osc_atom_u_allocWithTimetag(t_osc_timetag t);
-t_osc_atom_u *osc_atom_u_allocWithBndl(t_osc_bndl_u *b);
 
 void osc_atom_u_printf(t_osc_atom_u *a);
 

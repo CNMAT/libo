@@ -182,7 +182,7 @@ subbundle:
 		t_osc_bndl_u *b = osc_bundle_u_alloc();
 		t_osc_msg_u *m = $2;
 		osc_bundle_u_addMsgList(b, m);
-		$$ = osc_atom_u_allocWithBndl(b);
+		$$ = osc_atom_u_allocWithBndl_u(b, 1);
 	}
 ;
 

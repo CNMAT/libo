@@ -353,6 +353,7 @@ OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, H, Double, UInt64, uint64_t);
 OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, powf, f, Double, Float, float);
 OSC_EXPR_BUILTIN_BINARY_CFUNC(pow, pow, d, Double, Double, double);
 
+/*
 int osc_expr_builtin_and_T(t_osc_atom_u *lhs, t_osc_atom_u *rhs, t_osc_atom_u *res)
 {
 	osc_atom_u_setBool(res, osc_atom_u_getInt32(lhs) && osc_atom_u_getInt32(rhs));
@@ -374,6 +375,7 @@ int osc_expr_builtin_or_F(t_osc_atom_u *lhs, t_osc_atom_u *rhs, t_osc_atom_u *re
 {
 	return osc_expr_builtin_or_T(lhs, rhs, res);
 }
+*/
 
 //////////////////////////////////////////////////
 // constants
@@ -532,8 +534,8 @@ OSC_EXPR_BUILTIN_DEFOP(*, '*', mul, NULL, OSC_EXPR_BUILTIN_MUL_VTAB, _a, _b, _y,
 OSC_EXPR_BUILTIN_DEFOP(/, '/', div, NULL, OSC_EXPR_BUILTIN_DIV_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the quotient of its arguments");
 OSC_EXPR_BUILTIN_DEFOP(%, '%', mod, NULL, OSC_EXPR_BUILTIN_MOD_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 5, "Returns the remainder of _a divided by _b");
 OSC_EXPR_BUILTIN_DEFOP(^, '^', pow, NULL, OSC_EXPR_BUILTIN_POW_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 4, "Returns _a raised to the power of _b");
-OSC_EXPR_BUILTIN_DEFOP(&, OSC_EXPR_AND, and, NULL, OSC_EXPR_BUILTIN_AND_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 13, "Returns true if _a and _b are true, false otherwise");
-OSC_EXPR_BUILTIN_DEFOP(|, OSC_EXPR_OR, or, NULL, OSC_EXPR_BUILTIN_OR_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 14, "Returns true if either _a or _b are true, false otherwise");
+//OSC_EXPR_BUILTIN_DEFOP(&, OSC_EXPR_AND, and, NULL, OSC_EXPR_BUILTIN_AND_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 13, "Returns true if _a and _b are true, false otherwise");
+//OSC_EXPR_BUILTIN_DEFOP(|, OSC_EXPR_OR, or, NULL, OSC_EXPR_BUILTIN_OR_VTAB, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 14, "Returns true if either _a or _b are true, false otherwise");
 //OSC_EXPR_BUILTIN_DEFOP(., '.', lookup, lookup, NULL, _a, _b, _y, OSC_EXPR_PARSER_ASSOC_LEFT, 2, "Returns the value bound to _b in a subbundle associated with _a");
 
 static t_osc_expr_oprec _osc_expr_builtin_op_assign = {
@@ -716,8 +718,8 @@ static t_osc_expr_funcrec *osc_expr_builtin_fsymtab[] = {
 	&_osc_expr_builtin_func_div,
 	&_osc_expr_builtin_func_mod,
 	&_osc_expr_builtin_func_pow,
-	&_osc_expr_builtin_func_and,
-	&_osc_expr_builtin_func_or,
+	//&_osc_expr_builtin_func_and,
+	//&_osc_expr_builtin_func_or,
 	&_osc_expr_builtin_func_lookup,
  	&_osc_expr_builtin_func_apply,
 	&_osc_expr_builtin_func_map,
@@ -761,8 +763,8 @@ static t_osc_expr_oprec *osc_expr_builtin_osymtab[] = {
 	&_osc_expr_builtin_op_div,
 	&_osc_expr_builtin_op_mod,
 	&_osc_expr_builtin_op_pow,
-	&_osc_expr_builtin_op_and,
-	&_osc_expr_builtin_op_or,
+	//&_osc_expr_builtin_op_and,
+	//&_osc_expr_builtin_op_or,
 	&_osc_expr_builtin_op_lookup,
 };
 
@@ -785,8 +787,8 @@ static t_osc_expr_oprec *osc_expr_builtin_opcodeToOpRec[128] = {
 	NULL, //&osc_expr_builtin_op_modassign,
 	NULL, //&osc_expr_builtin_op_powassign,
 	NULL, //&osc_expr_builtin_op_nullcoalesceassign,
-	NULL	,
-	NULL	,
+	NULL	, //&osc_expr_builtin_op_andalso,
+	NULL	, //&osc_expr_builtin_op_orelse,
 	NULL	,
 	NULL	,
 	NULL	,
@@ -808,7 +810,7 @@ static t_osc_expr_oprec *osc_expr_builtin_opcodeToOpRec[128] = {
 	NULL	,
 	NULL	,
 	NULL, //&osc_expr_builtin_op_mod	,
-	&_osc_expr_builtin_op_and	,
+	//&_osc_expr_builtin_op_and	,
 	NULL	,
 	NULL	,// 40
 	NULL	,
@@ -894,7 +896,7 @@ static t_osc_expr_oprec *osc_expr_builtin_opcodeToOpRec[128] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	&_osc_expr_builtin_op_or	,
+	//&_osc_expr_builtin_op_or	,
 	NULL	,
 	NULL	,
 	NULL	,
@@ -939,7 +941,7 @@ static t_osc_expr_funcrec *osc_expr_builtin_opcodeToFuncRec[128] = {
 	NULL	,
 	NULL	,
 	&_osc_expr_builtin_func_mod	,
-	&_osc_expr_builtin_func_and	,
+	//&_osc_expr_builtin_func_and	,
 	NULL	,
 	NULL	,// 40
 	NULL	,
@@ -1025,7 +1027,7 @@ static t_osc_expr_funcrec *osc_expr_builtin_opcodeToFuncRec[128] = {
 	NULL	,
 	NULL	,
 	NULL	,
-	&_osc_expr_builtin_func_or	,
+	//&_osc_expr_builtin_func_or	,
 	NULL	,
 	NULL	,
 	NULL	,

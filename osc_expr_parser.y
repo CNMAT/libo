@@ -428,10 +428,10 @@ t_osc_expr_ast_expr *osc_expr_parser_bindFreeVars(t_osc_expr_ast_value **freevar
 %right OSC_EXPR_TERNARY_COND '?' ':'
 
 // level 14
-%left '|' OSC_EXPR_OR 124
+%left '|' OSC_EXPR_OROR 15
 
 // level 13
-%left '&' OSC_EXPR_AND 38
+%left '&' OSC_EXPR_ANDAND 16
 
 // level 9
 %left OSC_EXPR_EQ 1 OSC_EXPR_NEQ 2
@@ -787,11 +787,17 @@ binaryop:
 	| expr OSC_EXPR_GTE expr {
 		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_GTE, $3);
  	}
-	| expr OSC_EXPR_AND expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_AND, $3);
+	| expr '&' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '&', $3);
  	}
-	| expr OSC_EXPR_OR expr {
-		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_OR, $3);
+	| expr '|' expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, '|', $3);
+ 	}
+	| expr OSC_EXPR_ANDAND expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_ANDAND, $3);
+ 	}
+	| expr OSC_EXPR_OROR expr {
+		$$ = osc_expr_parser_reduceBinaryOp(&yylloc, input_string, $1, OSC_EXPR_OROR, $3);
  	}
 	| oscaddress OSC_EXPR_NULLCOALESCE expr {
 		/*
