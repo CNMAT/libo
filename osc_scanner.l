@@ -151,7 +151,7 @@ nil					{
 						return OSCVALUE;
 					}
 
-\/[^ \t\n#\",]+	{
+\/[^ \t\n#]+	{
 			yylval->atom = osc_atom_u_allocWithString(yytext);
 			return OSCADDRESS;
 		}
