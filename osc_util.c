@@ -54,3 +54,12 @@ size_t osc_util_getPaddingForNBytes(size_t n)
 {
 	return (n + 4) & 0xfffffffc;
 }
+
+size_t osc_util_getBlobLength(size_t blob_data_size)
+{
+	size_t len = 4 + blob_data_size;
+	if((len % 4) != 0){
+		len += (4 - (len % 4));
+	}
+	return len;
+}

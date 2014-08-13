@@ -1385,13 +1385,13 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 	case 'b':
 		{
 			int32_t len = ntoh32(*((int32_t *)a->w.b));
-			size_t plen = osc_util_getPaddingForNBytes(len);
+			size_t plen = osc_util_getBlobLength(len); // includes size
 			if(!buf){
-				return plen + 4;
+				return plen;
 			}else if(n >= plen){
-				memset(buf, '\0', plen + 4);
+				memset(buf, '\0', plen);
 				memcpy(buf, a->w.b, len + 4);
-				return plen + 4;
+				return plen;
 			}
 		}
 		break;
