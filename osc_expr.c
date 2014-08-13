@@ -4840,18 +4840,29 @@ int osc_expr_sqrthalf(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 int osc_expr_explicitCast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	if(argc){
-		int n = osc_atom_array_u_getLen(*argv);
-		*out = osc_atom_array_u_alloc(n);
-		osc_atom_array_u_clear(*out);
+		if(f->rec->extra == osc_expr_explicitCast_blob){
+			long n = osc_atom_array_u_getLen(*argv);
+			char *blob = osc_mem_alloc(n + 4);
+			for(int i = 0; i < n; i++){
+				blob[i + 4] = osc_atom_u_getInt8(osc_atom_array_u_get(*argv, i));
+			}
+			*((int32_t *)blob) = hton32(n);
+			*out = osc_atom_array_u_alloc(1);
+			osc_atom_u_setBlobPtr(osc_atom_array_u_get(*out, 0), blob);
+		}else{
+			int n = osc_atom_array_u_getLen(*argv);
+			*out = osc_atom_array_u_alloc(n);
+			osc_atom_array_u_clear(*out);
 			
-		int i;
-		for(i = 0; i < n; i++){
-			int ret;
-			int (*func)(t_osc_atom_u *dest, t_osc_atom_u *src) =
-				(int (*)(t_osc_atom_u *, t_osc_atom_u *))f->rec->extra;
-			ret = func(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(*argv, i));
-			if(ret){
-				return ret;
+			int i;
+			for(i = 0; i < n; i++){
+				int ret;
+				int (*func)(t_osc_atom_u *dest, t_osc_atom_u *src) =
+					(int (*)(t_osc_atom_u *, t_osc_atom_u *))f->rec->extra;
+				ret = func(osc_atom_array_u_get(*out, i), osc_atom_array_u_get(*argv, i));
+				if(ret){
+					return ret;
+				}
 			}
 		}
 	}
