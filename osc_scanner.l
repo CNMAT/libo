@@ -131,6 +131,7 @@ nil					{
 					}
 
 :|\{|\}|, {
+printf("%s\n", yytext);
 		return *yytext;
 	}
 
@@ -151,7 +152,11 @@ nil					{
 						return OSCVALUE;
 					}
 
-\/[^ \t\n#]+	{
+\/[^ \t\n#]+[^,]	{
+			if(yytext[yyleng - 2] == ','){
+				yyless(yyleng - 2);
+			}
+			printf("%s\n", yytext);
 			yylval->atom = osc_atom_u_allocWithString(yytext);
 			return OSCADDRESS;
 		}
