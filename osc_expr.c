@@ -1526,7 +1526,7 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
 		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
 		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
-	}
+	}//else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 
 
 	if(bndl_len_s && bndl_s){
 
@@ -1537,7 +1537,41 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 	/* 		char *p = NULL; */
 	/* 		osc_bundle_u_serialize(b, &l, &p); */
 		//if(p){
-				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
+
+		if(osc_expr_arg_getType(f_argv->next) == OSC_EXPR_ARG_TYPE_EXPR){
+			t_osc_atom_ar_u *a = NULL;
+			t_osc_expr *e = osc_expr_arg_getExpr(f_argv->next);
+			if(e->rec->func == osc_expr_value){
+				osc_expr_evalArgInLexEnv(osc_expr_getArgs(e), lexenv, len, oscbndl, &a);
+			}else{
+				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
+			}
+			if(a){
+				t_osc_expr_arg *arg = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr(osc_atom_array_u_get(a, 0)));
+				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
+				osc_atom_array_u_free(a);
+				osc_expr_arg_free(arg);
+			}else{
+				return 1;
+			}
+		}else if(osc_expr_arg_getType(f_argv->next) == OSC_EXPR_ARG_TYPE_STRING ||
+			 osc_expr_arg_getType(f_argv->next) == OSC_EXPR_ARG_TYPE_ATOM){
+			osc_expr_arg_setType(f_argv->next, OSC_EXPR_ARG_TYPE_ATOM);
+			t_osc_atom_ar_u *a = NULL;
+			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
+			if(a){
+				t_osc_expr_arg *arg = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr(osc_atom_array_u_get(a, 0)));
+				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
+				osc_atom_array_u_free(a);
+				osc_expr_arg_free(arg);
+			}else{
+				return 1;
+			}
+		}else{
+			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
+		}
 				osc_mem_free(bndl_s);
 				return 0;
 	}
