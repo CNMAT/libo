@@ -750,7 +750,7 @@ function:
 		//osc_expr_rec_setExtra(func, *tmp_exprstack);
 		$$ = func;
 		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
+			//*tmp_exprstack = NULL;
 		}else if(startcond == START_FUNCTION){
 			*rec = func;
 		}
@@ -835,7 +835,7 @@ function:
 		//osc_expr_rec_setExtra(func, *tmp_exprstack);
 		$$ = func;
 		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
+			//*tmp_exprstack = NULL;
 		}else if(startcond == START_FUNCTION){
 			*rec = func;
 		}
@@ -899,7 +899,7 @@ function:
 		//osc_expr_rec_setExtra(func, *tmp_exprstack);
 		$$ = func;
 		if(startcond == START_EXPNS){
-			*tmp_exprstack = NULL;
+			//*tmp_exprstack = NULL;
 		}else if(startcond == START_FUNCTION){
 			*rec = func;
 		}
