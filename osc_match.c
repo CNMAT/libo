@@ -25,6 +25,7 @@
 #include <inttypes.h>
 
 //#define OSC_MATCH_LOGSTATE
+#define OSC_MATCH_RANGE_CAN_BE_NEGATIVE
 
 static int osc_match_range(const char *pattern, const char *address);
 
@@ -364,10 +365,14 @@ static inline int osc_match_range(const char *pattern, const char *address)
 			if(p[1] != '\0' && p[1] != '/' && p[1] != ']'){
 				p++;
 				c2 = *p++;
+#ifdef OSC_MATCH_RANGE_CAN_BE_NEGATIVE
+				if((c <= *address && *address <= c2) || (c >= *address && *address >= c2)){
+#else
 				if(c2 < c){
 					return OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE;
 				}
 				if(c <= *address && *address <= c2){
+#endif
 					matched = val;
 					break;
 				}
