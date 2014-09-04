@@ -195,6 +195,11 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 				continue;
 			}else if(p == '\0'){
 				OSC_MATCH_RETURN_SUCCESS(OSC_MATCH_PATTERN_COMPLETE);
+			}else if(p == '*'){
+				while(pattern[sp->p] == '*'){
+					sp->p++;
+				}
+				continue;
 			}else{
 				OSC_MATCH_POP();
 				continue;
@@ -214,42 +219,18 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 
 		switch(p){
 		case '/':
-			/*
-			  if(a == '/'){
-			  int pp = sp->p;
-			  int aa = sp->a;
-			  sp = stack;
-			  sp->p = pp + 1;
-			  sp->a = aa + 1;
-			  }else{
-			*/
 			// we already checked to see if a is a '/' or a '\0', so just pop and continue;
 			OSC_MATCH_POP();
-			//}
 			break;
 		case '\0':
-			//if(a == '\0'){
-			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE);
-			//}else 
-			//if(a == '/'){
-			//OSC_MATCH_RETURN( OSC_MATCH_PATTERN_COMPLETE);
-			//}else{
 			// we know a is not a '/' or a '\0', so just pop and continue;
 			OSC_MATCH_POP();
-			//}
 			break;
 		case '?':
-			//if(a == '\0' || a == '/'){
-			//OSC_MATCH_POP();
-			//}else{
 			sp->p++;
 			sp->a++;
-			//}
 			break;
 		case '[':
-			//if(a == '\0' || a == '/'){
-			//OSC_MATCH_POP();
-			//}else{
 			{
 				int ret;
 				switch((ret = osc_match_range(pattern + sp->p, address + sp->a))){
@@ -278,12 +259,8 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 					OSC_MATCH_RETURN_FAILURE(ret);
 				}
 			}
-			//}
 			break;
 		case '{':
-			//if(a == '\0' || a == '/'){
-			//OSC_MATCH_POP();
-			//}else{
 			{
 				int rest = sp->p;
 				while(pattern[rest] != '}'){
@@ -343,6 +320,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 						OSC_MATCH_PUSH(pp, aa);
 						aa--;
 					}
+				        OSC_MATCH_PUSH(pp, aa);
 				}
 			}
 			break;
