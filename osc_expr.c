@@ -1548,7 +1548,9 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 			}
 			if(a){
 				t_osc_expr_arg *arg = osc_expr_arg_alloc();
-				osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr(osc_atom_array_u_get(a, 0)));
+				char *st = NULL;
+				osc_atom_u_getString(osc_atom_array_u_get(a, 0), 0, &st);
+				osc_expr_arg_setOSCAddress(arg, st);
 				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
 				osc_atom_array_u_free(a);
 				osc_expr_arg_free(arg);
@@ -1562,7 +1564,9 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
 			if(a){
 				t_osc_expr_arg *arg = osc_expr_arg_alloc();
-				osc_expr_arg_setOSCAddress(arg, osc_atom_u_getStringPtr(osc_atom_array_u_get(a, 0)));
+				char *st = NULL;
+				osc_atom_u_getString(osc_atom_array_u_get(a, 0), 0, &st);
+				osc_expr_arg_setOSCAddress(arg, st);
 				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
 				osc_atom_array_u_free(a);
 				osc_expr_arg_free(arg);
@@ -1572,7 +1576,8 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 		}else{
 			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
 		}
-				osc_mem_free(bndl_s);
+		osc_mem_free(bndl_s);
+		osc_atom_array_u_free(arg1);
 				return 0;
 	}
 	return 1;
