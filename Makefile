@@ -59,7 +59,7 @@ win: I = $(WIN-INCLUDES)
 win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a 
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
-linux: CC = gcc
+linux: CC = clang
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
