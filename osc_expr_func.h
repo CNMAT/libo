@@ -1796,7 +1796,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 1,
 	 0,
 	 (char *[]){"OSC address"},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_EXPR},
 	 (char *[]){NULL},
 	 (int []){},
 	 (char *[]){"/predicate", NULL},

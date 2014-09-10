@@ -1038,26 +1038,53 @@ static int osc_expr_specFunc_existsorbound(t_osc_expr *f,
 		break;
 	case OSC_EXPR_ARG_TYPE_EXPR:
 		{
-			// this could be value(/foo)
-			t_osc_atom_ar_u *ar = NULL;
-			int err = osc_expr_evalInLexEnv(osc_expr_arg_getExpr(f_argv), lexenv, len, oscbndl, &ar);
-			if(!err && ar){
-				if(osc_atom_array_u_getLen(ar) != 1){
-					goto err;
+			if(osc_expr_arg_getExpr(f_argv)->rec->func == osc_expr_getbundlemember){
+				t_osc_atom_ar_u *ar = NULL;
+				int err = osc_expr_evalInLexEnv(osc_expr_arg_getExpr(f_argv), lexenv, len, oscbndl, &ar);
+				*out = osc_atom_array_u_alloc(1);
+				if(err){
+					osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+				}else if(!ar){
+					if(func == osc_bundle_s_addressIsBound){
+						osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+					}else{
+						osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+					}
+				}else{
+					if(osc_atom_array_u_getLen(ar) == 0 && func == osc_bundle_s_addressIsBound){
+						osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+					}else{
+						osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+					}
 				}
-				t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
-				if(!a){
-					goto err;
-				}
-				if(osc_atom_u_getTypetag(a) != 's'){
-					goto err;
-				}
-				osc_atom_u_getString(a, 0, &address);
-				if(!address){
-					goto err;
-				}
-				if(address[0] != '/'){
-					goto err;
+				osc_atom_array_u_free(ar);
+				return 0;
+			}else{
+				t_osc_atom_ar_u *ar = NULL;
+				int err = osc_expr_evalInLexEnv(osc_expr_arg_getExpr(f_argv), lexenv, len, oscbndl, &ar);
+				if(!err && ar){
+					if(osc_atom_array_u_getLen(ar) != 1){
+						osc_atom_array_u_free(ar);
+						goto err;
+					}
+					t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+					if(!a){
+						osc_atom_array_u_free(ar);
+						goto err;
+					}
+					if(osc_atom_u_getTypetag(a) != 's'){
+						osc_atom_array_u_free(ar);
+						goto err;
+					}
+					osc_atom_u_getString(a, 0, &address);
+					if(!address){
+						osc_atom_array_u_free(ar);
+						goto err;
+					}
+					if(address[0] != '/'){
+						osc_atom_array_u_free(ar);
+						goto err;
+					}
 				}
 			}
 		}
@@ -1522,14 +1549,16 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 			bndl_s = osc_bundle_s_getPtr(b);
 			osc_atom_s_free(a);
 			osc_message_array_s_free(msgar);
+		}else{
+			return OSC_ERR_EXPR_ADDRESSUNBOUND;
 		}
 	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
 		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
 		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
 	}//else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 
 
+	int ret = 0;
 	if(bndl_len_s && bndl_s){
-
 	/* if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){ */
 	/* 	t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0)); */
 	/* 	if(b){ */
@@ -1542,43 +1571,43 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 			t_osc_atom_ar_u *a = NULL;
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv->next);
 			if(e->rec->func == osc_expr_value){
-				osc_expr_evalArgInLexEnv(osc_expr_getArgs(e), lexenv, len, oscbndl, &a);
+				ret = osc_expr_evalArgInLexEnv(osc_expr_getArgs(e), lexenv, len, oscbndl, &a);
 			}else{
-				osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
+				ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
 			}
 			if(a){
 				t_osc_expr_arg *arg = osc_expr_arg_alloc();
 				char *st = NULL;
 				osc_atom_u_getString(osc_atom_array_u_get(a, 0), 0, &st);
 				osc_expr_arg_setOSCAddress(arg, st);
-				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
+				ret = osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
 				osc_atom_array_u_free(a);
 				osc_expr_arg_free(arg);
 			}else{
-				return 1;
+				return ret;
 			}
 		}else if(osc_expr_arg_getType(f_argv->next) == OSC_EXPR_ARG_TYPE_STRING ||
 			 osc_expr_arg_getType(f_argv->next) == OSC_EXPR_ARG_TYPE_ATOM){
 			osc_expr_arg_setType(f_argv->next, OSC_EXPR_ARG_TYPE_ATOM);
 			t_osc_atom_ar_u *a = NULL;
-			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
+			ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &a);
 			if(a){
 				t_osc_expr_arg *arg = osc_expr_arg_alloc();
 				char *st = NULL;
 				osc_atom_u_getString(osc_atom_array_u_get(a, 0), 0, &st);
 				osc_expr_arg_setOSCAddress(arg, st);
-				osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
+				ret = osc_expr_evalArgInLexEnv(arg, lexenv, &bndl_len_s, &bndl_s, out);
 				osc_atom_array_u_free(a);
 				osc_expr_arg_free(arg);
 			}else{
-				return 1;
+				return ret;
 			}
 		}else{
-			osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
+			ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, &bndl_len_s, &bndl_s, out);
 		}
 		osc_mem_free(bndl_s);
 		osc_atom_array_u_free(arg1);
-				return 0;
+				return ret;
 	}
 	return 1;
 }
