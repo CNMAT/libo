@@ -3322,7 +3322,6 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 {
 	int n = osc_atom_u_getInt(osc_atom_array_u_get(*argv, 0));
 	t_osc_atom_u *val = NULL;
-	*out = osc_atom_array_u_alloc(n);
 
 	int outlen = n * osc_atom_array_u_getLen(argv[1]);
 	*out = osc_atom_array_u_alloc(outlen);
@@ -4066,11 +4065,11 @@ int osc_expr_sign(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	for(i = 0; i < len; i++){
 		double f = osc_atom_u_getDouble(osc_atom_array_u_get(*argv, i));
 		if(f == 0){
-			osc_atom_u_setInt32(osc_atom_array_u_get(*argv, i), 0);
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), 0);
 		}else if(f < 0){
-			osc_atom_u_setInt32(osc_atom_array_u_get(*argv, i), -1);
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), -1);
 		}else{
-			osc_atom_u_setInt32(osc_atom_array_u_get(*argv, i), 1);
+			osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), 1);
 		}
 	}
 	return 0;
@@ -5024,6 +5023,7 @@ int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src)
 
 int osc_expr_explicitCast_blob(t_osc_atom_u *dest, t_osc_atom_u *src)
 {
+	printf("%s\n", __func__);
 	int32_t l = 0;
 	char *blob = NULL;
 	osc_atom_u_getBlobCopy(src, &l, &blob);

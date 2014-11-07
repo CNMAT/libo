@@ -131,7 +131,6 @@ nil					{
 					}
 
 :|\{|\}|, {
-printf("%s\n", yytext);
 		return *yytext;
 	}
 
