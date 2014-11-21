@@ -32,7 +32,7 @@
    * Follow the instructions that come with the source code---it should be the normal ./configure; make; sudo make install.
    * Be aware that Apple's versions of flex and bison are installed in /usr/bin and that the ones you install will likely
      end up in /usr/local/bin, so you will have to remove Apple's, or adjust your path accordingly.
-
+   * As of the time of this writing, bison versions > 3.0 (current) fail to install via make.  3.0 seems to work fine and can be used for this process -- jml 11/2014
 
 3. Build libo
    * Mac:
