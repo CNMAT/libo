@@ -1675,6 +1675,8 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		int ret = osc_expr_specFunc_assign(assign, lexenv, &bndl_len_s, &bndl_s, out);
 		osc_expr_arg_freeList(target);
 		target = NULL;
+		assign->argv = NULL;
+		assign->argc = 0;
 		if(*out){
 			osc_atom_array_u_free(*out);
 			*out = NULL;
@@ -1684,6 +1686,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			// cleanup
 			return ret;
 		}
+		int free_arg1 = 1;
 
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
@@ -1709,8 +1712,8 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		}else{
 			osc_atom_u_setBndl_s(osc_atom_array_u_get(arg1, 0), bndl_len_s, bndl_s);
 			t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
-
 			osc_expr_arg_setList(arg_bndl, arg1);
+			free_arg1 = 0;
 			osc_expr_arg_copy(&target, f_argv);
 			osc_expr_arg_append(target, arg_bndl);
 			osc_expr_setArg(assign, target);
@@ -1719,7 +1722,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		}
 
 	cleanup:
-		if(arg1){
+		if(arg1 && free_arg1){
 			osc_atom_array_u_free(arg1);
 		}
 		if(assign){
@@ -5023,7 +5026,6 @@ int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src)
 
 int osc_expr_explicitCast_blob(t_osc_atom_u *dest, t_osc_atom_u *src)
 {
-	printf("%s\n", __func__);
 	int32_t l = 0;
 	char *blob = NULL;
 	osc_atom_u_getBlobCopy(src, &l, &blob);
