@@ -63,6 +63,28 @@ linux: CC = clang
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
+swig: CC = clang
+swig: libo.i libo_wrap.c libo.py _libo.so
+
+libo_wrap.c libo.py:
+	swig -python libo.i
+
+_libo.so: libo.py libo_wrap.c setup.py
+	python setup.py build_ext --inplace
+
+# libo.i:
+# 	$(shell echo "%module libo" > libo.i; echo "%{" >> libo.i; for f in $(LIBO_HFILES) osc_scanner.h osc_expr_scanner.h osc_parser.h osc_expr_parser.h; do echo "#include \""$$f"\"" >> libo.i; done; echo "%}" >> libo.i; for f in $(LIBO_HFILES); do echo "%include \""$$f"\"" >> libo.i; done;)
+
+# libo_wrap.c: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_SCANNER_HFILES)
+# 	swig -Wall -python libo.i
+
+# libo_wrap.o: $(LIBO_OBJECTS)
+# 	$(CC) -c $(shell python-config --cflags) libo_wrap.c
+
+# _libo.so: libo_wrap.o
+# 	$(CC) -bundle -L/Users/john/anaconda/envs/py2.7/lib/python2.7/config -ldl -framework CoreFoundation -lpython2.7 $(LIBO_OBJECTS) libo_wrap.o -o _libo.so
+#	$(CC) -bundle -L/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config -ldl -framework CoreFoundation -lpython2.7 $(LIBO_OBJECTS) libo_wrap.o -o _libo.so
+
 libo.a: $(LIBO_OBJECTS)
 	rm -f libo.a
 	$(STATIC-LINK)
@@ -97,3 +119,7 @@ clean:
 	cd doc && rm -rf html latex man
 	cd test && $(MAKE) clean
 	cd contrib && rm -rf *.o
+
+.PHONY: swig-clean
+swig-clean:
+	rm -rf libo.py libo_wrap.c _libo.so
