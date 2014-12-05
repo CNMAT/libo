@@ -328,10 +328,10 @@ t_osc_err osc_bundle_s_removeMessage(char *address, long *len, char *ptr, int fu
 }
 
 t_osc_err osc_bundle_s_replaceMessage(long *buflen,
-				      long *bufpos,
-				      char **bndl,
-				      t_osc_msg_s *oldmsg,
-				      t_osc_msg_s *newmsg)
+                                      long *bufpos,
+                                      char **bndl,
+                                      t_osc_msg_s *oldmsg,
+                                      t_osc_msg_s *newmsg)
 {
 	char *om = osc_message_s_getPtr(oldmsg);
 	char *nm = osc_message_s_getPtr(newmsg);
@@ -341,17 +341,21 @@ t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 	if(newbuflen < 0){
 		return OSC_ERR_INVAL;
 	}
-	char copy[newbuflen];// = (char *)osc_mem_alloc(buflen * 2);
-	char *oldptr = *bndl, *newptr = copy;
-
+	char *copy = (char *)osc_mem_alloc(newbuflen);
+	char *oldptr = NULL;
+    char *newptr = NULL;
+    
+    oldptr = *bndl;
+    newptr = copy;
+    
 	memcpy(newptr, oldptr, om - *bndl);
 	newptr += om - *bndl;
 	oldptr += om - *bndl;
-
+    
 	memcpy(newptr, nm, new_size + 4);
 	newptr += new_size + 4;
 	oldptr += old_size + 4;
-
+    
 	long r = *bufpos - (oldptr - *bndl);
 	if(r){
 		memcpy(newptr, oldptr, r);
@@ -366,8 +370,15 @@ t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 	}
 	*bufpos = newbuflen;
 	memcpy(*bndl, copy, newbuflen);
+    
+    if(copy)
+    {
+        osc_mem_free(copy);
+    }
+    
 	return OSC_ERR_NONE;
 }
+
 
 // if msg == NULL, an empty bundle will be created, or, if a bundle
 // already exists, nothing will happen.

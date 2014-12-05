@@ -811,10 +811,10 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 }
 
 static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
-			    t_osc_expr_lexenv *lexenv,
-			    long *len,
-			    char **oscbndl,
-			    t_osc_atom_ar_u **out)
+                                           t_osc_expr_lexenv *lexenv,
+                                           long *len,
+                                           char **oscbndl,
+                                           t_osc_atom_ar_u **out)
 {
 	if(!len || !oscbndl){
 		return 1;
@@ -830,94 +830,110 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
 		return 1;
 	}
-
-	t_osc_msg_u *mm = osc_message_u_alloc();
-	osc_message_u_setAddress(mm, f_argv->arg.osc_address);
-
-	// get data at target address
-	t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, out);
-	if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
-		return err;
-	}
-	int outlen = osc_atom_array_u_getLen(*out);
-
-	// get index(es)
+    
 	t_osc_atom_ar_u *indexes = NULL;
-	err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &indexes);
-	if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
-		return err;
-	}
-	int nindexes = osc_atom_array_u_getLen(indexes);
-	// get data
 	t_osc_atom_ar_u *data = NULL;
-	err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &data);
-	if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
-		osc_atom_array_u_free(indexes);
-		return err;
-	}
-	int ndata = osc_atom_array_u_getLen(data);
-	if(nindexes == 0 || ndata == 0){
-		return 1;
-	}else if(nindexes == 1 && ndata > 1){
-		int idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, 0));
-		if(idx >= outlen || idx < 0){
-			osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
-			return 1;
-		}
-		t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
-		osc_atom_u_copy(&dest, osc_atom_array_u_get(data, 0));
-	}else if(nindexes > 1 && ndata == 1){
-		int i, idx;
-		t_osc_atom_u *a = osc_atom_array_u_get(data, 0);
-		for(i = 0; i < nindexes; i++){
-			idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
-			if(idx >= outlen || idx < 0){
-				osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
-				continue;
-			}
-			t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
-			osc_atom_u_copy(&dest, a);
-		}
-	}else{
-		int i, idx;
-		int n = osc_atom_array_u_getLen(indexes);
-		if(osc_atom_array_u_getLen(data) < n){
-			n = osc_atom_array_u_getLen(data);
-		}
-		for(i = 0; i < n; i++){
-			idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
-			if(idx >= outlen || idx < 0){
-				osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
-				continue;
-			}
-			t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
-			osc_atom_u_copy(&dest, osc_atom_array_u_get(data, i));
-		}
-	}
-	int i;
-	for(i = 0; i < osc_atom_array_u_getLen(*out); i++){
-		t_osc_atom_u *cpy = NULL;
-		osc_atom_u_copy(&cpy, osc_atom_array_u_get(*out, i));
-		osc_message_u_appendAtom(mm, cpy);
-	}
-	char *msg_s = NULL;
+    char *msg_s = NULL;
 	long len_s = 0;
-	osc_message_u_serialize(mm, &len_s, &msg_s);
-	char osc_msg_s[osc_message_s_getStructSize()];
-	osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
-	osc_message_s_wrap((t_osc_msg_s *)osc_msg_s, msg_s);
-	if(msg_ar){
-		osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
-		osc_message_array_s_free(msg_ar);
-	}else{
-		osc_bundle_s_appendMessage(len, oscbndl, (t_osc_msg_s *)osc_msg_s);
-	}
-	osc_message_u_free(mm);
-	osc_mem_free(msg_s);
-	return 0;
+    t_osc_err err = 0;
+    // above needed to allow goto, which you probably hate, sorry
+	t_osc_msg_u *mm = osc_message_u_alloc();
+    {
+        osc_message_u_setAddress(mm, f_argv->arg.osc_address);
+        
+        // get data at target address
+        err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, out);
+        if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
+            osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
+            goto bail;
+        }
+        int outlen = osc_atom_array_u_getLen(*out);
+        
+        // get index(es)
+        err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &indexes);
+        if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
+            osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
+            goto bail;
+        }
+        int nindexes = osc_atom_array_u_getLen(indexes);
+        // get data
+        err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &data);
+        if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
+            osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
+            goto bail;
+        }
+        int ndata = osc_atom_array_u_getLen(data);
+        if(nindexes == 0 || ndata == 0){
+            err = 1;
+            goto bail;
+        }else if(nindexes == 1 && ndata > 1){
+            int idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, 0));
+            if(idx >= outlen || idx < 0){
+                osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                err = 1;
+                goto bail;
+            }
+            t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
+            osc_atom_u_copy(&dest, osc_atom_array_u_get(data, 0));
+        }else if(nindexes > 1 && ndata == 1){
+            int i, idx;
+            t_osc_atom_u *a = osc_atom_array_u_get(data, 0);
+            for(i = 0; i < nindexes; i++){
+                idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
+                if(idx >= outlen || idx < 0){
+                    osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                    continue;
+                }
+                t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
+                osc_atom_u_copy(&dest, a);
+            }
+        }else{
+            int i, idx;
+            int n = osc_atom_array_u_getLen(indexes);
+            if(osc_atom_array_u_getLen(data) < n){
+                n = osc_atom_array_u_getLen(data);
+            }
+            for(i = 0; i < n; i++){
+                idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
+                if(idx >= outlen || idx < 0){
+                    osc_error(OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                    continue;
+                }
+                t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
+                osc_atom_u_copy(&dest, osc_atom_array_u_get(data, i));
+            }
+        }
+        int i;
+        for(i = 0; i < osc_atom_array_u_getLen(*out); i++){
+            t_osc_atom_u *cpy = NULL;
+            osc_atom_u_copy(&cpy, osc_atom_array_u_get(*out, i));
+            osc_message_u_appendAtom(mm, cpy);
+        }
+        
+        osc_message_u_serialize(mm, &len_s, &msg_s);
+        char osc_msg_s[osc_message_s_getStructSize()];
+        osc_message_s_initMsg((t_osc_msg_s *)osc_msg_s);
+        osc_message_s_wrap((t_osc_msg_s *)osc_msg_s, msg_s);
+        if(msg_ar){
+            osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
+            osc_message_array_s_free(msg_ar);
+        }else{
+            osc_bundle_s_appendMessage(len, oscbndl, (t_osc_msg_s *)osc_msg_s);
+        }
+        err = 0;
+    }
+    
+bail:
+    if (indexes)
+        osc_atom_array_u_free(indexes);
+    if (data)
+        osc_atom_array_u_free(data);
+    if (msg_s)
+        osc_mem_free(msg_s);
+    if (mm)
+        osc_message_u_free(mm);
+	
+    return err;
 }
 
 static int osc_expr_specFunc_if(t_osc_expr *f,
@@ -4265,6 +4281,8 @@ int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	}else{
 		ret = strcmp(st1, st2);
 	}
+    osc_mem_free(st1);
+    osc_mem_free(st2);
 	*out = osc_atom_array_u_alloc(1);
 	osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), ret);
 	return 0;
