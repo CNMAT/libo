@@ -309,8 +309,6 @@ it does not contain a string.
 */
 char *osc_atom_u_getStringPtr(t_osc_atom_u *a);
 
-int osc_atom_u_getQuotedString(t_osc_atom_u *a, char **out);
-
 int osc_atom_u_getStringLen(t_osc_atom_u *a);
 
 /** \brief Return a copy of the string stored in the #t_osc_atom_u
@@ -492,10 +490,6 @@ void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b);
 The #t_osc_bndl_u that bndl points to will not be copied.  The caller is responsible 
 for freeing it.
 
-\param a The #t_osc_atom_u
-\param bndl The #t_osc_bndl_u to be referenced
-*/
-void osc_atom_u_setSerializedBndl(t_osc_atom_u *a, t_osc_bndl_u *bndl);
 
 /** \brief Set the #t_osc_atom_u to a timetag
 

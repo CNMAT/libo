@@ -35,6 +35,12 @@ extern "C" {
 #include <inttypes.h>
 #include <string.h>
 
+#ifdef SWIG
+#define OSC_DEPRECATED(decl, msg) decl;
+#else
+#define OSC_DEPRECATED(decl, msg) decl __attribute__((deprecated(msg)));
+#endif
+
 #define OSC_STRFMT_META_CHARS ((char []){'"', '\\'})
 
 int osc_strfmt_int8(char *buf, size_t n, int8_t i);
@@ -62,7 +68,7 @@ int osc_strfmt_stringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_quotedStringWithQuotedMeta(char *buf, size_t n, char *str);
 int osc_strfmt_countMeta(int len, char *buf);
 int osc_strfmt_isMeta(char c);
-int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out) __attribute__((deprecated("use osc_strfmt_quotedStringWithQuotedMeta() instead.")));
+OSC_DEPRECATED(int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **out), "use osc_strfmt_quotedStringWithQuotedMeta() instead.");
 
 int osc_strfmt_strlenPadded(char *str);
 

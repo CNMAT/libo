@@ -67,6 +67,10 @@ int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yysca
 #include "osc_error.h"
 #include "osc_message_u.h"
 
+#ifdef YY_DECL
+#undef YY_DECL
+#endif
+
 #ifdef __cplusplus
 #define YY_DECL extern "C" int osc_scanner_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t yyscanner, long *buflen, char **buf)
 #else

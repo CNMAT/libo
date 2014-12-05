@@ -54,8 +54,14 @@ extern "C" {
 
 #define OSC_ARRAY_CLEAR_ON_ALLOC 1
 
-#define OSC_INVALIDATE_PTR
+//#define OSC_INVALIDATE_PTR
 #define OSC_VALIDATE_PTR
+
+#ifdef SWIG
+#define OSC_DEPRECATED(decl, msg) decl;
+#else
+#define OSC_DEPRECATED(decl, msg) decl __attribute__((deprecated(msg)));
+#endif
 
 #ifdef __cplusplus
 }

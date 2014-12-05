@@ -1207,3 +1207,21 @@ t_osc_msg_u *osc_message_u_allocWithBlob(char *address, char *blob)
 	}
 	return m;
 }
+
+t_osc_msg_u *osc_message_u_allocWithDouble(char *address, double f)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendDouble(m, f);
+	}
+	return m;
+}
+
+t_osc_msg_u *osc_message_u_allocWithInt(char *address, int i)
+{
+	t_osc_msg_u *m = osc_message_u_allocWithAddress(address);
+	if(m){
+		osc_message_u_appendInt32(m, i);
+	}
+	return m;
+}

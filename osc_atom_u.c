@@ -110,6 +110,10 @@ void osc_atom_u_clear(t_osc_atom_u *a)
 	}
 	if(a->alloc && a->typetag == 's' && a->w.s){
 		osc_mem_free(a->w.s);
+		a->w.s = NULL;
+	}else if(a->typetag == OSC_BUNDLE_TYPETAG){
+		osc_bundle_u_free(a->w.bndl);
+		a->w.bndl = NULL;
 	}
 	a->alloc = 0;
 }

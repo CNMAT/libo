@@ -52,6 +52,12 @@ the arguments in a serialized OSC message.  Currently, it supports the following
 extern "C" {
 #endif
 
+#ifdef SWIG
+#define OSC_DEPRECATED(decl, msg) decl;
+#else
+#define OSC_DEPRECATED(decl, msg) decl __attribute__((deprecated(msg)));
+#endif
+
 /** \brief Opaque data type for storing an argument to an OSC message
 
 This structure is defined in osc_atom_s.r.  
@@ -119,7 +125,7 @@ void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t);
 void osc_atom_s_negate(t_osc_atom_s *a);
 size_t osc_atom_s_sizeof(t_osc_atom_s *a);
 t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u);
-t_osc_err osc_atom_s_format(t_osc_atom_s *a, long *buflen, char **buf) __attribute__((deprecated("use osc_atom_s_nformat() instead.")));
+OSC_DEPRECATED(t_osc_err osc_atom_s_format(t_osc_atom_s *a, long *buflen, char **buf), "use osc_atom_s_nformat() instead.");
 long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent);
 
 #ifdef __cplusplus

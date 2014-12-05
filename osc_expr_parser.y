@@ -67,6 +67,10 @@ int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan
 #include "osc_atom_u.h"
 #include "osc_expr.h"
 
+#ifdef YY_DECL
+#undef YY_DECL
+#endif
+
 #ifdef __cplusplus
 #define YY_DECL extern "C" int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, int alloc_atom, long *buflen, char **buf, int startcond, int *started)
 #else

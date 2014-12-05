@@ -94,8 +94,6 @@ void osc_expr_arg_setFunction(t_osc_expr_arg *a, t_osc_expr_rec *rec);
 void osc_expr_arg_setExpr(t_osc_expr_arg *a, t_osc_expr *e);
 void osc_expr_arg_setOSCAddress(t_osc_expr_arg *a, char *osc_address);
 void osc_expr_arg_setList(t_osc_expr_arg *a, t_osc_atom_ar_u *ar);
-void osc_expr_arg_setParameterSlot(t_osc_expr_arg *a, int slot);
-int osc_expr_arg_getParameterSlot(t_osc_expr_arg *a);
 void osc_expr_arg_setType(t_osc_expr_arg *a, long type);
 int osc_expr_arg_getType(t_osc_expr_arg *a);
 t_osc_atom_u *osc_expr_arg_getOSCAtom(t_osc_expr_arg *a);
@@ -105,8 +103,6 @@ t_osc_expr_rec *osc_expr_arg_getFunction(t_osc_expr_arg *a);
 int osc_expr_arg_append(t_osc_expr_arg *a, t_osc_expr_arg *arg_to_append);
 void osc_expr_arg_setNext(t_osc_expr_arg *a, t_osc_expr_arg *next);
 t_osc_expr_arg *osc_expr_arg_next(t_osc_expr_arg *a);
-void osc_expr_setAssignResultToAddress(t_osc_expr *e, int val);
-int osc_expr_getAssignResultToAddress(t_osc_expr *e);
 
 void osc_expr_format(t_osc_expr *fg, long *buflen, char **fmt);
 void osc_expr_formatFunctionTable(long *buflen, char **buf);

@@ -156,6 +156,8 @@ t_osc_msg_u *osc_message_u_allocWithString(char *address, char *s);
 t_osc_msg_u *osc_message_u_allocWithTimetag(char *address, t_osc_timetag t);
 t_osc_msg_u *osc_message_u_allocWithArray(char *address, t_osc_array *ar);
 t_osc_msg_u *osc_message_u_allocWithBlob(char *address, char *blob);
+t_osc_msg_u *osc_message_u_allocWithDouble(char *address, double f);
+t_osc_msg_u *osc_message_u_allocWithInt(char *address, int i);
 
 #ifdef __cplusplus
 }
