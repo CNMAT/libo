@@ -61,7 +61,7 @@ win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
 linux: CC = clang
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
-linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+linux: STATIC-LINK = libtool --tag=CC --mode=link clang -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a 
 
 swig: CC = clang
 swig: libo.i libo_wrap.c libo.py _libo.so

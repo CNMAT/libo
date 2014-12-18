@@ -9,6 +9,8 @@
 #include <arpa/inet.h>
 #endif
 */
+
+#define __USE_XOPEN
 #include <time.h>
 #include <sys/time.h>
 
@@ -23,6 +25,11 @@
 #include "osc_byteorder.h"
 #include "osc_timetag.h"
 #include "osc_strfmt.h"
+
+/*struct timezone {
+	int tz_minuteswest;
+	int tz_dsttime;
+};*/
 
 void osc_timetag_ut_to_ntp(time_t ut, t_osc_timetag_ntptime *n);
 time_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);

@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#define _X_OPENSOURCE 500
 #include <inttypes.h>
 #include <math.h>
 #include "osc.h"
