@@ -10,12 +10,14 @@
 #endif
 */
 
-#ifdef LINUX_VERSION
-#include <time.h>
-#else
-#include <time.h>
-#endif
+//#ifdef LINUX_VERSION
+
+//#else
+//#include <linux/time.h>
+//#endif
+#define __USE_BSD
 #include <sys/time.h>
+#include <time.h>
 
 // crossplatform gettimeofday
 //#include "contrib/timeval.h"

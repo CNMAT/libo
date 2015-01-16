@@ -270,10 +270,10 @@ void osc_expr_error(YYLTYPE *llocp,
 	char more[256];
 	memset(more, '\0', sizeof(more));
 	int more_len = 0;
-	if(ap){
+	//if(ap != NULL){
 		more_len += vsnprintf(more, 256, moreinfo_fmt, ap);
 		va_end(ap);
-	}
+		//}
 	if(loclen || more_len){
 		char buf[loclen + more_len];
 		char *ptr = buf;
