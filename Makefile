@@ -67,6 +67,7 @@ linux: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 #libtool -v --tag=CC --mode=link clang -all-static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a 
 
 swig: CC = clang
+swig: CFLAGS += -std=c99
 swig: libo.i libo_wrap.c libo.py _libo.so
 
 libo_wrap.c libo.py:
