@@ -59,10 +59,12 @@ win: I = $(WIN-INCLUDES)
 win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a 
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
-linux: CC = gcc
+linux: CC = clang
 linux: CFLAGS += -std=c99 -DLINUX_VERSION -D_XOPEN_SOURCE=500 #-D_USE_MATH_DEFINES
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
-linux: STATIC-LINK = libtool --tag=CC --mode=link clang -all-static -o libo.a $(LIBO_OBJECTS) #/usr/lib/libfl.a 
+linux: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a; ranlib libo.a
+
+#libtool -v --tag=CC --mode=link clang -all-static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a 
 
 swig: CC = clang
 swig: libo.i libo_wrap.c libo.py _libo.so
