@@ -30,7 +30,6 @@
 #include <float.h>
 #include <inttypes.h>
 
-#define _X_OPENSOURCE 500
 #include <string.h>
 #include <math.h>
 

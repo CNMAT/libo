@@ -10,8 +10,11 @@
 #endif
 */
 
-#define __USE_XOPEN
+#ifdef LINUX_VERSION
 #include <time.h>
+#else
+#include <time.h>
+#endif
 #include <sys/time.h>
 
 // crossplatform gettimeofday
