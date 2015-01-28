@@ -89,8 +89,7 @@ libo.a: $(LIBO_OBJECTS)
 	rm -f libo.a
 	$(STATIC-LINK)
 
-libo.dylib: $(LIBO_OBJECTS) 
-	rm -f libo.dylib
+libo.dylib: $(LIBO_OBJECTS)
 	$(DYNAMIC-LINK)
 
 %.o: %.c 
