@@ -317,17 +317,24 @@ long osc_timetag_toISO8601(char *buf, long n, t_osc_timetag timetag)
 	//secs = abs(secs);
 	for(year = 0; secs >= SEC_PER_YEAR; year++){ //determine # years elapse since epoch
 		secs -= SEC_PER_YEAR;
+		if(osc_timetag_isleap(year)){
+			secs -= SEC_PER_DAY;
+		}
 	}
 	//year+=1970;  //1/1/1970, 00:00 is epoch
 	year += 1900;  //1/1/1900, 00:00 is ntp epoch
 	//for (yrcount=1970;yrcount<year;yrcount++) //scroll from 1970 to last year to find leap yrs.
+	/*
 	for(yrcount = 1900; yrcount < year; yrcount++){
 		leap = osc_timetag_isleap(yrcount);  
 		if(leap == 1){
 			secs -= SEC_PER_DAY;  //if it's a leap year, subtract a day's worth of seconds
 		}
 	} 
+	*/
 	leap = osc_timetag_isleap(year); //Is this a leap year?
+
+
 	for(day = 1; secs >= SEC_PER_DAY; day++){ //determine # days elapsed in current year
 		secs -= SEC_PER_DAY;
 	}
