@@ -1570,7 +1570,9 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 		}
 	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
 		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
-		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
+		bndl_len_s = osc_bundle_u_nserialize(NULL, 0, b);
+		bndl_s = osc_mem_alloc(bndl_len_s);
+		osc_bundle_u_nserialize(bndl_s, bndl_len_s, b);
 	}//else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 
 
 	int ret = 0;
@@ -1660,7 +1662,9 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		}
 	}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == OSC_BUNDLE_TYPETAG){
 		t_osc_bndl_u *b = osc_atom_u_getBndl(osc_atom_array_u_get(arg1, 0));
-		osc_bundle_u_serialize(b, &bndl_len_s, &bndl_s);
+		bndl_len_s = osc_bundle_u_nserialize(NULL, 0, b);
+		bndl_s = osc_mem_alloc(bndl_len_s);
+		osc_bundle_u_nserialize(bndl_s, bndl_len_s, b);
 	}
 
 	if(bndl_len_s && bndl_s){
@@ -5777,9 +5781,9 @@ void osc_expr_makeCategoryBundle(void)
 		osc_message_u_setAddress(m, buf);
 		osc_bundle_u_addMsg(b, m);
 	}
-	long len = 0;
-	char *ptr = NULL;
-	osc_bundle_u_serialize(b, &len, &ptr);
+	long len = osc_bundle_u_nserialize(NULL, 0, b);
+	char *ptr = osc_mem_alloc(len);
+	osc_bundle_u_nserialize(ptr, len, b);
 	osc_expr_categoryBundle = osc_bundle_s_alloc(len, ptr);
 	osc_bundle_u_free(b);
 }
@@ -5812,7 +5816,9 @@ t_osc_err osc_expr_getFunctionsForCategory(char *cat, long *len, char **ptr)
 		t_osc_bndl_u *bndl = osc_bundle_u_alloc();
 		osc_bundle_u_addMsgArrayCopy(bndl, ar);
 		osc_message_array_u_free(ar);
-		osc_bundle_u_serialize(bndl, len, ptr);
+		*len = osc_bundle_u_nserialize(NULL, 0, bndl);
+		*ptr = osc_mem_alloc(*len);
+		osc_bundle_u_nserialize(*ptr, *len, bndl);
 		osc_bundle_u_free(bndl);
 	}
 	return OSC_ERR_NONE;

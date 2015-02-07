@@ -111,13 +111,5 @@ t_osc_atom_u *osc_message_u_getArg_r(t_osc_msg_u *m, int n)
 	return a;
 }
 
- t_osc_bndl_s *osc_bundle_u_serialize_r(t_osc_bndl_u *bndl)
-{
-	long buflen = 0;
-	char *buf = NULL;
-	osc_bundle_u_serialize(bndl, &buflen, &buf);
-	return osc_bundle_s_alloc(buflen, buf);
-}
-
  %}
 	 //extern t_osc_msg_s *void_to_osc_message_s(void *p);

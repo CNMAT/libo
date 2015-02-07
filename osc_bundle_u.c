@@ -82,24 +82,14 @@ void osc_bundle_u_clear(t_osc_bndl_u *bndl)
 
 long osc_bundle_u_getSerializedSize(t_osc_bndl_u *b)
 {
-	// this seems bad, but it probably isn't much less efficient than going through everything
-	// recursively and computing the size.  We could also keep track of it as things
-	// are added to and taken from the bundle, but that seems prone to error.
-	long len = 0;
-	char *bndl = NULL;
-	osc_bundle_u_serialize(b, &len, &bndl);
-	osc_mem_free(bndl);
-	return len;
+	return osc_bundle_u_nserialize(NULL, 0, b);
 }
 
 t_osc_err osc_bundle_u_copy(t_osc_bndl_u **dest, t_osc_bndl_u *src)
 {
-	// this is lazy, but it's also possible that this is faster than a crazy recursive copy
-	long len = 0;
-	char *buf = NULL;
-	osc_bundle_u_serialize(src, &len, &buf);
-	osc_bundle_s_deserialize(len, buf, dest);
-	osc_mem_free(buf);
+	t_osc_bndl_s *bs = osc_bundle_u_serialize(src);
+	osc_bundle_s_deserialize(osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs), dest);
+	osc_bundle_s_deepFree(bs);
 	return OSC_ERR_NONE;
 }
 /*
@@ -511,6 +501,18 @@ t_osc_err osc_bundle_u_intersection(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_
 	return OSC_ERR_NONE;
 }
 
+t_osc_bndl_s *osc_bundle_u_serialize(t_osc_bndl_u *b)
+{
+	size_t n = osc_bundle_u_nserialize(NULL, 0, b);
+	if(!n){
+		return NULL;
+	}
+	char *buf = osc_mem_alloc(n);
+	osc_bundle_u_nserialize(buf, n, b);
+	t_osc_bndl_s *bs = osc_bundle_s_alloc(n, buf);
+	return bs;
+}
+
 size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 {
 	size_t _n = 0;
@@ -534,14 +536,6 @@ size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 	}
 	osc_bndl_it_u_destroy(it);
 	return _n;
-}
-
-t_osc_err osc_bundle_u_serialize(t_osc_bundle_u *bndl, long *buflen, char **buf)
-{
-	size_t n = osc_bundle_u_nserialize(NULL, 0, bndl);
-	*buf = osc_mem_alloc(n);
-	*buflen = osc_bundle_u_nserialize(*buf, n, bndl);
-	return OSC_ERR_NONE;
 }
 
 t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf)

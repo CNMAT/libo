@@ -485,17 +485,6 @@ void osc_atom_u_setBndl(t_osc_atom_u *a, long len, char *ptr);
 void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr);
 void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b);
 
-/** \brief Set the #t_osc_atom_u to point to a(n unserialized) #t_osc_bndl_u.
-
-The #t_osc_bndl_u that bndl points to will not be copied.  The caller is responsible 
-for freeing it.
-
-
-/** \brief Set the #t_osc_atom_u to a timetag
-
-\param a The #t_osc_atom_u
-\param timetag The timetag
-*/
 void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag);
 
 void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob);

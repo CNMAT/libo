@@ -879,12 +879,9 @@ int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a)
 		}
 	case OSC_BUNDLE_TYPETAG:
 		{
-			long len = 0;
-			char *buf = NULL;
-			osc_bundle_u_serialize(a->w.bndl, &len, &buf);
-			if(buf){
-				osc_mem_free(buf);
-			}
+			t_osc_bndl_s *bs = osc_bundle_u_serialize(a->w.bndl);
+			long len = osc_bundle_s_getLen(bs);
+			osc_bundle_s_deepFree(bs);
 			return len;
 		}
 	case 's':
@@ -970,16 +967,13 @@ void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *buflen, char **blob)
 		break;
 	case OSC_BUNDLE_TYPETAG:
 		{
-			// this is to avoid a possible realloc that could happen during serialization.
-			// currently, the serialization algorithm doesn't precompute sizes and so 
-			// reallocs aggressively. 
-			long l = 0;
-			char *bndl = NULL;
-			osc_bundle_u_serialize(a->w.bndl, &l, &bndl);
-			if(bndl){
+			t_osc_bndl_s *bs = osc_bundle_u_serialize(a->w.bndl);
+			if(bs){
+				long l = osc_bundle_s_getLen(bs);
+				char *bndl = osc_bundle_s_getPtr(bs);
 				*((int32_t *)(*blob)) = hton32(l);
 				memcpy((*blob) + 4, bndl, l);
-				osc_mem_free(bndl);
+				osc_bundle_s_deepFree(bs);
 			}
 		}
 		break;

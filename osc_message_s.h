@@ -52,6 +52,7 @@ typedef struct _osc_message_s t_osc_message_s, t_osc_msg_s;
 #include "osc_atom_s.h"
 #include "osc_error.h"
 #include "osc_array.h"
+#include "osc_message_u.h"
 
 typedef t_osc_array t_osc_message_array_s, t_osc_msg_ar_s;
 

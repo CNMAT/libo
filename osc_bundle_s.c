@@ -485,12 +485,9 @@ t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest,
 	}
 	t_osc_bndl_u *bu = NULL;
 	t_osc_bndl_u *flattened = NULL;
-	long len = 0;
-	char *ptr = NULL;
 	osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src), &bu);
 	osc_bundle_u_flatten(&flattened, bu, maxlevel, sep, remove_enclosing_address_if_empty);
-	osc_bundle_u_serialize(flattened, &len, &ptr);
-	t_osc_bndl_s *b = osc_bundle_s_alloc(len, ptr);
+	t_osc_bndl_s *b = osc_bundle_u_serialize(flattened);
 	if(bu){
 		osc_bundle_u_free(bu);
 	}
@@ -508,17 +505,17 @@ t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxle
 	}
 	t_osc_bndl_u *bu = NULL;
 	t_osc_bndl_u *ex = NULL;
-	long len = 0;
-	char *ptr = NULL;
 	osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src), &bu);
 	t_osc_err ret = osc_bundle_u_explode(&ex, bu, maxlevel, sep);
 	if(ret){
 		return ret;
 	}
-	osc_bundle_u_serialize(ex, &len, &ptr);
 	if(!(*dest)){
-		*dest = osc_bundle_s_alloc(len, ptr);
+		*dest = osc_bundle_u_serialize(ex);
 	}else{
+		long len = osc_bundle_u_nserialize(NULL, 0, ex);
+		char *ptr = osc_mem_alloc(len);
+		osc_bundle_u_nserialize(ptr, len, ex);
 		osc_bundle_s_setLen(*dest, len);
 		osc_bundle_s_setPtr(*dest, ptr);
 	}

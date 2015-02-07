@@ -326,12 +326,11 @@ arglist:
 			*msg = m;
 			//}
 		PP("add BNDL to MSG %p := %p\n", *msg, (*bndl)->bndl);
-		long len = 0;
-		char *ptr = NULL;
-		osc_bundle_u_serialize((*bndl)->bndl, &len, &ptr);
+		long len = osc_bundle_u_nserialize(NULL, 0, (*bndl)->bndl);
+		char ptr[len];
+		osc_bundle_u_nserialize(ptr, len, (*bndl)->bndl);
 		if(ptr){
 			osc_message_u_appendBndl(*msg, len, ptr);
-			osc_mem_free(ptr);
 		}
 		PP("pop BNDL %p<-%p\n", (*bndl), (*bndl)->next);
 		t_osc_parser_bndl_list *b = (*bndl)->next;
@@ -347,12 +346,11 @@ arglist:
 			*msg = m;
 			//}
 		PP("add BNDL to MSG %p := %p\n", *msg, (*bndl)->bndl);
-		long len = 0;
-		char *ptr = NULL;
-		osc_bundle_u_serialize((*bndl)->bndl, &len, &ptr);
+		long len = osc_bundle_u_nserialize(NULL, 0, (*bndl)->bndl);
+		char ptr[len];
+		osc_bundle_u_nserialize(ptr, len, (*bndl)->bndl);
 		if(ptr){
 			osc_message_u_appendBndl(*msg, len, ptr);
-			osc_mem_free(ptr);
 		}
 		PP("pop BNDL %p<-%p\n", (*bndl), (*bndl)->next);
 		t_osc_parser_bndl_list *b = (*bndl)->next;
@@ -368,12 +366,11 @@ arglist:
 			*msg = m;
 		}
 		PP("add BNDL to MSG %p := %p\n", *msg, (*bndl)->bndl);
-		long len = 0;
-		char *ptr = NULL;
-		osc_bundle_u_serialize((*bndl)->bndl, &len, &ptr);
+		long len = osc_bundle_u_nserialize(NULL, 0, (*bndl)->bndl);
+		char ptr[len];
+		osc_bundle_u_nserialize(ptr, len, (*bndl)->bndl);
 		if(ptr){
 			osc_message_u_appendBndl(*msg, len, ptr);
-			osc_mem_free(ptr);
 		}
 		PP("pop BNDL %p<-%p\n", (*bndl), (*bndl)->next);
 		t_osc_parser_bndl_list *b = (*bndl)->next;
@@ -389,12 +386,11 @@ arglist:
 			*msg = m;
 		}
 		PP("add BNDL to MSG %p := %p\n", *msg, (*bndl)->bndl);
-		long len = 0;
-		char *ptr = NULL;
-		osc_bundle_u_serialize((*bndl)->bndl, &len, &ptr);
+		long len = osc_bundle_u_nserialize(NULL, 0, (*bndl)->bndl);
+		char ptr[len];
+		osc_bundle_u_nserialize(ptr, len, (*bndl)->bndl);
 		if(ptr){
 			osc_message_u_appendBndl(*msg, len, ptr);
-			osc_mem_free(ptr);
 		}
 		PP("pop BNDL %p<-%p\n", (*bndl), (*bndl)->next);
 		t_osc_parser_bndl_list *b = (*bndl)->next;
