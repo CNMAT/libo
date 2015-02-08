@@ -1,4 +1,4 @@
-%module libo
+%module odot
 
 %{
 #include "osc_match.h"
@@ -33,13 +33,6 @@
 #include "osc_serial.h"
 #include "osc.h"
 %}
-%typemap(out) t_osc_bndl_s* {
-#ifdef SWIGPYTHON
-	$result = PyString_FromStringAndSize(osc_bundle_s_getPtr($1), osc_bundle_s_getLen($1));
-#elsif defined(SWIGJAVASCRIPT) || defined(SWIG_JAVASCRIPT_V8)
-
-#endif
-}
 
 %include "osc_match.h"
 %include "osc_bundle_s.h"
