@@ -73,7 +73,7 @@ OSC_DEPRECATED(int osc_strfmt_addQuotesAndQuoteMeta(int len, char *buf, char **o
 int osc_strfmt_strlenPadded(char *str);
 
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 
 #endif

@@ -1,0 +1,40 @@
+{
+	"targets": [
+		{
+			"target_name": "odot",
+			"sources": [
+				"osc_match.c",
+				"osc_bundle_s.c",
+				"osc_bundle_u.c",
+				"osc_bundle_iterator_s.c",
+				"osc_bundle_iterator_u.c",
+				"osc_error.c",
+				"osc_mem.c",
+				"osc_message_s.c",
+				"osc_message_u.c",
+				"osc_message_iterator_s.c",
+				"osc_message_iterator_u.c",
+				"osc_atom_s.c",
+				"osc_atom_u.c",
+				"osc_array.c",
+				"osc_atom_array_s.c",
+				"osc_atom_array_u.c",
+				"osc_expr.c",
+				"osc_vtable.c",
+				"osc_dispatch.c",
+				"osc_hashtab.c",
+				"osc_linkedlist.c",
+				"osc_util.c",
+				"osc_rset.c",
+				"osc_query.c",
+				"osc_strfmt.c",
+				"osc_expr_rec.c",
+				"osc_typetag.c",
+				"contrib/strptime.c",
+				"osc_timetag.c",
+				"osc_serial.c",
+				"odot_wrap.cxx"
+			]
+		}
+	]
+}

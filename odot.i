@@ -1,4 +1,4 @@
-%module libo
+%module odot
 
 %{
 #include "osc_match.h"
