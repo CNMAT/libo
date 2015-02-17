@@ -688,19 +688,26 @@ t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, lon
 	long lens[2] = {len1, len2};
 	int i;
 	for(i = 0; i < 2; i++){
-		t_osc_bndl_it_s *it = osc_bndl_it_s_get(lens[i], bndls[i]);
-		while(osc_bndl_it_s_hasNext(it)){
-			t_osc_msg_s *m = osc_bndl_it_s_next(it);
-			char *address = osc_message_s_getAddress(m);
+		//t_osc_bndl_it_s *it = osc_bndl_it_s_get(lens[i], bndls[i]);
+		//while(osc_bndl_it_s_hasNext(it)){
+		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
+		char *m = bndls[i] + OSC_HEADER_SIZE;
+		while(m - bndls[i] < lens[i]){
+			//char *address = osc_message_s_getAddress(m);
+			int32_t size = ntoh32(*((int32_t *)m));
+			char *address = m + 4;
 			int res = 0;
 			osc_bundle_s_addressExists(len, bndl, address, 1, &res);
 			if(res == 0){
-				long l = osc_message_s_getSize(m) + 4;
-				memcpy(bndl + len, osc_message_s_getPtr(m), l);
+				//long l = osc_message_s_getSize(m) + 4;
+				long l = size + 4;
+				//memcpy(bndl + len, osc_message_s_getPtr(m), l);
+				memcpy(bndl + len, m, l);
 				len += l;
 			}
+			m += size + 4;
 		}
-		osc_bndl_it_s_destroy(it);
+		//osc_bndl_it_s_destroy(it);
 	}
 	*len_out = len;
 	return OSC_ERR_NONE;
