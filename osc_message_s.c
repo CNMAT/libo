@@ -31,6 +31,7 @@
 #include "osc_message_iterator_s.h"
 #include "osc_array.h"
 #include "osc_mem.h"
+#include "osc_util.h"
 
 t_osc_msg_s *osc_message_s_alloc(void)
 {
@@ -92,27 +93,35 @@ t_osc_err osc_message_s_wrap(t_osc_msg_s *m, char *bytes)
 	}
 	int32_t len = ntoh32(*((int32_t *)bytes));
 	m->size = bytes;
-	m->address = bytes + 4;
+	char *address = m->address = bytes + 4;
+	/*
 	if(!(m->address)){
 		return OSC_ERR_MALFORMEDADDRESS;
 	}
 	if(m->address[0] != '/'){
 		return OSC_ERR_MALFORMEDADDRESS;
 	}
+	*/
+	/*
 	m->typetags = bytes + 4 + strlen(bytes + 4) + 1;
 	while((m->typetags - bytes) % 4){
 		m->typetags++;
 	}
-	if((m->typetags - bytes) > len){
+	*/
+	char *tt = m->typetags = address + osc_util_getPaddedStringLen(address);
+	if((tt - bytes) > len){
 		m->typetags = NULL;
 		// this isn't really cool--if there is no data, there should at least be a 
 		// comma and 3 NULLs.  we'll let it go anyway...
 		return OSC_ERR_NONE;
 	}
+	/*
 	m->data = m->typetags + strlen(m->typetags) + 1;
 	while((m->data - bytes) % 4){
 		m->data++;
 	}
+	*/
+	m->data = tt + osc_util_getPaddedStringLen(tt);
 	return OSC_ERR_NONE;
 }
 

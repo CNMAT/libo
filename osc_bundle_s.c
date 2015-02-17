@@ -225,18 +225,23 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 {
 	int matchbuflen = 0, n = 0;
 	t_osc_msg_ar_s *ar = NULL;
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *current_message = osc_bndl_it_s_next(it);
+	char *current_message = buf + OSC_HEADER_SIZE;
+	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
+	//while(osc_bndl_it_s_hasNext(it)){
+	while((current_message - buf) <= len){
+		//t_osc_msg_s *current_message = osc_bndl_it_s_next(it);
+		int32_t size = ntohl(*((int32_t *)current_message));
+		char *current_message_address = current_message + 4;
 		int po, ao;
-		int r = osc_match(address, osc_message_s_getAddress(current_message), &po, &ao);
+		//int r = osc_match(address, osc_message_s_getAddress(current_message), &po, &ao);
+		int r = osc_match(address, current_message_address, &po, &ao);
 		if(fullmatch){
 			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
-				continue;
+				goto cont;
 			}
 		}else{
 			if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
-				continue;
+				goto cont;
 			}
 		}
 		//osc_message_s_copy(matches + n++, current_message);
@@ -256,9 +261,12 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 			matchbuflen += 16;
 		}
 		t_osc_msg_s *p = osc_array_get(ar, n++);
-		osc_message_s_copy(&p, current_message);
+		//osc_message_s_copy(&p, current_message);
+		osc_message_s_wrap(p, current_message);
+	cont:
+		current_message += size + 4;
 	}
-	osc_bndl_it_s_destroy(it);
+	//osc_bndl_it_s_destroy(it);
 //*nmatches = n;
 //*m = matches;
 	if(ar){
