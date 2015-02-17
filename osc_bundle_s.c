@@ -177,13 +177,13 @@ t_osc_err osc_bundle_s_addressIsBound(long len, char *buf, char *address, int fu
 	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
 	//while(osc_bndl_it_s_hasNext(it)){
 	char *msg = buf + OSC_HEADER_SIZE;
-	while(msg - buf <= len){
+	while(msg - buf < len){
 		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
 		int po, ao;
 		//int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
 		int32_t size = ntoh32(*((int32_t *)msg));
-		char *address = msg + 4;
-		int r = osc_match(address, msg + 4, &po, &ao);
+		char *msg_address = msg + 4;
+		int r = osc_match(address, msg_address, &po, &ao);
 		if(fullmatch){
 			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
 				msg += 4 + size;
@@ -196,10 +196,12 @@ t_osc_err osc_bundle_s_addressIsBound(long len, char *buf, char *address, int fu
 			}
 		}
 		//if(osc_message_s_getArgCount(m) > 0){
-		char *tt = address + osc_util_getPaddedStringLen(address);
+		char *tt = msg_address + osc_util_getPaddedStringLen(address);
 		if(tt - msg < size + 4 && tt[1] != 0){
 			*res = 1;
 			break;
+		}else{
+			msg += 4 + size;
 		}
 	}
 //osc_bndl_it_s_destroy(it);
@@ -212,7 +214,7 @@ t_osc_err osc_bundle_s_addressExists(long len, char *buf, char *address, int ful
 	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
 	//while(osc_bndl_it_s_hasNext(it)){
 	char *msg = buf + OSC_HEADER_SIZE;
-	while(msg - buf <= len){
+	while(msg - buf < len){
 		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
 		int po, ao;
 		//int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
@@ -242,7 +244,7 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 	char *current_message = buf + OSC_HEADER_SIZE;
 	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
 	//while(osc_bndl_it_s_hasNext(it)){
-	while((current_message - buf) <= len){
+	while((current_message - buf) < len){
 		//t_osc_msg_s *current_message = osc_bndl_it_s_next(it);
 		int32_t size = ntohl(*((int32_t *)current_message));
 		char *current_message_address = current_message + 4;
@@ -674,25 +676,29 @@ t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, lon
 		*bndl_out = osc_mem_alloc(len1 + len2);
 		memset(*bndl_out, '\0', len1 + len2);
 	}
-	char *bndl = *bndl_out;
-	long len = OSC_HEADER_SIZE;
+
 	if(bndl1){
-		memcpy(*bndl_out, bndl1, OSC_HEADER_SIZE);
+		memcpy(*bndl_out, bndl1, len1);
+		*len_out = len1;
 	}else if(bndl2){
-		memcpy(*bndl_out, bndl2, OSC_HEADER_SIZE);
+		memcpy(*bndl_out, bndl2, len2);
+		*len_out = len2;
+		return 0;
 	}else{
 		osc_bundle_s_setBundleID(*bndl_out);
+		*len_out = OSC_HEADER_SIZE;
 	}
-
-	char *bndls[2] = {bndl1, bndl2};
-	long lens[2] = {len1, len2};
-	int i;
-	for(i = 0; i < 2; i++){
+	char *bndl = *bndl_out;
+	long len = *len_out;
+	//char *bndls[2] = {bndl1, bndl2};
+	//long lens[2] = {len1, len2};
+	//int i = 1;
+	//for(i = 0; i < 2; i++){
 		//t_osc_bndl_it_s *it = osc_bndl_it_s_get(lens[i], bndls[i]);
 		//while(osc_bndl_it_s_hasNext(it)){
 		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
-		char *m = bndls[i] + OSC_HEADER_SIZE;
-		while(m - bndls[i] < lens[i]){
+		char *m = bndl2 + OSC_HEADER_SIZE;
+		while(m - bndl2 < len2){
 			//char *address = osc_message_s_getAddress(m);
 			int32_t size = ntoh32(*((int32_t *)m));
 			char *address = m + 4;
@@ -708,7 +714,7 @@ t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, lon
 			m += size + 4;
 		}
 		//osc_bndl_it_s_destroy(it);
-	}
+		//}
 	*len_out = len;
 	return OSC_ERR_NONE;
 }
