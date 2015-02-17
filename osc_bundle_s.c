@@ -38,7 +38,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_iterator_s.h"
 #include "osc_message_s.h"
 #include "osc_atom_s.h"
-
+#include "osc_util.h"
 #include "osc_array.h"
 
 #define myprintf(st, args...)
@@ -174,50 +174,64 @@ t_osc_err osc_bundle_s_getMessagesWithCallback(int len, char *buf, void (*f)(t_o
 t_osc_err osc_bundle_s_addressIsBound(long len, char *buf, char *address, int fullmatch, int *res)
 {
 	*res = 0;
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *m = osc_bndl_it_s_next(it);
+	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
+	//while(osc_bndl_it_s_hasNext(it)){
+	char *msg = buf + OSC_HEADER_SIZE;
+	while(msg - buf <= len){
+		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
 		int po, ao;
-		int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
+		//int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
+		int32_t size = ntoh32(*((int32_t *)msg));
+		char *address = msg + 4;
+		int r = osc_match(address, msg + 4, &po, &ao);
 		if(fullmatch){
 			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+				msg += 4 + size;
 				continue;
 			}
 		}else{
 			if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
+				msg += 4 + size;
 				continue;
 			}
 		}
-		if(osc_message_s_getArgCount(m) > 0){
+		//if(osc_message_s_getArgCount(m) > 0){
+		char *tt = address + osc_util_getPaddedStringLen(address);
+		if(tt - msg < size + 4 && tt[1] != 0){
 			*res = 1;
 			break;
 		}
 	}
-	osc_bndl_it_s_destroy(it);
+//osc_bndl_it_s_destroy(it);
 	return OSC_ERR_NONE;
 }
 
 t_osc_err osc_bundle_s_addressExists(long len, char *buf, char *address, int fullmatch, int *res)
 {
 	*res = 0;
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *m = osc_bndl_it_s_next(it);
+	//t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, buf);
+	//while(osc_bndl_it_s_hasNext(it)){
+	char *msg = buf + OSC_HEADER_SIZE;
+	while(msg - buf <= len){
+		//t_osc_msg_s *m = osc_bndl_it_s_next(it);
 		int po, ao;
-		int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
+		//int r = osc_match(address, osc_message_s_getAddress(m), &po, &ao);
+		int r = osc_match(address, msg + 4, &po, &ao);
 		if(fullmatch){
 			if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+				msg += 4 + ntoh32(*((int32_t *)msg));
 				continue;
 			}
 		}else{
 			if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
+				msg += 4 + ntoh32(*((int32_t *)msg));
 				continue;
 			}
 		}
 		*res = 1;
 		break;
 	}
-	osc_bndl_it_s_destroy(it);
+	//osc_bndl_it_s_destroy(it);
 	return OSC_ERR_NONE;
 }
 
