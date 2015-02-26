@@ -250,7 +250,34 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 			if(!(*oscbndl) || *len <= 16){
 				return OSC_ERR_EXPR_ADDRESSUNBOUND;
 			}
-		        t_osc_rset *rset = NULL;
+#define __FAST__
+#ifdef __FAST__
+			char *mbytes = osc_bundle_s_getFirstFullMatch(*len, *oscbndl, arg->arg.osc_address);
+			if(mbytes){
+				char mm[osc_message_s_getStructSize()];
+				memset(mm, 0, osc_message_s_getStructSize());
+				t_osc_msg_s *m = (t_osc_msg_s *)mm;
+				osc_message_s_wrap(m, mbytes);
+				long arg_count = osc_message_s_getArgCount(m);
+				*out = osc_atom_array_u_alloc(arg_count);
+						
+				t_osc_atom_ar_u *atom_ar = *out;
+				osc_atom_array_u_clear(atom_ar);
+				int i = 0;
+				t_osc_msg_it_s *it = osc_msg_it_s_get(m);
+				while(osc_msg_it_s_hasNext(it)){
+					t_osc_atom_s *as = osc_msg_it_s_next(it);
+					t_osc_atom_u *au = osc_atom_array_u_get(atom_ar, i);
+					osc_atom_s_deserialize(as, &au);
+					i++;
+				}
+				osc_msg_it_s_destroy(it);
+				return 0;
+			}
+			return OSC_ERR_EXPR_ADDRESSUNBOUND;
+		}
+#else
+			t_osc_rset *rset = NULL;
 			osc_query_select(1, &(arg->arg.osc_address), *len, *oscbndl, 0, &rset);
 			t_osc_rset_result *res = osc_rset_select(rset, arg->arg.osc_address);
 			if(rset){
@@ -279,16 +306,17 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 				}
 				osc_rset_free(rset);
 			}
-			/*
-			osc_error_handler(__FILE__,
-					  __func__,
-					  __LINE__,
-					  OSC_ERR_EXPR_ADDRESSUNBOUND,
-					  "address %s is unbound\n",
-					  arg->arg.osc_address);
-			*/
-			return OSC_ERR_EXPR_ADDRESSUNBOUND;
 		}
+		/*
+		  osc_error_handler(__FILE__,
+		  __func__,
+		  __LINE__,
+		  OSC_ERR_EXPR_ADDRESSUNBOUND,
+		  "address %s is unbound\n",
+		  arg->arg.osc_address);
+		*/
+		return OSC_ERR_EXPR_ADDRESSUNBOUND;
+#endif
 	}
 	return OSC_ERR_INVAL; // this really shouldn't happen unless there's a bug somewhere
 }

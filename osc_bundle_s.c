@@ -297,6 +297,22 @@ t_osc_err osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, 
 	return osc_bundle_s_lookupAddress(bndl->len, bndl->ptr, address, osc_msg_s_array, fullmatch);
 }
 
+char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address)
+{
+	char *msg = ptr + OSC_HEADER_SIZE;
+	while(msg - ptr < len){
+		int32_t size = ntohl(*((int32_t *)msg));
+		char *msg_address = msg + 4;
+		int po, ao;
+		int r = osc_match(address, msg_address, &po, &ao);
+		if(r == (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+			return msg;
+		}
+		msg += size + 4;
+	}
+	return NULL;
+}
+
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc)
 {
 	*alloc = 0;
