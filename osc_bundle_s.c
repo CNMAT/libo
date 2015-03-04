@@ -523,9 +523,8 @@ t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest,
 	if(!(src)){
 		return OSC_ERR_NOBUNDLE;
 	}
-	t_osc_bndl_u *bu = NULL;
 	t_osc_bndl_u *flattened = NULL;
-	osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src), &bu);
+	t_osc_bndl_u *bu = osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src));
 	osc_bundle_u_flatten(&flattened, bu, maxlevel, sep, remove_enclosing_address_if_empty);
 	t_osc_bndl_s *b = osc_bundle_u_serialize(flattened);
 	if(bu){
@@ -543,9 +542,8 @@ t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxle
 	if(!(src)){
 		return OSC_ERR_NOBUNDLE;
 	}
-	t_osc_bndl_u *bu = NULL;
 	t_osc_bndl_u *ex = NULL;
-	osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src), &bu);
+	t_osc_bndl_u *bu = osc_bundle_s_deserialize(osc_bundle_s_getLen(src), osc_bundle_s_getPtr(src));
 	t_osc_err ret = osc_bundle_u_explode(&ex, bu, maxlevel, sep);
 	if(ret){
 		return ret;
@@ -568,7 +566,7 @@ t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxle
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_bundle_s_deserialize(long len, char *ptr, t_osc_bndl_u **bndl)
+t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr)
 {
 	t_osc_bndl_u *b = osc_bundle_u_alloc();
 	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, ptr);
@@ -579,8 +577,7 @@ t_osc_err osc_bundle_s_deserialize(long len, char *ptr, t_osc_bndl_u **bndl)
 		osc_bundle_u_addMsg(b, um);
 	}
 	osc_bndl_it_s_destroy(it);
-	*bndl = b;
-	return OSC_ERR_NONE;
+	return b;
 }
 
 extern t_osc_err osc_message_s_doFormat(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf);

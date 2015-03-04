@@ -88,7 +88,7 @@ long osc_bundle_u_getSerializedSize(t_osc_bndl_u *b)
 t_osc_err osc_bundle_u_copy(t_osc_bndl_u **dest, t_osc_bndl_u *src)
 {
 	t_osc_bndl_s *bs = osc_bundle_u_serialize(src);
-	osc_bundle_s_deserialize(osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs), dest);
+	*dest = osc_bundle_s_deserialize(osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs));
 	osc_bundle_s_deepFree(bs);
 	return OSC_ERR_NONE;
 }
