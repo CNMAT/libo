@@ -580,35 +580,15 @@ t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr)
 	return b;
 }
 
-extern t_osc_err osc_message_s_doFormat(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf);
-
-t_osc_err osc_bundle_s_doFormat(long len, char *bndl, long *buflen, long *bufpos, char **buf)
-{
-	if(len == OSC_HEADER_SIZE){
-		// empty bundle
-		return OSC_ERR_NONE;
-	}
-	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, bndl);
-	while(osc_bndl_it_s_hasNext(it)){
-		t_osc_msg_s *m = osc_bndl_it_s_next(it);
-		osc_message_s_doFormat(m, buflen, bufpos, buf);
-		(*bufpos) += sprintf(*buf + *bufpos, "\n");
-	}
-	osc_bndl_it_s_destroy(it);
-	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_bundle_s_format(long len, char *bndl, long *buflen, char **buf)
+char *osc_bundle_s_format(long len, char *bndl)
 {
 	if(!bndl){
-		return OSC_ERR_NOBUNDLE;
+		return NULL;
 	}
-	if(!(*buf)){
-		*buflen = osc_bundle_s_nformat(NULL, 0, len, bndl, 0) + 1;
-		*buf = osc_mem_alloc(*buflen);
-	}
-	osc_bundle_s_nformat(*buf, *buflen, len, bndl, 0);
-	return OSC_ERR_NONE;
+	long buflen = osc_bundle_s_nformat(NULL, 0, len, bndl, 0) + 1;
+	char *buf = osc_mem_alloc(buflen);
+	osc_bundle_s_nformat(buf, buflen, len, bndl, 0);
+	return buf;
 }
 
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent)
@@ -647,7 +627,7 @@ long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int ninde
 	return offset;
 }
 
-long osc_bundle_s_formatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent)
+long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent)
 {
 	if(!bndl || nindent < 1){
 		return 0;

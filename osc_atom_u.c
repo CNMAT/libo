@@ -684,7 +684,7 @@ int osc_atom_u_getInt(t_osc_atom_u *a){
 char *osc_atom_u_getStringPtr(t_osc_atom_u *a)
 {
 	if(!a){
-		return '\0';
+		return NULL;
 	}
 	if(a->typetag == 's'){
 		return a->w.s;
@@ -1171,8 +1171,7 @@ void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr)
 		return;
 	}
 	osc_atom_u_clear(a);
-	t_osc_bndl_u *b = NULL;
-	osc_bundle_s_deserialize(len, ptr, &b);
+	t_osc_bndl_u *b = osc_bundle_s_deserialize(len, ptr);
 	osc_atom_u_setBndl_u(a, b);
 /*
 	char *copy = osc_mem_alloc(len);
@@ -1414,7 +1413,7 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 	char tt = osc_atom_u_getTypetag(a);
 	if(!buf){
 		if(tt == OSC_BUNDLE_TYPETAG){
-			return osc_bundle_u_formatNestedBndl(NULL, 0, a->w.bndl, nindent + 1);
+			return osc_bundle_u_nformatNestedBndl(NULL, 0, a->w.bndl, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_u_getStringPtr(a));
 		}else{
@@ -1422,7 +1421,7 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 		}
 	}else{
 		if(tt == OSC_BUNDLE_TYPETAG){
-			return osc_bundle_u_formatNestedBndl(buf, n, a->w.bndl, nindent + 1);
+			return osc_bundle_u_nformatNestedBndl(buf, n, a->w.bndl, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_u_getStringPtr(a));
 		}else{

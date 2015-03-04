@@ -537,17 +537,15 @@ size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 	return _n;
 }
 
-t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf)
+char *osc_bundle_u_format(t_osc_bndl_u *bndl)
 {
 	if(!bndl){
-		return OSC_ERR_NOBUNDLE;
+		return NULL;
 	}
-	if(!(*buf)){
-		*buflen = osc_bundle_u_nformat(NULL, 0, bndl, 0) + 1;
-		*buf = osc_mem_alloc(*buflen);
-	}
-	osc_bundle_u_nformat(*buf, *buflen, bndl, 0);
-	return OSC_ERR_NONE;
+	long buflen = osc_bundle_u_nformat(NULL, 0, bndl, 0) + 1;
+	char *buf = osc_mem_alloc(buflen);
+	osc_bundle_u_nformat(buf, buflen, bndl, 0);
+	return buf;
 }
 
 long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
@@ -578,7 +576,7 @@ long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
 	return offset;
 }
 
-long osc_bundle_u_formatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
+long osc_bundle_u_nformatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent)
 {
 	if(!bndl || nindent < 1){
 		return 0;

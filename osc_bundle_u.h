@@ -81,9 +81,9 @@ t_osc_err osc_bundle_u_union(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_osc_bnd
 t_osc_err osc_bundle_u_intersection(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_osc_bndl_u **bndl_out);
 size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b);
 t_osc_bndl_s *osc_bundle_u_serialize(t_osc_bndl_u *bndl);
-OSC_DEPRECATED(t_osc_err osc_bundle_u_format(t_osc_bndl_u *bndl, long *buflen, char **buf), "use osc_bundle_u_nformat() instead.")
+char *osc_bundle_u_format(t_osc_bndl_u *bndl);
 long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
-long osc_bundle_u_formatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
+long osc_bundle_u_nformatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
 
 t_osc_bundle_array_u *osc_bundle_array_u_alloc(long len);
 #define osc_bundle_array_u_free(ar) osc_array_free((ar))

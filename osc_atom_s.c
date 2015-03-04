@@ -1094,7 +1094,7 @@ long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
 	if(!buf){
 		if(tt == OSC_BUNDLE_TYPETAG){
 			char *data = osc_atom_s_getData(a);
-			return osc_bundle_s_formatNestedBndl(NULL, 0, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
+			return osc_bundle_s_nformatNestedBndl(NULL, 0, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_s_getData(a));
 		}else{
@@ -1103,7 +1103,7 @@ long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
 	}else{
 		if(tt == OSC_BUNDLE_TYPETAG){
 			char *data = osc_atom_s_getData(a);
-			return osc_bundle_s_formatNestedBndl(buf, n, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
+			return osc_bundle_s_nformatNestedBndl(buf, n, ntoh32(*((uint32_t *)data)), data + 4, nindent + 1);
 		}else if(tt == 's'){
 			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_s_getData(a));
 		}else{
