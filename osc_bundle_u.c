@@ -164,7 +164,7 @@ t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int full
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_osc_array **osc_msg_u_array, int fullmatch)
+t_osc_msg_ar_u *osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, int fullmatch)
 {
 	int matchbuflen = 16, n = 0;
 	//t_osc_msg_u **matches = osc_mem_alloc(matchbuflen * sizeof(t_osc_msg_u *));
@@ -177,7 +177,7 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 			//matches = osc_mem_resize(matches, (matchbuflen + 16) * sizeof(t_osc_msg_u *));
 			t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
 			if(e){
-				return e;
+				return NULL;
 			}
 			matchbuflen += 16;
 		}
@@ -199,8 +199,7 @@ t_osc_err osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, t_
 	}
 	osc_bndl_it_u_destroy(it);
 	osc_array_resize(ar, n);
-	*osc_msg_u_array = ar;
-	return OSC_ERR_NONE;
+	return ar;
 }
 
 static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, int remove_dups)

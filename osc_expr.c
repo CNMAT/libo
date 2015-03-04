@@ -5833,8 +5833,7 @@ t_osc_err osc_expr_getFunctionsForCategory(char *cat, long *len, char **ptr)
 	}else{
 		sprintf(buf, "%s", cat);
 	}
-	t_osc_msg_ar_u *ar = NULL;
-	osc_bundle_u_lookupAddress(osc_expr_functionBundle, buf, &ar, 0);
+	t_osc_msg_ar_u *ar = osc_bundle_u_lookupAddress(osc_expr_functionBundle, buf, 0);
 	if(ar){
 		t_osc_bndl_u *bndl = osc_bundle_u_alloc();
 		osc_bundle_u_addMsgArrayCopy(bndl, ar);

@@ -874,8 +874,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 			osc_bundle_u_addMsgWithoutDups(dest, msg);
 			return OSC_ERR_NONE;
 		}else{
-			t_osc_msg_ar_u *ar = NULL;
-			osc_bundle_u_lookupAddress(dest, a1, &ar, 1);
+			t_osc_msg_ar_u *ar = osc_bundle_u_lookupAddress(dest, a1, 1);
 			t_osc_msg_u *m = NULL;
 			t_osc_bndl_u *b = NULL;
 			osc_message_u_deepCopy(&m, osc_message_array_u_get(ar, 0));
