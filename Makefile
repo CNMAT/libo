@@ -60,10 +60,13 @@ win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
 linux: CC = clang
+linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
-linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+#linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+linux: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 
 swig: CC = clang
+swig: CFLAGS += -std=c99
 swig: libo.i libo_wrap.c libo.py _libo.so
 
 libo_wrap.c libo.py:
@@ -99,6 +102,7 @@ libo.a: $(LIBO_OBJECTS)
 	$(STATIC-LINK)
 
 libo.dylib: $(LIBO_OBJECTS)
+	rm -f libo.dylib
 	$(DYNAMIC-LINK)
 
 %.o: %.c 

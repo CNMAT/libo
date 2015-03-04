@@ -53,6 +53,10 @@ typedef struct _osc_bundle_s t_osc_bundle_s, t_osc_bndl_s;
 #include <malloc.h> // for alloca in the macro below
 #endif
 
+#ifdef LINUX_VERSION
+#include <alloca.h>
+#endif
+
 typedef t_osc_array t_osc_bundle_array_s, t_osc_bndl_ar_s;
 
 #define osc_bundle_s_wrap_naked_message(len, ptr){\
