@@ -282,85 +282,15 @@ t_osc_err osc_message_s_deserialize(t_osc_msg_s *msg, t_osc_msg_u **msg_u){
 	return OSC_ERR_NONE;
 }
 
-extern t_osc_err osc_atom_s_doFormat(t_osc_atom_s *a, long *buflen, long *bufpos, char **buf);
-t_osc_err osc_message_s_doFormat(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf);
-t_osc_err osc_message_s_doFormatArgs(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf, int offset);
-
-t_osc_err osc_message_s_format(t_osc_msg_s *m, long *buflen, char **buf)
+char *osc_message_s_format(t_osc_msg_s *m)
 {
-	long bufpos = 0, bl = 0;
-	t_osc_err e = osc_message_s_doFormat(m, &bl, &bufpos, buf);
-	*buflen = bufpos;
-	return e;
-}
-
-t_osc_err osc_message_s_formatArgs(t_osc_msg_s *m, long *buflen, char **buf, int offset)
-{
-	long bufpos = 0, bl = 0;
-	t_osc_err e = osc_message_s_doFormatArgs(m, &bl, &bufpos, buf, offset);
-	*buflen = bufpos;
-	return e;
-}
-
-t_osc_err osc_message_s_doFormatArgs(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf, int offset)
-{
-	t_osc_msg_it_s *it = osc_msg_it_s_get(m);
-	int i = 0;
-	while(osc_msg_it_s_hasNext(it)){
-		t_osc_atom_s *a = osc_msg_it_s_next(it);
-		if(i < offset){
-			i++;
-			continue;
-		}
-		if((*buflen - *bufpos) < 256){
-			*buf = osc_mem_resize(*buf, *buflen + 1024);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += 1024;
-		}
-		t_osc_err e = osc_atom_s_doFormat(a, buflen, bufpos, buf);
-		if(e){
-			return e;
-		}
+	if(!m){
+		return NULL;
 	}
-	osc_msg_it_s_destroy(it);
-	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_message_s_doFormat(t_osc_msg_s *m, long *buflen, long *bufpos, char **buf)
-{
-	if((*buflen - *bufpos) < 256){
-		*buf = osc_mem_resize(*buf, *buflen + 1024);
-		if(!(*buf)){
-			return OSC_ERR_OUTOFMEM;
-		}
-		*buflen += 1024;
-	}
-	*bufpos += sprintf(*buf + *bufpos, "%s ", osc_message_s_getAddress(m));
-	/*
-	t_osc_msg_it_s *it = osc_msg_it_s_get(m);
-	while(osc_msg_it_s_hasNext(it)){
-		t_osc_atom_s *a = osc_msg_it_s_next(it);
-		if((*buflen - *bufpos) < 256){
-			*buf = osc_mem_resize(*buf, *buflen + 1024);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += 1024;
-		}
-		t_osc_err e = osc_atom_s_doFormat(a, buflen, bufpos, buf);
-		if(e){
-			return e;
-		}
-	}
-	osc_msg_it_s_destroy(it);
-	*/
-	t_osc_err e = osc_message_s_doFormatArgs(m, buflen, bufpos, buf, 0);
-	if(e){
-		return e;
-	}
-	return OSC_ERR_NONE;
+	long len = osc_message_s_nformat(NULL, 0, m, 0) + 1;
+	char *buf = osc_mem_alloc(len);
+	osc_message_s_nformat(buf, len, m, 0);
+	return buf;
 }
 
 long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)

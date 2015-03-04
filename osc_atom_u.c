@@ -1405,6 +1405,17 @@ t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf)
 	return OSC_ERR_NONE;
 }
 
+char *osc_atom_u_format(t_osc_atom_u *a)
+{
+	if(!a){
+		return NULL;
+	}
+	long len = osc_atom_u_nformat(NULL, 0, a, 0) + 1;
+	char *buf = osc_mem_alloc(len);
+	osc_atom_u_nformat(buf, len, a, 0);
+	return buf;
+}
+
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 {
 	if(!a){

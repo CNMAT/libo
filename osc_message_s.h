@@ -189,10 +189,9 @@ t_osc_err osc_message_s_deserialize(t_osc_msg_s *msg, t_osc_msg_u **msg_u);
 The string will be allocated with #osc_mem_alloc and must be freed by the caller using #osc_mem_free
    @return An error or #OSC_ERR_NONE
  */
-OSC_DEPRECATED(t_osc_err osc_message_s_format(t_osc_msg_s *m, long *buflen, char **buf), "use osc_message_s_nformat() instead.");
+char *osc_message_s_format(t_osc_msg_s *m);
 long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent);
 
-OSC_DEPRECATED(t_osc_err osc_message_s_formatArgs(t_osc_msg_s *m, long *buflen, char **buf, int offset), "");
 
 t_osc_message_array_s *osc_message_array_s_alloc(long len);
 #define osc_message_array_s_free(ar) osc_array_free((ar))

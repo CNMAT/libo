@@ -1019,70 +1019,15 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_atom_s_doFormat(t_osc_atom_s *a, long *buflen, long *bufpos, char **buf)
+char *osc_atom_s_format(t_osc_atom_s *a, long *buflen)
 {
 	if(!a){
-		return OSC_ERR_NOBUNDLE;
+		return NULL;
 	}
-	if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
-		char *data = osc_atom_s_getData(a);
-		int n = ntoh32(*((uint32_t *)data)) + 32;
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		*bufpos += sprintf(*buf + *bufpos, "[\n");
-		extern t_osc_err osc_bundle_s_doFormat(long len, char *bndl, long *buflen, long *bufpos, char **buf);
-		osc_bundle_s_doFormat(ntoh32(*((uint32_t *)data)), data + 4, buflen, bufpos, buf);
-		*bufpos += sprintf(*buf + *bufpos, "]");
-		//}else if(osc_atom_s_getTypetag(a) == OSC_TIMETAG_TYPETAG){
-		//*bufpos += sprintf(*buf + *bufpos, "timetag");
-		//*bufpos += osc_timetag_format(*((t_osc_timetag *)osc_atom_s_getData(a)), *buf + *bufpos);
-	}else if(osc_atom_s_getTypetag(a) == 's'){
-		char *stringptr = osc_atom_s_getData(a);
-		int stringlen = strlen(stringptr);
-
-		int n = stringlen + 4 + osc_strfmt_countMeta(stringlen, stringptr);
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		char *b = *buf + *bufpos;
-		(*bufpos) += osc_strfmt_addQuotesAndQuoteMeta(stringlen, stringptr, &b);
-		(*buf)[(*bufpos)++] = ' ';
-		(*buf)[(*bufpos)] = '\0';
-	}else{
-		int n = osc_atom_s_getStringLen(a) + 2; // space and null byte
-		if((*buflen - *bufpos) < n){
-			*buf = osc_mem_resize(*buf, *buflen + n);
-			if(!(*buf)){
-				return OSC_ERR_OUTOFMEM;
-			}
-			*buflen += n;
-		}
-		char *b = *buf + *bufpos;
-		(*bufpos) += osc_atom_s_getString(a, *buflen - *bufpos, &b);
-		(*buf)[(*bufpos)++] = ' ';
-		(*buf)[(*bufpos)] = '\0';
-	}
-	return OSC_ERR_NONE;
-}
-
-t_osc_err osc_atom_s_format(t_osc_atom_s *a, long *buflen, char **buf)
-{
-	if(!a){
-		return OSC_ERR_INVAL;
-	}
-	long mybuflen = 0, mybufpos = 0;
-	t_osc_err e = osc_atom_s_doFormat(a, &mybuflen, &mybufpos, buf);
-	*buflen = mybufpos;
-	return e;
+	long len = osc_atom_s_nformat(NULL, 0, a, 0) + 1;
+	char *buf = osc_mem_alloc(len);
+	osc_atom_s_nformat(buf, len, a, 0);
+	return buf;
 }
 
 long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent)
