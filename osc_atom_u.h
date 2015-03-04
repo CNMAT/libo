@@ -108,7 +108,6 @@ typedef struct _osc_atom_u t_osc_atom_u;
 #include "osc_error.h"
 #include "osc_bundle_s.h"
 #include "osc_bundle_u.h"
-#include "osc_atom_u.h"
 #include "osc_array.h"
 #include "osc_timetag.h"
 

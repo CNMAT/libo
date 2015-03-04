@@ -733,7 +733,6 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		return 1;
 	}
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
-	t_osc_msg_ar_s *msg_ar = NULL;
 	t_osc_atom_ar_u *address_ar = NULL;
 	char *address = NULL;
 	if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
@@ -821,7 +820,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 
 	//int mc = 0;
 	//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
-	osc_bundle_s_lookupAddress(*len, *oscbndl, address, &msg_ar, 1);
+	t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, address, 1);
         if(msg_ar){
                 osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), (t_osc_msg_s *)osc_msg_s);
                 osc_message_array_s_free(msg_ar);
@@ -852,8 +851,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 		return 1;
 	}
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
-	t_osc_msg_ar_s *msg_ar = NULL;
-	osc_bundle_s_lookupAddress(*len, *oscbndl, f_argv->arg.osc_address, &msg_ar, 1);
+	t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, f_argv->arg.osc_address, 1);
 	if(!msg_ar){
 		osc_expr_err_unbound(osc_expr_arg_getOSCAddress(f_argv), "=");
 		return 1;
@@ -1299,8 +1297,7 @@ static int osc_expr_specFunc_value(t_osc_expr *f,
 			}
 		}
 		if(address){
-			t_osc_msg_ar_s *ar = NULL;
-			osc_bundle_s_lookupAddress(*len, *oscbndl, address, &ar, 1);
+			t_osc_msg_ar_s *ar = osc_bundle_s_lookupAddress(*len, *oscbndl, address, 1);
 			if(ar){
 				t_osc_msg_s *m = osc_message_array_s_get(ar, 0);
 				int argc = osc_message_s_getArgCount(m);
@@ -1580,8 +1577,7 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 	char *bndl_s = NULL;
 	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
 		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
-		t_osc_message_array_s *msgar = NULL;
-		osc_bundle_s_lookupAddress(*len, *oscbndl, string, &msgar, 1);
+		t_osc_message_array_s *msgar = osc_bundle_s_lookupAddress(*len, *oscbndl, string, 1);
 		if(msgar){
 			t_osc_msg_s *m = osc_message_array_s_get(msgar, 0);
 			t_osc_atom_s *a = NULL;
@@ -1674,8 +1670,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 	char *bndl_s = NULL;
 	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
 		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
-		t_osc_message_array_s *msgar = NULL;
-		osc_bundle_s_lookupAddress(*len, *oscbndl, string, &msgar, 1);
+		t_osc_message_array_s *msgar = osc_bundle_s_lookupAddress(*len, *oscbndl, string, 1);
 		if(msgar){
 			t_osc_msg_s *m = osc_message_array_s_get(msgar, 0);
 			t_osc_atom_s *a = NULL;

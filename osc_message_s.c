@@ -25,10 +25,10 @@
 #include <string.h>
 #include <inttypes.h>
 #include "osc.h"
-#include "osc_message_s.h"
 #include "osc_message_s.r"
-#include "osc_message_u.h"
+#include "osc_message_s.h"
 #include "osc_message_iterator_s.h"
+#include "osc_message_u.h"
 #include "osc_array.h"
 #include "osc_mem.h"
 #include "osc_util.h"

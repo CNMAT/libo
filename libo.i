@@ -73,13 +73,6 @@
 %include "osc_serial.h"
 %include "osc.h"
 %inline %{
-t_osc_ar *osc_bundle_s_lookupAddress_r(int len, char *buf, const char *address, int fullmatch)
-{
-	t_osc_ar *ar = NULL;
-	osc_bundle_s_lookupAddress(len, buf, address, &ar, fullmatch);
-	return ar;
-}
-
 t_osc_ar *osc_bundle_u_lookupAddress_r(t_osc_bndl_u *bndl, const char *address, int fullmatch)
 {
 	t_osc_ar *ar = NULL;

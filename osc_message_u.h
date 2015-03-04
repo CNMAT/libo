@@ -37,12 +37,12 @@ extern "C" {
 typedef struct _osc_message_u t_osc_message_u, t_osc_msg_u;
 
 #include <stdint.h>
-#include "osc_bundle_u.h"
-#include "osc_bundle_s.h"
 #include "osc_atom_u.h"
 #include "osc_atom_array_u.h"
 #include "osc_array.h"
 #include "osc_timetag.h"
+#include "osc_bundle_u.h"
+#include "osc_bundle_s.h"
 
 typedef t_osc_array t_osc_message_array_u, t_osc_msg_ar_u;
 

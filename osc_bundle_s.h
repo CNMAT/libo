@@ -43,8 +43,8 @@ typedef struct _osc_bundle_s t_osc_bundle_s, t_osc_bndl_s;
 #endif
 
 #include <stdint.h>
-#include "osc_bundle_u.h"
 #include "osc_message_s.h"
+#include "osc_bundle_u.h"
 #include "osc_error.h"
 #include "osc_array.h"
 #include "osc_timetag.h"
@@ -84,8 +84,8 @@ t_osc_err osc_bundle_s_getMessagesWithCallback(int len, char *buf, void (*f)(t_o
 
 t_osc_err osc_bundle_s_addressIsBound(long len, char *buf, char *address, int fullmatch, int *res);
 t_osc_err osc_bundle_s_addressExists(long len, char *buf, char *address, int fullmatch, int *res);
-t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_osc_array **osc_msg_s_array, int fullmatch);
-t_osc_err osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, t_osc_ar **osc_msg_s_array, int fullmatch);
+t_osc_msg_ar_s *osc_bundle_s_lookupAddress(long len, char *buf, const char *address, int fullmatch);
+t_osc_msg_ar_s *osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, int fullmatch);
 char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address);
 
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc);

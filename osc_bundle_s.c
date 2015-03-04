@@ -33,10 +33,10 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_message_u.h"
 #include "osc_atom_u.h"
 
+#include "osc_message_s.h"
 #include "osc_bundle_s.r"
 #include "osc_bundle_s.h"
 #include "osc_bundle_iterator_s.h"
-#include "osc_message_s.h"
 #include "osc_atom_s.h"
 #include "osc_util.h"
 #include "osc_array.h"
@@ -237,7 +237,7 @@ t_osc_err osc_bundle_s_addressExists(long len, char *buf, char *address, int ful
 	return OSC_ERR_NONE;
 }
 
-t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_osc_ar **osc_msg_s_array, int fullmatch)
+t_osc_msg_ar_s *osc_bundle_s_lookupAddress(long len, char *buf, const char *address, int fullmatch)
 {
 	int matchbuflen = 0, n = 0;
 	t_osc_msg_ar_s *ar = NULL;
@@ -266,12 +266,12 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 			if(!ar){
 				ar = osc_message_array_s_alloc(16);
 				if(!ar){
-					return OSC_ERR_OUTOFMEM;
+					return NULL;
 				}
 			}else{
 				t_osc_err e = osc_array_resize(ar, matchbuflen + 16);
 				if(e){
-					return e;
+					return NULL;
 				}
 			}
 			matchbuflen += 16;
@@ -288,13 +288,13 @@ t_osc_err osc_bundle_s_lookupAddress(int len, char *buf, const char *address, t_
 	if(ar){
 		osc_array_resize(ar, n);
 	}
-	*osc_msg_s_array = ar;
-	return OSC_ERR_NONE;
+	//*osc_msg_s_array = ar;
+	return ar;
 }
 
-t_osc_err osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, t_osc_ar **osc_msg_s_array, int fullmatch)
+t_osc_msg_ar_s *osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, int fullmatch)
 {
-	return osc_bundle_s_lookupAddress(bndl->len, bndl->ptr, address, osc_msg_s_array, fullmatch);
+	return osc_bundle_s_lookupAddress(bndl->len, bndl->ptr, address, fullmatch);
 }
 
 char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address)
