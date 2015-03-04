@@ -60,7 +60,7 @@ char *osc_message_u_getAddress(t_osc_msg_u *m);
 t_osc_err osc_message_u_setAddress(t_osc_msg_u *m, const char *address);
 t_osc_err osc_message_u_setAddressPtr(t_osc_msg_u *m, char *newAddress, char **oldAddress);
 int osc_message_u_getArgCount(t_osc_msg_u *m);
-void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom);
+t_osc_atom_u *osc_message_u_getArg(t_osc_msg_u *m, int n);
 
 t_osc_err osc_message_u_appendAtom(t_osc_msg_u *m, t_osc_atom_u *a);
 t_osc_err osc_message_u_prependAtom(t_osc_msg_u *m, t_osc_atom_u *a);

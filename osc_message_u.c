@@ -210,18 +210,17 @@ int osc_message_u_getArgCount(t_osc_msg_u *m)
 	return m->argc;
 }
 
-void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom)
+t_osc_atom_u *osc_message_u_getArg(t_osc_msg_u *m, int n)
 {
 	if(!m){
-		return;
+		return NULL;
 	}
 	int nn = osc_message_u_getArgCount(m);
 	if(nn <= n){
-		return;
+		return NULL;
 	}
 	if(n == 0){
-		*atom = m->arghead;
-		return;
+		return m->arghead;
 	}
 	t_osc_atom_u *a = NULL;
 	int i;
@@ -236,7 +235,7 @@ void osc_message_u_getArg(t_osc_msg_u *m, int n, t_osc_atom_u **atom)
 			a = a->prev;
 		}
 	}
-	*atom = a;
+	return a;
 }
 
 t_osc_err osc_message_u_appendAtom(t_osc_msg_u *m, t_osc_atom_u *a)
@@ -884,14 +883,12 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 				osc_message_u_clearArgs(m);
 				b = osc_bundle_u_alloc();
 			}else if(argc == 1){
-				t_osc_atom_u *a = NULL;
-				osc_message_u_getArg(m, 0, &a);
+				t_osc_atom_u *a = osc_message_u_getArg(m, 0);
 				if(osc_atom_u_getTypetag(a) != OSC_BUNDLE_TYPETAG){
 					osc_message_u_clearArgs(m);
 					b = osc_bundle_u_alloc();
 				}else{
-					t_osc_atom_u *a = NULL;
-					osc_message_u_getArg(m, 0, &a);
+					t_osc_atom_u *a = osc_message_u_getArg(m, 0);
 					b = osc_atom_u_getBndl(a);
 					t_osc_bndl_u *bb = NULL;
 					osc_bundle_u_copy(&bb, b);
