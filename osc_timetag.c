@@ -9,8 +9,9 @@
 #include <arpa/inet.h>
 #endif
 */
-#include <time.h>
+#define __USE_BSD
 #include <sys/time.h>
+#include <time.h>
 
 // crossplatform gettimeofday
 //#include "contrib/timeval.h"
