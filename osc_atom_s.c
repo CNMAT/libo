@@ -1019,7 +1019,7 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 	return OSC_ERR_NONE;
 }
 
-long osc_atom_s_getFormattedLen(t_osc_atom_s *a)
+long osc_atom_s_getFormattedSize(t_osc_atom_s *a)
 {
 	return osc_atom_s_nformat(NULL, 0, a, 0);
 }

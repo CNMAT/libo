@@ -80,11 +80,6 @@ void osc_bundle_u_clear(t_osc_bndl_u *bndl)
 	bndl->msgtail = NULL;
 }
 
-long osc_bundle_u_getSerializedSize(t_osc_bndl_u *b)
-{
-	return osc_bundle_u_nserialize(NULL, 0, b);
-}
-
 t_osc_err osc_bundle_u_copy(t_osc_bndl_u **dest, t_osc_bndl_u *src)
 {
 	t_osc_bndl_s *bs = osc_bundle_u_serialize(src);
@@ -500,6 +495,11 @@ t_osc_err osc_bundle_u_intersection(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2, t_
 	return OSC_ERR_NONE;
 }
 
+long osc_bundle_u_getSerializedSize(t_osc_bndl_u *b)
+{
+	return osc_bundle_u_nserialize(NULL, 0, b);
+}
+
 t_osc_bndl_s *osc_bundle_u_serialize(t_osc_bndl_u *b)
 {
 	size_t n = osc_bundle_u_nserialize(NULL, 0, b);
@@ -537,7 +537,7 @@ size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 	return _n;
 }
 
-long osc_bundle_u_getFormattedLen(t_osc_bndl_u *bndl)
+long osc_bundle_u_getFormattedSize(t_osc_bndl_u *bndl)
 {
 	return osc_bundle_u_nformat(NULL, 0, bndl, 0);
 }

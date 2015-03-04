@@ -135,9 +135,10 @@ t_osc_atom_u *osc_message_u_insertBlob(t_osc_msg_u *m, char *b, int pos);
 
 t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlevel, char *sep);
 
+long osc_message_u_getSerializedSize(t_osc_msg_u *m);
+t_osc_msg_s *osc_message_u_serialize(t_osc_msg_u *m);
 size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m);
-t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf);
-long osc_message_u_getFormattedLen(t_osc_msg_u *m);
+long osc_message_u_getFormattedSize(t_osc_msg_u *m);
 char *osc_message_u_format(t_osc_msg_u *m);
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 

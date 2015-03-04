@@ -1397,15 +1397,20 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 	return 0;
 }
 
-t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf)
+long osc_atom_u_getSerializedSize(t_osc_atom_u *a)
 {
-	size_t n = osc_atom_u_nserialize(NULL, 0, a);
-	*buf = osc_mem_alloc(n);
-	*buflen = osc_atom_u_nserialize(*buf, n, a);
-	return OSC_ERR_NONE;
+	return osc_atom_u_nserialize(NULL, 0, a);
 }
 
-long osc_atom_u_getFormattedLen(t_osc_atom_u *a)
+t_osc_atom_s *osc_atom_u_serialize(t_osc_atom_u *a)
+{
+	size_t n = osc_atom_u_nserialize(NULL, 0, a);
+	char *buf = osc_mem_alloc(n);
+	osc_atom_u_nserialize(buf, n, a);
+	return osc_atom_s_alloc(osc_atom_u_getTypetag(a), buf);
+}
+
+long osc_atom_u_getFormattedSize(t_osc_atom_u *a)
 {
 	return osc_atom_u_nformat(NULL, 0, a, 0);
 }

@@ -44,6 +44,7 @@ typedef struct _osc_atom_u t_osc_atom_u;
 #include "osc_bundle_u.h"
 #include "osc_array.h"
 #include "osc_timetag.h"
+#include "osc_atom_s.h"
 
 /** \brief Allocate a #t_osc_atom_u
 
@@ -437,8 +438,6 @@ size_t osc_atom_u_sizeof(t_osc_atom_u *a);
 
 void osc_atom_u_negate(t_osc_atom_u *a);
 
-size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a);
-
 /** \brief Serialize a #t_osc_atom_u
 
 This function will convert the contents of a #t_osc_atom_u to a byte array suitable
@@ -452,7 +451,9 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
  */
-t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf);
+long osc_atom_u_getSerializedSize(t_osc_atom_u *a);
+t_osc_atom_s *osc_atom_u_serialize(t_osc_atom_u *a);
+size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a);
 
 /** \brief Format a #t_osc_atom_u for display.
 
@@ -466,7 +467,7 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
 */
-long osc_atom_u_getFormattedLen(t_osc_atom_u *a);
+long osc_atom_u_getFormattedSize(t_osc_atom_u *a);
 char *osc_atom_u_format(t_osc_atom_u *a);
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 

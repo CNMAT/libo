@@ -1031,15 +1031,22 @@ size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m)
 	return _n;
 }
 
-t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf)
+long osc_message_u_getSerializedSize(t_osc_msg_u *m)
 {
-	size_t n = osc_message_u_nserialize(NULL, 0, m);
-	*buf = osc_mem_alloc(n);
-	*buflen = osc_message_u_nserialize(*buf, n, m);
-	return OSC_ERR_NONE;
+	return osc_message_u_nserialize(NULL, 0, m);
 }
 
-long osc_message_u_getFormattedLen(t_osc_msg_u *m)
+t_osc_msg_s *osc_message_u_serialize(t_osc_msg_u *m)
+{
+	size_t n = osc_message_u_nserialize(NULL, 0, m);
+	char *buf = osc_mem_alloc(n);
+	osc_message_u_nserialize(buf, n, m);
+	t_osc_msg_s *mm = osc_message_s_alloc();
+	osc_message_s_wrap(mm, buf);
+	return mm;
+}
+
+long osc_message_u_getFormattedSize(t_osc_msg_u *m)
 {
 	return osc_message_u_nformat(NULL, 0, m, 0);
 }
