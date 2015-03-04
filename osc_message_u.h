@@ -137,6 +137,7 @@ t_osc_err osc_message_u_explode(t_osc_bndl_u *dest, t_osc_msg_u *msg, int maxlev
 
 size_t osc_message_u_nserialize(char *buf, size_t n, t_osc_msg_u *m);
 t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf);
+long osc_message_u_getFormattedLen(t_osc_msg_u *m);
 char *osc_message_u_format(t_osc_msg_u *m);
 long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 

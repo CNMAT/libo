@@ -466,6 +466,7 @@ one will be created and must be freed by the caller using #osc_mem_free().
 
 \return An error or #OSC_ERR_NONE
 */
+long osc_atom_u_getFormattedLen(t_osc_atom_u *a);
 char *osc_atom_u_format(t_osc_atom_u *a);
 long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent);
 

@@ -537,6 +537,11 @@ size_t osc_bundle_u_nserialize(char *buf, size_t n, t_osc_bndl_u *b)
 	return _n;
 }
 
+long osc_bundle_u_getFormattedLen(t_osc_bndl_u *bndl)
+{
+	return osc_bundle_u_nformat(NULL, 0, bndl, 0);
+}
+
 char *osc_bundle_u_format(t_osc_bndl_u *bndl)
 {
 	if(!bndl){

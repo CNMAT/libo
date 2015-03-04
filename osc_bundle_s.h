@@ -113,6 +113,7 @@ t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest,
 			       int remove_enclosing_address_if_empty);
 t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxlevel, char *sep);
 t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr);
+long osc_bundle_s_getFormattedLen(long len, char *bndl);
 char *osc_bundle_s_format(long len, char *bndl);
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent);
 long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent);

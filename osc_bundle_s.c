@@ -580,6 +580,11 @@ t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr)
 	return b;
 }
 
+long osc_bundle_s_getFormattedLen(long len, char *bndl)
+{
+	return osc_bundle_s_nformat(NULL, 0, len, bndl, 0);
+}
+
 char *osc_bundle_s_format(long len, char *bndl)
 {
 	if(!bndl){

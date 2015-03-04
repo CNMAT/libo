@@ -1039,6 +1039,11 @@ t_osc_err osc_message_u_serialize(t_osc_msg_u *m, long *buflen, char **buf)
 	return OSC_ERR_NONE;
 }
 
+long osc_message_u_getFormattedLen(t_osc_msg_u *m)
+{
+	return osc_message_u_nformat(NULL, 0, m, 0);
+}
+
 char *osc_message_u_format(t_osc_msg_u *m)
 {
 	if(!m){

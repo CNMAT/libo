@@ -1405,6 +1405,11 @@ t_osc_err osc_atom_u_serialize(t_osc_atom_u *a, long *buflen, char **buf)
 	return OSC_ERR_NONE;
 }
 
+long osc_atom_u_getFormattedLen(t_osc_atom_u *a)
+{
+	return osc_atom_u_nformat(NULL, 0, a, 0);
+}
+
 char *osc_atom_u_format(t_osc_atom_u *a)
 {
 	if(!a){

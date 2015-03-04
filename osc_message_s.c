@@ -282,6 +282,11 @@ t_osc_err osc_message_s_deserialize(t_osc_msg_s *msg, t_osc_msg_u **msg_u){
 	return OSC_ERR_NONE;
 }
 
+long osc_message_s_getFormattedLen(t_osc_msg_s *m)
+{
+	return osc_message_s_nformat(NULL, 0, m, 0);
+}
+
 char *osc_message_s_format(t_osc_msg_s *m)
 {
 	if(!m){

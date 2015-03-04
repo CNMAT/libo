@@ -189,6 +189,7 @@ t_osc_err osc_message_s_deserialize(t_osc_msg_s *msg, t_osc_msg_u **msg_u);
 The string will be allocated with #osc_mem_alloc and must be freed by the caller using #osc_mem_free
    @return An error or #OSC_ERR_NONE
  */
+long osc_message_s_getFormattedLen(t_osc_msg_s *m);
 char *osc_message_s_format(t_osc_msg_s *m);
 long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent);
 
