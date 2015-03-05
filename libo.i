@@ -73,36 +73,4 @@
 %include "osc_serial.h"
 %include "osc.h"
 %inline %{
-t_osc_ar *osc_bundle_u_lookupAddress_r(t_osc_bndl_u *bndl, const char *address, int fullmatch)
-{
-	t_osc_ar *ar = NULL;
-	osc_bundle_u_lookupAddress(bndl, address, &ar, fullmatch);
-	return ar;
-}
-
-t_osc_bndl_u *osc_bundle_s_deserialize_r(long len, char *ptr)
-{
-	t_osc_bndl_u *bndl = NULL;
-	osc_bundle_s_deserialize(len, ptr, &bndl);
-	return bndl;
-}
-
-t_osc_msg_s *void_to_osc_message_s(void *p)
-{
-	return (t_osc_msg_s *)p;
-}
-
-t_osc_msg_u *void_to_osc_message_u(void *p)
-{
-	return (t_osc_msg_u *)p;
-}
-
-t_osc_atom_u *osc_message_u_getArg_r(t_osc_msg_u *m, int n)
-{
-	t_osc_atom_u *a = NULL;
-	osc_message_u_getArg(m, n, &a);
-	return a;
-}
-
  %}
-	 //extern t_osc_msg_s *void_to_osc_message_s(void *p);

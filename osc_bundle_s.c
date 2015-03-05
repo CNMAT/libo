@@ -654,12 +654,6 @@ long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl,
 	return offset;
 }
 
-t_osc_array *osc_bundle_array_s_alloc(long len)
-{
-	return osc_array_allocWithSize(len, sizeof(t_osc_bndl_s));
-}
-
-
 t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out)
 {
 	if((len1 == 0 && len2 == 0) || (len1 == OSC_HEADER_SIZE && len2 == OSC_HEADER_SIZE)){
@@ -829,4 +823,39 @@ int osc_bundle_s_concat(long len1, char *bndl1, long len2, char *bndl2, char *bn
 	memcpy(bndl, bndl1, len1);
 	memcpy(bndl + len1, bndl2 + OSC_HEADER_SIZE, len2 - OSC_HEADER_SIZE);
 	return len1 + len2 - OSC_HEADER_SIZE;
+}
+
+t_osc_bundle_array_s *osc_bundle_array_s_alloc(long len)
+{
+	return (t_osc_bundle_array_s *)osc_array_allocWithSize(len, sizeof(t_osc_bndl_s));
+}
+
+void osc_bundle_array_s_free(t_osc_bundle_array_s *ar)
+{
+	osc_array_free((t_osc_array *)ar);
+}
+
+void osc_bundle_array_s_clear(t_osc_bundle_array_s *ar)
+{
+	osc_array_clear((t_osc_array *)ar);
+}
+
+t_osc_bndl_s *osc_bundle_array_s_get(t_osc_bundle_array_s *ar, long idx)
+{
+	return (t_osc_bndl_s *)osc_array_get((t_osc_array *)ar, idx);
+}
+
+long osc_bundle_array_s_getLen(t_osc_bundle_array_s *ar)
+{
+	return osc_array_getLen((t_osc_array *)ar);
+}
+
+t_osc_bundle_array_s *osc_bundle_array_s_copy(t_osc_bundle_array_s *ar)
+{
+	return (t_osc_bundle_array_s *)osc_array_copy((t_osc_array *)ar);
+}
+
+t_osc_err osc_bundle_array_s_resize(t_osc_bundle_array_s *ar, long newlen)
+{
+	return osc_array_resize((t_osc_array *)ar, newlen);
 }

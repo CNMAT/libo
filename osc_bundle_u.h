@@ -87,12 +87,20 @@ long osc_bundle_u_nformat(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
 long osc_bundle_u_nformatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int nindent);
 
 t_osc_bundle_array_u *osc_bundle_array_u_alloc(long len);
+void osc_bundle_array_u_free(t_osc_bundle_array_u *ar);
+void osc_bundle_array_u_clear(t_osc_bundle_array_u *ar);
+t_osc_bndl_u *osc_bundle_array_u_get(t_osc_bundle_array_u *ar, long idx);
+long osc_bundle_array_u_getLen(t_osc_bundle_array_u *ar);
+t_osc_bundle_array_u *osc_bundle_array_u_copy(t_osc_bundle_array_u *ar);
+t_osc_err osc_bundle_array_u_resize(t_osc_bundle_array_u *ar, long newlen);
+/*
 #define osc_bundle_array_u_free(ar) osc_array_free((ar))
 #define osc_bundle_array_u_clear(ar) osc_array_clear((ar))
 #define osc_bundle_array_u_get(ar, idx) osc_array_get((ar), (idx))
 #define osc_bundle_array_u_getLen(ar) osc_array_getLen((ar))
 #define osc_bundle_array_u_copy(ar) osc_array_copy((ar))
 #define osc_bundle_array_u_resize(ar, newlen) osc_array_resize((ar), (newlen))
+*/
 
 #ifdef __cplusplus
 }

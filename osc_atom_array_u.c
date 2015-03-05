@@ -33,9 +33,9 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_array.h"
 #include "osc_atom_array_u.h"
 
-t_osc_array *osc_atom_array_u_alloc(long len)
+t_osc_atom_array_u *osc_atom_array_u_alloc(long len)
 {
-	return osc_array_allocWithSize(len, sizeof(t_osc_atom_u));
+	return (t_osc_atom_array_u *)osc_array_allocWithSize(len, sizeof(t_osc_atom_u));
 }
 
 void osc_atom_array_u_free(t_osc_atom_ar_u *ar)
@@ -191,24 +191,24 @@ t_osc_err osc_atom_array_u_getStringArray(t_osc_atom_ar_u *array, long *len, cha
 // we can't use the copy and copyInto routines in osc_array.c because we may have an atom
 // with a string that needs to be copied in which case memcpy() is not our friend.
 // so unfortunately we need to iterate through every element and copy it.
-t_osc_array *osc_atom_array_u_copy(t_osc_array *array)
+t_osc_atom_array_u *osc_atom_array_u_copy(t_osc_atom_array_u *array)
 {
 	if(!array){
 		return NULL;
 	}
-	long len = osc_array_getLen(array);
+	long len = osc_array_getLen((t_osc_array *)array);
 	t_osc_ar *cp = osc_atom_array_u_alloc(len);
 	//memcpy(cp->ar, array->ar, cp->len * cp->membersize);
 	int i;
 	for(i = 0; i < len; i++){
-		t_osc_atom_u *src = osc_atom_array_u_get(array, i);
+		t_osc_atom_u *src = osc_atom_array_u_get((t_osc_array *)array, i);
 		t_osc_atom_u *dest = osc_atom_array_u_get(cp, i);
 		osc_atom_u_copy(&dest, src);
 	}
-	return cp;
+	return (t_osc_atom_array_u *)cp;
 }
 
-t_osc_err osc_atom_array_u_copyInto(t_osc_array **dest, t_osc_array *src, long offset)
+t_osc_err osc_atom_array_u_copyInto(t_osc_atom_array_u **dest, t_osc_atom_array_u *src, long offset)
 {
 	if(!src){
 		return OSC_ERR_INVAL;

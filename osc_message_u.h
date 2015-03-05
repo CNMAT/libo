@@ -144,11 +144,11 @@ long osc_message_u_nformat(char *buf, long n, t_osc_msg_u *m, int nindent);
 
 t_osc_message_array_u *osc_message_array_u_alloc(long len);
 void osc_message_array_u_free(t_osc_msg_ar_u *ar);//#define osc_message_array_u_free(ar) osc_array_free((ar))
-#define osc_message_array_u_clear(ar) osc_array_clear((ar))
-#define osc_message_array_u_get(ar, idx) osc_array_get((ar), (idx))
-#define osc_message_array_u_getLen(ar) osc_array_getLen((ar))
-#define osc_message_array_u_copy(ar) osc_array_copy((ar))
-#define osc_message_array_u_resize(ar, newlen) osc_array_resize((ar), (newlen))
+void osc_message_array_u_clear(t_osc_msg_ar_u *ar);//#define osc_message_array_u_clear(ar) osc_array_clear((ar))
+t_osc_msg_u *osc_message_array_u_get(t_osc_msg_ar_u *ar, long idx);//#define osc_message_array_u_get(ar, idx) osc_array_get((ar), (idx))
+long osc_message_array_u_getLen(t_osc_msg_ar_u *ar);//#define osc_message_array_u_getLen(ar) osc_array_getLen((ar))
+t_osc_msg_ar_u *osc_message_array_u_copy(t_osc_msg_ar_u *ar);//#define osc_message_array_u_copy(ar) osc_array_copy((ar))
+t_osc_err osc_message_array_u_resize(t_osc_msg_ar_u *ar, long newlen);//#define osc_message_array_u_resize(ar, newlen) osc_array_resize((ar), (newlen))
 
 t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg);
 t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_array *ar);

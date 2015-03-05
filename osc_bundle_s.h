@@ -126,12 +126,20 @@ int osc_bundle_s_concat(long len1, char *bndl1, long len2, char *bndl2, char *bn
 t_osc_array *osc_bundle_array_s_alloc(long len);
 
 t_osc_bundle_array_s *osc_bundle_array_s_alloc(long len);
+void osc_bundle_array_s_free(t_osc_bundle_array_s *ar);
+void osc_bundle_array_s_clear(t_osc_bundle_array_s *ar);
+t_osc_bndl_s *osc_bundle_array_s_get(t_osc_bundle_array_s *ar, long idx);
+long osc_bundle_array_s_getLen(t_osc_bundle_array_s *ar);
+t_osc_bundle_array_s *osc_bundle_array_s_copy(t_osc_bundle_array_s *ar);
+t_osc_err osc_bundle_array_s_resize(t_osc_bundle_array_s *ar, long newlen);
+/*
 #define osc_bundle_array_s_free(ar) osc_array_free((ar))
 #define osc_bundle_array_s_clear(ar) osc_array_clear((ar))
 #define osc_bundle_array_s_get(ar, idx) osc_array_get((ar), (idx))
 #define osc_bundle_array_s_getLen(ar) osc_array_getLen((ar))
 #define osc_bundle_array_s_copy(ar) osc_array_copy((ar))
 #define osc_bundle_array_s_resize(ar, newlen) osc_array_resize((ar), (newlen))
+*/
 
 #ifdef __cplusplus
 }
