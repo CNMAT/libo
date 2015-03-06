@@ -91,6 +91,7 @@ typedef struct _osc_parser_bndl_list{
 extern "C"{
 #endif
 t_osc_err osc_parser_parseString(long len, char *ptr, struct _osc_bundle_u **bndl);
+struct _osc_bundle_u *osc_parser_parseString_r(long len, char *ptr);
 #ifdef __cplusplus
 }
 #endif
@@ -132,6 +133,13 @@ t_osc_err osc_parser_parseString(long len, char *ptr, t_osc_bndl_u **bndl)
 		return OSC_ERR_PARSER;
 	}
 	return OSC_ERR_NONE;
+}
+
+struct _osc_bundle_u *osc_parser_parseString_r(long len, char *ptr)
+{
+	t_osc_bndl_u *bndl = NULL;
+	osc_parser_parseString(len, ptr, &bndl);
+	return bndl;
 }
 
 void yyerror (YYLTYPE *yylloc, t_osc_bndl_u **bndl, void *scanner, long *buflen, char **buf, char const *e){
