@@ -32,6 +32,7 @@
 #include "osc_timetag.h"
 #include "osc_serial.h"
 #include "osc.h"
+#include "osc_parser.h"
 %}
 %typemap(out) t_osc_bndl_s* {
 #ifdef SWIGPYTHON
@@ -72,5 +73,6 @@
 %include "osc_timetag.h"
 %include "osc_serial.h"
 %include "osc.h"
+%include "osc_parser.h"
 %inline %{
  %}
