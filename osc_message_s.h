@@ -179,7 +179,7 @@ void osc_message_s_getArg(t_osc_msg_s *m, int n, t_osc_atom_s **atom);
  */
 t_osc_err osc_message_s_cacheDataOffsets(t_osc_msg_s *m);
 
-t_osc_err osc_message_s_deserialize(t_osc_msg_s *msg, t_osc_msg_u **msg_u);
+t_osc_msg_u *osc_message_s_deserialize(t_osc_msg_s *msg);
 
 /**
    Convert the contents of a #t_osc_msg_s to a string suitable for display.

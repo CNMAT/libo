@@ -572,8 +572,7 @@ t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr)
 	t_osc_bndl_it_s *it = osc_bndl_it_s_get(len, ptr);
 	while(osc_bndl_it_s_hasNext(it)){
 		t_osc_msg_s *m = osc_bndl_it_s_next(it);
-		t_osc_msg_u *um = NULL;
-		osc_message_s_deserialize(m, &um);
+		t_osc_msg_u *um = osc_message_s_deserialize(m);
 		osc_bundle_u_addMsg(b, um);
 	}
 	osc_bndl_it_s_destroy(it);
