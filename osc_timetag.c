@@ -623,8 +623,15 @@ void osc_timetag_toBytes(t_osc_timetag t, char *ptr)
 #endif
 }
 
-//int osc_timetag_format(t_osc_timetag t, char *buf)
-long osc_timetag_format(char *buf, long n, t_osc_timetag t)
+char *osc_timetag_format(t_osc_timetag t)
+{
+	long l = osc_timetag_nformat(NULL, 0, t) + 1;
+	char *buf = osc_mem_alloc(l);
+	osc_timetag_nformat(buf, l, t);
+	return buf;
+}
+
+long osc_timetag_nformat(char *buf, long n, t_osc_timetag t)
 {
 	return osc_timetag_toISO8601(buf, n, t);
 }

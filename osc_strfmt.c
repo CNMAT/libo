@@ -119,7 +119,7 @@ int osc_strfmt_null(char *buf, size_t n)
 
 int osc_strfmt_timetag(char *buf, size_t n, t_osc_timetag t)
 {
-	return osc_timetag_format(buf, n, t);
+	return osc_timetag_nformat(buf, n, t);
 }
 
 int osc_strfmt_blob(char *buf, size_t n, char *blob)
