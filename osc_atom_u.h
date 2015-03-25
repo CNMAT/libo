@@ -72,7 +72,8 @@ If dest is NULL, a new #t_osc_atom_u will be allocated, but
 if dest is non-NULL, no new memory will be allocated
 no new memory will be allocated.
  */
-void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src);
+void osc_atom_u_copyInto(t_osc_atom_u **dest, t_osc_atom_u *src);
+t_osc_atom_u *osc_atom_u_copy(t_osc_atom_u *src);
 
 /** \brief Set whether or not the data that this atom points to should be freed with the atom
 

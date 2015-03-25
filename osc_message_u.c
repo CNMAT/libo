@@ -120,8 +120,7 @@ t_osc_err osc_message_u_deepCopy(t_osc_msg_u **dest, t_osc_msg_u *src)
 	t_osc_msg_it_u *it = osc_msg_it_u_get(src);
 	while(osc_msg_it_u_hasNext(it)){
 		t_osc_atom_u *a = osc_msg_it_u_next(it);
-		t_osc_atom_u *acpy = NULL;
-		osc_atom_u_copy(&acpy, a);
+		t_osc_atom_u *acpy = osc_atom_u_copy(a);
 		osc_message_u_appendAtom(*dest, acpy);
 	}
 	osc_msg_it_u_destroy(it);
@@ -1177,7 +1176,7 @@ t_osc_array *osc_message_u_getArgArrayCopy(t_osc_msg_u *msg)
 	while(osc_msg_it_u_hasNext(it)){
 		t_osc_atom_u *src = osc_msg_it_u_next(it);
 		t_osc_atom_u *dest = osc_atom_array_u_get(atom_array, i);
-		osc_atom_u_copy(&dest, src);
+		osc_atom_u_copyInto(&dest, src);
 		i++;
 	}
 	osc_msg_it_u_destroy(it);
@@ -1188,8 +1187,7 @@ t_osc_err osc_message_u_setArgArrayCopy(t_osc_msg_u *msg, t_osc_atom_ar_u *ar)
 {
 	t_osc_err e = OSC_ERR_NONE;
 	for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
-		t_osc_atom_u *a = NULL;
-		osc_atom_u_copy(&a, osc_atom_array_u_get(ar, i));
+		t_osc_atom_u *a = osc_atom_u_copy(osc_atom_array_u_get(ar, i));
 		e = osc_message_u_appendAtom(msg, a);
 		if(e){
 			return e;

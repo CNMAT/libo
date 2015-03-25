@@ -926,18 +926,16 @@ size_t osc_atom_s_sizeof(t_osc_atom_s *a)
 	return osc_sizeof(a->typetag, a->data);
 }
 
-t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
+void osc_atom_s_deserializeInto(t_osc_atom_u **dest, t_osc_atom_s *src)
 {
-	if(!a){
-		return OSC_ERR_INVAL;
+	if(!src || !dest){
+		return;
 	}
-	t_osc_atom_u *atom_u = NULL;
-	if(!(*a_u)){
-		atom_u = osc_atom_u_alloc();
-	}else{
-		atom_u = *a_u;
+	if(!(*dest)){
+		*dest = osc_atom_u_alloc();
 	}
-
+	t_osc_atom_u *atom_u = *dest;
+	t_osc_atom_s *a = src;
 	switch(osc_atom_s_getTypetag(a)){
 	case 'i':
 		osc_atom_u_setInt32(atom_u, osc_atom_s_getInt32(a));
@@ -1005,9 +1003,14 @@ t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u)
 	case 'b':
 		osc_atom_u_setBlob(atom_u, a->data);
 		break;
-	}
-	*a_u = atom_u;
-	return OSC_ERR_NONE;
+	}	
+}
+
+t_osc_atom_u *osc_atom_s_deserialize(t_osc_atom_s *a)
+{
+	t_osc_atom_u *atom_u = NULL;
+	osc_atom_s_deserializeInto(&atom_u, a);
+	return atom_u;
 }
 
 long osc_atom_s_getFormattedSize(t_osc_atom_s *a)

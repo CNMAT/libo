@@ -124,7 +124,8 @@ void osc_atom_s_setTimetag(t_osc_atom_s *a, t_osc_timetag t);
 
 void osc_atom_s_negate(t_osc_atom_s *a);
 size_t osc_atom_s_sizeof(t_osc_atom_s *a);
-t_osc_err osc_atom_s_deserialize(t_osc_atom_s *a, t_osc_atom_u **a_u);
+void osc_atom_s_deserializeInto(t_osc_atom_u **dest, t_osc_atom_s *src);
+t_osc_atom_u *osc_atom_s_deserialize(t_osc_atom_s *a);
 long osc_atom_s_getFormattedSize(t_osc_atom_s *a);
 char *osc_atom_s_format(t_osc_atom_s *a);
 long osc_atom_s_nformat(char *buf, long n, t_osc_atom_s *a, int nindent);

@@ -275,8 +275,7 @@ t_osc_msg_u *osc_message_s_deserialize(t_osc_msg_s *msg)
 	t_osc_msg_it_s *it = osc_msg_it_s_get(msg);
 	while(osc_msg_it_s_hasNext(it)){
 		t_osc_atom_s *a = osc_msg_it_s_next(it);
-		t_osc_atom_u *ua = NULL;
-		osc_atom_s_deserialize(a, &ua);
+		t_osc_atom_u *ua = osc_atom_s_deserialize(a);
 		osc_message_u_appendAtom(m, ua);
 	}
 	osc_msg_it_s_destroy(it);

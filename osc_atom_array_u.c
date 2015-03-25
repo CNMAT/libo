@@ -203,7 +203,7 @@ t_osc_atom_array_u *osc_atom_array_u_copy(t_osc_atom_array_u *array)
 	for(i = 0; i < len; i++){
 		t_osc_atom_u *src = osc_atom_array_u_get((t_osc_array *)array, i);
 		t_osc_atom_u *dest = osc_atom_array_u_get(cp, i);
-		osc_atom_u_copy(&dest, src);
+		osc_atom_u_copyInto(&dest, src);
 	}
 	return (t_osc_atom_array_u *)cp;
 }
@@ -224,7 +224,7 @@ t_osc_err osc_atom_array_u_copyInto(t_osc_atom_array_u **dest, t_osc_atom_array_
 	for(i = 0; i < srclen; i++){
 		t_osc_atom_u *s = osc_atom_array_u_get(src, i);
 		t_osc_atom_u *d = osc_atom_array_u_get(*dest, i + offset);
-		osc_atom_u_copy(&d, s);
+		osc_atom_u_copyInto(&d, s);
 	}
 	return OSC_ERR_NONE;
 }

@@ -65,7 +65,7 @@ void osc_atom_u_free(t_osc_atom_u *a)
 	osc_mem_free(a);
 }
 
-void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src)
+void osc_atom_u_copyInto(t_osc_atom_u **dest, t_osc_atom_u *src)
 {
 	if(!src){
 		return;
@@ -94,6 +94,13 @@ void osc_atom_u_copy(t_osc_atom_u **dest, t_osc_atom_u *src)
 		aa->w = src->w;
 	}
 	*dest = aa;
+}
+
+t_osc_atom_u *osc_atom_u_copy(t_osc_atom_u *src)
+{
+	t_osc_atom_u *dest = NULL;
+	osc_atom_u_copyInto(&dest, src);
+	return dest;
 }
 
 void osc_atom_u_setShouldFreePtr(t_osc_atom_u *a, int bool)
