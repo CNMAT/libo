@@ -653,34 +653,42 @@ long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl,
 	return offset;
 }
 
-t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out)
+//t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out)
+t_osc_bndl_s *osc_bundle_s_union(t_osc_bndl_s *lhs, t_osc_bndl_s *rhs)
 {
+	if(!lhs || !rhs){
+		return NULL;
+	}
+	long len1 = osc_bundle_s_getLen(lhs);
+	char *bndl1 = osc_bundle_s_getPtr(lhs);
+	long len2 = osc_bundle_s_getLen(rhs);
+	char *bndl2 = osc_bundle_s_getPtr(rhs);
+
+	long len_out = 0;
+	char *bndl_out = NULL;
+	t_osc_bndl_s *b = NULL;
 	if((len1 == 0 && len2 == 0) || (len1 == OSC_HEADER_SIZE && len2 == OSC_HEADER_SIZE)){
-		if(!(*bndl_out)){
-			*bndl_out = osc_mem_alloc(OSC_HEADER_SIZE);
-		}
-		osc_bundle_s_setBundleID(*bndl_out);
-		*len_out = OSC_HEADER_SIZE;
-		return OSC_ERR_NONE;
+		bndl_out = osc_mem_alloc(OSC_HEADER_SIZE);
+		osc_bundle_s_setBundleID(bndl_out);
+		len_out = OSC_HEADER_SIZE;
+		goto out;
 	}
-	if(!(*bndl_out)){
-		*bndl_out = osc_mem_alloc(len1 + len2);
-		memset(*bndl_out, '\0', len1 + len2);
-	}
+	bndl_out = osc_mem_alloc(len1 + len2);
+	memset(bndl_out, '\0', len1 + len2);
 
 	if(bndl1){
-		memcpy(*bndl_out, bndl1, len1);
-		*len_out = len1;
+		memcpy(bndl_out, bndl1, len1);
+		len_out = len1;
 	}else if(bndl2){
-		memcpy(*bndl_out, bndl2, len2);
-		*len_out = len2;
-		return 0;
+		memcpy(bndl_out, bndl2, len2);
+		len_out = len2;
+		goto out;
 	}else{
-		osc_bundle_s_setBundleID(*bndl_out);
-		*len_out = OSC_HEADER_SIZE;
+		osc_bundle_s_setBundleID(bndl_out);
+		len_out = OSC_HEADER_SIZE;
 	}
-	char *bndl = *bndl_out;
-	long len = *len_out;
+	char *bndl = bndl_out;
+	long len = len_out;
 	//char *bndls[2] = {bndl1, bndl2};
 	//long lens[2] = {len1, len2};
 	//int i = 1;
@@ -706,8 +714,10 @@ t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, lon
 		}
 		//osc_bndl_it_s_destroy(it);
 		//}
-	*len_out = len;
-	return OSC_ERR_NONE;
+	len_out = len;
+ out:
+	b = osc_bundle_s_alloc(len_out, bndl_out);
+	return b;
 }
 
 t_osc_err osc_bundle_s_intersection(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out)

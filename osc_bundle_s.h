@@ -117,7 +117,7 @@ long osc_bundle_s_getFormattedSize(long len, char *bndl);
 char *osc_bundle_s_format(long len, char *bndl);
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent);
 long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent);
-t_osc_err osc_bundle_s_union(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out);
+t_osc_bndl_s *osc_bundle_s_union(t_osc_bndl_s *lhs, t_osc_bndl_s *rhs);
 t_osc_err osc_bundle_s_intersection(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out);
 t_osc_err osc_bundle_s_difference(long len1, char *bndl1, long len2, char *bndl2, long *len_out, char **bndl_out);
 // returns len which is len1 + len2 - OSC_HEADER_SIZE
