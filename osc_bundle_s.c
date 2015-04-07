@@ -595,6 +595,11 @@ char *osc_bundle_s_format(long len, char *bndl)
 	return buf;
 }
 
+char *osc_bundle_s_pformat(t_osc_bundle_s *bndl)
+{
+	return osc_bundle_s_format(osc_bundle_s_getLen(bndl), osc_bundle_s_getPtr(bndl));
+}
+
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent)
 {
 	if(!bndl){

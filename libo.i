@@ -37,13 +37,13 @@
 #include "osc_parser.h"
 %}
 
-%typemap(out) t_osc_bndl_s* {
-#ifdef SWIGPYTHON
-	$result = PyString_FromStringAndSize(osc_bundle_s_getPtr($1), osc_bundle_s_getLen($1));
-#elif defined(SWIGJAVASCRIPT) || defined(SWIG_JAVASCRIPT_V8)
+//%typemap(out) t_osc_bndl_s* {
+//#ifdef SWIGPYTHON
+//	$result = PyString_FromStringAndSize(osc_bundle_s_getPtr($1), osc_bundle_s_getLen($1));
+//#elif defined(SWIGJAVASCRIPT) || defined(SWIG_JAVASCRIPT_V8)
 
-#endif
-}
+//#endif
+//}
 
 %include "osc_match.h"
 %include "osc_bundle_s.h"
@@ -78,4 +78,9 @@
 %include "osc.h"
 %include "osc_parser.h"
 %inline %{
- %}
+
+PyObject *osc_bundle_s_swugged( t_osc_bundle_s *b ) {
+    return PyString_FromStringAndSize( osc_bundle_s_getPtr(b), osc_bundle_s_getLen(b) );
+}
+
+%}
