@@ -29,6 +29,8 @@ class timetag(object):
         else:
             self.__tt = odot.osc_timetag_now()
 
+    ### no need for __del__ as timetags are initialized on the stack
+
     def __repr__(self):
         return odot.osc_timetag_format(self.__tt)
 
@@ -138,7 +140,7 @@ class timetag(object):
 
 class message(object):
     """
-    Immutable dictionary container, serialized OpenSoundControl.
+    An immutable binding of data to an address.
 
     Attributes
     ----------
@@ -147,6 +149,8 @@ class message(object):
     All interactions are handled through dedicated functions. 
     """
     def __init__(self, address = None, values = None, binary = None):
+        ### TODO: binary keyword requires cloning semantics
+        ### self.__dealloc is a bug
         if binary is not None:
             self.__message = binary
             self.__dealloc = False
@@ -286,20 +290,37 @@ class message(object):
 
 class bundle(object):
     """
-    Immutable dictionary container, serialized OpenSoundControl.
+    Immutable, iterable dictionary container.
 
     Attributes
     ----------
-    NO PUBLIC ATTRIBUTES
+    NO PUBLIC MEMBERS
 
-    All interactions are handled through dedicated functions. 
+    All interactions are handled through dedicated functions.
+
+    Functions
+    ---------
+    len(bundle)                     - returns the number of bindings in a bundle
+    str(bundle)                     - pretty-prints the bundle according to CNMAT odot conventions
+    .append(message)                - returns a copy of the bundle with a new message appended at the end
+    .checkAddress(string)           - returns True if the address is in the bundle, False otherwise
+    .copy()                         - returns a copy of the bundle's contents (with an updated header timetag)
+    .explode()                      - returns a copy of the bundle with subbundles representing nested addresses
+    .flatten()                      - returns a copy of the bundle with subbundles flattened to a singular namespace
+    .fromDictionary()               - TODO: move this and toDictionary() out of the bundle class
+    .getAddresses()                 - returns a list of addresses in the bundle
+    .getBytes()                     - returns a network-friendly binary encoding of the data (Python 3.x use bytes())
+    .getMessageWithAddress(string)  - returns a message with matched address
+    .getRaw()                       - returns the SWIG object representing a bundle, not recommended outside of internal use
+    .getTimetag()                   - returns a timetag stored in the bundle's header (guaranteed to be set during construction)
+    .next()                         - used by __iter__ - will throw an exception if used outside of iteration
+    .remove(string)                 - returns a copy of the bundle with the indicated address removed
+    .toDictionary()                 - TODO: move this and fromDictionary() out of the bundle class
     """
     def __init__(self, text=None, messages=None, binary=None):
         """
-        Bundle Constructor
-
-        Attributes
-        ----------
+        Bundle Constructor Arguments
+        ----------------------------
             * text = < textual bundle representation >
               example: o.bundle('/foo : 1, /bar : [2, 3, 4]')
             * messages = < list of odot messages >
@@ -319,9 +340,9 @@ class bundle(object):
                 for m in messages:
                     um = odot.osc_message_s_deserialize_r(m.getRaw())
                     odot.osc_bundle_u_addMsg(ub, um)
-                self.__temp = odot.osc_bundle_u_serialize(ub)
+                temp = odot.osc_bundle_u_serialize(ub)
                 self.__bundle = osc_bundle_s_setTimetag_p(self.__temp, now().getRaw())
-                odot.osc_bundle_s_deepFree(self.__temp)
+                odot.osc_bundle_s_deepFree(temp)
                 del(temp)
                 odot.osc_bundle_u_free(ub)
                 return
@@ -374,6 +395,9 @@ class bundle(object):
     def __bytes__(self):
         return odot.osc_bundle_s_swugged(self.__bundle)
 
+    def getBytes(self):
+        return odot.osc_bundle_s_swugged(self.__bundle)
+
     def __getitem__(self, key):
         if self.checkAddress(key):
             m = self.getMessageWithAddress(key)
@@ -393,10 +417,10 @@ class bundle(object):
         return bundle(binary = odot.osc_bundle_s_setTimetag_p(self.__bundle, now().getRaw()))
 
     def append(self, message):
-        print("append a message")
+        pass
 
     def remove(self, address):
-        print("removes a message with address" + str(address))
+        pass
 
     def getTimetag(self):
         return timetag(odot.osc_bundle_s_getTimetag_p(self.__bundle))
@@ -423,10 +447,10 @@ class bundle(object):
         return self.__bundle
 
     def explode(self):
-        print("returns an exploded copy of itself")
+        pass
 
     def flatten(self):
-        print("returns a flattened copy of itself")
+        pass
 
     def toDictionary(self, strip_slashes=False):
         result = {}
