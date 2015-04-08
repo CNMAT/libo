@@ -1,0 +1,1 @@
+make clean; make swig-clean; make; make swig

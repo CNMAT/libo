@@ -30,7 +30,7 @@ class timetag(object):
             self.__tt = odot.osc_timetag_now()
 
     def __repr__(self):
-        return str()
+        return odot.osc_timetag_format(self.__tt)
 
     def __str__(self):
         return str(self.getSeconds()) + " " + str(self.getFraction())
@@ -79,6 +79,7 @@ class timetag(object):
                 print("Can't convert into a timetag...")
         else:
             result = odot.osc_timetag_subtract(self.__tt, other._timetag__tt)
+            return odot.osc_timetag_timetagToFloat(result)
         return timetag(binary = result)
 
     def __rsub__(self, other):
@@ -90,6 +91,7 @@ class timetag(object):
                 print("Can't convert into a timetag...")
         else:
             result = odot.osc_timetag_subtract(other._timetag__tt, self.__tt)
+            return odot.osc_timetag_timetagToFloat(result)
         return timetag(binary = result)
 
     def __iadd__(self, other):
@@ -260,7 +262,7 @@ class message(object):
         elif tt is odot.OSC_TIMETAG_TYPETAG : # timetag
             result = o.timetag(binary = odot.osc_atom_s_getTimetag(atom))
         elif tt is odot.OSC_BUNDLE_TYPETAG : # bundle
-            result = o.bundle(binary = odot.osc_atom_s_getBndl(atom))
+            result = o.bundle(binary = odot.osc_atom_s_getBndlCopy(atom))
         return result
 
     def copy(self):
@@ -293,22 +295,46 @@ class bundle(object):
     All interactions are handled through dedicated functions. 
     """
     def __init__(self, text=None, messages=None, binary=None):
+        """
+        Bundle Constructor
+
+        Attributes
+        ----------
+            * text = < textual bundle representation >
+              example: o.bundle('/foo : 1, /bar : [2, 3, 4]')
+            * messages = < list of odot messages >
+              example: o.bundle(messages=[o.message('/foo', 1), o.message('/bar', [2, 3, 4])])
+            * binary = < an array of bytes, e.g. from a UDP packet > (Python String in Python 2.x, bytes() in Python 3.x)
+              example: o.bundle(bytes = from_udp)
+        """
         if text is None:
             if messages is None:
                 if binary is None:
                     self.___createEmptyBundle()
                 else: # using binary -- TODO: validate first!
-                    self.__bundle = binary
+                    ### note that setting a header timetag returns a copy of the bundle
+                    self.__bundle = odot.osc_bundle_s_setTimetag_p(self.__bundle, now().getRaw())
             else: # messages
                 ub = odot.osc_bundle_u_alloc()
                 for m in messages:
                     um = odot.osc_message_s_deserialize_r(m.getRaw())
                     odot.osc_bundle_u_addMsg(ub, um)
-                self.__bundle = odot.osc_bundle_u_serialize(ub)
+                self.__temp = odot.osc_bundle_u_serialize(ub)
+                self.__bundle = osc_bundle_s_setTimetag_p(self.__temp, now().getRaw())
+                odot.osc_bundle_s_deepFree(self.__temp)
+                del(temp)
                 odot.osc_bundle_u_free(ub)
                 return
         else: # from string
             self.___fromString(text)
+
+    def __del__(self):
+        odot.osc_bundle_s_deepFree(self.__bundle)
+        try: self.__iter
+        except NameError: pass
+        except AttributeError: pass
+        else:
+            odot.osc_bundle_iterator_s_destroyIterator(self.__iter)
 
     def ___validate(self, data):
         __err = odot.osc_error_bundleSanityCheck(len(data), data)
@@ -318,36 +344,35 @@ class bundle(object):
         return __result
 
     def __repr__(self):
-        return self.__bundle 
+        return odot.osc_bundle_s_format_p(self.__bundle) 
 
     def __str__(self):
-        return odot.osc_bundle_s_format(len(self.__bundle), self.__bundle)
+        return odot.osc_bundle_s_format_p(self.__bundle)
 
     def __iter__(self):
-        self.__iter = odot.osc_bundle_iterator_s_getIterator(len(self.__bundle), self.__bundle)
+        ### clean up previous iterator, if one exists...
+        try: self.__iter
+        except NameError: pass
+        except AttributeError: pass
+        else:
+            odot.osc_bundle_iterator_s_destroyIterator(self.__iter)
+        ### create a new iterator:
+        self.__iter = odot.osc_bundle_iterator_s_getIterator_p(self.__bundle)
         return self
 
     def next(self):
         if odot.osc_bundle_iterator_s_hasNext(self.__iter) is 1:
-            self.message = odot.osc_bundle_iterator_s_next(self.__iter)
-            return message(binary = self.message)
+            return message(binary = odot.osc_bundle_iterator_s_next(self.__iter))
         else:
             odot.osc_bundle_iterator_s_destroyIterator(self.__iter)
             del(self.__iter)
-            del(self.message)
             raise StopIteration
 
     def __len__(self):
-        return len(self.__bundle)
+        return odot.osc_bundle_s_getMsgCount_p(self.__bundle)
 
     def __bytes__(self):
-        return self.__bundle
-
-    def __getattr__(self, name):
-        proper = '/' + name
-        if self.checkAddress(proper):
-            return self.getMessageWithAddress(proper).getData()
-        else: raise AttributeError
+        return odot.osc_bundle_s_swugged(self.__bundle)
 
     def __getitem__(self, key):
         if self.checkAddress(key):
@@ -365,13 +390,16 @@ class bundle(object):
         return checkAddress(key)
 
     def copy(self):
-        return bundle(binary = self.__bundle)
+        return bundle(binary = odot.osc_bundle_s_setTimetag_p(self.__bundle, now().getRaw()))
 
     def append(self, message):
         print("append a message")
 
     def remove(self, address):
         print("removes a message with address" + str(address))
+
+    def getTimetag(self):
+        return timetag(odot.osc_bundle_s_getTimetag_p(self.__bundle))
 
     def getAddresses(self):
         result = []
@@ -386,19 +414,12 @@ class bundle(object):
                 return True
         return False
 
-    def getMessageCount(self):
-        counter = 0
-        for m in self:
-            counter += 1
-        return counter
-
     def getMessageWithAddress(self, address):
         for m in self:
             if m.getAddress() == address:
                 return m
 
     def getRaw(self):
-        """possibly unnecessary due to __repr__ and __len__ overloads"""
         return self.__bundle
 
     def explode(self):
@@ -410,7 +431,10 @@ class bundle(object):
     def toDictionary(self, strip_slashes=False):
         result = {}
         for m in self:
-            result[m.getAddress()] = m.getData()
+            if type(m.getData()) is 'bundle':
+                result[m.getAddress()] = toDictionary(m.getData())
+            else:
+                result[m.getAddress()] = m.getData()
         return result
 
     def fromDictionary(self, d):
@@ -432,7 +456,10 @@ class bundle(object):
             self.__bundle = text_bundle
             return
         __ub = odot.osc_parser_parseString_r(len(text_bundle) + 1, text_bundle)
-        self.__bundle = odot.osc_bundle_u_serialize(__ub)
+        self.__temp = odot.osc_bundle_u_serialize(__ub)
+        self.__bundle = odot.osc_bundle_s_setTimetag_p(self.__temp, now().getRaw())
+        odot.osc_bundle_s_deepFree(self.__temp)
+        del(self.__temp)
         odot.osc_bundle_u_free(__ub)
                                     
     def ___fixAddresses(key):
@@ -461,18 +488,20 @@ def difference(lhs, rhs):
     """
     Returns bundle containing the difference between lhs & rhs
     """
+    pass
 
 def union(lhs, rhs):
     """returns a new bundle containing the union between lhs & rhs")"""
+    pass
 
 def rcompliment(lhs, rhs):
-    print("returns a bundle containing the bindings in rhs whose addresses are not also in lhs")
+    """returns a bundle containing the bindings in rhs whose addresses are not also in lhs"""
     pass
 
 def intersection(lhs, rhs):
-    print("returns an intersection between lhs & rhs")
+    """returns an intersection between lhs & rhs"""
     pass
 
 def select(bundle, address):
-    print("returns a bundle containing all messages with addresses that matched")
+    """returns a bundle containing all messages with addresses that matched"""
     pass
