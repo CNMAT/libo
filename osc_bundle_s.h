@@ -83,7 +83,6 @@ long osc_bundle_s_getLen(t_osc_bndl_s *bndl);
 void osc_bundle_s_setLen(t_osc_bndl_s *bndl, long len);
 void osc_bundle_s_setPtr(t_osc_bndl_s *bndl, char *ptr);
 t_osc_err osc_bundle_s_getMsgCount(int len, char *buf, int *count);
-int osc_bundle_s_getMsgCount_p(t_osc_bundle_s* bundle);
 t_osc_msg_s *osc_bundle_s_getFirstMsg(t_osc_bndl_s *bndl);
 t_osc_err osc_bundle_s_getMessagesWithCallback(int len, char *buf, void (*f)(t_osc_msg_s*, void *), void *context);
 
@@ -106,9 +105,7 @@ t_osc_err osc_bundle_s_setBundleID(char *buf);
 t_osc_err osc_bundle_s_setBundleID_b(t_osc_bndl_s *bndl);
 int osc_bundle_s_strcmpID(char *buf);
 t_osc_timetag osc_bundle_s_getTimetag(long len, char *buf);
-t_osc_timetag osc_bundle_s_getTimetag_p(t_osc_bundle_s* bundle);
 void osc_bundle_s_setTimetag(long len, char *buf, t_osc_timetag t);
-t_osc_bundle_s* osc_bundle_s_setTimetag_p(t_osc_bundle_s*, t_osc_timetag t);
 t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest, 
 			       t_osc_bndl_s *src, 
 			       int maxlevel, 
@@ -118,7 +115,6 @@ t_osc_err osc_bundle_s_explode(t_osc_bndl_s **dest, t_osc_bndl_s *src, int maxle
 t_osc_bndl_u *osc_bundle_s_deserialize(long len, char *ptr);
 long osc_bundle_s_getFormattedSize(long len, char *bndl);
 char *osc_bundle_s_format(long len, char *bndl);
-char *osc_bundle_s_format_p(t_osc_bundle_s *bndl);
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent);
 long osc_bundle_s_nformatNestedBndl(char *buf, long n, long bndllen, char *bndl, int nindent);
 t_osc_bndl_s *osc_bundle_s_union(t_osc_bndl_s *lhs, t_osc_bndl_s *rhs);

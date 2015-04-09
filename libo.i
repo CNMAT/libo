@@ -37,14 +37,6 @@
 #include "osc_parser.h"
 %}
 
-//%typemap(out) t_osc_bndl_s* {
-//#ifdef SWIGPYTHON
-//	$result = PyString_FromStringAndSize(osc_bundle_s_getPtr($1), osc_bundle_s_getLen($1));
-//#elif defined(SWIGJAVASCRIPT) || defined(SWIG_JAVASCRIPT_V8)
-
-//#endif
-//}
-
 %include "osc_match.h"
 %include "osc_bundle_s.h"
 %include "osc_bundle_u.h"
@@ -79,8 +71,44 @@
 %include "osc_parser.h"
 %inline %{
 
-PyObject *osc_bundle_s_swugged( t_osc_bundle_s *b ) {
+PyObject *osc_bundle_s_swugged( t_osc_bundle_s *b ) 
+{
     return PyString_FromStringAndSize( osc_bundle_s_getPtr(b), osc_bundle_s_getLen(b) );
 }
+
+// osc_bundle.c:
+
+char *osc_bundle_s_format_p(t_osc_bundle_s *bndl)
+{
+	return osc_bundle_s_format(osc_bundle_s_getLen(bndl), osc_bundle_s_getPtr(bndl));
+}
+
+int osc_bundle_s_getMsgCount_p(t_osc_bundle_s* bundle)
+{
+	int count = 0;
+	t_osc_err error;
+	error = osc_bundle_s_getMsgCount(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle), &count);
+	if (error == OSC_ERR_NONE) return count;
+	else return -1; //// need to figure out what to do here...
+}
+
+t_osc_timetag osc_bundle_s_getTimetag_p(t_osc_bundle_s* bundle)
+{
+	return osc_bundle_s_getTimetag(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle));
+}
+
+t_osc_bundle_s* osc_bundle_s_setTimetag_p(t_osc_bundle_s* bundle, t_osc_timetag t)
+{
+	t_osc_bundle_s* copy = NULL;
+	osc_bundle_s_deepCopy(&copy, bundle);
+	osc_bundle_s_setTimetag(osc_bundle_s_getLen(copy), osc_bundle_s_getPtr(copy), t);
+	return copy;
+}
+
+t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator_p(t_osc_bundle_s* bundle)
+{
+	return osc_bundle_iterator_s_getIterator(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle));
+}
+
 
 %}

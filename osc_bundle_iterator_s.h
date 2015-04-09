@@ -47,7 +47,6 @@ typedef struct _osc_bundle_iterator_s t_osc_bundle_iterator_s, t_osc_bndl_it_s;
 #define osc_bndl_it_s_hasNext(it) osc_bundle_iterator_s_hasNext((it))
 
 t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator(long len, char *ptr);
-t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator_p(t_osc_bundle_s* bundle);
 void osc_bundle_iterator_s_destroyIterator(t_osc_bndl_it_s *it);
 void osc_bundle_iterator_s_resetIterator(t_osc_bndl_it_s *it);
 t_osc_msg_s *osc_bundle_iterator_s_next(t_osc_bndl_it_s *it);

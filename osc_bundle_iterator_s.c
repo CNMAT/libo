@@ -44,11 +44,6 @@ t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator(long len, char *ptr)
 	return it;
 }
 
-t_osc_bndl_it_s *osc_bundle_iterator_s_getIterator_p(t_osc_bundle_s* bundle)
-{
-	return osc_bundle_iterator_s_getIterator(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle));
-}
-
 void osc_bundle_iterator_s_destroyIterator(t_osc_bndl_it_s *it)
 {
 	osc_mem_free(it);

@@ -142,15 +142,6 @@ t_osc_err osc_bundle_s_getMsgCount(int len, char *buf, int *count)
 	return OSC_ERR_NONE;
 }
 
-int osc_bundle_s_getMsgCount_p(t_osc_bundle_s* bundle)
-{
-	int count = 0;
-	t_osc_err error;
-	error = osc_bundle_s_getMsgCount(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle), &count);
-	if (error == OSC_ERR_NONE) return count;
-	else return -1; //// need to figure out what to do here...
-}
-
 t_osc_msg_s *osc_bundle_s_getFirstMsg(t_osc_bndl_s *bndl)
 {
 	if(bndl){
@@ -515,25 +506,12 @@ t_osc_timetag osc_bundle_s_getTimetag(long len, char *buf)
 	return osc_timetag_decodeFromHeader(buf + OSC_IDENTIFIER_SIZE);
 }
 
-t_osc_timetag osc_bundle_s_getTimetag_p(t_osc_bundle_s* bundle)
-{
-	return osc_bundle_s_getTimetag(osc_bundle_s_getLen(bundle), osc_bundle_s_getPtr(bundle));
-}
-
 void osc_bundle_s_setTimetag(long len, char *buf, t_osc_timetag t)
 {
 	if(!buf || len < OSC_HEADER_SIZE){
 		return;
 	}
 	osc_timetag_encodeForHeader(t, buf + OSC_IDENTIFIER_SIZE);
-}
-
-t_osc_bundle_s* osc_bundle_s_setTimetag_p(t_osc_bundle_s* bundle, t_osc_timetag t)
-{
-	t_osc_bundle_s* copy = NULL;
-	osc_bundle_s_deepCopy(&copy, bundle);
-	osc_bundle_s_setTimetag(osc_bundle_s_getLen(copy), osc_bundle_s_getPtr(copy), t);
-	return copy;
 }
 
 t_osc_err osc_bundle_s_flatten(t_osc_bndl_s **dest, 
@@ -615,11 +593,6 @@ char *osc_bundle_s_format(long len, char *bndl)
 	char *buf = osc_mem_alloc(buflen);
 	osc_bundle_s_nformat(buf, buflen, len, bndl, 0);
 	return buf;
-}
-
-char *osc_bundle_s_format_p(t_osc_bundle_s *bndl)
-{
-	return osc_bundle_s_format(osc_bundle_s_getLen(bndl), osc_bundle_s_getPtr(bndl));
 }
 
 long osc_bundle_s_nformat(char *buf, long n, long bndllen, char *bndl, int nindent)
