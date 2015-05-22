@@ -55,6 +55,8 @@ int osc_strfmt_uint64(char *buf, size_t n, uint64_t i);
 
 int osc_strfmt_float32(char *buf, size_t n, float f);
 int osc_strfmt_float64(char *buf, size_t n, double f);
+int osc_strfmt_float(char *buf, size_t n, float f);
+int osc_strfmt_double(char *buf, size_t n, float f);
 
 int osc_strfmt_bool(char *buf, size_t n, char b);
 int osc_strfmt_null(char *buf, size_t n);

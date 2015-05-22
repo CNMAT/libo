@@ -31,7 +31,7 @@ static int osc_match_range(const char *pattern, const char *address);
 
 #define OSC_MATCH_RANGE_NOMATCH 1
 
-static const char const *_osc_match_errstr[] = 
+static const char * const _osc_match_errstr[] = 
 	{
 		"no error",
 		"unmatched left square bracket",
@@ -44,7 +44,7 @@ static const char const *_osc_match_errstr[] =
 		"backtrack limit exceeded"
 	};
 
-const char const *osc_match_errstr(unsigned long e)
+const char * const osc_match_errstr(unsigned long e)
 {
 	e >>= 8;
 	if(e < sizeof(_osc_match_errstr) / sizeof(char *)){

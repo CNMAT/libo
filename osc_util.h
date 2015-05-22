@@ -33,9 +33,11 @@ extern "C" {
 #endif
 
 int osc_util_strdup(char **dest, char *src);
+char *osc_util_strcpy(char *src);
 size_t osc_util_getPaddedStringLen(char *s);
 size_t osc_util_getPaddingForNBytes(size_t n);
 size_t osc_util_getBlobLength(size_t blob_data_size);
+char *osc_util_blobcpy(char *blob);
 
 #ifdef __cplusplus
 }

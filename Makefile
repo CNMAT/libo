@@ -1,16 +1,16 @@
-LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial 
+LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial osc_pvec osc_bundle osc_message osc_atom osc_builtin
 
 LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
 LIBO_OFILES = $(foreach F, $(LIBO_BASENAMES), $(F).o)
 
-LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner osc_legacy_scanner
+LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner osc_legacy_scanner osc_lex
 LIBO_SCANNER_LFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).l)
 LIBO_SCANNER_CFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).c)
 LIBO_SCANNER_HFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).h)
 LIBO_SCANNER_OBJECTS = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).o)
 
-LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser osc_legacy_parser
+LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser osc_legacy_parser osc_parse
 LIBO_PARSER_YFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).y)
 LIBO_PARSER_CFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).c)
 LIBO_PARSER_HFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).h)
@@ -110,8 +110,12 @@ libo.dylib: $(LIBO_OBJECTS)
 
 %_scanner.c: %_scanner.l %_parser.c
 	flex -o $(basename $@).c --prefix=$(basename $@)_ --header-file=$(basename $@).h $(basename $@).l
+osc_lex.c: osc_lex.l osc_parse.c
+	flex -o $(basename $@).c --prefix=$(basename $@)_ --header-file=$(basename $@).h $(basename $@).l
 
 %_parser.c: %_parser.y
+	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
+osc_parse.c: osc_parse.y
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
 
 .PHONY: doc

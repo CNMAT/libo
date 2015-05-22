@@ -46,8 +46,15 @@ extern "C" {
 #define OSC_ID OSC_IDENTIFIER
 #define OSC_ID_SIZE OSC_IDENTIFIER_SIZE
 
-#define OSC_BUNDLE_TYPETAG '.'
+#define OSC_BUNDLE_TYPETAG 'B'
 #define OSC_TIMETAG_TYPETAG 't'
+#define OSC_EXPR_TYPETAG 'A'
+#define OSC_BOOL_TYPETAG 'O'
+#define OSC_UNDEFINED_TYPETAG 'r'
+#define OSC_NATIVE_TYPETAG 'n'
+
+#define OSC_VALUE_ADDRESS "/odot/value"
+
 
 #define OSC_SUBBUNDLE_ACCESSOR_OPERATOR '.'
 #define OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING "."
@@ -56,6 +63,10 @@ extern "C" {
 
 //#define OSC_INVALIDATE_PTR
 #define OSC_VALIDATE_PTR
+
+#define OSC_COMBINE1(x, y) x##y
+#define OSC_COMBINE(x, y) OSC_COMBINE1(x, y)
+#define OSC_UID(x) OSC_COMBINE(x, __LINE__)
 
 #ifdef SWIG
 #define OSC_DEPRECATED(decl, msg) decl;

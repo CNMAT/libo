@@ -71,7 +71,7 @@ typedef struct _osc_callback {
 #define OSC_MATCH_ERROR_INVALID_CHARACTER_RANGE 0x700
 #define OSC_MATCH_ERROR_BACKTRACK_LIMIT_EXCEEDED 0x800
 
-const char const *osc_match_errstr(unsigned long e);
+const char * const osc_match_errstr(unsigned long e);
 
 /**
  * Match a pattern against an address.  In the case of a partial match, pattern_offset

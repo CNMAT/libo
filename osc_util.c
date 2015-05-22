@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include "osc_mem.h"
+#include "osc_byteorder.h"
 
 int osc_util_strdup(char **dest, char *src)
 {
@@ -38,6 +39,17 @@ int osc_util_strdup(char **dest, char *src)
 		strncpy(*dest, src, len);
 	}
 	return len - 1;
+}
+
+char *osc_util_strcpy(char *src)
+{
+	if(!src){
+		return NULL;
+	}
+	int len = strlen(src) + 1;
+	char *str = osc_mem_alloc(len);
+	memcpy(str, src, len);
+	return str;
 }
 
 size_t osc_util_getPaddedStringLen(char *s)
@@ -62,4 +74,15 @@ size_t osc_util_getBlobLength(size_t blob_data_size)
 		len += (4 - (len % 4));
 	}
 	return len;
+}
+
+char *osc_util_blobcpy(char *blob)
+{
+	if(blob){
+		int32_t len = ntoh32(*((int32_t *)blob));
+		char *copy = osc_mem_alloc(len + 4);
+		memcpy(copy, blob, len + 4);
+		return copy;
+	}
+	return NULL;
 }

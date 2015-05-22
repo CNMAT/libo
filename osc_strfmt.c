@@ -82,6 +82,16 @@ int osc_strfmt_float32(char *buf, size_t n, float f)
 	return osc_strfmt_float64(buf, n, f);
 }
 
+int osc_strfmt_float(char *buf, size_t n, float f)
+{
+	return osc_strfmt_float32(buf, n, f);
+}
+
+int osc_strfmt_double(char *buf, size_t n, float f)
+{
+	return osc_strfmt_float64(buf, n, f);
+}
+
 #ifdef OSC_STRFMT_PRINTALLBITS
 int osc_strfmt_float64(char *buf, size_t n, double f)
 {
