@@ -338,10 +338,10 @@ class bundle(object):
             else: # messages
                 ub = odot.osc_bundle_u_alloc()
                 for m in messages:
-                    um = odot.osc_message_s_deserialize_r(m.getRaw())
+                    um = odot.osc_message_s_deserialize(m.getRaw())
                     odot.osc_bundle_u_addMsg(ub, um)
                 temp = odot.osc_bundle_u_serialize(ub)
-                self.__bundle = osc_bundle_s_setTimetag_p(self.__temp, now().getRaw())
+                self.__bundle = odot.osc_bundle_s_setTimetag_p(temp, now().getRaw())
                 odot.osc_bundle_s_deepFree(temp)
                 del(temp)
                 odot.osc_bundle_u_free(ub)
