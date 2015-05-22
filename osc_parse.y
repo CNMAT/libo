@@ -243,7 +243,7 @@ atom:
 		$$ = osc_atom_allocBndl($1, 1);
  	}
 	| expr {
-		$$ = osc_atom_allocBndl($1, 1);
+		$$ = osc_atom_allocExpr($1, 1);
 	}
 ;
 
@@ -289,7 +289,7 @@ expr:
 
 native:
 	OSC_PARSE_NATIVE OSC_PARSE_SYMBOL {
-		osc_atom_format_m($2);
+		osc_atom_format_m($2, 0);
 		t_osc_builtin f = osc_builtin_lookup(osc_atom_getPrettyPtr($2));
 		if(f){
 			$$ = osc_atom_allocNative(f, osc_atom_getPrettyPtr($2));

@@ -3262,8 +3262,7 @@ t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context)
 		return osc_atom_allocBndl(osc_bndl_eval(v(a, OSC_BUNDLE_TYPETAG_ID), NULL), 1);
 	case OSC_EXPR_TYPETAG:
 		//return osc_atom_allocBndl(osc_expr_eval(context, v(a, OSC_EXPR_TYPETAG_ID)));
-		printf("expr\n");
-		break;
+		return osc_atom_undefined;
 	case 'S':
 		return osc_atom_evalSymbol(a, context);
 	default:
