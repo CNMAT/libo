@@ -93,7 +93,7 @@ t_osc_bndl *osc_parse(char *ptr)
 	YY_BUFFER_STATE buf_state = osc_lex__scan_string(ptr, scanner);
 	osc_lex_set_out(NULL, scanner);
 	t_osc_bndl *b = NULL;
-	osc_parse_parse(scanner, &b);
+	osc_parse_parse(scanner, &b, ptr, NULL);
 	osc_lex__delete_buffer(buf_state, scanner);
 	osc_lex_lex_destroy(scanner);
 	return b;
@@ -128,7 +128,7 @@ void osc_parse_error(YYLTYPE *llocp,
 {
 }
 */
-void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, char const *e)
+void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, char const *e)
 {
 }
 
@@ -149,6 +149,8 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 
 %parse-param{void *scanner}
 %parse-param{t_osc_bndl **bndl}
+%parse-param{const char *input_string}
+%parse-param{t_osc_bndl *context}
 
 %lex-param{void *scanner}
 
@@ -214,6 +216,7 @@ bndl: '{' '}' {
 	| '{' msgs '}' {
 		$$ = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
 		*bndl = $$;
+		printf("%d.%d-%d.%d\n", @1.first_line, @1.first_column, @3.last_line, @3.last_column);
   	}
 ;
 

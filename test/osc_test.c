@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 	}
  foo:
 	{
-		t_osc_bndl *b = osc_parse("{/foo : 10, /bar : /foo, /bloo, /blurp : add {/lhs : 1, /rhs : 2}}");
+		t_osc_bndl *b = osc_parse("{/foo : 10,\n/bar : /foo,\n/bloo, /blurp : add {/lhs : 1,\n/rhs : 2}}");
 		//t_osc_bndl *b = osc_parse("{/foo : 10, /bar : /foo, /bloo}");
 		osc_bndl_format_m(b, 0);
 		printf("parsed bndl:\n%s\n", osc_bndl_getPrettyPtr(b));
