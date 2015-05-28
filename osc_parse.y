@@ -216,7 +216,6 @@ bndl: '{' '}' {
 	| '{' msgs '}' {
 		$$ = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
 		*bndl = $$;
-		printf("%d.%d-%d.%d\n", @1.first_line, @1.first_column, @3.last_line, @3.last_column);
   	}
 ;
 

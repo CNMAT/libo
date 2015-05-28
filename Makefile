@@ -1,6 +1,6 @@
 LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial osc_pvec osc_bundle osc_message osc_atom osc_builtin
 
-LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
+LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c) 
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
 LIBO_OFILES = $(foreach F, $(LIBO_BASENAMES), $(F).o)
 
@@ -36,6 +36,7 @@ all: I = $(MAC-INCLUDES)
 all: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 all: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
 all: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
+all: o.repl
 
 arm: CFLAGS += $(RELEASE-CFLAGS)
 arm: CFLAGS += $(ARM-CFLAGS)
@@ -117,6 +118,9 @@ osc_lex.c: osc_lex.l osc_parse.c
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
 osc_parse.c: osc_parse.y
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
+
+o.repl: o.repl.c
+	$(CC) $(CFLAGS) $(I) -L. -lo -o o.repl o.repl.c
 
 .PHONY: doc
 doc:
