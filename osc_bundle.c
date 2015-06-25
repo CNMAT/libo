@@ -507,7 +507,7 @@ t_osc_bndl *osc_bndl_union(t_osc_bndl *lhs, t_osc_bndl *rhs)
 			osc_atom_release(a);
 		}
 		if(!match){
-			out = osc_bndl_assocn(out, rm, osc_bndl_length(out));
+			out = osc_bndl_append(out, osc_msg_retain(rm));
 		}
 	}
 	return out;
@@ -560,10 +560,101 @@ t_osc_bndl *osc_bndl_rcompliment(t_osc_bndl *lhs, t_osc_bndl *rhs)
 			osc_atom_release(a);
 		}
 		if(!match){
-			out = osc_bndl_assocn(out, lm, osc_bndl_length(out));
+			out = osc_bndl_append(out, osc_msg_retain(lm));
 		}
 	}
 	return out;
+}
+
+t_osc_msg *osc_bndl_value(t_osc_bndl *b)
+{
+	if(!b){
+		return NULL;
+	}
+	t_osc_msg *msg = osc_bndl_lookup(b, osc_atom_valueaddress, osc_atom_match);
+	if(!msg){
+		return NULL;
+	}
+	t_osc_msg *ret = NULL;
+	t_osc_atom *address = osc_msg_nth(msg, 1);
+	if(osc_atom_getTypetag(address) == OSC_BUNDLE_TYPETAG){
+		t_osc_msg *maddress = osc_bndl_value(b);
+		if(maddress){
+			ret = osc_msg_alloc(osc_atom_retain(osc_msg_nth(maddress, 1)), 0);
+		}else{
+			ret = osc_msg_alloc(osc_atom_retain(address), 0);
+		}
+	}else{
+		ret = osc_msg_alloc(osc_atom_retain(address), 0);
+	}
+	for(int i = 2; i < osc_msg_length(msg) + 1; i++){
+		t_osc_atom *a = osc_msg_nth(msg, i);
+		if(osc_atom_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+			t_osc_msg *m = osc_atom_value(a);
+			if(m){
+				for(int i = 1; i < osc_msg_length(m) + 1; i++){
+					osc_msg_append_m((t_osc_msg_m *)ret, osc_atom_retain(osc_msg_nth(m, i)));
+				}
+			}else{
+				osc_msg_append_m((t_osc_msg_m *)ret, osc_atom_retain(a));
+			}
+			osc_msg_release(m);
+		}else{
+			osc_msg_append_m((t_osc_msg_m *)ret, osc_atom_retain(a));
+		}
+	}
+	return ret;
+}
+
+t_osc_bndl *osc_bndl_reduce(t_osc_bndl *b, t_osc_bndl *context)
+{
+	if(!b){
+		return osc_bndl_empty;
+	}
+	if(context == NULL){
+		context = b;
+	}
+	t_osc_bndl *u = osc_bndl_union(b, context);
+	t_osc_bndl *newb = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
+	for(int i = 0; i < osc_bndl_length(b); i++){
+		t_osc_msg *m = osc_bndl_nth(b, i);
+		if(!m){
+			continue;
+		}
+		t_osc_atom *address = osc_msg_nth(m, 0);
+		t_osc_msg *newm = NULL;
+		newm = osc_msg_alloc(osc_atom_retain(address), 0);
+		for(int j = 1; j < osc_msg_length(m) + 1; j++){
+			t_osc_atom *a = osc_msg_nth(m, j);
+			if(!a){
+				continue;
+			}
+			t_osc_atom *ret = osc_atom_eval(a, u);
+			if(osc_atom_getTypetag(ret) == OSC_BUNDLE_TYPETAG){
+				t_osc_msg *v = osc_atom_value(ret);
+				if(v){
+					/*
+					int start = 0;
+					if(osc_atom_getTypetag(a) == 'S'){
+						start = 1;
+					}
+					*/
+					for(int i = 1; i < osc_msg_length(v) + 1; i++){
+						newm = osc_msg_append_m((t_osc_msg_m *)newm, osc_atom_retain(osc_msg_nth(v, i)));
+					}
+					osc_msg_release(v);
+				}else{
+					newm = osc_msg_append_m((t_osc_msg_m *)newm, osc_atom_retain(ret));
+				}
+			}else{
+				newm = osc_msg_append_m((t_osc_msg_m *)newm, osc_atom_retain(ret));
+			}
+			osc_atom_release(ret);
+		}
+		newb = osc_bndl_append_m((t_osc_bndl_m *)newb, newm);
+	}
+	osc_bndl_release(u);
+	return newb;
 }
 
 t_osc_bndl *osc_bndl_eval(t_osc_bndl *b, t_osc_bndl *context)
@@ -574,6 +665,7 @@ t_osc_bndl *osc_bndl_eval(t_osc_bndl *b, t_osc_bndl *context)
 	if(context == NULL){
 		context = b;
 	}
+	t_osc_bndl *u = osc_bndl_union(b, context);
 	t_osc_bndl *newb = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
 	for(int i = 0; i < osc_bndl_length(b); i++){
 		t_osc_msg *m = osc_bndl_nth(b, i);
@@ -581,15 +673,31 @@ t_osc_bndl *osc_bndl_eval(t_osc_bndl *b, t_osc_bndl *context)
 			continue;
 		}
 		t_osc_atom *address = osc_msg_nth(m, 0);
-		t_osc_msg *newm = osc_msg_alloc(osc_atom_retain(address), 0);
+		t_osc_msg *newm = NULL;
+		newm = osc_msg_alloc(osc_atom_retain(address), 0);
 		for(int j = 1; j < osc_msg_length(m) + 1; j++){
 			t_osc_atom *a = osc_msg_nth(m, j);
 			if(!a){
 				continue;
 			}
-			newm = osc_msg_append((t_osc_msg_m *)newm, osc_atom_eval(a, context));
+			t_osc_atom *ret = osc_atom_eval(a, u);
+			newm = osc_msg_append_m((t_osc_msg_m *)newm, osc_atom_retain(ret));
+			osc_atom_release(ret);
 		}
 		newb = osc_bndl_append_m((t_osc_bndl_m *)newb, newm);
 	}
+	osc_bndl_release(u);
 	return newb;
+}
+
+t_osc_msg *osc_bndl_lookup(t_osc_bndl *b, t_osc_atom *key, t_osc_atom *(*f)(t_osc_atom *, t_osc_atom *))
+{
+	for(int i = 0; i < osc_bndl_length(b); i++){
+		t_osc_msg *m = osc_bndl_nth(b, i);
+		t_osc_atom *a = osc_msg_nth(m, 0);
+		if(f(key, a) == osc_atom_true){
+			return m;
+		}
+	}
+	return NULL;
 }

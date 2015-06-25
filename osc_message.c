@@ -53,7 +53,7 @@ t_osc_msg *osc_msg_alloc(t_osc_atom *address, int n, ...)
 	pvec2 = osc_pvec2_assocN_m(pvec2, 0, (void *)address);
 
 	if(n == 0){
-		pvec2 = osc_pvec2_append_m(pvec2, (void *)osc_atom_undefined);
+		//pvec2 = osc_pvec2_append_m(pvec2, (void *)osc_atom_undefined);
 	}else{
 		va_list argp;
 		va_start(argp, n);
@@ -220,7 +220,9 @@ static void _osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postf
 		return;
 	}
 	t_osc_atom *a = NULL;
-	if(osc_msg_length(m) > 1){
+	if(osc_msg_length(m) == 0){
+		a = osc_atom_formatAtomsAsMsg(a(m), prefixlen, prefix, 0, NULL, 0, NULL, 0, NULL, postfixlen, postfix, level);
+	}else if(osc_msg_length(m) > 1){
 		char _postfix[postfixlen + 2];
 		_postfix[0] = ' ';
 		_postfix[1] = ']';
@@ -339,7 +341,7 @@ t_osc_msg *osc_msg_assocn(t_osc_msg *m, t_osc_atom *a, int idx)
 t_osc_msg_m *osc_msg_assocn_m(t_osc_msg_m *m, t_osc_atom *a, int idx)
 {
 	if(m){
-		osc_pvec2_assocN_m(a(m), idx, (void *)m);
+		osc_pvec2_assocN_m(a(m), idx, (void *)a);
 		return m;
 	}
 	return (t_osc_msg_m *)osc_msg_empty;
@@ -347,12 +349,12 @@ t_osc_msg_m *osc_msg_assocn_m(t_osc_msg_m *m, t_osc_atom *a, int idx)
 
 t_osc_msg *osc_msg_append(t_osc_msg *m, t_osc_atom *a)
 {
-	return osc_msg_assocn(m, a, osc_msg_length(m));
+	return osc_msg_assocn(m, a, osc_msg_length(m) + 1);
 }
 
 t_osc_msg_m *osc_msg_append_m(t_osc_msg_m *m, t_osc_atom *a)
 {
-	return osc_msg_assocn_m(m, a, osc_msg_length(m));
+	return osc_msg_assocn_m(m, a, osc_msg_length(m) + 1);
 }
 
 t_osc_msg *osc_msg_prepend(t_osc_msg *m, t_osc_atom *a)
@@ -371,6 +373,36 @@ t_osc_msg_m *osc_msg_prepend_m(t_osc_msg_m *m, t_osc_atom *a)
 		return m;
 	}else{
 		return osc_msg_alloc(a, 0);
+	}
+}
+
+t_osc_msg *osc_msg_popFirst(t_osc_msg *m)
+{
+	if(m){
+		t_osc_msg *mm = NULL;
+		if(osc_msg_length(m) < 2){
+			return osc_msg_empty;
+		}else{
+			mm = osc_msg_allocWithPvec2(osc_pvec2_popFirst(a(m)));
+		}
+		return mm;
+	}else{
+		return osc_msg_empty;
+	}
+}
+
+t_osc_msg *osc_msg_popLast(t_osc_msg *m)
+{
+	if(m){
+		t_osc_msg *mm = NULL;
+		if(osc_msg_length(m) < 2){
+			return osc_msg_empty;
+		}else{
+			mm = osc_msg_allocWithPvec2(osc_pvec2_popLast(a(m)));
+		}
+		return mm;
+	}else{
+		return osc_msg_empty;
 	}
 }
 

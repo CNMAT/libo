@@ -29,6 +29,8 @@ extern "C" {
 
 #define OSC_MATCH_BACKTRACK_LIMIT 1000
 
+//#define OSC_MATCH_NEED_LEADING_SLASH
+
 /**
  * Switch this off to disable matching against a pattern with 2 stars
  */

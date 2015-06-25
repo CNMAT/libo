@@ -56,6 +56,9 @@ dfc       (({frac}{exp_opt}{fsuff_opt})|({dseq}{exp}{fsuff_opt}))
 hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
+range \[!?[a-zA-Z0-9]+-[a-zA-Z0-9]+\]
+pattern \/?({range}|[a-zA-Z0-9_\?])+
+
 quoted_string [^\"\\]
 oscaddress \/[^\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\)\"\'` \n\t]+
 reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
@@ -254,6 +257,13 @@ quote[[:space:]]*\( {
 \/?[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
 						yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
 						return OSC_PARSE_SYMBOL;
+				 	}
+
+{pattern}				{
+						// fixme---this should identify only correctly formatted patterns
+						printf("pattern: %s\n", yytext);
+						yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
+						return OSC_PARSE_PATTERN;
 				 	}
 
 [^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {

@@ -24,6 +24,25 @@
 	\author John MacCallum
 
 */
+
+/*
+{
+	/a : 10,
+	/b : add { 
+		/lhs : 3, 
+		/rhs : /a
+	},
+	/c : {
+		/a : /a
+	},
+	/d : {
+		/a : {
+			/a : /c./a
+		},
+		/b : add {/lhs : 10, /rhs : /a./a}
+	}
+}
+ */
 %code top{
 
 #include <math.h>
@@ -60,6 +79,7 @@
 #include "osc_message.h"
 #include "osc_atom.h"
 #include "osc_pvec.h"
+#include "osc_builtin.h"
 
 #ifdef YY_DECL
 #undef YY_DECL
@@ -140,7 +160,16 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 	osc_pvec2_assocN_m(pvec2, 1, (void *)a);
 	return pvec2;
 }
- 
+
+t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
+{
+	t_osc_bndl *bb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
+					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_allocInt8('f')),
+					osc_msg_alloc(osc_atom_funcaddress, 1, func),
+					osc_msg_alloc(osc_atom_argsaddress, 1, args));
+	return bb;
+}
+
 %}
 
 %define "api.pure"
@@ -160,15 +189,15 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 	t_osc_atom *atom;
 	t_osc_pvec2 *pvec2;
 }
-%type <bndl> bndl binop expr funcall
+%type <bndl> bndl funcall nth binop
 %type <msg> msg
-%type <atom> atom native
-%type <pvec2> msgs atoms
-%nonassoc <atom> OSC_PARSE_SYMBOL OSC_PARSE_NUMBER OSC_PARSE_STRING OSC_PARSE_BOOL OSC_PARSE_NIL OSC_PARSE_UNDEFINED
+%type <atom> atom native expr 
+%type <pvec2> msgs atoms list
+%nonassoc <atom> OSC_PARSE_SYMBOL OSC_PARSE_NUMBER OSC_PARSE_STRING OSC_PARSE_BOOL OSC_PARSE_NIL OSC_PARSE_UNDEFINED OSC_PARSE_PATTERN
 %token OSC_PARSE_NATIVE
-/*
+
 //%type <atom> 
-%nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
+ //%nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
@@ -199,11 +228,11 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 %left '^' 
 
 // level 3
-%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!' OSC_EXPR_DBLQMARK OSC_EXPR_DBLQMARKEQ
+ //%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!' OSC_EXPR_DBLQMARK OSC_EXPR_DBLQMARKEQ
 
 // level 2
-%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
-*/
+ //%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
+
  //%token START_EXPNS START_FUNCTION
  //%start start
 
@@ -216,13 +245,29 @@ bndl: '{' '}' {
 	| '{' msgs '}' {
 		$$ = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
 		*bndl = $$;
+		//t_osc_bndl *bx = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
+		//$$ = osc_parse_allocBindingExpr(osc_atom_allocBndl(bx, 1));
+		//*bndl = bx;
   	}
 ;
 
 msg: OSC_PARSE_SYMBOL {
 		$$ = osc_msg_alloc($1, 0);
  	}
-	| OSC_PARSE_SYMBOL ':' atoms {
+	| OSC_PARSE_PATTERN {
+		$$ = osc_msg_alloc($1, 0);
+ 	}
+	| OSC_PARSE_SYMBOL ':' atom {
+		$$ = osc_msg_alloc($1, 1, $3);
+	}
+	| OSC_PARSE_PATTERN ':' atom {
+		$$ = osc_msg_alloc($1, 1, $3);
+	}
+	| OSC_PARSE_SYMBOL ':' list{
+		osc_pvec2_assocN_m($3, 0, (void *)$1);
+		$$ = osc_msg_allocWithPvec2($3);
+	}
+	| OSC_PARSE_PATTERN ':' list {
 		osc_pvec2_assocN_m($3, 0, (void *)$1);
 		$$ = osc_msg_allocWithPvec2($3);
 	}
@@ -240,31 +285,33 @@ msgs: msg {
 ;
 
 atom:
-	OSC_PARSE_NUMBER | OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_SYMBOL | native
-	| bndl {
-		$$ = osc_atom_allocBndl($1, 1);
- 	}
-	| expr {
-		$$ = osc_atom_allocExpr($1, 1);
-	}
+	OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native | expr
+		//| bndl {
+		//$$ = osc_atom_allocBndl($1, 1);
+		//}
 ;
 
 atoms:
 	atom {
 		$$ = osc_parse_atom($1);
 	}
-	| '[' atom ']' {
-		$$ = osc_parse_atom($2);
- 	}
-	| '[' atoms ',' atom ']' {
-		osc_pvec2_assocN_m($2, osc_pvec2_length($2), (void *)$4);
+	| atoms ',' atom {
+		osc_pvec2_assocN_m($1, osc_pvec2_length($1), (void *)$3);
+		$$ = $1;
+	}
+;
+
+list:
+	'[' atoms ']' {
 		$$ = $2;
 	}
 ;
 
 binop:
-	OSC_PARSE_NUMBER '+' OSC_PARSE_NUMBER {
-		$$ = NULL;
+	expr '+' expr {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_add, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
 	}
 	| bndl '\\' bndl {
 		$$ = NULL;
@@ -276,22 +323,41 @@ funcall:
 		$$ = NULL;
 	}
 	| OSC_PARSE_SYMBOL bndl {
-		$$ = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
-				    osc_msg_alloc(osc_atom_allocSymbol("/type", 0), 1, osc_atom_allocInt8('f')),
-				    osc_msg_alloc(osc_atom_allocSymbol("/func", 0), 1, $1),
-				    osc_msg_alloc(osc_atom_allocSymbol("/args", 0), 1, osc_atom_allocBndl($2, 1)));
+		$$ = osc_parse_allocFuncall($1, osc_atom_allocBndl($2, 1));
 	}
 	| OSC_PARSE_SYMBOL OSC_PARSE_SYMBOL {
 		$$ = NULL;
 	}
 ;
 
+nth:
+	OSC_PARSE_SYMBOL list {
+		t_osc_msg *n = osc_msg_allocWithPvec2(osc_pvec2_assocN_m($2, 0, osc_atom_naddress));
+		t_osc_msg *list = osc_msg_alloc(osc_atom_listaddress, 1, $1);
+		t_osc_bndl *args = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, n, list);
+		$$ = osc_parse_allocFuncall(osc_atom_ps_nth, osc_atom_allocBndl(args, 1));
+	}
+;
+
 expr:
-	binop | funcall;
+	OSC_PARSE_NUMBER | OSC_PARSE_SYMBOL
+	| bndl {
+		$$ = osc_atom_allocBndl($1, 1);
+	}
+	| binop {
+		$$ = osc_atom_allocExpr($1, 1);
+	}
+	| funcall {
+		$$ = osc_atom_allocExpr($1, 1);
+	}
+	| nth {
+		$$ = osc_atom_allocBndl($1, 1);
+	}
+;
 
 native:
 	OSC_PARSE_NATIVE OSC_PARSE_SYMBOL {
-		osc_atom_format_m($2, 0);
+		osc_atom_format_m((t_osc_atom_m *)$2, 0);
 		t_osc_builtin f = osc_builtin_lookup(osc_atom_getPrettyPtr($2));
 		if(f){
 			$$ = osc_atom_allocNative(f, osc_atom_getPrettyPtr($2));

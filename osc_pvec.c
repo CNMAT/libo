@@ -1113,9 +1113,24 @@ t_osc_pvec2 *osc_pvec2_prepend_m(t_osc_pvec2 *pvec2, void *val)
 	return pvec2;
 }
 
-t_osc_pvec2 *osc_pvec2_pop(t_osc_pvec2 *pvec2)
+t_osc_pvec2 *osc_pvec2_popFirst(t_osc_pvec2 *pvec2)
 {
+	if(!pvec2){
+		return NULL;
+	}
+	t_osc_pvec *head = pvec2->head;
+	t_osc_pvec *tail = pvec2->tail;
+	return _osc_pvec2_alloc(osc_pvec_pop(head), osc_pvec_copy(tail));
+}
 
+t_osc_pvec2 *osc_pvec2_popLast(t_osc_pvec2 *pvec2)
+{
+	if(!pvec2){
+		return NULL;
+	}
+	t_osc_pvec *head = pvec2->head;
+	t_osc_pvec *tail = pvec2->tail;
+	return _osc_pvec2_alloc(osc_pvec_copy(head), osc_pvec_pop(tail));
 }
 
 int osc_pvec2_length(t_osc_pvec2 *pvec2)

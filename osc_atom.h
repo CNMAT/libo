@@ -12,18 +12,59 @@ typedef struct _osc_atom t_osc_atom_m;
 #include "osc_builtin.h"
 #include "osc_pvec.h"
 
+#define OSC_BUNDLE_TYPETAG_ID B
+#define OSC_NATIVE_TYPETAG_ID n
+#define OSC_EXPR_TYPETAG_ID A
+
+#pragma pack(push)
+#pragma pack(4)
+typedef struct _osc_value{
+	union _value {
+		int8_t c;
+		uint8_t C;
+		int16_t u;
+		uint16_t U;
+		int32_t i;
+		uint32_t I;
+		int64_t h;
+		uint64_t H;
+		float f;
+		double d;
+		//float q[4];
+		//double Q[4];
+		char *s;
+		char *S;
+		t_osc_bndl *OSC_BUNDLE_TYPETAG_ID;
+		t_osc_timetag t;
+		char *b;
+		//t_osc_bndl *(*OSC_NATIVE_TYPETAG_ID)(t_osc_bndl *);
+		t_osc_builtin OSC_NATIVE_TYPETAG_ID;
+		t_osc_bndl *OSC_EXPR_TYPETAG_ID;
+	} value;
+	char typetag;
+} t_osc_value;
+#pragma pack(pop)
+
 t_osc_atom *osc_atom_true;
 t_osc_atom *osc_atom_false;
 t_osc_atom *osc_atom_nil;
 t_osc_atom *osc_atom_undefined;
 t_osc_atom *osc_atom_emptystring;
 t_osc_atom *osc_atom_valueaddress;
+t_osc_atom *osc_atom_expraddress;
 t_osc_atom *osc_atom_typeaddress;
 t_osc_atom *osc_atom_funcaddress;
 t_osc_atom *osc_atom_argsaddress;
 t_osc_atom *osc_atom_partialaddress;
 t_osc_atom *osc_atom_completeaddress;
 t_osc_atom *osc_atom_unmatchedaddress;
+t_osc_atom *osc_atom_ps_add;
+t_osc_atom *osc_atom_ps_nth;
+t_osc_atom *osc_atom_yaddress;
+t_osc_atom *osc_atom_lhsaddress;
+t_osc_atom *osc_atom_rhsaddress;
+t_osc_atom *osc_atom_naddress;
+t_osc_atom *osc_atom_listaddress;
 
 t_osc_atom *osc_atom_allocInt8(int8_t i);
 t_osc_atom *osc_atom_allocUInt8(uint8_t i);
@@ -90,6 +131,9 @@ t_osc_atom *osc_atom_le(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_gt(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_ge(t_osc_atom *lhs, t_osc_atom *rhs);
 
+t_osc_msg *osc_atom_value(t_osc_atom *a);
+t_osc_atom *osc_atom_eagerEval(t_osc_atom *a, t_osc_bndl *context);
+t_osc_atom *osc_atom_lazyEval(t_osc_atom *a, t_osc_bndl *context);
 t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context);
 
 #ifdef __cplusplus

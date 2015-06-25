@@ -135,12 +135,14 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 
 int osc_match(const char *pattern, const char *address, int *pattern_offset, int *address_offset)
 {
+#ifdef OSC_MATCH_NEED_LEADING_SLASH
 	if(*pattern != '/'){
 		OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_PATTERN_NO_LEADING_SLASH);
 	}
 	if(*address != '/'){
 		OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH);
 	}
+#endif
 
 	*pattern_offset = 0;
 	*address_offset = 0;

@@ -35,7 +35,8 @@ t_osc_pvec2 *osc_pvec2_append(t_osc_pvec2 *pvec2, void *val);
 t_osc_pvec2 *osc_pvec2_append_m(t_osc_pvec2 *pvec2, void *val);
 t_osc_pvec2 *osc_pvec2_prepend(t_osc_pvec2 *pvec2, void *val);
 t_osc_pvec2 *osc_pvec2_prepend_m(t_osc_pvec2 *pvec2, void *val);
-t_osc_pvec2 *osc_pvec2_pop(t_osc_pvec2 *pvec2);
+t_osc_pvec2 *osc_pvec2_popFirst(t_osc_pvec2 *pvec2);
+t_osc_pvec2 *osc_pvec2_popLast(t_osc_pvec2 *pvec2);
 int osc_pvec2_length(t_osc_pvec2 *pvec2);
 
 void osc_pvec_print(t_osc_pvec *pvec);

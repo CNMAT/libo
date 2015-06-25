@@ -119,7 +119,7 @@ osc_lex.c: osc_lex.l osc_parse.c
 osc_parse.c: osc_parse.y
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
 
-o.repl: o.repl.c
+o.repl: o.repl.c $(LIBO_CFILES) osc_lex.c osc_parser.c
 	$(CC) $(CFLAGS) $(I) -L. -lo -o o.repl o.repl.c
 
 .PHONY: doc

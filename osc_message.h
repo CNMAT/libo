@@ -33,6 +33,8 @@ t_osc_msg *osc_msg_append(t_osc_msg *m, t_osc_atom *a);
 t_osc_msg_m *osc_msg_append_m(t_osc_msg_m *m, t_osc_atom *a);
 t_osc_msg *osc_msg_prepend(t_osc_msg *m, t_osc_atom *a);
 t_osc_msg_m *osc_msg_prepend_m(t_osc_msg_m *m, t_osc_atom *a);
+t_osc_msg *osc_msg_popFirst(t_osc_msg *m);
+t_osc_msg *osc_msg_popLast(t_osc_msg *m);
 t_osc_msg *osc_msg_apply(t_osc_msg *(*fn)(t_osc_msg *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
 t_osc_msg *osc_msg_map(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
 t_osc_msg *osc_msg_filter(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);

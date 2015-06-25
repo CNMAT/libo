@@ -36,7 +36,6 @@ int osc_bndl_getPrettyLen(t_osc_bndl *b);
 char *osc_bndl_getPrettyPtr(t_osc_bndl *b);
 int osc_bndl_length(t_osc_bndl *b);
 t_osc_msg *osc_bndl_nth(t_osc_bndl *b, int idx);
-t_osc_bndl *osc_bndl_lookup(t_osc_bndl *b, t_osc_atom *pattern);
 t_osc_bndl *osc_bndl_assocn(t_osc_bndl *b, t_osc_msg *m, int idx);
 t_osc_bndl_m *osc_bndl_assocn_m(t_osc_bndl_m *b, t_osc_msg *m, int idx);
 t_osc_bndl *osc_bndl_append(t_osc_bndl *b, t_osc_msg *m);
@@ -52,7 +51,11 @@ t_osc_bndl *osc_bndl_union(t_osc_bndl *lhs, t_osc_bndl *rhs);
 t_osc_bndl *osc_bndl_intersect(t_osc_bndl *lhs, t_osc_bndl *rhs);
 t_osc_bndl *osc_bndl_rcompliment(t_osc_bndl *lhs, t_osc_bndl *rhs);
 
+t_osc_msg *osc_bndl_value(t_osc_bndl *b);
+t_osc_bndl *osc_bndl_reduce(t_osc_bndl *b, t_osc_bndl *context);
 t_osc_bndl *osc_bndl_eval(t_osc_bndl *b, t_osc_bndl *context);
+
+t_osc_msg *osc_bndl_lookup(t_osc_bndl *b, t_osc_atom *key, t_osc_atom *(*f)(t_osc_atom *, t_osc_atom *));
 
 #ifdef __cplusplus
 }
