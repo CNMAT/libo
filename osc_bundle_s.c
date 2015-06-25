@@ -246,7 +246,7 @@ t_osc_msg_ar_s *osc_bundle_s_lookupAddress(long len, char *buf, const char *addr
 	//while(osc_bndl_it_s_hasNext(it)){
 	while((current_message - buf) < len){
 		//t_osc_msg_s *current_message = osc_bndl_it_s_next(it);
-		int32_t size = ntohl(*((int32_t *)current_message));
+		int32_t size = ntoh32(*((int32_t *)current_message));
 		char *current_message_address = current_message + 4;
 		int po, ao;
 		//int r = osc_match(address, osc_message_s_getAddress(current_message), &po, &ao);
@@ -301,7 +301,7 @@ char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address)
 {
 	char *msg = ptr + OSC_HEADER_SIZE;
 	while(msg - ptr < len){
-		int32_t size = ntohl(*((int32_t *)msg));
+		int32_t size = ntoh32(*((int32_t *)msg));
 		char *msg_address = msg + 4;
 		int po, ao;
 		int r = osc_match(address, msg_address, &po, &ao);
