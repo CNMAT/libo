@@ -577,7 +577,7 @@ t_osc_msg *osc_bndl_value(t_osc_bndl *b)
 	}
 	t_osc_msg *ret = NULL;
 	t_osc_atom *address = osc_msg_nth(msg, 1);
-	if(osc_atom_getTypetag(address) == OSC_BUNDLE_TYPETAG){
+	if(osc_atom_getTypetag(address) == OSC_TT_BNDL){
 		t_osc_msg *maddress = osc_bndl_value(b);
 		if(maddress){
 			ret = osc_msg_alloc(osc_atom_retain(osc_msg_nth(maddress, 1)), 0);
@@ -589,7 +589,7 @@ t_osc_msg *osc_bndl_value(t_osc_bndl *b)
 	}
 	for(int i = 2; i < osc_msg_length(msg) + 1; i++){
 		t_osc_atom *a = osc_msg_nth(msg, i);
-		if(osc_atom_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+		if(osc_atom_getTypetag(a) == OSC_TT_BNDL){
 			t_osc_msg *m = osc_atom_value(a);
 			if(m){
 				for(int i = 1; i < osc_msg_length(m) + 1; i++){
@@ -630,12 +630,12 @@ t_osc_bndl *osc_bndl_reduce(t_osc_bndl *b, t_osc_bndl *context)
 				continue;
 			}
 			t_osc_atom *ret = osc_atom_eval(a, u);
-			if(osc_atom_getTypetag(ret) == OSC_BUNDLE_TYPETAG){
+			if(osc_atom_getTypetag(ret) == OSC_TT_BNDL){
 				t_osc_msg *v = osc_atom_value(ret);
 				if(v){
 					/*
 					int start = 0;
-					if(osc_atom_getTypetag(a) == 'S'){
+					if(osc_atom_getTypetag(a) == OSC_TT_SYM){
 						start = 1;
 					}
 					*/

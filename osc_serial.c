@@ -214,13 +214,13 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 		case OSC_SERIAL_BUNDLE_HEADER_ID:
 			switch(count){
 			case 0:
-				if(b == 'b'){
+				if(b == OSC_TT_BLOB){
 					OSC_SERIAL_RETURN(s + 1);
 				}else{
 					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 1:
-				if(b == 'u'){
+				if(b == OSC_TT_I16){
 					OSC_SERIAL_RETURN(s + 1);
 				}else{
 					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
@@ -232,7 +232,7 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
 				}
 			case 3:
-				if(b == 'd'){
+				if(b == OSC_TT_F64){
 					OSC_SERIAL_RETURN(s + 1);
 				}else{
 					OSC_SERIAL_RETURN(OSC_SERIAL_BUNDLE_HEADER | OSC_SERIAL_BUNDLE_HEADER_ID | OSC_SERIAL_ERROR_BADHEADER);
@@ -383,22 +383,22 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			switch(micro){
 			case 0:
 				switch(b){
-				case 'c':
-				case 'C':
-				case 'u':
-				case 'U':
-				case 'i':
-				case 'I':
-				case 'h':
-				case 'H':
-				case 'f':
-				case 'd':
-				case 's':
+				case OSC_TT_I8:
+				case OSC_TT_U8:
+				case OSC_TT_I16:
+				case OSC_TT_U16:
+				case OSC_TT_I32:
+				case OSC_TT_U32:
+				case OSC_TT_I64:
+				case OSC_TT_U64:
+				case OSC_TT_F32:
+				case OSC_TT_F64:
+				case OSC_TT_STR:
 				case 'T':
 				case 'F':
 				case 'N':
-				case OSC_TIMETAG_TYPETAG:
-				case OSC_BUNDLE_TYPETAG:
+				case OSC_TT_TIME:
+				case OSC_TT_BNDL:
 					OSC_SERIAL_RETURN(s - 1);
 				case '\0':
 					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) - 1);
@@ -503,22 +503,22 @@ uint64_t osc_serial_processByte(char b, uint64_t s)
 			switch(micro){
 			case 0:
 				switch(b){
-				case 'c':
-				case 'C':
-				case 'u':
-				case 'U':
-				case 'i':
-				case 'I':
-				case 'h':
-				case 'H':
-				case 'f':
-				case 'd':
-				case 's':
+				case OSC_TT_I8:
+				case OSC_TT_U8:
+				case OSC_TT_I16:
+				case OSC_TT_U16:
+				case OSC_TT_I32:
+				case OSC_TT_U32:
+				case OSC_TT_I64:
+				case OSC_TT_U64:
+				case OSC_TT_F32:
+				case OSC_TT_F64:
+				case OSC_TT_STR:
 				case 'T':
 				case 'F':
 				case 'N':
-				case OSC_TIMETAG_TYPETAG:
-				case OSC_BUNDLE_TYPETAG:
+				case OSC_TT_TIME:
+				case OSC_TT_BNDL:
 					OSC_SERIAL_RETURN(s + 1);
 				case '\0':
 					OSC_SERIAL_RETURN((s | OSC_SERIAL_MESSAGE_TYPETAGS_NULLPADDING) + 1);

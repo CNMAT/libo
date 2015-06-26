@@ -326,7 +326,7 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 			t_osc_atom_s *a = osc_msg_it_s_next(it);
 			offset += osc_atom_s_nformat(NULL, 0, a, nindent);
 			if(osc_msg_it_s_hasNext(it)){
-				//if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				//if(osc_atom_s_getTypetag(a) == OSC_TT_BNDL){
 				//offset += snprintf(NULL, 0, ",\n");
 					//}else{
 					offset += snprintf(NULL, 0, ", ");
@@ -352,7 +352,7 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 			t_osc_atom_s *a = osc_msg_it_s_next(it);
 			offset += osc_atom_s_nformat(buf + offset, n - offset, a, nindent);
 			if(osc_msg_it_s_hasNext(it)){
-				//if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				//if(osc_atom_s_getTypetag(a) == OSC_TT_BNDL){
 				//offset += snprintf(buf + offset, n - offset, ",\n");
 				//}else{
 					offset += snprintf(buf + offset, n - offset, ", ");

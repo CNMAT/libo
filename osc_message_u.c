@@ -883,7 +883,7 @@ static t_osc_err osc_message_u_explode_impl(t_osc_bndl_u *dest, t_osc_msg_u *msg
 				b = osc_bundle_u_alloc();
 			}else if(argc == 1){
 				t_osc_atom_u *a = osc_message_u_getArg(m, 0);
-				if(osc_atom_u_getTypetag(a) != OSC_BUNDLE_TYPETAG){
+				if(osc_atom_u_getTypetag(a) != OSC_TT_BNDL){
 					osc_message_u_clearArgs(m);
 					b = osc_bundle_u_alloc();
 				}else{

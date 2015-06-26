@@ -52,11 +52,11 @@ void osc_atom_u_free(t_osc_atom_u *a)
 	if(!a){
 		return;
 	}
-	if(a->typetag == 's'){
+	if(a->typetag == OSC_TT_STR){
 		if(a->w.s){
 			osc_mem_free(a->w.s);
 		}
-	}else if(a->typetag == OSC_BUNDLE_TYPETAG){
+	}else if(a->typetag == OSC_TT_BNDL){
 		//if(a->alloc){ // should always be true
 		//osc_mem_free(osc_bundle_s_getPtr(a->w.bndl));
 			osc_bundle_u_free(a->w.bndl);
@@ -78,13 +78,13 @@ void osc_atom_u_copyInto(t_osc_atom_u **dest, t_osc_atom_u *src)
 	aa->typetag = src->typetag;
 	aa->alloc = src->alloc;
 	switch(aa->typetag){
-	case 's':
+	case OSC_TT_STR:
 		{
 			aa->w.s = osc_mem_alloc(strlen(src->w.s) + 1);
 			strcpy(aa->w.s, src->w.s);
 		}
 		break;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
 			aa->w.bndl = NULL;
 			osc_bundle_u_copy(&(aa->w.bndl), src->w.bndl);
@@ -115,10 +115,10 @@ void osc_atom_u_clear(t_osc_atom_u *a)
 	if(!a){
 		return;
 	}
-	if(a->alloc && a->typetag == 's' && a->w.s){
+	if(a->alloc && a->typetag == OSC_TT_STR && a->w.s){
 		osc_mem_free(a->w.s);
 		a->w.s = NULL;
-	}else if(a->typetag == OSC_BUNDLE_TYPETAG){
+	}else if(a->typetag == OSC_TT_BNDL){
 		osc_bundle_u_free(a->w.bndl);
 		a->w.bndl = NULL;
 	}
@@ -149,17 +149,17 @@ float osc_atom_u_getFloat(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (float)a->w.d;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return (float)a->w.i;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (float)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (float)a->w.I;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return strtof(a->w.s, &endp);
@@ -168,21 +168,21 @@ float osc_atom_u_getFloat(t_osc_atom_u *a){
 		return 1.f;
 	case 'F': // false
 		return 0.f;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (float)a->w.H;
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (float)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (float)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (float)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (float)a->w.U;
 	case 'N': // NULL
 		return 0.f;
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		return (float)osc_timetag_timetagToFloat(a->w.t);
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -200,17 +200,17 @@ double osc_atom_u_getDouble(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return a->w.d;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (double)a->w.f;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return (double)a->w.i;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (double)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (double)a->w.I;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return strtod(a->w.s, &endp);
@@ -219,21 +219,21 @@ double osc_atom_u_getDouble(t_osc_atom_u *a){
 		return 1.f;
 	case 'F': // false
 		return 0.f;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (double)a->w.H;
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (double)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (double)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (double)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (double)a->w.U;
 	case 'N': // NULL
 		return 0.;
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		return osc_timetag_timetagToFloat(a->w.t);
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -251,17 +251,17 @@ int8_t osc_atom_u_getInt8(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (int8_t)a->w.C;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return (int8_t)a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (int8_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (int8_t)a->w.d;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *s = a->w.s;
 			if(s){
@@ -272,19 +272,19 @@ int8_t osc_atom_u_getInt8(t_osc_atom_u *a){
 		return 1;
 	case 'F': // false
 		return 0;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (int8_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (int8_t)a->w.U;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (int8_t)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (int8_t)a->w.I;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (int8_t)a->w.H;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -301,17 +301,17 @@ int16_t osc_atom_u_getInt16(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (int16_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (int16_t)a->w.U;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (int16_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (int16_t)a->w.d;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (int16_t)strtol(a->w.s, &endp, 0);
@@ -320,19 +320,19 @@ int16_t osc_atom_u_getInt16(t_osc_atom_u *a){
 		return 1;
 	case 'F': // false
 		return 0;
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (int16_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (int16_t)a->w.C;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (int16_t)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (int16_t)a->w.I;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (int16_t)a->w.H;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -351,13 +351,13 @@ int32_t osc_atom_u_getInt32(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (int32_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (int32_t)a->w.d;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (int32_t)strtol(a->w.s, &endp, 0);
@@ -366,23 +366,23 @@ int32_t osc_atom_u_getInt32(t_osc_atom_u *a){
 		return 1;
 	case 'F': // false
 		return 0;
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (int32_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (int32_t)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (int32_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (int32_t)a->w.U;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (int32_t)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (int32_t)a->w.I;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (int32_t)a->w.H;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -399,30 +399,30 @@ int64_t osc_atom_u_getInt64(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (int64_t)a->w.h;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (int64_t)a->w.d;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (int64_t)a->w.f;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (int64_t)a->w.I;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (int64_t)a->w.H;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (int64_t)strtoll(a->w.s, &endp, 0);
 		}
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (int64_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (int64_t)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (int64_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (int64_t)a->w.U;
 	case 'T': // true
 		return 1;
@@ -430,7 +430,7 @@ int64_t osc_atom_u_getInt64(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -447,32 +447,32 @@ uint8_t osc_atom_u_getUInt8(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'C': // signed 8-bit int
+	case OSC_TT_U8: // signed 8-bit int
 		return (uint8_t)a->w.C;
-	case 'c': // unsigned 8-bit int
+	case OSC_TT_I8: // unsigned 8-bit int
 		return (uint8_t)a->w.c;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (uint8_t)a->w.I;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return (uint8_t)a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (uint8_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (uint8_t)a->w.d;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (uint8_t)a->w.h;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (uint8_t)a->w.H;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *s = a->w.s;
 			if(s){
 				return *s;
 			}
 		}
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (uint8_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (uint8_t)a->w.U;
 	case 'T': // true
 		return 1;
@@ -480,7 +480,7 @@ uint8_t osc_atom_u_getUInt8(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -497,30 +497,30 @@ uint16_t osc_atom_u_getUInt16(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'U': // signed 16-bit int
+	case OSC_TT_U16: // signed 16-bit int
 		return a->w.U;
-	case 'u': // unsigned 16-bit int
+	case OSC_TT_I16: // unsigned 16-bit int
 		return (uint16_t)a->w.u;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (uint16_t)a->w.I;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return (uint16_t)a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (uint16_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (uint16_t)a->w.d;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (uint16_t)a->w.h;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (uint16_t)a->w.H;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (uint16_t)strtoul(a->w.s, &endp, 0);
 		}
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (uint16_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (uint16_t)a->w.C;
 	case 'T': // true
 		return 1;
@@ -528,7 +528,7 @@ uint16_t osc_atom_u_getUInt16(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -545,30 +545,30 @@ uint32_t osc_atom_u_getUInt32(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (uint32_t)a->w.I;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (uint32_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (uint32_t)a->w.d;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (uint32_t)a->w.h;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (uint32_t)a->w.H;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (uint32_t)strtoul(a->w.s, &endp, 0);
 		}
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (uint32_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (uint32_t)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (uint32_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (uint32_t)a->w.U;
 	case 'T': // true
 		return 1;
@@ -576,7 +576,7 @@ uint32_t osc_atom_u_getUInt32(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -593,30 +593,30 @@ uint64_t osc_atom_u_getUInt64(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (uint64_t)a->w.H;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (uint64_t)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (uint64_t)a->w.I;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (uint64_t)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (uint64_t)a->w.d;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (uint64_t)strtoull(a->w.s, &endp, 0);
 		}
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (uint64_t)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (uint64_t)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (uint64_t)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (uint64_t)a->w.U;
 	case 'T': // true
 		return 1;
@@ -624,7 +624,7 @@ uint64_t osc_atom_u_getUInt64(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -641,30 +641,30 @@ int osc_atom_u_getInt(t_osc_atom_u *a){
 		return '\0';
 	}
 	switch(a->typetag){
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return a->w.i;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return (int)a->w.f;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return (int)a->w.d;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return (int)a->w.h;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return (int)a->w.I;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return (int)a->w.H;
-	case 's': // string
+	case OSC_TT_STR: // string
 		{
 			char *endp = NULL;
 			return (int)strtol(a->w.s, &endp, 0);
 		}
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return (int)a->w.c;
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return (int)a->w.C;
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return (int)a->w.u;
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return (int)a->w.U;
 	case 'T': // true
 		return 1;
@@ -672,7 +672,7 @@ int osc_atom_u_getInt(t_osc_atom_u *a){
 		return 0;
 	case 'N': // NULL
 		return 0;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		{
 			char *blob = a->w.b;
 			int32_t len = ntoh32(*((int32_t *)blob));
@@ -693,7 +693,7 @@ char *osc_atom_u_getStringPtr(t_osc_atom_u *a)
 	if(!a){
 		return NULL;
 	}
-	if(a->typetag == 's'){
+	if(a->typetag == OSC_TT_STR){
 		return a->w.s;
 	}else{
 		return NULL;
@@ -706,27 +706,27 @@ int osc_atom_u_getStringLen(t_osc_atom_u *a)
 		return 0;
 	}
 	switch(a->typetag){
-	case 's':
+	case OSC_TT_STR:
 		return strlen(a->w.s);
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		return osc_strfmt_int32(NULL, 0, a->w.i);
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		return osc_strfmt_float32(NULL, 0, a->w.f);
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		return osc_strfmt_float64(NULL, 0, a->w.d);
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		return osc_strfmt_int64(NULL, 0, a->w.h);
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		return osc_strfmt_uint32(NULL, 0, a->w.I);
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		return osc_strfmt_uint64(NULL, 0, a->w.H);
-	case 'c': // signed 8-bit int
+	case OSC_TT_I8: // signed 8-bit int
 		return osc_strfmt_int8(NULL, 0, a->w.c);
-	case 'C': // unsigned 8-bit int
+	case OSC_TT_U8: // unsigned 8-bit int
 		return osc_strfmt_uint32(NULL, 0, a->w.C);
-	case 'u': // signed 16-bit int
+	case OSC_TT_I16: // signed 16-bit int
 		return osc_strfmt_int16(NULL, 0, a->w.u);
-	case 'U': // unsigned 16-bit int
+	case OSC_TT_U16: // unsigned 16-bit int
 		return osc_strfmt_uint16(NULL, 0, a->w.U);
 	case 'T': // true
 		return osc_strfmt_bool(NULL, 0, 'T');
@@ -734,9 +734,9 @@ int osc_atom_u_getStringLen(t_osc_atom_u *a)
 		return osc_strfmt_bool(NULL, 0, 'F');
 	case 'N': // NULL
 		return osc_strfmt_null(NULL, 0);
-	case 't': // timetag
+	case OSC_TT_TIME: // timetag
 		return osc_strfmt_timetag(NULL, 0, a->w.t);
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		return osc_strfmt_blob(NULL, 0, a->w.b);
 	}
 	return 0;
@@ -757,37 +757,37 @@ int osc_atom_u_getString(t_osc_atom_u *a, size_t n, char **out)
 		return 0;
 	}
 	switch(a->typetag){
-	case 's': // string
+	case OSC_TT_STR: // string
 		strncpy(*out, a->w.s, nn);
 		break;
-	case 'i': // signed 32-bit int
+	case OSC_TT_I32: // signed 32-bit int
 		osc_strfmt_int32(*out, nn, a->w.i);
 		break;
-	case 'f': // 32-bit IEEE 754 float
+	case OSC_TT_F32: // 32-bit IEEE 754 float
 		osc_strfmt_float32(*out, nn, a->w.f);
 		break;
-	case 'd': // 64-bit IEEE 754 double
+	case OSC_TT_F64: // 64-bit IEEE 754 double
 		osc_strfmt_float64(*out, nn, a->w.d);
 		break;
-	case 'h': // signed 64-bit int
+	case OSC_TT_I64: // signed 64-bit int
 		osc_strfmt_int64(*out, nn, a->w.h);
 		break;
-	case 'I': // unsigned 32-bit int
+	case OSC_TT_U32: // unsigned 32-bit int
 		osc_strfmt_uint32(*out, nn, a->w.I);
 		break;
-	case 'H': // unsigned 64-bit int
+	case OSC_TT_U64: // unsigned 64-bit int
 		osc_strfmt_uint64(*out, nn, a->w.H);
 		break;
-	case 'c': // signed 8-bit char
+	case OSC_TT_I8: // signed 8-bit char
 		osc_strfmt_int8(*out, nn, a->w.c);
 		break;
-	case 'C': // unsigned 8-bit char
+	case OSC_TT_U8: // unsigned 8-bit char
 		osc_strfmt_uint8(*out, nn, a->w.C);
 		break;
-	case 'u': // unsigned 32-bit int
+	case OSC_TT_I16: // unsigned 32-bit int
 		osc_strfmt_int16(*out, nn, a->w.u);
 		break;
-	case 'U': // unsigned 64-bit int
+	case OSC_TT_U16: // unsigned 64-bit int
 		osc_strfmt_uint16(*out, nn, a->w.U);
 		break;
 	case 'T': // true
@@ -799,10 +799,10 @@ int osc_atom_u_getString(t_osc_atom_u *a, size_t n, char **out)
 	case 'N': // NULL
 		osc_strfmt_null(*out, nn);
 		break;
-	case 't': // timetag
+	case OSC_TT_TIME: // timetag
 		stringlen = osc_strfmt_timetag(*out, nn, a->w.t);
 		break;
-	case 'b': // blob
+	case OSC_TT_BLOB: // blob
 		stringlen = osc_strfmt_blob(*out, nn, a->w.b);
 		break;
 	}
@@ -819,29 +819,29 @@ int osc_atom_u_getBool(t_osc_atom_u *a){
 	case 'F':
 	case 'N':
 		return 0;
-	case 'i':
+	case OSC_TT_I32:
 		return !(a->w.i == 0);
-	case 'h':
+	case OSC_TT_I64:
 		return !(a->w.h == 0);
-	case 'I':
+	case OSC_TT_U32:
 		return !(a->w.I == 0);
-	case 'H':
+	case OSC_TT_U64:
 		return !(a->w.H == 0);
-	case 'f':
+	case OSC_TT_F32:
 		return !(a->w.f == 0);
-	case 'd':
+	case OSC_TT_F64:
 		return !(a->w.d == 0);
-	case 's':
+	case OSC_TT_STR:
 		return 0;
-	case 'c':
+	case OSC_TT_I8:
 		return !(a->w.c == 0);
-	case 'C':
+	case OSC_TT_U8:
 		return !(a->w.C == 0);
-	case 'u':
+	case OSC_TT_I16:
 		return !(a->w.u == 0);
-	case 'U':
+	case OSC_TT_U16:
 		return !(a->w.U == 0);
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		// uh...
 		return 0;
 	}
@@ -853,7 +853,7 @@ t_osc_bndl_u *osc_atom_u_getBndl(t_osc_atom_u *a)
 	if(!a){
 		return NULL;
 	}
-	if(a->typetag == OSC_BUNDLE_TYPETAG){
+	if(a->typetag == OSC_TT_BNDL){
 		return a->w.bndl;
 	}else{
 		return NULL;
@@ -865,7 +865,7 @@ t_osc_timetag osc_atom_u_getTimetag(t_osc_atom_u *a)
 	if(!a){
 		return OSC_TIMETAG_NULL;
 	}
-	if(a->typetag == OSC_TIMETAG_TYPETAG){
+	if(a->typetag == OSC_TT_TIME){
 		return a->w.t;
 	}else{
 		return OSC_TIMETAG_NULL;
@@ -878,20 +878,20 @@ int32_t osc_atom_u_getBlobLen(t_osc_atom_u *a)
 		return -1;
 	}
 	switch(osc_atom_u_getTypetag(a)){
-	case 'b':
+	case OSC_TT_BLOB:
 		if(a->w.b){
 			return ntoh32(*((int32_t *)a->w.b));
 		}else{
 			return 0;
 		}
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
 			t_osc_bndl_s *bs = osc_bundle_u_serialize(a->w.bndl);
 			long len = osc_bundle_s_getLen(bs);
 			osc_bundle_s_deepFree(bs);
 			return len;
 		}
-	case 's':
+	case OSC_TT_STR:
 		return strlen(a->w.s);
 	default:
 		return osc_sizeof(osc_atom_u_getTypetag(a), a->w.s);
@@ -903,7 +903,7 @@ char *osc_atom_u_getBlob(t_osc_atom_u *a)
 	if(!a){
 		return NULL;
 	}
-	if(osc_atom_u_getTypetag(a) != 'b'){
+	if(osc_atom_u_getTypetag(a) != OSC_TT_BLOB){
 		return NULL;
 	}
 	return a->w.b;
@@ -925,54 +925,54 @@ void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *buflen, char **blob)
 	}
 	memset(*blob, '\0', *buflen);
 	switch(osc_atom_u_getTypetag(a)){
-	case 'b':
+	case OSC_TT_BLOB:
 		memcpy(*blob, a->w.b, *buflen);
 		break;
-	case 'c':
-	case 'C':
+	case OSC_TT_I8:
+	case OSC_TT_U8:
 		*((int32_t *)(*blob)) = hton32(1);
 		(*blob)[4] = a->w.c;
 		break;
-	case 'u':
-	case 'U':
+	case OSC_TT_I16:
+	case OSC_TT_U16:
 		*((int32_t *)(*blob)) = hton32(2);
 		*((int16_t *)((*blob) + 4)) = hton16(a->w.u);
 		break;
-	case 'i':
-	case 'I':
+	case OSC_TT_I32:
+	case OSC_TT_U32:
 		*((int32_t *)(*blob)) = hton32(4);
 		*((int32_t *)((*blob) + 4)) = hton32(a->w.i);
 		break;
-	case 'h':
-	case 'H':
+	case OSC_TT_I64:
+	case OSC_TT_U64:
 		{
 			int64_t i = a->w.i;
 			*((int32_t *)(*blob)) = hton32(8);
 			*((int64_t *)((*blob) + 4)) = hton64(i);
 		}
 		break;		
-	case 'f':
+	case OSC_TT_F32:
 		{
 			float f = a->w.f;
 			*((int32_t *)(*blob)) = hton32(4);
 			*((int32_t *)((*blob) + 4)) = hton32(*((int32_t *)&f));
 		}
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		{
 			double f = a->w.d;
 			*((int32_t *)(*blob)) = hton32(8);
 			*((int64_t *)((*blob) + 4)) = hton64(*((int64_t *)&f));
 		}
 		break;
-	case 's':
+	case OSC_TT_STR:
 		{
 			*((int32_t *)(*blob)) = hton32(*buflen - 4);
 			char *p = (*blob) + 4;
 			osc_atom_u_getString(a, *buflen, &p);
 		}
 		break;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
 			t_osc_bndl_s *bs = osc_bundle_u_serialize(a->w.bndl);
 			if(bs){
@@ -984,7 +984,7 @@ void osc_atom_u_getBlobCopy(t_osc_atom_u *a, int32_t *buflen, char **blob)
 			}
 		}
 		break;
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		*((int32_t *)(*blob)) = hton32(OSC_TIMETAG_SIZEOF);
 		osc_timetag_encodeForHeader(a->w.t, (*blob) + 4);
 		break;
@@ -999,7 +999,7 @@ void osc_atom_u_setFloat(t_osc_atom_u *a, float v)
 	}
 	osc_atom_u_clear(a);
 	a->w.f = v;
-	a->typetag = 'f';
+	a->typetag = OSC_TT_F32;
 }
 
 void osc_atom_u_setDouble(t_osc_atom_u *a, double v)
@@ -1009,7 +1009,7 @@ void osc_atom_u_setDouble(t_osc_atom_u *a, double v)
 	}
 	osc_atom_u_clear(a);
 	a->w.d = v;
-	a->typetag = 'd';
+	a->typetag = OSC_TT_F64;
 }
 
 void osc_atom_u_setInt8(t_osc_atom_u *a, int8_t v)
@@ -1019,7 +1019,7 @@ void osc_atom_u_setInt8(t_osc_atom_u *a, int8_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.c = v;
-	a->typetag = 'c';
+	a->typetag = OSC_TT_I8;
 }
 
 void osc_atom_u_setInt16(t_osc_atom_u *a, int16_t v)
@@ -1029,7 +1029,7 @@ void osc_atom_u_setInt16(t_osc_atom_u *a, int16_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.u = v;
-	a->typetag = 'u';
+	a->typetag = OSC_TT_I16;
 }
 
 void osc_atom_u_setInt32(t_osc_atom_u *a, int32_t v)
@@ -1039,7 +1039,7 @@ void osc_atom_u_setInt32(t_osc_atom_u *a, int32_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.i = v;
-	a->typetag = 'i';
+	a->typetag = OSC_TT_I32;
 }
 
 void osc_atom_u_setInt64(t_osc_atom_u *a, int64_t v)
@@ -1049,7 +1049,7 @@ void osc_atom_u_setInt64(t_osc_atom_u *a, int64_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.h = v;
-	a->typetag = 'h';
+	a->typetag = OSC_TT_I64;
 }
 
 void osc_atom_u_setUInt8(t_osc_atom_u *a, uint8_t v)
@@ -1059,7 +1059,7 @@ void osc_atom_u_setUInt8(t_osc_atom_u *a, uint8_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.C = v;
-	a->typetag = 'C';
+	a->typetag = OSC_TT_U8;
 }
 
 void osc_atom_u_setUInt16(t_osc_atom_u *a, uint16_t v)
@@ -1069,7 +1069,7 @@ void osc_atom_u_setUInt16(t_osc_atom_u *a, uint16_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.U = v;
-	a->typetag = 'U';
+	a->typetag = OSC_TT_U16;
 }
 
 void osc_atom_u_setUInt32(t_osc_atom_u *a, uint32_t v)
@@ -1079,7 +1079,7 @@ void osc_atom_u_setUInt32(t_osc_atom_u *a, uint32_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.I = v;
-	a->typetag = 'I';
+	a->typetag = OSC_TT_U32;
 }
 
 void osc_atom_u_setUInt64(t_osc_atom_u *a, uint64_t v)
@@ -1089,7 +1089,7 @@ void osc_atom_u_setUInt64(t_osc_atom_u *a, uint64_t v)
 	}
 	osc_atom_u_clear(a);
 	a->w.H = v;
-	a->typetag = 'H';
+	a->typetag = OSC_TT_U64;
 }
 
 void osc_atom_u_setString(t_osc_atom_u *a, const char *v)
@@ -1097,7 +1097,7 @@ void osc_atom_u_setString(t_osc_atom_u *a, const char *v)
 	if(!a){
 		return;
 	}
-	if(a->w.s && a->typetag == 's' && a->alloc){
+	if(a->w.s && a->typetag == OSC_TT_STR && a->alloc){
 		if(v){
 			long len = strlen(v) + 1;
 			a->w.s = osc_mem_resize(a->w.s, len);
@@ -1109,7 +1109,7 @@ void osc_atom_u_setString(t_osc_atom_u *a, const char *v)
 		if(v){
 			a->w.s = osc_mem_alloc(strlen(v) + 1);
 			strcpy(a->w.s, v);
-			a->typetag = 's';
+			a->typetag = OSC_TT_STR;
 			a->alloc = 1;
 		}else{
 			a->w.s = NULL;
@@ -1124,7 +1124,7 @@ void osc_atom_u_setStringPtr(t_osc_atom_u *a, char *v)
 	}
 	osc_atom_u_clear(a);
 	a->w.s = v;
-	a->typetag = 's';
+	a->typetag = OSC_TT_STR;
 }
 
 void osc_atom_u_setBool(t_osc_atom_u *a, int v)
@@ -1185,7 +1185,7 @@ void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr)
 	memcpy(copy, ptr, len);
 	t_osc_bndl_s *bndl = osc_bundle_s_alloc(len, copy);
 	a->w.bndl = bndl;
-	a->typetag = OSC_BUNDLE_TYPETAG;
+	a->typetag = OSC_TT_BNDL;
 	a->alloc = 1;
 */
 }
@@ -1193,7 +1193,7 @@ void osc_atom_u_setBndl_s(t_osc_atom_u *a, long len, char *ptr)
 void osc_atom_u_setBndl_u(t_osc_atom_u *a, t_osc_bndl_u *b)
 {
 	a->w.bndl = b;
-	a->typetag = OSC_BUNDLE_TYPETAG;
+	a->typetag = OSC_TT_BNDL;
 }
 
 void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)
@@ -1203,7 +1203,7 @@ void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag)
 	}
 	osc_atom_u_clear(a);
 	a->w.t = timetag;
-	a->typetag = OSC_TIMETAG_TYPETAG;
+	a->typetag = OSC_TT_TIME;
 }
 
 void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob)
@@ -1221,7 +1221,7 @@ void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob)
 	memset(copy, '\0', buflen + 4);
 	memcpy(copy, blob, l + 4);
 	a->w.b = copy;
-	a->typetag = 'b';
+	a->typetag = OSC_TT_BLOB;
 }
 
 void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob)
@@ -1231,7 +1231,7 @@ void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob)
 	}
 	osc_atom_u_clear(a);
 	a->w.b = blob;
-	a->typetag = 'b';
+	a->typetag = OSC_TT_BLOB;
 }
 
 void osc_atom_u_negate(t_osc_atom_u *a)
@@ -1240,34 +1240,34 @@ void osc_atom_u_negate(t_osc_atom_u *a)
 		return;
 	}
 	switch(osc_atom_u_getTypetag(a)){
-	case 'c':
+	case OSC_TT_I8:
 		osc_atom_u_setInt8(a, -osc_atom_u_getInt8(a));
 		break;
-	case 'u':
+	case OSC_TT_I16:
 		osc_atom_u_setInt16(a, -osc_atom_u_getInt16(a));
 		break;
-	case 'i':
+	case OSC_TT_I32:
 		osc_atom_u_setInt32(a, -osc_atom_u_getInt32(a));
 		break;
-	case 'h':
+	case OSC_TT_I64:
 		osc_atom_u_setInt64(a, -osc_atom_u_getInt64(a));
 		break;
-	case 'C':
+	case OSC_TT_U8:
 		osc_atom_u_setInt8(a, -osc_atom_u_getUInt8(a));
 		break;
-	case 'U':
+	case OSC_TT_U16:
 		osc_atom_u_setInt16(a, -osc_atom_u_getUInt16(a));
 		break;
-	case 'I':
+	case OSC_TT_U32:
 		osc_atom_u_setInt32(a, -osc_atom_u_getUInt32(a));
 		break;
-	case 'H':
+	case OSC_TT_U64:
 		osc_atom_u_setInt64(a, -osc_atom_u_getUInt64(a));
 		break;
-	case 'f':
+	case OSC_TT_F32:
 		osc_atom_u_setFloat(a, -osc_atom_u_getFloat(a));
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		osc_atom_u_setDouble(a, -osc_atom_u_getDouble(a));
 		break;
 	}
@@ -1279,29 +1279,29 @@ size_t osc_atom_u_sizeof(t_osc_atom_u *a)
 		return 0;
 	}
 	switch(a->typetag){
-	case 'c':
-	case 'C':
-	case 'u':
-	case 'U':
-	case 'i':
-	case 'I':
-	case 'f':
+	case OSC_TT_I8:
+	case OSC_TT_U8:
+	case OSC_TT_I16:
+	case OSC_TT_U16:
+	case OSC_TT_I32:
+	case OSC_TT_U32:
+	case OSC_TT_F32:
 		return 4;
-	case 'h':
-	case 'H':
-	case 'd':
+	case OSC_TT_I64:
+	case OSC_TT_U64:
+	case OSC_TT_F64:
 		return 8;
-	case 's':
+	case OSC_TT_STR:
 		return strlen(a->w.s);
 	case 'T':
 	case 'F':
 	case 'N':
 		return 0;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		return osc_bundle_u_getSerializedSize(a->w.bndl);
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		return OSC_TIMETAG_SIZEOF;
-	case 'b':
+	case OSC_TT_BLOB:
 		return ntoh32(*((int32_t *)a->w.b));
 	}
 	return 0;
@@ -1313,12 +1313,12 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 		return 0;
 	}
 	switch(osc_atom_u_getTypetag(a)){
-	case 'c':
-	case 'C':
-	case 'u':
-	case 'U':
-	case 'i':
-	case 'I':
+	case OSC_TT_I8:
+	case OSC_TT_U8:
+	case OSC_TT_I16:
+	case OSC_TT_U16:
+	case OSC_TT_I32:
+	case OSC_TT_U32:
 		if(!buf){
 			return 4;
 		}else if(n >= 4){
@@ -1327,7 +1327,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			return 4;
 		}
 		break;
-	case 'f':
+	case OSC_TT_F32:
 		if(!buf){
 			return 4;
 		}else if(n >= 4){
@@ -1336,7 +1336,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			return 4;
 		}
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		if(!buf){
 			return 8;
 		}else if(n >= 8){
@@ -1345,7 +1345,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			return 8;
 		}
 		break;
-	case 's':
+	case OSC_TT_STR:
 		{
 			size_t len = strlen(a->w.s);
 			size_t plen = osc_util_getPaddingForNBytes(len);
@@ -1358,7 +1358,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			}
 		}
 		break;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
 			size_t len = osc_bundle_u_nserialize(NULL, 0, a->w.bndl);
 			if(!buf){
@@ -1368,7 +1368,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 				return osc_bundle_u_nserialize(buf + 4, len, a->w.bndl) + 4;
 			}
 		}
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		if(!buf){
 			return OSC_TIMETAG_SIZEOF;
 		}else if(n >= OSC_TIMETAG_SIZEOF){
@@ -1376,8 +1376,8 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 			return OSC_TIMETAG_SIZEOF;
 		}
 		break;
-	case 'h':
-	case 'H':
+	case OSC_TT_I64:
+	case OSC_TT_U64:
 		if(!buf){
 			return 8;
 		}else if(n >= 8){
@@ -1386,7 +1386,7 @@ size_t osc_atom_u_nserialize(char *buf, size_t n, t_osc_atom_u *a)
 		}
 		break;
 // nothing to do for T, F, or N
-	case 'b':
+	case OSC_TT_BLOB:
 		{
 			int32_t len = ntoh32(*((int32_t *)a->w.b));
 			size_t plen = osc_util_getBlobLength(len); // includes size
@@ -1440,17 +1440,17 @@ long osc_atom_u_nformat(char *buf, long n, t_osc_atom_u *a, int nindent)
 	}
 	char tt = osc_atom_u_getTypetag(a);
 	if(!buf){
-		if(tt == OSC_BUNDLE_TYPETAG){
+		if(tt == OSC_TT_BNDL){
 			return osc_bundle_u_nformatNestedBndl(NULL, 0, a->w.bndl, nindent + 1);
-		}else if(tt == 's'){
+		}else if(tt == OSC_TT_STR){
 			return osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, osc_atom_u_getStringPtr(a));
 		}else{
 			return osc_atom_u_getStringLen(a);
 		}
 	}else{
-		if(tt == OSC_BUNDLE_TYPETAG){
+		if(tt == OSC_TT_BNDL){
 			return osc_bundle_u_nformatNestedBndl(buf, n, a->w.bndl, nindent + 1);
-		}else if(tt == 's'){
+		}else if(tt == OSC_TT_STR){
 			return osc_strfmt_quotedStringWithQuotedMeta(buf, n, osc_atom_u_getStringPtr(a));
 		}else{
 			return osc_atom_u_getString(a, n, &buf);

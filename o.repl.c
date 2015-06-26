@@ -26,7 +26,7 @@ int main(int av, char **ac)
 		}
 		if(n == 2){
 			switch(buf[0]){
-			case 'c':
+			case OSC_TT_I8:
 				osc_bndl_release(g);
 				g = NULL;
 				break;

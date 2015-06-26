@@ -36,12 +36,12 @@ typedef struct _osc_value{
 		//double Q[4];
 		char *s;
 		char *S;
-		t_osc_bndl *OSC_BUNDLE_TYPETAG_ID;
+		t_osc_bndl *OSC_TT_BNDL_ID;
 		t_osc_timetag t;
 		char *b;
-		//t_osc_bndl *(*OSC_NATIVE_TYPETAG_ID)(t_osc_bndl *);
-		t_osc_builtin OSC_NATIVE_TYPETAG_ID;
-		t_osc_bndl *OSC_EXPR_TYPETAG_ID;
+		//t_osc_bndl *(*OSC_TT_NATIVE_ID)(t_osc_bndl *);
+		t_osc_builtin OSC_TT_NATIVE_ID;
+		t_osc_bndl *OSC_TT_EXPR_ID;
 	} value;
 	char typetag;
 } t_osc_value;
@@ -80,43 +80,43 @@ static t_osc_atom _osc_atom_false = { {-1, NULL}, {{0}, 'F'}, 0, NULL, 5, "false
 t_osc_atom *osc_atom_false = &_osc_atom_false;
 static t_osc_atom _osc_atom_nil = { {-1, NULL}, {{0}, 'N'}, 0, NULL, 3, "nil", 0, 1 };
 t_osc_atom *osc_atom_nil = &_osc_atom_nil;
-static t_osc_atom _osc_atom_undefined = { {-1, NULL}, {{0}, OSC_UNDEFINED_TYPETAG}, 0, NULL, 9, "undefined", 0, 1 };
+static t_osc_atom _osc_atom_undefined = { {-1, NULL}, {{0}, OSC_TT_UNDEF}, 0, NULL, 9, "undefined", 0, 1 };
 t_osc_atom *osc_atom_undefined = &_osc_atom_undefined;
 
-static t_osc_atom _osc_atom_emptystring = { {-1, NULL}, {{ .S = "\0" }, 'S'}, 4, "\0\0\0\0", 4, "\0\0\0\0", 0, 1};
+static t_osc_atom _osc_atom_emptystring = { {-1, NULL}, {{ .S = "\0" }, OSC_TT_SYM}, 4, "\0\0\0\0", 4, "\0\0\0\0", 0, 1};
 t_osc_atom *osc_atom_emptystring = &_osc_atom_emptystring;
 
-static t_osc_atom _osc_atom_valueaddress = { {-1, NULL}, {{.S = "/value" }, 'S'}, 8, "/value\0\0", 6, "/value", 0, 1};
+static t_osc_atom _osc_atom_valueaddress = { {-1, NULL}, {{.S = "/value" }, OSC_TT_SYM}, 8, "/value\0\0", 6, "/value", 0, 1};
 t_osc_atom *osc_atom_valueaddress = &_osc_atom_valueaddress;
-static t_osc_atom _osc_atom_expraddress = { {-1, NULL}, {{.S = "/expr" }, 'S'}, 8, "/expr\0\0\0", 5, "/expr", 0, 1};
+static t_osc_atom _osc_atom_expraddress = { {-1, NULL}, {{.S = "/expr" }, OSC_TT_SYM}, 8, "/expr\0\0\0", 5, "/expr", 0, 1};
 t_osc_atom *osc_atom_expraddress = &_osc_atom_expraddress;
-static t_osc_atom _osc_atom_typeaddress = { {-1, NULL}, {{.S = "/type" }, 'S'}, 8, "/type\0\0\0", 5, "/type", 0, 1};
+static t_osc_atom _osc_atom_typeaddress = { {-1, NULL}, {{.S = "/type" }, OSC_TT_SYM}, 8, "/type\0\0\0", 5, "/type", 0, 1};
 t_osc_atom *osc_atom_typeaddress = &_osc_atom_typeaddress;
-static t_osc_atom _osc_atom_funcaddress = { {-1, NULL}, {{.S = "/func" }, 'S'}, 8, "/func\0\0\0", 5, "/func", 0, 1};
+static t_osc_atom _osc_atom_funcaddress = { {-1, NULL}, {{.S = "/func" }, OSC_TT_SYM}, 8, "/func\0\0\0", 5, "/func", 0, 1};
 t_osc_atom *osc_atom_funcaddress = &_osc_atom_funcaddress;
-static t_osc_atom _osc_atom_argsaddress = { {-1, NULL}, {{.S = "/args" }, 'S'}, 8, "/args\0\0\0", 5, "/args", 0, 1};
+static t_osc_atom _osc_atom_argsaddress = { {-1, NULL}, {{.S = "/args" }, OSC_TT_SYM}, 8, "/args\0\0\0", 5, "/args", 0, 1};
 t_osc_atom *osc_atom_argsaddress = &_osc_atom_argsaddress;
-static t_osc_atom _osc_atom_partialaddress = { {-1, NULL}, {{.S = "/partial" }, 'S'}, 12, "/partial\0\0\0\0", 8, "/partial", 0, 1};
+static t_osc_atom _osc_atom_partialaddress = { {-1, NULL}, {{.S = "/partial" }, OSC_TT_SYM}, 12, "/partial\0\0\0\0", 8, "/partial", 0, 1};
 t_osc_atom *osc_atom_partialaddress = &_osc_atom_partialaddress;
-static t_osc_atom _osc_atom_completeaddress = { {-1, NULL}, {{.S = "/complete" }, 'S'}, 12, "/complete\0\0\0", 9, "/complete", 0, 1};
+static t_osc_atom _osc_atom_completeaddress = { {-1, NULL}, {{.S = "/complete" }, OSC_TT_SYM}, 12, "/complete\0\0\0", 9, "/complete", 0, 1};
 t_osc_atom *osc_atom_completeaddress = &_osc_atom_completeaddress;
-static t_osc_atom _osc_atom_unmatchedaddress = { {-1, NULL}, {{.S = "/unmatched" }, 'S'}, 12, "/unmatched\0\0", 10, "/unmatched", 0, 1};
+static t_osc_atom _osc_atom_unmatchedaddress = { {-1, NULL}, {{.S = "/unmatched" }, OSC_TT_SYM}, 12, "/unmatched\0\0", 10, "/unmatched", 0, 1};
 t_osc_atom *osc_atom_unmatchedaddress = &_osc_atom_unmatchedaddress;
 
-static t_osc_atom _osc_atom_ps_add = { {-1, NULL}, {{.S = "add" }, 'S'}, 4, "add\0", 3, "add", 0, 1};
+static t_osc_atom _osc_atom_ps_add = { {-1, NULL}, {{.S = "add" }, OSC_TT_SYM}, 4, "add\0", 3, "add", 0, 1};
 t_osc_atom *osc_atom_ps_add = &_osc_atom_ps_add;
-static t_osc_atom _osc_atom_ps_nth = { {-1, NULL}, {{.S = "nth" }, 'S'}, 4, "nth\0", 3, "nth", 0, 1};
+static t_osc_atom _osc_atom_ps_nth = { {-1, NULL}, {{.S = "nth" }, OSC_TT_SYM}, 4, "nth\0", 3, "nth", 0, 1};
 t_osc_atom *osc_atom_ps_nth = &_osc_atom_ps_nth;
 
-static t_osc_atom _osc_atom_yaddress = { {-1, NULL}, {{.S = "/y" }, 'S'}, 4, "/y\0\0", 2, "/y", 0, 1};
+static t_osc_atom _osc_atom_yaddress = { {-1, NULL}, {{.S = "/y" }, OSC_TT_SYM}, 4, "/y\0\0", 2, "/y", 0, 1};
 t_osc_atom *osc_atom_yaddress = &_osc_atom_yaddress;
-static t_osc_atom _osc_atom_lhsaddress = { {-1, NULL}, {{.S = "/lhs" }, 'S'}, 8, "/lhs\0\0\0\0", 4, "/lhs", 0, 1};
+static t_osc_atom _osc_atom_lhsaddress = { {-1, NULL}, {{.S = "/lhs" }, OSC_TT_SYM}, 8, "/lhs\0\0\0\0", 4, "/lhs", 0, 1};
 t_osc_atom *osc_atom_lhsaddress = &_osc_atom_lhsaddress;
-static t_osc_atom _osc_atom_rhsaddress = { {-1, NULL}, {{.S = "/rhs" }, 'S'}, 8, "/rhs\0\0\0\0", 4, "/rhs", 0, 1};
+static t_osc_atom _osc_atom_rhsaddress = { {-1, NULL}, {{.S = "/rhs" }, OSC_TT_SYM}, 8, "/rhs\0\0\0\0", 4, "/rhs", 0, 1};
 t_osc_atom *osc_atom_rhsaddress = &_osc_atom_rhsaddress;
-static t_osc_atom _osc_atom_naddress = { {-1, NULL}, {{.S = "/n" }, 'S'}, 4, "/n\0\0", 2, "/n", 0, 1};
+static t_osc_atom _osc_atom_naddress = { {-1, NULL}, {{.S = "/n" }, OSC_TT_SYM}, 4, "/n\0\0", 2, "/n", 0, 1};
 t_osc_atom *osc_atom_naddress = &_osc_atom_naddress;
-static t_osc_atom _osc_atom_listaddress = { {-1, NULL}, {{.S = "/list" }, 'S'}, 8, "/list\0\0\0", 5, "/list", 0, 1};
+static t_osc_atom _osc_atom_listaddress = { {-1, NULL}, {{.S = "/list" }, OSC_TT_SYM}, 8, "/list\0\0\0", 5, "/list", 0, 1};
 t_osc_atom *osc_atom_listaddress = &_osc_atom_listaddress;
 
 
@@ -132,91 +132,91 @@ t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context);
 // serialize and pretty print on init?
 t_osc_atom *osc_atom_allocInt8(int8_t i)
 {
-	OSC_ATOM_ALLOC(a, i, c, 'c', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocUInt8(uint8_t i)
 {
-	OSC_ATOM_ALLOC(a, i, C, 'C', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocInt16(int16_t i)
 {
-	OSC_ATOM_ALLOC(a, i, u, 'u', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocUInt16(uint16_t i)
 {
-	OSC_ATOM_ALLOC(a, i, U, 'U', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocInt32(int32_t i)
 {
-	OSC_ATOM_ALLOC(a, i, i, 'i', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocUInt32(uint32_t i)
 {
-	OSC_ATOM_ALLOC(a, i, I, 'I', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocInt64(int64_t i)
 {
-	OSC_ATOM_ALLOC(a, i, h, 'h', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocUInt64(uint64_t i)
 {
-	OSC_ATOM_ALLOC(a, i, H, 'H', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocFloat(float i)
 {
-	OSC_ATOM_ALLOC(a, i, f, 'f', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocDouble(double i)
 {
-	OSC_ATOM_ALLOC(a, i, d, 'd', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocString(char *i, int should_free_ptr)
 {
-	OSC_ATOM_ALLOC(a, i, s, 's', 0, NULL, 0, NULL, 1, should_free_ptr);
+	OSC_ATOM_ALLOC(a, i, s, OSC_TT_STR, 0, NULL, 0, NULL, 1, should_free_ptr);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocSymbol(char *i, int should_free_ptr)
 {
-	OSC_ATOM_ALLOC(a, i, S, 'S', 0, NULL, 0, NULL, 1, should_free_ptr);
+	OSC_ATOM_ALLOC(a, i, S, OSC_TT_SYM, 0, NULL, 0, NULL, 1, should_free_ptr);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocBndl(t_osc_bndl *b, int should_free_bndl)
 {
-	OSC_ATOM_ALLOC(a, b, OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, should_free_bndl);
+	OSC_ATOM_ALLOC(a, b, OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, should_free_bndl);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocTimetag(t_osc_timetag i)
 {
-	OSC_ATOM_ALLOC(a, i, t, 't', 0, NULL, 0, NULL, 1, 0);
+	OSC_ATOM_ALLOC(a, i, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocBlob(char *b, int should_free_ptr)
 {
-	OSC_ATOM_ALLOC(a, b, b, 'b', 0, NULL, 0, NULL, 1, should_free_ptr);
+	OSC_ATOM_ALLOC(a, b, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, should_free_ptr);
 	return a;
 }
 
@@ -239,13 +239,13 @@ t_osc_atom *osc_atom_allocNative(t_osc_builtin f, char *funcname)
 {
 	char *buf = osc_mem_alloc(128);
 	int n = snprintf(buf, 128, "__native %s", funcname);
-	OSC_ATOM_ALLOC(a, f, OSC_NATIVE_TYPETAG_ID, OSC_NATIVE_TYPETAG, 0, NULL, n, buf, 1, 0);
+	OSC_ATOM_ALLOC(a, f, OSC_TT_NATIVE_ID, OSC_TT_NATIVE, 0, NULL, n, buf, 1, 0);
 	return a;
 }
 
 t_osc_atom *osc_atom_allocExpr(t_osc_bndl *b, int should_free)
 {
-	OSC_ATOM_ALLOC(a, b, OSC_EXPR_TYPETAG_ID, OSC_EXPR_TYPETAG, 0, NULL, 0, NULL, 1, should_free);
+	OSC_ATOM_ALLOC(a, b, OSC_TT_EXPR_ID, OSC_TT_EXPR, 0, NULL, 0, NULL, 1, should_free);
 	return a;
 }
 
@@ -272,24 +272,24 @@ t_osc_atom *osc_atom_clone(t_osc_atom *a)
 		memcpy(pp, pp(a), pl);
 	}
 	switch(tt(a)){
-	case 's':
+	case OSC_TT_STR:
 		{
-			OSC_ATOM_ALLOC(ret, osc_util_strcpy(v(a, s)), s, 's', sl, sp, pl, pp, 1, 1);
+			OSC_ATOM_ALLOC(ret, osc_util_strcpy(v(a, s)), s, OSC_TT_STR, sl, sp, pl, pp, 1, 1);
 			return ret;
 		}
-	case 'S':
+	case OSC_TT_SYM:
 		{
-			OSC_ATOM_ALLOC(ret, osc_util_strcpy(v(a, S)), S, 'S', sl, sp, pl, pp, 1, 1);
+			OSC_ATOM_ALLOC(ret, osc_util_strcpy(v(a, S)), S, OSC_TT_SYM, sl, sp, pl, pp, 1, 1);
 			return ret;
 		}
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
-			OSC_ATOM_ALLOC(ret, osc_bndl_retain(v(a, OSC_BUNDLE_TYPETAG_ID)), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, sl, sp, pl, pp, 1, 1);
+			OSC_ATOM_ALLOC(ret, osc_bndl_retain(v(a, OSC_TT_BNDL_ID)), OSC_TT_BNDL_ID, OSC_TT_BNDL, sl, sp, pl, pp, 1, 1);
 			return ret;
 		}
-	case 'b':
+	case OSC_TT_BLOB:
 		{
-			OSC_ATOM_ALLOC(ret, osc_util_blobcpy(v(a, b)), b, 'b', sl, sp, pl, pp, 1, 1);
+			OSC_ATOM_ALLOC(ret, osc_util_blobcpy(v(a, b)), b, OSC_TT_BLOB, sl, sp, pl, pp, 1, 1);
 			return ret;
 		}
 	default:
@@ -325,16 +325,16 @@ void osc_atom_free(void *_a)
 		}
 		char *p = NULL;
 		switch(tt(a)){
-		case 's':
-		case 'S':
-		case 'b':
+		case OSC_TT_STR:
+		case OSC_TT_SYM:
+		case OSC_TT_BLOB:
 			if(sf(a)){
 				p = v(a, s);
 			}
 			break;
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			if(sf(a)){
-				osc_bndl_release(v(a, OSC_BUNDLE_TYPETAG_ID));
+				osc_bndl_release(v(a, OSC_TT_BNDL_ID));
 			}
 			break;
 		}
@@ -414,7 +414,7 @@ t_osc_atom *osc_atom_strcat(t_osc_pvec2 *pvec2)
 	int lengths[n];
 	int len = 0;
 	for(int i = 0; i < n; i++){
-		atoms[i] = osc_atom_convertAny((t_osc_atom *)osc_pvec2_nth(pvec2, i), 's');
+		atoms[i] = osc_atom_convertAny((t_osc_atom *)osc_pvec2_nth(pvec2, i), OSC_TT_STR);
 		lengths[i] = strlen(v(atoms[i], s));
 		len += lengths[i];
 	}
@@ -493,7 +493,7 @@ t_osc_atom *osc_atom_formatAtomsAsMsg(t_osc_pvec2 *pvec2,
 	}
 	ptr += postfixlen;
 	*ptr = '\0';
-	OSC_ATOM_ALLOC(ret, buf, s, 's', 0, NULL, (ptr - buf), osc_util_strcpy(buf), 1, 1);
+	OSC_ATOM_ALLOC(ret, buf, s, OSC_TT_STR, 0, NULL, (ptr - buf), osc_util_strcpy(buf), 1, 1);
 	return ret;
 }
 
@@ -505,12 +505,12 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 	int len = 0;
 	char *buf = NULL;
 	switch(tt(a)){
-	case 'c':
-	case 'C':
-	case 'u':
-	case 'U':
-	case 'i':
-	case 'I':
+	case OSC_TT_I8:
+	case OSC_TT_U8:
+	case OSC_TT_I16:
+	case OSC_TT_U16:
+	case OSC_TT_I32:
+	case OSC_TT_U32:
 		{
 			len = 4;
 			buf = osc_mem_alloc(len);
@@ -518,7 +518,7 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 			*((int32_t *)buf) = hton32(i);
 		}
 		break;
-	case 'f':
+	case OSC_TT_F32:
 		{
 			len = 4;
 			buf = osc_mem_alloc(len);
@@ -526,7 +526,7 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 			*((int32_t *)buf) = hton32(*((int32_t *)(&f)));
 		}
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		{
 			len = 8;
 			buf = osc_mem_alloc(len);
@@ -534,8 +534,8 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 			*((int64_t *)buf) = hton64(*((int64_t *)(&d)));
 		}
 		break;
-	case 's':
-	case 'S':
+	case OSC_TT_STR:
+	case OSC_TT_SYM:
 		{
 			int l = strlen(v(a, s));
 			len = osc_util_getPaddingForNBytes(l);
@@ -544,9 +544,9 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 			memcpy(buf, v(a, s), l);
 		}
 		break;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		{
-			t_osc_bndl *b = osc_bndl_serialize(v(a, OSC_BUNDLE_TYPETAG_ID));
+			t_osc_bndl *b = osc_bndl_serialize(v(a, OSC_TT_BNDL_ID));
 			len = osc_bndl_getSerializedLen(b);
 			buf = osc_bndl_getSerializedPtr(b);
 			osc_bndl_setSerializedLen(b, 0);
@@ -554,19 +554,19 @@ static void _osc_atom_serialize(t_osc_atom *a, int *_len, char **_buf)
 			osc_bndl_release(b);
 		}
 		break;
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		len = OSC_TIMETAG_SIZEOF;
 		buf = osc_mem_alloc(len);
 		osc_timetag_encodeForHeader(v(a, t), buf);
 		break;
-	case 'h':
-	case 'H':
+	case OSC_TT_I64:
+	case OSC_TT_U64:
 		len = 8;
 		buf = osc_mem_alloc(len);
 		*((int64_t *)buf) = hton64(v(a, h));
 		break;
 // nothing to do for T, F, or N
-	case 'b':
+	case OSC_TT_BLOB:
 		{
 			len = osc_util_getBlobLength(ntoh32(*((int32_t *)v(a, b)))); // includes size
 			buf = osc_mem_alloc(len);
@@ -625,7 +625,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 	int len = 0;
 	char *buf = NULL;
 	switch(tt(a)){
-	case 'c':
+	case OSC_TT_I8:
 		{
 			int8_t i = v(a, c);
 			len = osc_strfmt_int8(NULL, 0, i);
@@ -633,7 +633,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_int8(buf, len + 1, i);
 		}
 		break;
-	case 'C':
+	case OSC_TT_U8:
 		{
 			uint8_t i = v(a, C);
 			len = osc_strfmt_uint8(NULL, 0, i);
@@ -641,7 +641,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_uint8(buf, len + 1, i);
 		}
 		break;
-        case 'u':
+        case OSC_TT_I16:
 		{
 			int16_t i = v(a, u);
 			len = osc_strfmt_int16(NULL, 0, i);
@@ -649,7 +649,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_int16(buf, len + 1, i);
 		}
 		break;
-	case 'U':
+	case OSC_TT_U16:
 		{
 			uint16_t i = v(a, U);
 			len = osc_strfmt_uint16(NULL, 0, i);
@@ -657,7 +657,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_uint16(buf, len + 1, i);
 		}
 		break;
-	case 'i':
+	case OSC_TT_I32:
 		{
 			int32_t i = v(a, i);
 			len = osc_strfmt_int32(NULL, 0, i);
@@ -665,7 +665,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_int32(buf, len + 1, i);
 		}
 		break;
-	case 'I':
+	case OSC_TT_U32:
 		{
 			uint32_t i = v(a, I);
 			len = osc_strfmt_uint32(NULL, 0, i);
@@ -673,7 +673,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_uint32(buf, len + 1, i);
 		}
 		break;
-	case 'h':
+	case OSC_TT_I64:
 		{
 			int64_t i = v(a, h);
 			len = osc_strfmt_int64(NULL, 0, i);
@@ -681,7 +681,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_int64(buf, len + 1, i);
 		}
 		break;
-	case 'H':
+	case OSC_TT_U64:
 		{
 			uint64_t i = v(a, H);
 			len = osc_strfmt_uint64(NULL, 0, i);
@@ -689,7 +689,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_uint64(buf, len + 1, i);
 		}
 		break;
-	case 'f':
+	case OSC_TT_F32:
 		{
 			float i = v(a, f);
 			len = osc_strfmt_float(NULL, 0, i);
@@ -697,7 +697,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_float(buf, len + 1, i);
 		}
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		{
 			double i = v(a, d);
 			len = osc_strfmt_double(NULL, 0, i);
@@ -705,7 +705,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_double(buf, len + 1, i);
 		}
 		break;
-	case 's':
+	case OSC_TT_STR:
 		{
 			char *str = v(a, s);
 			len = osc_strfmt_quotedStringWithQuotedMeta(NULL, 0, str);
@@ -713,7 +713,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_quotedStringWithQuotedMeta(buf, len + 1, str);
 		}
 		break;
-	case 'S':
+	case OSC_TT_SYM:
 		{
 			char *str = v(a, S);
 			len = strlen(str);
@@ -721,10 +721,10 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			strncpy(buf, str, len + 1);
 		}
 		break;
-	case OSC_EXPR_TYPETAG:
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_EXPR:
+	case OSC_TT_BNDL:
 		{
-			t_osc_bndl *b = osc_bndl_format(v(a, OSC_BUNDLE_TYPETAG_ID), level + 1);
+			t_osc_bndl *b = osc_bndl_format(v(a, OSC_TT_BNDL_ID), level + 1);
 			len = osc_bndl_getPrettyLen(b);
 			buf = osc_bndl_getPrettyPtr(b);
 			osc_bndl_setPrettyLen(b, 0);
@@ -732,7 +732,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_bndl_release(b);
 		}
 		break;
-	case 't':
+	case OSC_TT_TIME:
 		{
 			t_osc_timetag tt = v(a, t);
 			len = osc_strfmt_timetag(NULL, 0, tt);
@@ -755,7 +755,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 		buf = osc_mem_alloc(len + 1);
 		osc_strfmt_null(buf, len + 1);
 		break;
-	case 'b':
+	case OSC_TT_BLOB:
 		{
 			char *blob = v(a, b);
 			len = osc_strfmt_blob(NULL, 0, blob);
@@ -763,7 +763,7 @@ void _osc_atom_format(t_osc_atom *a, int *_len, char **_buf, int level)
 			osc_strfmt_blob(buf, len + 1, blob);
 		}
 		break;
-	case OSC_NATIVE_TYPETAG:
+	case OSC_TT_NATIVE:
 		len = pl(a);
 		buf = pp(a);
 		break;
@@ -838,101 +838,101 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 	}
 	t_osc_atom *ret = NULL;
 	switch(tt){
-	case 'c':
+	case OSC_TT_I8:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			return osc_atom_retain(a);
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, c), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, c), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, c), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, c), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, c), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, c), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, c), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, c), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, c), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, c), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, c), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, c), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, c), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, c), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, c), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, c), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, c), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, c), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
 				t_osc_msg *m = osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a));
 				t_osc_bndl *b = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, m);
-				OSC_ATOM_ALLOC(aa, b, OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, b, OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, c)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, c)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -949,99 +949,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'C':
+	case OSC_TT_U8:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, C), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, C), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			return osc_atom_retain(a);
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, C), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, C), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, C), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, C), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, C), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, C), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, C), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, C), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, C), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, C), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, C), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, C), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, C), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, C), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, C), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, C), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, C)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, C)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1059,99 +1059,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'u':
+	case OSC_TT_I16:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, u), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, u), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, u), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, u), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			return osc_atom_retain(a);
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, u), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, u), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, u), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, u), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, u), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, u), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, u), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, u), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, u), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, u), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, u), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, u), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, u), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, u), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, u)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, u)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1168,99 +1168,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'U':
+	case OSC_TT_U16:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, U), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, U), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, U), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, U), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, U), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, U), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			return osc_atom_retain(a);
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, U), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, U), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, U), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, U), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, U), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, U), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, U), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, U), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, U), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, U), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, U), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, U), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, U)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, U)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1277,99 +1277,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'i':
+	case OSC_TT_I32:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, i), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, i), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, i), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, i), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, i), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, i), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, i), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, i), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			return osc_atom_retain(a);
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, i), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, i), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, i), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, i), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, i), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, i), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, i), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, i), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, i), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, i), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, i)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, i)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1386,99 +1386,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'I':
+	case OSC_TT_U32:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, I), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, I), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, I), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, I), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, I), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, I), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, I), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, I), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, I), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, I), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			return osc_atom_retain(a);
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, I), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, I), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, I), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, I), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, I), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, I), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, I), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, I), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, I)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, I)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1495,99 +1495,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'h':
+	case OSC_TT_I64:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, h), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, h), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, h), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, h), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, h), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, h), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, h), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, h), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, h), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, h), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, h), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, h), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			return osc_atom_retain(a);
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, h), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, h), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, h), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, h), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, h), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, h), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, h)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, h)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1604,99 +1604,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'H':
+	case OSC_TT_U64:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, H), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, H), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, H), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, H), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, H), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, H), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, H), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, H), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, H), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, H), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, H), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, H), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, H), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, H), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			return osc_atom_retain(a);
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, H), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, H), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, H), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, H), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, H)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, H)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1713,99 +1713,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'f':
+	case OSC_TT_F32:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, f), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, f), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, f), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, f), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, f), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, f), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, f), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, f), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, f), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, f), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, f), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, f), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, f), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, f), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, f), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, f), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			return osc_atom_retain(a);
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, f), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, f), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, f)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, f)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1822,99 +1822,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'd':
+	case OSC_TT_F64:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (double)v(a, d), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (double)v(a, d), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, d), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)v(a, d), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)v(a, d), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)v(a, d), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, d), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)v(a, d), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)v(a, d), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)v(a, d), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, d), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)v(a, d), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)v(a, d), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)v(a, d), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, d), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)v(a, d), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)v(a, d), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)v(a, d), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			return osc_atom_retain(a);
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, d)), t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_floatToTimetag((double)v(a, d)), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -1931,167 +1931,167 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 's':
-	case 'S':
+	case OSC_TT_STR:
+	case OSC_TT_SYM:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, *ptr, c, 'c', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, *ptr, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, *ptr, C, 'C', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, *ptr, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'u':
-			{
-				char *ptr = v(a, s);
-				if(ptr){
-					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (int16_t)strtol(ptr, &endptr, 0), u, 'u', 0, NULL, 0, NULL, 1, 0);
-					ret = aa;
-				}else{
-					OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
-					ret = aa;
-				}
-				break;
-			}
-		case 'U':
+		case OSC_TT_I16:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (int16_t)strtol(ptr, &endptr, 0), U, 'U', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int16_t)strtol(ptr, &endptr, 0), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'i':
+		case OSC_TT_U16:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (int32_t)strtol(ptr, &endptr, 0), i, 'i', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int16_t)strtol(ptr, &endptr, 0), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'I':
+		case OSC_TT_I32:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (uint32_t)strtoul(ptr, &endptr, 0), I, 'I', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int32_t)strtol(ptr, &endptr, 0), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'h':
+		case OSC_TT_U32:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (int64_t)strtoll(ptr, &endptr, 0), h, 'h', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint32_t)strtoul(ptr, &endptr, 0), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'H':
+		case OSC_TT_I64:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, (uint64_t)strtoull(ptr, &endptr, 0), H, 'H', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int64_t)strtoll(ptr, &endptr, 0), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'f':
+		case OSC_TT_U64:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, strtof(ptr, &endptr), f, 'f', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint64_t)strtoull(ptr, &endptr, 0), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, f, 'f', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'd':
+		case OSC_TT_F32:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					char *endptr = NULL;
-					OSC_ATOM_ALLOC(aa, strtod(ptr, &endptr), d, 'd', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, strtof(ptr, &endptr), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 's':
-		case 'S':
+		case OSC_TT_F64:
+			{
+				char *ptr = v(a, s);
+				if(ptr){
+					char *endptr = NULL;
+					OSC_ATOM_ALLOC(aa, strtod(ptr, &endptr), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
+					ret = aa;
+				}else{
+					OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
+					ret = aa;
+				}
+				break;
+			}
+		case OSC_TT_STR:
+		case OSC_TT_SYM:
 			return osc_atom_retain(a);
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
 				char *ptr = v(a, s);
 				if(ptr){
 					t_osc_timetag t;
 					osc_timetag_fromISO8601(ptr, &t);
-					OSC_ATOM_ALLOC(aa, t, t, 't', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, t, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -2108,103 +2108,103 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -2221,99 +2221,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 't':
+	case OSC_TT_TIME:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, (int8_t)osc_timetag_timetagToFloat(v(a, t)), c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int8_t)osc_timetag_timetagToFloat(v(a, t)), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, (uint8_t)osc_timetag_timetagToFloat(v(a, t)), C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint8_t)osc_timetag_timetagToFloat(v(a, t)), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, (int16_t)osc_timetag_timetagToFloat(v(a, t)), u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int16_t)osc_timetag_timetagToFloat(v(a, t)), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, (uint16_t)osc_timetag_timetagToFloat(v(a, t)), U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint16_t)osc_timetag_timetagToFloat(v(a, t)), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, (int32_t)osc_timetag_timetagToFloat(v(a, t)), i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int32_t)osc_timetag_timetagToFloat(v(a, t)), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, (uint32_t)osc_timetag_timetagToFloat(v(a, t)), I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint32_t)osc_timetag_timetagToFloat(v(a, t)), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, (int64_t)osc_timetag_timetagToFloat(v(a, t)), h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (int64_t)osc_timetag_timetagToFloat(v(a, t)), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, (uint64_t)osc_timetag_timetagToFloat(v(a, t)), H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (uint64_t)osc_timetag_timetagToFloat(v(a, t)), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, (float)osc_timetag_timetagToFloat(v(a, t)), f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, (float)osc_timetag_timetagToFloat(v(a, t)), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, osc_timetag_timetagToFloat(v(a, t)), d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, osc_timetag_timetagToFloat(v(a, t)), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			return osc_atom_retain(a);
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				t_osc_atom *aa = osc_atom_serialize(a);
 				char *blob = osc_mem_alloc(sl(aa) + 4);
 				*((int32_t *)blob) = hton32(sl(aa));
 				memcpy(blob + 4, sp(aa), sl(aa));
-				OSC_ATOM_ALLOC(out, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(out, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = out;
 				osc_atom_release(aa);
 				break;
@@ -2330,165 +2330,165 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		default: break;
 		}
 		break;
-	case 'b':
+	case OSC_TT_BLOB:
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (int8_t)ntoh32(*((int32_t *)(ptr + 4))), c, 'c', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int8_t)ntoh32(*((int32_t *)(ptr + 4))), c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (uint8_t)ntoh32(*((int32_t *)(ptr + 4))), C, 'C', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint8_t)ntoh32(*((int32_t *)(ptr + 4))), C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (int16_t)ntoh32(*((int32_t *)(ptr + 4))), u, 'u', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int16_t)ntoh32(*((int32_t *)(ptr + 4))), u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (uint16_t)ntoh32(*((int32_t *)(ptr + 4))), U, 'U', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint16_t)ntoh32(*((int32_t *)(ptr + 4))), U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (int32_t)ntoh32(*((int32_t *)(ptr + 4))), i, 'i', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int32_t)ntoh32(*((int32_t *)(ptr + 4))), i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (uint32_t)ntoh32(*((int32_t *)(ptr + 4))), I, 'I', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint32_t)ntoh32(*((int32_t *)(ptr + 4))), I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (int64_t)ntoh32(*((int32_t *)(ptr + 4))), h, 'h', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (int64_t)ntoh32(*((int32_t *)(ptr + 4))), h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, (uint64_t)ntoh32(*((int32_t *)(ptr + 4))), H, 'H', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, (uint64_t)ntoh32(*((int32_t *)(ptr + 4))), H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
 				char *ptr = v(a, b);
 				int32_t i = ntoh32(*((int32_t *)(ptr + 4)));
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, *((float *)&i), f, 'f', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, *((float *)&i), f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, f, 'f', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
 				char *ptr = v(a, b);
 				int64_t i = ntoh64(*((int64_t *)(ptr + 4)));
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, *((double *)&i), d, 'd', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, *((double *)&i), d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, 0, d, 'd', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, 0, d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
 				char *ptr = v(a, b);
 				if(ptr){
-					OSC_ATOM_ALLOC(aa, osc_timetag_decodeFromHeader(ptr + 4), t, 't', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, osc_timetag_decodeFromHeader(ptr + 4), t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}else{
-					OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+					OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 					ret = aa;
 				}
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			return osc_atom_retain(a);
 		case 'T':
 			ret = osc_atom_true;
@@ -2504,99 +2504,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		break;
 	case 'T':
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, 0., f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, 0., d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				char *blob = osc_mem_alloc(4);
 				memset(blob, 0, 4);
-				OSC_ATOM_ALLOC(aa, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
@@ -2613,99 +2613,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		break;
 	case 'F':
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, 0., f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, 0., d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				char *blob = osc_mem_alloc(4);
 				memset(blob, 0, 4);
-				OSC_ATOM_ALLOC(aa, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
@@ -2722,99 +2722,99 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag)
 		break;
 	case 'N':
 		switch(typetag){
-		case 'c':
+		case OSC_TT_I8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'C':
+		case OSC_TT_U8:
 			{
-				OSC_ATOM_ALLOC(aa, 0, C, 'C', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, C, OSC_TT_U8, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'u':
+		case OSC_TT_I16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, u, 'u', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, u, OSC_TT_I16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'U':
+		case OSC_TT_U16:
 			{
-				OSC_ATOM_ALLOC(aa, 0, U, 'U', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, U, OSC_TT_U16, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'i':
+		case OSC_TT_I32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, i, 'i', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, i, OSC_TT_I32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'I':
+		case OSC_TT_U32:
 			{
-				OSC_ATOM_ALLOC(aa, 0, I, 'I', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, I, OSC_TT_U32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'h':
+		case OSC_TT_I64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, h, 'h', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, h, OSC_TT_I64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'H':
+		case OSC_TT_U64:
 			{
-				OSC_ATOM_ALLOC(aa, 0, H, 'H', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0, H, OSC_TT_U64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'f':
+		case OSC_TT_F32:
 			{
-				OSC_ATOM_ALLOC(aa, 0., f, 'f', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., f, OSC_TT_F32, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'd':
+		case OSC_TT_F64:
 			{
-				OSC_ATOM_ALLOC(aa, 0., d, 'd', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, 0., d, OSC_TT_F64, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 's':
+		case OSC_TT_STR:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, 's', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), s, OSC_TT_STR, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case 'S':
+		case OSC_TT_SYM:
 			{
 				t_osc_atom *fa = osc_atom_format(a, 0);
-				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, 'S', 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_util_strcpy(pp(a)), S, OSC_TT_SYM, 0, NULL, pl(fa), osc_util_strcpy(pp(fa)), 1, 1);
 				osc_atom_release(fa);
 				ret = aa;
 				break;
 			}
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			{
-				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_BUNDLE_TYPETAG_ID, OSC_BUNDLE_TYPETAG, 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a))), OSC_TT_BNDL_ID, OSC_TT_BNDL, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
-		case 't':
+		case OSC_TT_TIME:
 			{
-				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, 't', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(aa, OSC_TIMETAG_NULL, t, OSC_TT_TIME, 0, NULL, 0, NULL, 1, 0);
 				ret = aa;
 				break;
 			}
-		case 'b':
+		case OSC_TT_BLOB:
 			{
 				char *blob = osc_mem_alloc(4);
 				memset(blob, 0, 4);
-				OSC_ATOM_ALLOC(aa, blob, b, 'b', 0, NULL, 0, NULL, 1, 1);
+				OSC_ATOM_ALLOC(aa, blob, b, OSC_TT_BLOB, 0, NULL, 0, NULL, 1, 1);
 				ret = aa;
 				break;
 			}
@@ -2855,7 +2855,7 @@ t_osc_atom *osc_atom_match(t_osc_atom *lhs, t_osc_atom *rhs)
 	if(tt(lhs) != tt(rhs)){
 		return osc_atom_false;
 	}
-	if(tt(lhs) != 's' && tt(lhs) != 'S'){
+	if(tt(lhs) != OSC_TT_STR && tt(lhs) != OSC_TT_SYM){
 		return osc_atom_false;
 	}
 	char *s1 = v(lhs, s); // "pattern"
@@ -2869,7 +2869,7 @@ t_osc_atom *osc_atom_match(t_osc_atom *lhs, t_osc_atom *rhs)
 		char *buf = osc_mem_alloc(len + 1);
 		memcpy(buf, s1 + po, len - po);
 		buf[len - po] = '\0';
-		OSC_ATOM_ALLOC(ret, buf, s, 's', 0, NULL, 0, NULL, 1, 1);
+		OSC_ATOM_ALLOC(ret, buf, s, OSC_TT_STR, 0, NULL, 0, NULL, 1, 1);
 		return ret;
 	}else{
 		return osc_atom_false;
@@ -2882,32 +2882,32 @@ t_osc_atom *_osc_atom_nth(t_osc_atom *a, int n)
 		return osc_atom_undefined;
 	}
 	switch(tt(a)){
-	case 's':
-	case 'S':
+	case OSC_TT_STR:
+	case OSC_TT_SYM:
 		{
 			char *ptr = v(a, s);
 			int len = strlen(ptr);
 			if(n < len){
-				OSC_ATOM_ALLOC(ret, ptr[n], c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(ret, ptr[n], c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				return ret;
 			}else{
 				return osc_atom_undefined;
 			}
 		}
-	case 'b':
+	case OSC_TT_BLOB:
 		{
 			char *ptr = v(a, b);
 			int len = ntoh32(*((int32_t *)ptr));
 			ptr += 4;
 			if(n < len){
-				OSC_ATOM_ALLOC(ret, ptr[n], c, 'c', 0, NULL, 0, NULL, 1, 0);
+				OSC_ATOM_ALLOC(ret, ptr[n], c, OSC_TT_I8, 0, NULL, 0, NULL, 1, 0);
 				return ret;
 			}else{
 				return osc_atom_undefined;
 			}
 		}
-	case OSC_BUNDLE_TYPETAG:
-		return osc_msg_nth(osc_bndl_nth(v(a, OSC_BUNDLE_TYPETAG_ID), n), 0);
+	case OSC_TT_BNDL:
+		return osc_msg_nth(osc_bndl_nth(v(a, OSC_TT_BNDL_ID), n), 0);
 	default:
 		return osc_atom_undefined;
 	}
@@ -2918,12 +2918,12 @@ t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n)
 	if(!a || !n){
 		return osc_atom_undefined;
 	}
-	if(tt(n) == 'i'){
+	if(tt(n) == OSC_TT_I32){
 		return _osc_atom_nth(a, v(n, i));
 	}else if(OSC_TYPETAG_ISINT(tt(n))){
 		return _osc_atom_nth(a, (int32_t)v(n, i));
 	}else{
-		char tt = osc_typetag_findLUB(tt(n), 'i');
+		char tt = osc_typetag_findLUB(tt(n), OSC_TT_I32);
 		t_osc_atom *_nn = osc_atom_convertAny(n, tt);
 		t_osc_atom nn = *_nn;
 		osc_atom_release(_nn);
@@ -2932,43 +2932,43 @@ t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n)
 }
 
 #define OSC_ATOM_IBINOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'i');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'i');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_I32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_I32);			\
 	OSC_ATOM_ALLOC(varname, v(l, i) op v(r, i), i, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_UIBINOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'I');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'I');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_U32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_U32);			\
 	OSC_ATOM_ALLOC(varname, v(l, I) op v(r, I), I, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_IBINOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'h');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'h');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_I64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_I64);			\
 	OSC_ATOM_ALLOC(varname, v(l, h) op v(r, h), h, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_UIBINOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'H');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'H');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_U64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_U64);			\
 	OSC_ATOM_ALLOC(varname, v(l, H) op v(r, H), H, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_FBINOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'f');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'f');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_F32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_F32);			\
 	OSC_ATOM_ALLOC(varname, v(l, f) op v(r, f), f, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_FBINOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'd');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'd');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_F64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_F64);			\
 	OSC_ATOM_ALLOC(varname, v(l, d) op v(r, d), d, tt, 0, NULL, 0, NULL, 1, 0);\
 	osc_atom_release(l);\
 	osc_atom_release(r);
@@ -3004,7 +3004,7 @@ t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n)
 			}						\
 		}\
 	}else if(OSC_TYPETAG_ISFLOAT(tt)){\
-		if(tt == 'f'){\
+		if(tt == OSC_TT_F32){\
 			OSC_ATOM_FBINOP32(a, tt, op, lhs, rhs);\
 			varname = a;\
 		}else{\
@@ -3014,43 +3014,43 @@ t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n)
 	}
 
 #define OSC_ATOM_IBOOLOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'i');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'i');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_I32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_I32);			\
 	t_osc_atom *varname = v(l, i) op v(r, i) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_UIBOOLOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'I');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'I');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_U32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_U32);			\
 	t_osc_atom *varname = v(l, I) op v(r, I) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_IBOOLOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'h');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'h');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_I64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_I64);			\
 	t_osc_atom *varname = v(l, h) op v(r, h) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_UIBOOLOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'H');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'H');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_U64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_U64);			\
 	t_osc_atom *varname = v(l, H) op v(r, H) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_FBOOLOP32(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'f');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'f');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_F32);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_F32);			\
 	t_osc_atom *varname = v(l, f) op v(r, f) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
 
 #define OSC_ATOM_FBOOLOP64(varname, tt, op, lhs, rhs)			\
-	t_osc_atom *l = osc_atom_convertAny(lhs, 'd');			\
-	t_osc_atom *r = osc_atom_convertAny(rhs, 'd');			\
+	t_osc_atom *l = osc_atom_convertAny(lhs, OSC_TT_F64);			\
+	t_osc_atom *r = osc_atom_convertAny(rhs, OSC_TT_F64);			\
 	t_osc_atom *varname = v(l, d) op v(r, d) ? osc_atom_true : osc_atom_false;\
 	osc_atom_release(l);\
 	osc_atom_release(r);
@@ -3086,7 +3086,7 @@ t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n)
 			}						\
 		}\
 	}else if(OSC_TYPETAG_ISFLOAT(tt)){\
-		if(tt == 'f'){\
+		if(tt == OSC_TT_F32){\
 			OSC_ATOM_FBOOLOP32(a, tt, op, lhs, rhs);\
 			varname = a;\
 		}else{\
@@ -3129,35 +3129,35 @@ t_osc_atom *osc_atom_eql(t_osc_atom *lhs, t_osc_atom *rhs)
 	}
 	if(tt(lhs) == tt(rhs)){
 		switch(tt(lhs)){
-		case 'c':
+		case OSC_TT_I8:
 			return v(lhs, c) == v(rhs, c) ? osc_atom_true : osc_atom_false;
-		case 'C':
+		case OSC_TT_U8:
 			return v(lhs, C) == v(rhs, C) ? osc_atom_true : osc_atom_false;
-		case 'u':
+		case OSC_TT_I16:
 			return v(lhs, u) == v(rhs, u) ? osc_atom_true : osc_atom_false;
-		case 'U':
+		case OSC_TT_U16:
 			return v(lhs, U) == v(rhs, U) ? osc_atom_true : osc_atom_false;
-		case 'i':
+		case OSC_TT_I32:
 			return v(lhs, i) == v(rhs, i) ? osc_atom_true : osc_atom_false;
-		case 'I':
+		case OSC_TT_U32:
 			return v(lhs, I) == v(rhs, I) ? osc_atom_true : osc_atom_false;
-		case 'h':
+		case OSC_TT_I64:
 			return v(lhs, h) == v(rhs, h) ? osc_atom_true : osc_atom_false;
-		case 'H':
+		case OSC_TT_U64:
 			return v(lhs, H) == v(rhs, H) ? osc_atom_true : osc_atom_false;
-		case 'f':
+		case OSC_TT_F32:
 			return v(lhs, f) == v(rhs, f) ? osc_atom_true : osc_atom_false;
-		case 'd':
+		case OSC_TT_F64:
 			return v(lhs, d) == v(rhs, d) ? osc_atom_true : osc_atom_false;
-		case 's':
-		case 'S':
+		case OSC_TT_STR:
+		case OSC_TT_SYM:
 			return v(lhs, s) == v(rhs, s) ? osc_atom_true : strcmp(v(lhs, s), v(rhs, s)) == 0 ? osc_atom_true : osc_atom_false;
-		case OSC_BUNDLE_TYPETAG:
+		case OSC_TT_BNDL:
 			// need to call osc_bundle_eql which doesn't exist yet
-			return v(lhs, OSC_BUNDLE_TYPETAG_ID) == v(rhs, OSC_BUNDLE_TYPETAG_ID) ? osc_atom_true : osc_atom_false;
-		case 't':
+			return v(lhs, OSC_TT_BNDL_ID) == v(rhs, OSC_TT_BNDL_ID) ? osc_atom_true : osc_atom_false;
+		case OSC_TT_TIME:
 			return osc_timetag_compare(v(lhs, t), v(rhs, t)) == 0 ? osc_atom_true : osc_atom_false;
-		case 'b':
+		case OSC_TT_BLOB:
 			if(v(lhs, b) == v(rhs, b)){
 				return osc_atom_true;
 			}else{
@@ -3215,8 +3215,8 @@ t_osc_msg *osc_atom_value(t_osc_atom *a)
 	if(!a){
 		return NULL;
 	}
-	if(tt(a) == OSC_BUNDLE_TYPETAG){
-		t_osc_bndl *b = v(a, OSC_BUNDLE_TYPETAG_ID);
+	if(tt(a) == OSC_TT_BNDL){
+		t_osc_bndl *b = v(a, OSC_TT_BNDL_ID);
 		if(!b){
 			return NULL;
 		}
@@ -3230,7 +3230,7 @@ t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
 	if(!expr){
 		return osc_atom_undefined;
 	}
-	t_osc_bndl *b = v(expr, OSC_BUNDLE_TYPETAG_ID);
+	t_osc_bndl *b = v(expr, OSC_TT_BNDL_ID);
 	t_osc_msg *typem = NULL;
 	for(int i = 0; i < osc_bndl_length(b); i++){
 		t_osc_msg *m = osc_bndl_nth(b, i);
@@ -3244,12 +3244,12 @@ t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
 		return osc_atom_allocBndl(osc_bndl_empty, 0);
 	}
 	t_osc_atom *type = osc_msg_nth(typem, 1);
-	if(osc_atom_getTypetag(type) != 'c'){
+	if(osc_atom_getTypetag(type) != OSC_TT_I8){
 		// return bundle with debugging info
 		return osc_atom_allocBndl(osc_bndl_empty, 0);
 	}
 	switch(v(type, c)){
-	case 'f': // function call
+	case OSC_TT_F32: // function call
 		{
 			t_osc_msg *funcm = NULL;
 			t_osc_msg *argsm = NULL;
@@ -3272,7 +3272,7 @@ t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
 			t_osc_atom *func = NULL;
 			t_osc_atom *first = osc_msg_nth(funcm, 1);
 			switch(tt(first)){
-			case 'S':
+			case OSC_TT_SYM:
 				{
 					t_osc_msg *m = osc_bndl_lookup(context, first, osc_atom_match);
 					if(m){
@@ -3282,7 +3282,7 @@ t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
 					}
 				}
 				break;
-			case OSC_BUNDLE_TYPETAG:
+			case OSC_TT_BNDL:
 				func = osc_atom_retain(first);
 				break;
 			default:
@@ -3306,7 +3306,7 @@ t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
 			}else{
 				funcb = osc_atom_retain(func);
 			}
-			t_osc_bndl *bb = osc_bndl_union(v(argsb, OSC_BUNDLE_TYPETAG_ID), v(funcb, OSC_BUNDLE_TYPETAG_ID));
+			t_osc_bndl *bb = osc_bndl_union(v(argsb, OSC_TT_BNDL_ID), v(funcb, OSC_TT_BNDL_ID));
 			
 			t_osc_msg *expr = osc_bndl_lookup(bb, osc_atom_expraddress, osc_atom_match);
 			t_osc_atom *r = NULL;
@@ -3345,7 +3345,7 @@ t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context)
 			t_osc_msg *em = osc_msg_alloc(osc_atom_retain(osc_msg_nth(m, 0)), 0);
 			for(int i = 0; i < osc_msg_length(m); i++){
 				t_osc_atom *ea = NULL;
-				if(tt(a) == OSC_BUNDLE_TYPETAG){
+				if(tt(a) == OSC_TT_BNDL){
 					ea = osc_atom_eval(osc_msg_nth(m, i + 1), NULL);
 				}else{
 					ea = osc_atom_eval(osc_msg_nth(m, i + 1), context);
@@ -3361,7 +3361,7 @@ t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context)
 			t_osc_msg *em = osc_msg_alloc(osc_atom_retain(res), 0);
 			for(int i = 0; i < osc_msg_length(m); i++){
 				t_osc_atom *ea = NULL;
-				if(tt(a) == OSC_BUNDLE_TYPETAG){
+				if(tt(a) == OSC_TT_BNDL){
 					ea = osc_atom_eval(osc_msg_nth(m, i + 1), NULL);
 				}else{
 					ea = osc_atom_eval(osc_msg_nth(m, i + 1), context);
@@ -3401,17 +3401,17 @@ t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context)
 	}
 	t_osc_atom *r = NULL;
 	switch(tt(a)){
-	case OSC_BUNDLE_TYPETAG:
-		r = osc_atom_allocBndl(osc_bndl_eval(v(a, OSC_BUNDLE_TYPETAG_ID), context), 1);
+	case OSC_TT_BNDL:
+		r = osc_atom_allocBndl(osc_bndl_eval(v(a, OSC_TT_BNDL_ID), context), 1);
 		break;
-	case OSC_EXPR_TYPETAG:
+	case OSC_TT_EXPR:
 		r = osc_atom_evalExpr(a, context);
 		break;
-	case 'S':
+	case OSC_TT_SYM:
 		r = osc_atom_evalSymbol(a, context);
 		break;
-	case OSC_NATIVE_TYPETAG:
-		r = osc_atom_allocBndl(v(a, OSC_NATIVE_TYPETAG_ID)(context), 1);
+	case OSC_TT_NATIVE:
+		r = osc_atom_allocBndl(v(a, OSC_TT_NATIVE_ID)(context), 1);
 		break;
 	default:
 		r = osc_atom_retain(a);

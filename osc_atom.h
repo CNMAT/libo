@@ -12,9 +12,9 @@ typedef struct _osc_atom t_osc_atom_m;
 #include "osc_builtin.h"
 #include "osc_pvec.h"
 
-#define OSC_BUNDLE_TYPETAG_ID B
-#define OSC_NATIVE_TYPETAG_ID n
-#define OSC_EXPR_TYPETAG_ID A
+#define OSC_TT_BNDL_ID B
+#define OSC_TT_NATIVE_ID n
+#define OSC_TT_EXPR_ID A
 
 t_osc_atom *osc_atom_true;
 t_osc_atom *osc_atom_false;

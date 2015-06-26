@@ -61,7 +61,7 @@ t_osc_bndl *osc_builtin_math_nth(t_osc_bndl *b)
 		return osc_bndl_append(b, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_undefined));
 	}else if(osc_msg_length(list) == 1){
 		t_osc_atom *a = osc_msg_nth(list, 1);
-		if(osc_atom_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+		if(osc_atom_getTypetag(a) == OSC_TT_BNDL){
 			//return osc_bndl_append(b, osc_msg_prepend(osc_bndl_nth(b, n
 		}
 	}else{

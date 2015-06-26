@@ -82,7 +82,7 @@ int osc_query_select_impl(int nselectors,
 					t_osc_msg_it_s *msg_it = osc_msg_it_s_get(msg);
 					while(osc_msg_it_s_hasNext(msg_it)){
 						t_osc_atom_s *a = osc_msg_it_s_next(msg_it);
-						if(osc_atom_s_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+						if(osc_atom_s_getTypetag(a) == OSC_TT_BNDL){
 							char *nested_bndl = osc_atom_s_getData(a);
 							char *sel_offset = selector + ao + 1;
 							result = osc_query_select_impl(1,

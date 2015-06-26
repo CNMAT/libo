@@ -164,7 +164,7 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 {
 	t_osc_bndl *bb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
-					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_allocInt8('f')),
+					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_allocInt8(OSC_TT_F32)),
 					osc_msg_alloc(osc_atom_funcaddress, 1, func),
 					osc_msg_alloc(osc_atom_argsaddress, 1, args));
 	return bb;

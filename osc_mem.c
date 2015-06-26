@@ -212,14 +212,14 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 		return -1;
 	}
 	switch(typetag){
-	case 'b':
+	case OSC_TT_BLOB:
 		return ntoh32(*((int32_t *)data)) + 4;
-	case 's':
-	case 'S':
+	case OSC_TT_STR:
+	case OSC_TT_SYM:
 		return osc_util_getPaddedStringLen(data);
-	case OSC_BUNDLE_TYPETAG:
+	case OSC_TT_BNDL:
 		return ntoh32(*((uint32_t *)data)) + 4;
-	case OSC_TIMETAG_TYPETAG:
+	case OSC_TT_TIME:
 		return OSC_TIMETAG_SIZEOF;
 	default:
 		return osc_data_lengths[typetag];
@@ -229,23 +229,23 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 int osc_mem_shouldByteswap(unsigned char typetag){
 	switch(typetag){
 		// signed ints
-	case 'c':
-	case 'u':
+	case OSC_TT_I8:
+	case OSC_TT_I16:
 	case 'a':
-	case 'i':
-	case 'h':
+	case OSC_TT_I32:
+	case OSC_TT_I64:
 	case 'j':
 		// unsigned ints
-	case 'C':
-	case 'U':
+	case OSC_TT_U8:
+	case OSC_TT_U16:
 	case 'A':
-	case 'I':
-	case 'H':
+	case OSC_TT_U32:
+	case OSC_TT_U64:
 	case 'J':
 		// floats
 	case 'e':
-	case 'f':
-	case 'd':
+	case OSC_TT_F32:
+	case OSC_TT_F64:
 	case 'q':
 		return 1;
 	default:

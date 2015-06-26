@@ -350,7 +350,7 @@ static t_osc_err osc_bundle_u_flatten_impl(t_osc_bndl_u **dest,
 			t_osc_msg_it_u *mit = osc_msg_it_u_get(mcopy);
 			while(osc_msg_it_u_hasNext(mit)){
 				t_osc_atom_u *a = osc_msg_it_u_next(mit);
-				if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				if(osc_atom_u_getTypetag(a) == OSC_TT_BNDL){
 					osc_message_u_removeAtom(mcopy, a);
 					t_osc_bndl_u *bu = osc_atom_u_getBndl(a);
 					/*

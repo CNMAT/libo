@@ -44,11 +44,11 @@ void osc_atom_array_u_free(t_osc_atom_ar_u *ar)
 		int i;
 		for(i = 0; i < osc_atom_array_u_getLen(ar); i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(ar, i);
-			if(a->alloc && a->typetag == 's'){
+			if(a->alloc && a->typetag == OSC_TT_STR){
 				if(a->w.s){
 					osc_mem_free(a->w.s);
 				}
-			}else if(a->typetag == OSC_BUNDLE_TYPETAG){
+			}else if(a->typetag == OSC_TT_BNDL){
 				if(a->w.bndl){
 					osc_bundle_u_free(a->w.bndl);
 				}

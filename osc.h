@@ -46,12 +46,25 @@ extern "C" {
 #define OSC_ID OSC_IDENTIFIER
 #define OSC_ID_SIZE OSC_IDENTIFIER_SIZE
 
-#define OSC_BUNDLE_TYPETAG 'B'
-#define OSC_TIMETAG_TYPETAG 't'
-#define OSC_EXPR_TYPETAG 'A'
-#define OSC_BOOL_TYPETAG 'O'
-#define OSC_UNDEFINED_TYPETAG 'r'
-#define OSC_NATIVE_TYPETAG 'n'
+#define OSC_TT_I8 'c'
+#define OSC_TT_U8 'C'
+#define OSC_TT_I16 'u'
+#define OSC_TT_U16 'U'
+#define OSC_TT_I32 'i'
+#define OSC_TT_U32 'I'
+#define OSC_TT_I64 'h'
+#define OSC_TT_U64 'H'
+#define OSC_TT_F32 'f'
+#define OSC_TT_F64 'd'
+#define OSC_TT_STR 's'
+#define OSC_TT_SYM 'S'
+#define OSC_TT_TIME 't'
+#define OSC_TT_BLOB 'b'
+// non-standard
+#define OSC_TT_BNDL 'B'
+#define OSC_TT_UNDEF 'r'
+#define OSC_TT_EXPR 'A'
+#define OSC_TT_NATIVE 'n'
 
 #define OSC_VALUE_ADDRESS "/odot/value"
 

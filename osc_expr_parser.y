@@ -941,7 +941,7 @@ parameters: parameter
 ;
 
 parameter: OSC_EXPR_STRING {
-		if(osc_atom_u_getTypetag($1) == 's'){
+		if(osc_atom_u_getTypetag($1) == OSC_TT_STR){
 			char *st = osc_atom_u_getStringPtr($1);
 			if(st){
 				if(*st == '/' && st[1] != '\0'){

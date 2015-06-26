@@ -234,7 +234,7 @@ int osc_atom_u_getInt(t_osc_atom_u *a);
 
 /** \brief Return the address of the string stored in the #t_osc_atom_u.
 
-If the #t_osc_atom_u does not contain a string (typetag 's'), this function will
+If the #t_osc_atom_u does not contain a string (typetag OSC_TT_STR), this function will
 return NULL.
 
 \param a A #t_osc_atom_u
