@@ -16,35 +16,6 @@ typedef struct _osc_atom t_osc_atom_m;
 #define OSC_NATIVE_TYPETAG_ID n
 #define OSC_EXPR_TYPETAG_ID A
 
-#pragma pack(push)
-#pragma pack(4)
-typedef struct _osc_value{
-	union _value {
-		int8_t c;
-		uint8_t C;
-		int16_t u;
-		uint16_t U;
-		int32_t i;
-		uint32_t I;
-		int64_t h;
-		uint64_t H;
-		float f;
-		double d;
-		//float q[4];
-		//double Q[4];
-		char *s;
-		char *S;
-		t_osc_bndl *OSC_BUNDLE_TYPETAG_ID;
-		t_osc_timetag t;
-		char *b;
-		//t_osc_bndl *(*OSC_NATIVE_TYPETAG_ID)(t_osc_bndl *);
-		t_osc_builtin OSC_NATIVE_TYPETAG_ID;
-		t_osc_bndl *OSC_EXPR_TYPETAG_ID;
-	} value;
-	char typetag;
-} t_osc_value;
-#pragma pack(pop)
-
 t_osc_atom *osc_atom_true;
 t_osc_atom *osc_atom_false;
 t_osc_atom *osc_atom_nil;
