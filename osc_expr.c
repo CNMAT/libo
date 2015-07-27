@@ -4317,6 +4317,15 @@ int osc_expr_split(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	if(!sep || !str){
 		return 1;
 	}
+	if(strlen(sep) == 0){
+		int len = strlen(str);
+		*out = osc_atom_array_u_alloc(len);
+		for(int i = 0; i < len; i++){
+			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
+			osc_atom_u_setInt8(a, str[i]);
+		}
+		return 0;
+	}
 	int n = 16;
 	t_osc_atom_ar_u *ar = osc_atom_array_u_alloc(n);
 	int i = 0;

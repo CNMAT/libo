@@ -221,6 +221,14 @@ quote[[:space:]]*\( {
 	}
 }
 
+\"\" {
+	if(alloc_atom){
+		yylval->atom = osc_atom_u_alloc();
+	}
+	osc_atom_u_setString(yylval->atom, "");
+	return OSC_EXPR_STRING;
+}
+
 (([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						// int 
 						char *endptr = NULL;
