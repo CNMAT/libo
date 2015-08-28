@@ -68,6 +68,8 @@ extern "C" {
 
 #define OSC_VALUE_ADDRESS "/odot/value"
 
+#define OSC_PFX "/odot"
+
 
 #define OSC_SUBBUNDLE_ACCESSOR_OPERATOR '.'
 #define OSC_SUBBUNDLE_ACCESSOR_OPERATOR_STRING "."

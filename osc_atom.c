@@ -73,6 +73,19 @@ struct _osc_atom
 #define sf(a) ((a)->should_free)
 #define st(a) ((a)->static_atom)
 
+#define OSC_ATOM_STRLEN(s) ((sizeof(s)/sizeof(s[0])) - 1)
+
+#define OSC_ATOM_DEF_ADDRESS(pfx, s)					\
+	static const char __osc_atom_##s##address[] = pfx"/"#s;\
+	static t_osc_atom _osc_atom_##s##address = {{-1, NULL}, {{.S = (char *)__osc_atom_##s##address}, OSC_TT_SYM}, (OSC_ATOM_STRLEN(__osc_atom_##s##address) + 4) & 0xfffffffc, pfx"/"#s"\0\0\0\0", OSC_ATOM_STRLEN(__osc_atom_##s##address), (char *)__osc_atom_##s##address, 0, 1}; \
+	t_osc_atom *osc_atom_##s##address = &_osc_atom_##s##address;
+
+#define OSC_ATOM_DEF_SYM(s)					\
+	static const char __osc_atom_ps_##s[] = #s;\
+	static t_osc_atom _osc_atom_ps_##s = {{-1, NULL}, {{.S = (char *)__osc_atom_ps_##s}, OSC_TT_SYM}, (OSC_ATOM_STRLEN(__osc_atom_ps_##s) + 4) & 0xfffffffc, #s"\0\0\0\0", OSC_ATOM_STRLEN(__osc_atom_ps_##s), (char *)__osc_atom_ps_##s, 0, 1}; \
+	t_osc_atom *osc_atom_ps_##s = &_osc_atom_ps_##s;
+
+
 
 static t_osc_atom _osc_atom_true = { {-1, NULL}, {{0}, 'T'}, 0, NULL, 4, "true", 0, 1 };
 t_osc_atom *osc_atom_true = &_osc_atom_true;
@@ -86,48 +99,38 @@ t_osc_atom *osc_atom_undefined = &_osc_atom_undefined;
 static t_osc_atom _osc_atom_emptystring = { {-1, NULL}, {{ .S = "\0" }, OSC_TT_SYM}, 4, "\0\0\0\0", 4, "\0\0\0\0", 0, 1};
 t_osc_atom *osc_atom_emptystring = &_osc_atom_emptystring;
 
-static t_osc_atom _osc_atom_valueaddress = { {-1, NULL}, {{.S = "/value" }, OSC_TT_SYM}, 8, "/value\0\0", 6, "/value", 0, 1};
-t_osc_atom *osc_atom_valueaddress = &_osc_atom_valueaddress;
-static t_osc_atom _osc_atom_expraddress = { {-1, NULL}, {{.S = "/expr" }, OSC_TT_SYM}, 8, "/expr\0\0\0", 5, "/expr", 0, 1};
-t_osc_atom *osc_atom_expraddress = &_osc_atom_expraddress;
-static t_osc_atom _osc_atom_typeaddress = { {-1, NULL}, {{.S = "/type" }, OSC_TT_SYM}, 8, "/type\0\0\0", 5, "/type", 0, 1};
-t_osc_atom *osc_atom_typeaddress = &_osc_atom_typeaddress;
-static t_osc_atom _osc_atom_funcaddress = { {-1, NULL}, {{.S = "/func" }, OSC_TT_SYM}, 8, "/func\0\0\0", 5, "/func", 0, 1};
-t_osc_atom *osc_atom_funcaddress = &_osc_atom_funcaddress;
-static t_osc_atom _osc_atom_argsaddress = { {-1, NULL}, {{.S = "/args" }, OSC_TT_SYM}, 8, "/args\0\0\0", 5, "/args", 0, 1};
-t_osc_atom *osc_atom_argsaddress = &_osc_atom_argsaddress;
-static t_osc_atom _osc_atom_partialaddress = { {-1, NULL}, {{.S = "/partial" }, OSC_TT_SYM}, 12, "/partial\0\0\0\0", 8, "/partial", 0, 1};
-t_osc_atom *osc_atom_partialaddress = &_osc_atom_partialaddress;
-static t_osc_atom _osc_atom_completeaddress = { {-1, NULL}, {{.S = "/complete" }, OSC_TT_SYM}, 12, "/complete\0\0\0", 9, "/complete", 0, 1};
-t_osc_atom *osc_atom_completeaddress = &_osc_atom_completeaddress;
-static t_osc_atom _osc_atom_unmatchedaddress = { {-1, NULL}, {{.S = "/unmatched" }, OSC_TT_SYM}, 12, "/unmatched\0\0", 10, "/unmatched", 0, 1};
-t_osc_atom *osc_atom_unmatchedaddress = &_osc_atom_unmatchedaddress;
+#define OSC_ATOM_PFX OSC_PFX
+OSC_ATOM_DEF_ADDRESS("", value)
+OSC_ATOM_DEF_ADDRESS("", status)
+OSC_ATOM_DEF_ADDRESS("", ok)
+OSC_ATOM_DEF_ADDRESS("", message)
+OSC_ATOM_DEF_ADDRESS("/expr", type)
+OSC_ATOM_DEF_ADDRESS("/expr", func)
+OSC_ATOM_DEF_ADDRESS("/expr", args)
+OSC_ATOM_DEF_ADDRESS("", partial)
+OSC_ATOM_DEF_ADDRESS("", complete)
+OSC_ATOM_DEF_ADDRESS("", unmatched)
+OSC_ATOM_DEF_ADDRESS("", y)
+OSC_ATOM_DEF_ADDRESS("", lhs)
+OSC_ATOM_DEF_ADDRESS("", rhs)
+OSC_ATOM_DEF_ADDRESS("", n)
+OSC_ATOM_DEF_ADDRESS("", list)
 
-static t_osc_atom _osc_atom_ps_add = { {-1, NULL}, {{.S = "add" }, OSC_TT_SYM}, 4, "add\0", 3, "add", 0, 1};
-t_osc_atom *osc_atom_ps_add = &_osc_atom_ps_add;
-static t_osc_atom _osc_atom_ps_nth = { {-1, NULL}, {{.S = "nth" }, OSC_TT_SYM}, 4, "nth\0", 3, "nth", 0, 1};
-t_osc_atom *osc_atom_ps_nth = &_osc_atom_ps_nth;
-
-static t_osc_atom _osc_atom_yaddress = { {-1, NULL}, {{.S = "/y" }, OSC_TT_SYM}, 4, "/y\0\0", 2, "/y", 0, 1};
-t_osc_atom *osc_atom_yaddress = &_osc_atom_yaddress;
-static t_osc_atom _osc_atom_lhsaddress = { {-1, NULL}, {{.S = "/lhs" }, OSC_TT_SYM}, 8, "/lhs\0\0\0\0", 4, "/lhs", 0, 1};
-t_osc_atom *osc_atom_lhsaddress = &_osc_atom_lhsaddress;
-static t_osc_atom _osc_atom_rhsaddress = { {-1, NULL}, {{.S = "/rhs" }, OSC_TT_SYM}, 8, "/rhs\0\0\0\0", 4, "/rhs", 0, 1};
-t_osc_atom *osc_atom_rhsaddress = &_osc_atom_rhsaddress;
-static t_osc_atom _osc_atom_naddress = { {-1, NULL}, {{.S = "/n" }, OSC_TT_SYM}, 4, "/n\0\0", 2, "/n", 0, 1};
-t_osc_atom *osc_atom_naddress = &_osc_atom_naddress;
-static t_osc_atom _osc_atom_listaddress = { {-1, NULL}, {{.S = "/list" }, OSC_TT_SYM}, 8, "/list\0\0\0", 5, "/list", 0, 1};
-t_osc_atom *osc_atom_listaddress = &_osc_atom_listaddress;
-
+OSC_ATOM_DEF_SYM(add)
+OSC_ATOM_DEF_SYM(nth)
+OSC_ATOM_DEF_SYM(lookup)
+OSC_ATOM_DEF_SYM(circularreference)
 
 static int osc_atom_changeRefCount(t_osc_atom *a, int amount);
 t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context);
+t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context);
 
 #define OSC_ATOM_ALLOC(varname, value, unionfield, typetag, serialized_len, serialized_ptr, pretty_len, pretty_ptr, refcount, should_free) \
 	void *OSC_UID(__osc_atom_alloc_ptr__) = osc_mem_alloc(sizeof(t_osc_atom));	\
 	t_osc_atom OSC_UID(__osc_atom_alloc_a__) = {{refcount, osc_atom_free}, {{.unionfield = value}, typetag}, serialized_len, serialized_ptr, pretty_len, pretty_ptr, should_free, 0}; \
 	memcpy(OSC_UID(__osc_atom_alloc_ptr__), &OSC_UID(__osc_atom_alloc_a__), sizeof(t_osc_atom)); \
-	t_osc_atom *varname = (t_osc_atom *)OSC_UID(__osc_atom_alloc_ptr__);
+	t_osc_atom *varname = (t_osc_atom *)OSC_UID(__osc_atom_alloc_ptr__); \
+	osc_atom_format_m((t_osc_atom_m *)varname, 0);
 
 // serialize and pretty print on init?
 t_osc_atom *osc_atom_allocInt8(int8_t i)
@@ -247,6 +250,139 @@ t_osc_atom *osc_atom_allocExpr(t_osc_bndl *b, int should_free)
 {
 	OSC_ATOM_ALLOC(a, b, OSC_TT_EXPR_ID, OSC_TT_EXPR, 0, NULL, 0, NULL, 1, should_free);
 	return a;
+}
+
+int8_t osc_atom_getInt8(t_osc_atom *a)
+{
+	if(a){
+		return v(a, c);
+	}
+	return 0;
+}
+
+int8_t osc_atom_getUInt8(t_osc_atom *a)
+{
+	if(a){
+		return v(a, C);
+	}
+	return 0;
+}
+
+int16_t osc_atom_getInt16(t_osc_atom *a)
+{
+	if(a){
+		return v(a, u);
+	}
+	return 0;
+}
+
+int16_t osc_atom_getUInt16(t_osc_atom *a)
+{
+	if(a){
+		return v(a, U);
+	}
+	return 0;
+}
+
+int32_t osc_atom_getInt32(t_osc_atom *a)
+{
+	if(a){
+		return v(a, i);
+	}
+	return 0;
+}
+
+int32_t osc_atom_getUInt32(t_osc_atom *a)
+{
+	if(a){
+		return v(a, I);
+	}
+	return 0;
+}
+
+int64_t osc_atom_getInt64(t_osc_atom *a)
+{
+	if(a){
+		return v(a, h);
+	}
+	return 0;
+}
+
+int64_t osc_atom_getUInt64(t_osc_atom *a)
+{
+	if(a){
+		return v(a, H);
+	}
+	return 0;
+}
+
+float osc_atom_getFloat(t_osc_atom *a)
+{
+	if(a){
+		return v(a, f);
+	}
+	return 0;
+}
+
+double osc_atom_getDouble(t_osc_atom *a)
+{
+	if(a){
+		return v(a, d);
+	}
+	return 0;
+}
+
+char *osc_atom_getStringPtr(t_osc_atom *a)
+{
+	if(a){
+		return v(a, s);
+	}
+	return NULL;
+}
+
+char *osc_atom_getSymbolPtr(t_osc_atom *a)
+{
+	if(a){
+		return v(a, S);
+	}
+	return NULL;
+}
+
+t_osc_bndl *osc_atom_getBndlPtr(t_osc_atom *a)
+{
+	if(a){
+		return v(a, OSC_TT_BNDL_ID);
+	}
+	return NULL;
+}
+
+t_osc_timetag osc_atom_getTimetag(t_osc_atom *a)
+{
+	if(a){
+		return v(a, t);
+	}
+	return OSC_TIMETAG_NULL;
+}
+
+char *osc_atom_getBlobPtr(t_osc_atom *a)
+{
+	if(a){
+		return v(a, b);
+	}
+	return NULL;
+}
+
+t_osc_builtin osc_atom_getNativePtr(t_osc_atom *a)
+{
+	if(a){
+		return v(a, OSC_TT_NATIVE_ID);
+	}
+	return NULL;
+}
+
+t_osc_bndl *osc_atom_getExprPtr(t_osc_atom *a)
+{
+	return osc_atom_getBndlPtr(a);
 }
 
 t_osc_atom *osc_atom_clone(t_osc_atom *a)
@@ -405,6 +541,14 @@ char *osc_atom_getPrettyPtr(t_osc_atom *a)
 		return pp(a);
 	}
 	return NULL;
+}
+
+void osc_atom_setPrettyPtr(t_osc_atom_m *a, int len, char *pretty_ptr)
+{
+	if(a){
+		pl(a) = len;
+		pp(a) = pretty_ptr;
+	}
 }
 
 t_osc_atom *osc_atom_strcat(t_osc_pvec2 *pvec2)
@@ -2876,6 +3020,22 @@ t_osc_atom *osc_atom_match(t_osc_atom *lhs, t_osc_atom *rhs)
 	}
 }
 
+t_osc_atom *osc_atom_indexable(t_osc_atom *a)
+{
+	if(!a){
+		return osc_atom_false;
+	}
+	switch(tt(a)){
+	case OSC_TT_STR:
+	case OSC_TT_SYM:
+	case OSC_TT_BLOB:
+	case OSC_TT_BNDL:
+		return osc_atom_true;
+	default:
+		return osc_atom_false;
+	}
+}
+
 t_osc_atom *_osc_atom_nth(t_osc_atom *a, int n)
 {
 	if(!a || n < 0){
@@ -2907,7 +3067,10 @@ t_osc_atom *_osc_atom_nth(t_osc_atom *a, int n)
 			}
 		}
 	case OSC_TT_BNDL:
-		return osc_msg_nth(osc_bndl_nth(v(a, OSC_TT_BNDL_ID), n), 0);
+		{
+			t_osc_bndl *out = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_bndl_nth(v(a, OSC_TT_BNDL_ID), n));
+			return osc_atom_allocBndl(out, 1);
+		}
 	default:
 		return osc_atom_undefined;
 	}
@@ -3210,190 +3373,6 @@ t_osc_atom *osc_atom_ge(t_osc_atom *lhs, t_osc_atom *rhs)
 	return ret;
 }
 
-t_osc_msg *osc_atom_value(t_osc_atom *a)
-{
-	if(!a){
-		return NULL;
-	}
-	if(tt(a) == OSC_TT_BNDL){
-		t_osc_bndl *b = v(a, OSC_TT_BNDL_ID);
-		if(!b){
-			return NULL;
-		}
-		return osc_bndl_value(b);
-	}
-	return osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a));
-}
-
-t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
-{
-	if(!expr){
-		return osc_atom_undefined;
-	}
-	t_osc_bndl *b = v(expr, OSC_TT_BNDL_ID);
-	t_osc_msg *typem = NULL;
-	for(int i = 0; i < osc_bndl_length(b); i++){
-		t_osc_msg *m = osc_bndl_nth(b, i);
-		if(osc_atom_match(osc_atom_typeaddress, osc_msg_nth(m, 0)) == osc_atom_true){
-			typem = m;
-			break;
-		}
-	}
-	if(!typem){
-		// return bundle with debugging info
-		return osc_atom_allocBndl(osc_bndl_empty, 0);
-	}
-	t_osc_atom *type = osc_msg_nth(typem, 1);
-	if(osc_atom_getTypetag(type) != OSC_TT_I8){
-		// return bundle with debugging info
-		return osc_atom_allocBndl(osc_bndl_empty, 0);
-	}
-	switch(v(type, c)){
-	case OSC_TT_F32: // function call
-		{
-			t_osc_msg *funcm = NULL;
-			t_osc_msg *argsm = NULL;
-			for(int i = 0; i < osc_bndl_length(b); i++){
-				t_osc_msg *m = osc_bndl_nth(b, i);
-				if(osc_atom_match(osc_atom_funcaddress, osc_msg_nth(m, 0)) == osc_atom_true){
-					funcm = m;
-				}else if(osc_atom_match(osc_atom_argsaddress, osc_msg_nth(m, 0)) == osc_atom_true){
-					argsm = m;
-				}
-				if(funcm && argsm){
-					break;
-				}
-			}
-			if(!funcm || !argsm){
-				return osc_atom_undefined;
-			}
-			
-			t_osc_atom *args = osc_atom_eval(osc_msg_nth(argsm, 1), context);
-			t_osc_atom *func = NULL;
-			t_osc_atom *first = osc_msg_nth(funcm, 1);
-			switch(tt(first)){
-			case OSC_TT_SYM:
-				{
-					t_osc_msg *m = osc_bndl_lookup(context, first, osc_atom_match);
-					if(m){
-						func = osc_atom_retain(osc_msg_nth(m, 1));
-					}else{
-						osc_atom_retain(expr);
-					}
-				}
-				break;
-			case OSC_TT_BNDL:
-				func = osc_atom_retain(first);
-				break;
-			default:
-				func = osc_atom_eval(first, context);
-				break;
-			}
-			t_osc_msg *argsv = osc_atom_value(args);
-			t_osc_atom *argsb = NULL;
-			if(argsv){
-				argsb = osc_atom_retain(osc_msg_nth(argsv, 2));
-				osc_msg_release(argsv);
-			}else{
-				argsb = osc_atom_retain(args);
-			}
- 
-			t_osc_msg *funcv = osc_atom_value(func);
-			t_osc_atom *funcb = NULL;
-			if(funcv){
-				funcb = osc_atom_retain(osc_msg_nth(funcv, 1));
-				osc_msg_release(funcv);
-			}else{
-				funcb = osc_atom_retain(func);
-			}
-			t_osc_bndl *bb = osc_bndl_union(v(argsb, OSC_TT_BNDL_ID), v(funcb, OSC_TT_BNDL_ID));
-			
-			t_osc_msg *expr = osc_bndl_lookup(bb, osc_atom_expraddress, osc_atom_match);
-			t_osc_atom *r = NULL;
-			if(expr){
-				r = osc_atom_eval(osc_msg_nth(expr, 1), bb);
-			}else{
-				r = osc_atom_allocBndl(osc_bndl_retain(bb), 1);
-			}
-			osc_atom_release(args);
-			osc_atom_release(func);
-			osc_msg_release(argsv);
-			osc_atom_release(argsb);
-			osc_msg_release(funcv);
-			osc_atom_release(funcb);
-			osc_bndl_release(bb);
-			return r;
-		}
-		break;
-	default:
-		return osc_atom_undefined;
-	}
-	return osc_atom_undefined;
-}
-
-t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context)
-{
-	t_osc_bndl *partialb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-	t_osc_bndl *completeb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-	t_osc_bndl *unmatchedb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-	for(int i = 0; i < osc_bndl_length(context); i++){
-		t_osc_msg *m = osc_bndl_nth(context, i);
-		t_osc_atom *address = osc_msg_nth(m, 0);
-		t_osc_atom *res = osc_atom_match(address, a);
-		if(res == osc_atom_true){
-			// complete match
-			t_osc_msg *em = osc_msg_alloc(osc_atom_retain(osc_msg_nth(m, 0)), 0);
-			for(int i = 0; i < osc_msg_length(m); i++){
-				t_osc_atom *ea = NULL;
-				if(tt(a) == OSC_TT_BNDL){
-					ea = osc_atom_eval(osc_msg_nth(m, i + 1), NULL);
-				}else{
-					ea = osc_atom_eval(osc_msg_nth(m, i + 1), context);
-				}
-				osc_msg_append_m((t_osc_msg_m *)em, ea);
-			}
-			osc_bndl_append_m((t_osc_bndl_m *)completeb, em);
-		}else if(res == osc_atom_false){
-			// no match
-			osc_bndl_append_m((t_osc_bndl_m *)unmatchedb, osc_msg_retain(m));
-		}else{
-			// partial match
-			t_osc_msg *em = osc_msg_alloc(osc_atom_retain(res), 0);
-			for(int i = 0; i < osc_msg_length(m); i++){
-				t_osc_atom *ea = NULL;
-				if(tt(a) == OSC_TT_BNDL){
-					ea = osc_atom_eval(osc_msg_nth(m, i + 1), NULL);
-				}else{
-					ea = osc_atom_eval(osc_msg_nth(m, i + 1), context);
-				}
-				osc_msg_append_m((t_osc_msg_m *)em, ea);
-			}
-			osc_bndl_append_m((t_osc_bndl_m *)partialb, em);
-		}
-	}
-	/*
-	if(osc_bndl_length(partialb) == 0 && osc_bndl_length(completeb) == 0){
-		osc_bndl_release(partialb);
-		osc_bndl_release(completeb);
-		osc_bndl_release(unmatchedb);
-		return osc_atom_retain(a);
-	}
-	*/
-	t_osc_msg *partialm = osc_msg_alloc(osc_atom_partialaddress, 1, osc_atom_allocBndl(partialb, 1));
-	t_osc_msg *completem = osc_msg_alloc(osc_atom_completeaddress, 1, osc_atom_allocBndl(completeb, 1));
-	t_osc_msg *unmatchedm = osc_msg_alloc(osc_atom_unmatchedaddress, 1, osc_atom_allocBndl(unmatchedb, 1));
-	t_osc_bndl *out = NULL;
-	if(osc_bndl_length(completeb) == 0){
-		t_osc_msg *valuem = osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_undefined);
-		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 4, partialm, completem, unmatchedm, valuem);
-	}else{
-		//t_osc_msg *valuem = osc_msg_assocn(osc_bndl_nth(completeb, 0), osc_atom_valueaddress, 0);
-		t_osc_msg *valuem = osc_msg_prepend(osc_bndl_nth(completeb, 0), osc_atom_valueaddress);
-		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 4, partialm, completem, unmatchedm, valuem);
-	}
-	return osc_atom_allocBndl(out, 1);
-}
-
 t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context)
 {
 	if(!a){
@@ -3411,13 +3390,104 @@ t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context)
 		r = osc_atom_evalSymbol(a, context);
 		break;
 	case OSC_TT_NATIVE:
-		r = osc_atom_allocBndl(v(a, OSC_TT_NATIVE_ID)(context), 1);
-		break;
+		// intentional fallthrough
 	default:
 		r = osc_atom_retain(a);
 		break;
 	}
+
 	return r;
+}
+
+t_osc_atom *osc_atom_evalSymbol(t_osc_atom *a, t_osc_bndl *context)
+{
+	t_osc_bndl *partialb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+	t_osc_bndl *completeb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+#ifdef INCLUDE_UNMATCHED
+	t_osc_bndl *unmatchedb = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+#endif
+	for(int i = 0; i < osc_bndl_length(context); i++){
+		t_osc_msg *m = osc_bndl_nth(context, i);
+		t_osc_atom *address = osc_msg_nth(m, 0);
+		t_osc_atom *res = osc_atom_match(address, a);
+		if(res == osc_atom_true){
+			// complete match
+			osc_bndl_append_m((t_osc_bndl_m *)completeb, osc_msg_retain(m));
+		}else if(res == osc_atom_false){
+			// no match
+#ifdef INCLUDE_UNMATCHED
+			osc_bndl_append_m((t_osc_bndl_m *)unmatchedb, osc_msg_retain(m));
+#endif
+		}else{
+			// partial match
+			osc_bndl_append_m((t_osc_bndl_m *)partialb, osc_msg_retain(m));
+		}
+	}
+	t_osc_msg *partialm = osc_msg_alloc(osc_atom_partialaddress, 1, osc_atom_allocBndl(partialb, 1));
+	t_osc_msg *completem = osc_msg_alloc(osc_atom_completeaddress, 1, osc_atom_allocBndl(completeb, 1));
+#ifdef INCLUDE_UNMATCHED
+	t_osc_msg *unmatchedm = osc_msg_alloc(osc_atom_unmatchedaddress, 1, osc_atom_allocBndl(unmatchedb, 1));
+#endif
+	t_osc_bndl *out = NULL;
+	if(osc_bndl_length(completeb) == 0){
+		t_osc_msg *valuem = osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_retain(a));
+#ifdef INCLUDE_UNMATCHED
+		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 4, partialm, completem, unmatchedm, valuem);
+#else
+		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 3, partialm, completem, valuem);
+#endif
+	}else{
+		t_osc_msg *valuem = osc_msg_assocn(osc_bndl_nth(completeb, 0), osc_atom_valueaddress, 0);
+		//t_osc_msg *valuem = osc_msg_prepend(osc_bndl_nth(completeb, 0), osc_atom_valueaddress);
+#ifdef INCLUDE_UNMATCHED
+		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 4, partialm, completem, unmatchedm, valuem);
+#else
+		out = osc_bndl_alloc(OSC_TIMETAG_NULL, 3, partialm, completem, valuem);
+#endif		
+	}
+	return osc_atom_allocBndl(out, 1);
+}
+
+t_osc_atom *osc_atom_evalExpr(t_osc_atom *expr, t_osc_bndl *context)
+{
+	if(!expr){
+		return NULL;
+	}
+	if(tt(expr) != OSC_TT_EXPR && tt(expr) != OSC_TT_BNDL){
+		return osc_atom_retain(expr);
+	}
+	
+	t_osc_bndl *b = osc_bndl_eval(v(expr, OSC_TT_BNDL_ID), context);
+
+	t_osc_atom *func = osc_msg_nth(osc_bndl_lookup(b, osc_atom_funcaddress, osc_atom_match), 1);
+	t_osc_atom *args = osc_msg_nth(osc_bndl_lookup(b, osc_atom_argsaddress, osc_atom_match), 1);
+	if(osc_atom_getTypetag(args) != OSC_TT_BNDL){
+		return osc_atom_allocBndl(b, 1);
+	}
+
+	if(tt(func) == OSC_TT_BNDL || tt(func) == OSC_TT_EXPR){
+		t_osc_bndl *u = osc_bndl_union(v(args, OSC_TT_BNDL_ID), v(func, OSC_TT_BNDL_ID));
+		t_osc_bndl *e = osc_bndl_eval(u, context);
+		osc_bndl_release(u);
+		t_osc_bndl *uu = osc_bndl_union(e, b);
+		osc_bndl_release(b);
+		osc_bndl_release(e);
+		return osc_atom_allocExpr(uu, 1);
+	}else if(tt(func) == OSC_TT_NATIVE){
+		t_osc_bndl *e = v(func, OSC_TT_NATIVE_ID)(v(args, OSC_TT_BNDL_ID));
+		t_osc_bndl *u = osc_bndl_union(e, b);
+		osc_bndl_release(b);
+		osc_bndl_release(e);
+		return osc_atom_allocExpr(u, 1);
+	}else if(tt(func) == OSC_TT_SYM){
+		printf("sym\n");
+		return osc_atom_allocBndl(b, 1);
+	}else{
+		printf("%c\n", tt(func));
+		osc_atom_print(func);
+		printf("%s:%d: something went terribly wrong!\n", __func__, __LINE__);
+		return osc_atom_allocBndl(b, 1);
+	}
 }
 
 void osc_atom_print(t_osc_atom *a)

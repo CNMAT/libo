@@ -28,6 +28,7 @@
 #include "osc.h"
 #include "osc_parse.h"
 #include "osc_util.h"
+#include "osc_hashtab.h"
 
 int colnum;
 
@@ -78,157 +79,52 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 \+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\.|&|\||,|;|\(|\)|\{|\} {
 	return *yytext;
 }
-	/*
-\<= {
-	return OSC_EXPR_LTE;
-}
->= {
-	return OSC_EXPR_GTE;
-}
-!= {
-	return OSC_EXPR_NEQ;
-}
-\&\& {
-	return OSC_EXPR_ANDAND;
-}
-\|\| {
-	return OSC_EXPR_OROR;
-}
-\+\+ {
-	return OSC_EXPR_INC;
-}
-\-\- {
-	return OSC_EXPR_DEC;
-}
-\+= {
-	return OSC_EXPR_PLUSEQ;
-}
-\-= {
-	return OSC_EXPR_MINUSEQ;
-}
-\*= {
-	return OSC_EXPR_MULTEQ;
-}
-\/= {
-	return OSC_EXPR_DIVEQ;
-}
-%= {
-	return OSC_EXPR_MODEQ;
-}
-\^= {
-	return OSC_EXPR_POWEQ;
-}
-\?\? {
-	return OSC_EXPR_DBLQMARK;
-}
-\?\?= {
-	return OSC_EXPR_DBLQMARKEQ;
-}
-
-quote[[:space:]]*\( {
-	BEGIN(quote_function);
-	}
-
-<quote_function>.* {
-	char *start = yytext;
-	char *end = start;
-	int np = 1;
-	while(np){
-		if(*end == ')'){
-			np--;
-		}else if(*end == '('){
-			np++;
-		}
-		end++;
-	}
-	yyless(end - start);
-	if(alloc_atom){
-		yylval->atom = osc_atom_u_alloc();
-	}
-	*(end - 1) = '\0';
-	osc_atom_u_setString(yylval->atom, yytext);
-	*(end - 1) = ')';
-	BEGIN(0);
-	return OSC_EXPR_QUOTED_EXPR;
-	}
-
-\" {
-	BEGIN(quote);
-}
-	*/
-	/*
-<quote>[^\"]+ { 
-	if(*buf){
-		*buf = osc_mem_resize(*buf, *buflen + yyleng + 1);
-		*buflen += yyleng + 1;
-		strcat(*buf, yytext);
-	}else{
-		//char *copy = osc_mem_alloc(yyleng + 1);
-		//strncpy(copy, yytext, yyleng + 1);
-		//t_osc_atom_u *a = osc_atom_u_alloc();
-		//yylval->atom = a;
-		if(alloc_atom){
-			yylval->atom = osc_atom_u_alloc();
-		}
-		osc_atom_u_setString(yylval->atom, yytext);
-		return OSC_EXPR_STRING;
-	}
-}
-
-<quote>\" {
-	BEGIN(0);
-	if(*buf){
-		t_osc_atom_u *a = osc_atom_u_alloc();
-		//osc_atom_u_setStringPtr(a, *buf);
-		//osc_atom_u_setShouldFreePtr(a, 1);
-		yylval->atom = osc_atom_u_allocString(*buf);
-		//yylval->string = *buf;
-		*buf = NULL;
-		*buflen = 0;
-		return OSC_EXPR_STRING;
-	}
-}
-
-<quote>{quoted_string}*\\. {
-	if(*buf){
-		*buf = osc_mem_resize(*buf, *buflen + yyleng);
-		memcpy(*buf + *buflen, yytext, yyleng - 1);
-		*buflen += yyleng - 1;
-		(*buf)[*buflen - 1] = yytext[yyleng - 1];
-		(*buf)[*buflen] = '\0';
-	}else{
-		*buf = osc_mem_alloc(yyleng);
-		memcpy(*buf, yytext, yyleng - 1);
-		*buflen = yyleng - 1;
-		(*buf)[*buflen - 1] = yytext[yyleng - 1];
-		(*buf)[*buflen] = '\0';
-	}
-}
-	*/
 
 \"(\\.|[^\\"])*\" {
 			char *copy = osc_util_strcpy(yytext + 1);
 			copy[yyleng - 2] = 0;
 			yylval->atom = osc_atom_allocString(copy, 1);
+			osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
 			return OSC_PARSE_STRING;
 			}
 
 (([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
-						// int 
-						char *endptr = NULL;
-						int32_t i = strtol(yytext, &endptr, 0);
-						yylval->atom = osc_atom_allocInt32(i);
+						// int
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							char *endptr = NULL;
+							int32_t i = strtol(yytext, &endptr, 0);
+							yylval->atom = osc_atom_allocInt32(i);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, (int)yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+						}
 						return OSC_PARSE_NUMBER;
 					}
 {c99_floating_point_constant}		{
-						// floating point 
-						char *endptr = NULL;
-						double f = strtod(yytext, &endptr);
-						yylval->atom = osc_atom_allocDouble(f);
+						// floating point
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							char *endptr = NULL;
+							double f = strtod(yytext, &endptr);
+							yylval->atom = osc_atom_allocDouble(f);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+						}
 						return OSC_PARSE_NUMBER;
 					}
 \'.\'					{
-						yylval->atom = osc_atom_allocInt8(yytext[1]);
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							yylval->atom = osc_atom_allocInt8(yytext[1]);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+						}
 						return OSC_PARSE_NUMBER;
 					}
 (true)			{
@@ -255,19 +151,42 @@ quote[[:space:]]*\( {
 				}
 
 \/?[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
-						yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+						}
+
 						return OSC_PARSE_SYMBOL;
 				 	}
 
 {pattern}				{
-						// fixme---this should identify only correctly formatted patterns
-						printf("pattern: %s\n", yytext);
-						yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							// fixme---this should identify only correctly formatted patterns
+							printf("pattern: %s\n", yytext);
+							yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+						}
 						return OSC_PARSE_PATTERN;
 				 	}
 
 [^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
-						yylval->atom = osc_atom_allocString(osc_util_strcpy(yytext), 1);
+
+						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
+						if(a){
+							yylval->atom = osc_atom_retain(a);
+						}else{
+							yylval->atom = osc_atom_allocString(osc_util_strcpy(yytext), 1);
+							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
+							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
+}
 						return OSC_PARSE_STRING;
 					}
 

@@ -53,6 +53,7 @@
 #include <stdarg.h>
 #include <libgen.h>
 
+#include "osc_hashtab.h"
 #include "osc_parse.h"
 #include "osc_lex.h"
 #include "osc_util.h"
@@ -66,9 +67,9 @@
 #endif
 
 #ifdef __cplusplus
-	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner);
+	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht);
 #else
-	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner);
+	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht);
 #endif
 
 }
@@ -80,20 +81,22 @@
 #include "osc_atom.h"
 #include "osc_pvec.h"
 #include "osc_builtin.h"
+#include "osc_hashtab.h"
 
 #ifdef YY_DECL
 #undef YY_DECL
 #endif
 
 #ifdef __cplusplus
-	#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner)
+	#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht)
 #else
-	#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner)
+	#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht)
 #endif
 #ifdef __cplusplus
 extern "C"{
 #endif
 t_osc_bndl *osc_parse(char *ptr);
+t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args);
 #ifdef __cplusplus
 }
 #endif
@@ -101,9 +104,9 @@ t_osc_bndl *osc_parse(char *ptr);
 
 %{
 
-int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner)
+int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, t_osc_hashtab *ht)
 {
-	return osc_lex_lex(yylval_param, llocp, yyscanner);
+	return osc_lex_lex(yylval_param, llocp, yyscanner, ht);
 }
 
 t_osc_bndl *osc_parse(char *ptr)
@@ -113,9 +116,11 @@ t_osc_bndl *osc_parse(char *ptr)
 	YY_BUFFER_STATE buf_state = osc_lex__scan_string(ptr, scanner);
 	osc_lex_set_out(NULL, scanner);
 	t_osc_bndl *b = NULL;
-	osc_parse_parse(scanner, &b, ptr, NULL);
+	t_osc_hashtab *ht = osc_hashtab_new(-1, NULL);
+	osc_parse_parse(scanner, &b, ptr, NULL, ht);
 	osc_lex__delete_buffer(buf_state, scanner);
 	osc_lex_lex_destroy(scanner);
+	osc_hashtab_destroy(ht);
 	return b;
 }
 /*
@@ -148,7 +153,7 @@ void osc_parse_error(YYLTYPE *llocp,
 {
 }
 */
-void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, char const *e)
+void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, t_osc_hashtab *ht, char const *e)
 {
 }
 
@@ -180,8 +185,10 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 %parse-param{t_osc_bndl **bndl}
 %parse-param{const char *input_string}
 %parse-param{t_osc_bndl *context}
+%parse-param{t_osc_hashtab *ht}
 
 %lex-param{void *scanner}
+%lex-param{t_osc_hashtab *ht}
 
 %union {
 	t_osc_bndl *bndl;
@@ -189,7 +196,7 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 	t_osc_atom *atom;
 	t_osc_pvec2 *pvec2;
 }
-%type <bndl> bndl funcall nth binop
+%type <bndl> bndl funcall nth binop unaryop
 %type <msg> msg
 %type <atom> atom native expr 
 %type <pvec2> msgs atoms list
@@ -232,6 +239,7 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 
 // level 2
  //%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
+%left '[' ']' '.' '\''
 
  //%token START_EXPNS START_FUNCTION
  //%start start
@@ -307,14 +315,22 @@ list:
 	}
 ;
 
+unaryop:
+	'\'' expr {
+
+	}
+;
+
 binop:
 	expr '+' expr {
 		$$ = osc_parse_allocFuncall(osc_atom_ps_add, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
 											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
 											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
 	}
-	| bndl '\\' bndl {
-		$$ = NULL;
+	| expr '.' OSC_PARSE_SYMBOL {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+										       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
 	}
 ;
 
@@ -328,10 +344,17 @@ funcall:
 	| OSC_PARSE_SYMBOL OSC_PARSE_SYMBOL {
 		$$ = NULL;
 	}
+	| native bndl {
+		printf("hi there\n");
+	}
+	| native OSC_PARSE_SYMBOL {
+
+	}
 ;
 
 nth:
-	OSC_PARSE_SYMBOL list {
+	expr list {
+		// /foo[1, 2, 3]
 		t_osc_msg *n = osc_msg_allocWithPvec2(osc_pvec2_assocN_m($2, 0, osc_atom_naddress));
 		t_osc_msg *list = osc_msg_alloc(osc_atom_listaddress, 1, $1);
 		t_osc_bndl *args = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, n, list);
@@ -344,6 +367,9 @@ expr:
 	| bndl {
 		$$ = osc_atom_allocBndl($1, 1);
 	}
+	| unaryop {
+//$$ = osc_atom_allocExpr($1, 1);
+	}
 	| binop {
 		$$ = osc_atom_allocExpr($1, 1);
 	}
@@ -351,7 +377,7 @@ expr:
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| nth {
-		$$ = osc_atom_allocBndl($1, 1);
+		$$ = osc_atom_allocExpr($1, 1);
 	}
 ;
 

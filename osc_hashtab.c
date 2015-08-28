@@ -204,21 +204,21 @@ static void osc_hashtab_doStore(t_osc_hashtab *ht,
 
 // will blow away an existing entry with the same key
 void osc_hashtab_store(t_osc_hashtab *ht, int keylen, char *key, void *val){
-	if(!ht){
+	if(!ht || !keylen || !key){
 		return;
 	}
 	osc_hashtab_doStore(ht, keylen, key, val, osc_hashtab_store_elem);
 }
 
 void osc_hashtab_storeSafe(t_osc_hashtab *ht, int keylen, char *key, void *val){
-	if(!ht){
+	if(!ht || !keylen || !key){
 		return;
 	}
 	osc_hashtab_doStore(ht, keylen, key, val, osc_hashtab_store_elem_safe);
 }
 
 void *osc_hashtab_lookup(t_osc_hashtab *ht, int keylen, char *key){
-	if(!ht){
+	if(!ht || !keylen || !key){
 		return NULL;
 	}
 	OSC_HASHTYPE h = osc_hash(keylen, key);
@@ -234,7 +234,7 @@ void *osc_hashtab_lookup(t_osc_hashtab *ht, int keylen, char *key){
 
 void osc_hashtab_remove(t_osc_hashtab *ht, int keylen, char *key, t_osc_hashtab_dtor dtor)
 {
-	if(!ht){
+	if(!ht || !keylen || !key){
 		return;
 	}
 	OSC_HASHTYPE h = osc_hash(keylen, key);

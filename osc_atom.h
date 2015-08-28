@@ -22,7 +22,9 @@ t_osc_atom *osc_atom_nil;
 t_osc_atom *osc_atom_undefined;
 t_osc_atom *osc_atom_emptystring;
 t_osc_atom *osc_atom_valueaddress;
-t_osc_atom *osc_atom_expraddress;
+t_osc_atom *osc_atom_statusaddress;
+t_osc_atom *osc_atom_okaddress;
+t_osc_atom *osc_atom_messageaddress;
 t_osc_atom *osc_atom_typeaddress;
 t_osc_atom *osc_atom_funcaddress;
 t_osc_atom *osc_atom_argsaddress;
@@ -31,6 +33,8 @@ t_osc_atom *osc_atom_completeaddress;
 t_osc_atom *osc_atom_unmatchedaddress;
 t_osc_atom *osc_atom_ps_add;
 t_osc_atom *osc_atom_ps_nth;
+t_osc_atom *osc_atom_ps_lookup;
+t_osc_atom *osc_atom_ps_circularreference;
 t_osc_atom *osc_atom_yaddress;
 t_osc_atom *osc_atom_lhsaddress;
 t_osc_atom *osc_atom_rhsaddress;
@@ -58,6 +62,24 @@ t_osc_atom *osc_atom_allocNil(void);
 t_osc_atom *osc_atom_allocNative(t_osc_builtin n, char *funcname);
 t_osc_atom *osc_atom_allocExpr(t_osc_bndl *b, int should_free);
 
+int8_t osc_atom_getInt8(t_osc_atom *a);
+int8_t osc_atom_getUInt8(t_osc_atom *a);
+int16_t osc_atom_getInt16(t_osc_atom *a);
+int16_t osc_atom_getUInt16(t_osc_atom *a);
+int32_t osc_atom_getInt32(t_osc_atom *a);
+int32_t osc_atom_getUInt32(t_osc_atom *a);
+int64_t osc_atom_getInt64(t_osc_atom *a);
+int64_t osc_atom_getUInt64(t_osc_atom *a);
+float osc_atom_getFloat(t_osc_atom *a);
+double osc_atom_getDouble(t_osc_atom *a);
+char *osc_atom_getStringPtr(t_osc_atom *a);
+char *osc_atom_getSymbolPtr(t_osc_atom *a);
+t_osc_bndl *osc_atom_getBndlPtr(t_osc_atom *a);
+t_osc_timetag osc_atom_getTimetag(t_osc_atom *a);
+char *osc_atom_getBlobPtr(t_osc_atom *a);
+t_osc_builtin osc_atom_getNativePtr(t_osc_atom *a);
+t_osc_bndl *osc_atom_getExprPtr(t_osc_atom *a);
+
 t_osc_atom *osc_atom_clone(t_osc_atom *a);
 t_osc_atom *osc_atom_retain(t_osc_atom *a);
 void osc_atom_free(void *_a);
@@ -67,6 +89,7 @@ int osc_atom_getSerializedLen(t_osc_atom *a);
 char *osc_atom_getSerializedPtr(t_osc_atom *a);
 int osc_atom_getPrettyLen(t_osc_atom *a);
 char *osc_atom_getPrettyPtr(t_osc_atom *a);
+void osc_atom_setPrettyPtr(t_osc_atom_m *a, int len, char *pretty_ptr);
 t_osc_atom *osc_atom_strcat(t_osc_pvec2 *pvec2);
 t_osc_atom *osc_atom_formatAtomsAsMsg(t_osc_pvec2 *pvec2,
 				      int prefixlen,
@@ -90,6 +113,7 @@ t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag);
 t_osc_atom *osc_atom_apply(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_atom *a, t_osc_bndl *context);
 
 t_osc_atom *osc_atom_match(t_osc_atom *lhs, t_osc_atom *rhs);
+t_osc_atom *osc_atom_indexable(t_osc_atom *a);
 t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n);
 t_osc_atom *osc_atom_add(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_sub(t_osc_atom *lhs, t_osc_atom *rhs);
@@ -102,9 +126,6 @@ t_osc_atom *osc_atom_le(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_gt(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_ge(t_osc_atom *lhs, t_osc_atom *rhs);
 
-t_osc_msg *osc_atom_value(t_osc_atom *a);
-t_osc_atom *osc_atom_eagerEval(t_osc_atom *a, t_osc_bndl *context);
-t_osc_atom *osc_atom_lazyEval(t_osc_atom *a, t_osc_bndl *context);
 t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context);
 
 #ifdef __cplusplus

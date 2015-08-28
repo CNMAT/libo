@@ -22,6 +22,7 @@ struct _osc_msg
 	char *serialized_ptr;
 	int pretty_len;
 	char *pretty_ptr;
+	int static_msg;
 };
 #pragma pack(pop)
 
@@ -37,7 +38,7 @@ t_osc_msg *osc_msg_empty = &_osc_msg_empty;
 
 #define OSC_MSG_ALLOC(varname, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr, refcount) \
 	void *OSC_UID(__osc_msg_alloc_ptr__) = osc_mem_alloc(sizeof(t_osc_msg));\
-	t_osc_msg OSC_UID(__osc_msg_alloc_m__) = {{refcount, osc_msg_free}, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr}; \
+	t_osc_msg OSC_UID(__osc_msg_alloc_m__) = {{refcount, osc_msg_free}, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr, 0}; \
 	memcpy(OSC_UID(__osc_msg_alloc_ptr__), &OSC_UID(__osc_msg_alloc_m__), sizeof(t_osc_msg));\
 	t_osc_msg *varname = (t_osc_msg *)OSC_UID(__osc_msg_alloc_ptr__);
 
@@ -493,3 +494,4 @@ t_osc_msg *osc_msg_rreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_b
 	ret = osc_msg_assocn(ret, rhs, 1);
 	return ret;
 }
+
