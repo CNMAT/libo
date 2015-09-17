@@ -169,7 +169,7 @@ t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
 t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 {
 	t_osc_bndl *bb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
-					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_allocInt8(OSC_TT_F32)),
+					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_exprtype),
 					osc_msg_alloc(osc_atom_funcaddress, 1, func),
 					osc_msg_alloc(osc_atom_argsaddress, 1, args));
 	return bb;
@@ -196,10 +196,10 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 	t_osc_atom *atom;
 	t_osc_pvec2 *pvec2;
 }
-%type <bndl> bndl funcall nth binop unaryop
+%type <bndl> bndl funcall nth binop unaryop ternaryop
 %type <msg> msg
-%type <atom> atom native expr 
-%type <pvec2> msgs atoms list
+%type <atom> native expr 
+%type <pvec2> msgs expns list
 %nonassoc <atom> OSC_PARSE_SYMBOL OSC_PARSE_NUMBER OSC_PARSE_STRING OSC_PARSE_BOOL OSC_PARSE_NIL OSC_PARSE_UNDEFINED OSC_PARSE_PATTERN
 %token OSC_PARSE_NATIVE
 
@@ -210,10 +210,10 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
 
 // level 16
-%right '=' OSC_EXPR_PLUSEQ OSC_EXPR_MINUSEQ OSC_EXPR_MULTEQ OSC_EXPR_DIVEQ OSC_EXPR_MODEQ OSC_EXPR_POWEQ
+%right OSC_EXPR_PLUSEQ OSC_EXPR_MINUSEQ OSC_EXPR_MULTEQ OSC_EXPR_DIVEQ OSC_EXPR_MODEQ OSC_EXPR_POWEQ
 
 // level 15
-%right OSC_EXPR_TERNARY_COND '?' ':'
+%right OSC_PARSE_TERNARYCOND ':' '?'
 
 // level 14
 %left '|' OSC_EXPR_OROR
@@ -222,7 +222,7 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 %left '&' OSC_EXPR_ANDAND
 
 // level 9
-%left OSC_EXPR_EQ OSC_EXPR_NEQ
+%left '=' '~' OSC_EXPR_NEQ
 
 // level 8
 %left '<' '>' OSC_EXPR_LTE OSC_EXPR_GTE 
@@ -239,7 +239,7 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 
 // level 2
  //%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
-%left '[' ']' '.' '\''
+%left '[' ']' '.' '\'' '@' OSC_PARSE_FUNCALL
 
  //%token START_EXPNS START_FUNCTION
  //%start start
@@ -265,10 +265,10 @@ msg: OSC_PARSE_SYMBOL {
 	| OSC_PARSE_PATTERN {
 		$$ = osc_msg_alloc($1, 0);
  	}
-	| OSC_PARSE_SYMBOL ':' atom {
+	| OSC_PARSE_SYMBOL ':' expr {
 		$$ = osc_msg_alloc($1, 1, $3);
 	}
-	| OSC_PARSE_PATTERN ':' atom {
+	| OSC_PARSE_PATTERN ':' expr {
 		$$ = osc_msg_alloc($1, 1, $3);
 	}
 	| OSC_PARSE_SYMBOL ':' list{
@@ -292,6 +292,7 @@ msgs: msg {
  	}
 ;
 
+/*
 atom:
 	OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native | expr
 		//| bndl {
@@ -308,9 +309,10 @@ atoms:
 		$$ = $1;
 	}
 ;
+*/
 
 list:
-	'[' atoms ']' {
+	'[' expns ']' {
 		$$ = $2;
 	}
 ;
@@ -319,11 +321,25 @@ unaryop:
 	'\'' expr {
 
 	}
+	| '@' expr {
+		printf("%s\n", osc_atom_getPrettyPtr($2));
+		$$ = osc_parse_allocFuncall(osc_atom_ps_address, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_stringaddress, 1, $2)), 1));
+	}
 ;
 
 binop:
 	expr '+' expr {
 		$$ = osc_parse_allocFuncall(osc_atom_ps_add, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
+	}
+	| expr '=' expr {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_eql, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
+	}
+	| expr '~' expr {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_eqv, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
 											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
 											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
 	}
@@ -334,20 +350,26 @@ binop:
 	}
 ;
 
+ternaryop:
+	expr '?' expr ':' expr %prec OSC_PARSE_TERNARYCOND {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_if, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 3, osc_msg_alloc(osc_atom_testaddress, 1, $1), osc_msg_alloc(osc_atom_thenaddress, 1, $3), osc_msg_alloc(osc_atom_elseaddress, 1, $5)), 1));
+	}
+;
+
 funcall:
-	bndl bndl {
+	bndl bndl %prec OSC_PARSE_FUNCALL {
 		$$ = NULL;
 	}
-	| OSC_PARSE_SYMBOL bndl {
+	| OSC_PARSE_SYMBOL bndl %prec OSC_PARSE_FUNCALL {
 		$$ = osc_parse_allocFuncall($1, osc_atom_allocBndl($2, 1));
 	}
-	| OSC_PARSE_SYMBOL OSC_PARSE_SYMBOL {
+	| OSC_PARSE_SYMBOL OSC_PARSE_SYMBOL %prec OSC_PARSE_FUNCALL {
 		$$ = NULL;
 	}
-	| native bndl {
+	| native bndl %prec OSC_PARSE_FUNCALL {
 		printf("hi there\n");
 	}
-	| native OSC_PARSE_SYMBOL {
+	| native OSC_PARSE_SYMBOL %prec OSC_PARSE_FUNCALL {
 
 	}
 ;
@@ -363,14 +385,20 @@ nth:
 ;
 
 expr:
-	OSC_PARSE_NUMBER | OSC_PARSE_SYMBOL
+	OSC_PARSE_NUMBER | OSC_PARSE_SYMBOL | OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native
+	| '(' expr ')' {
+		$$ = $2;
+	}
 	| bndl {
 		$$ = osc_atom_allocBndl($1, 1);
 	}
 	| unaryop {
-//$$ = osc_atom_allocExpr($1, 1);
+		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| binop {
+		$$ = osc_atom_allocExpr($1, 1);
+	}
+	| ternaryop {
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| funcall {
@@ -378,6 +406,16 @@ expr:
 	}
 	| nth {
 		$$ = osc_atom_allocExpr($1, 1);
+	}
+;
+
+expns:
+	expr {
+		$$ = osc_parse_atom($1);
+	}
+	| expns ',' expr {
+		osc_pvec2_assocN_m($1, osc_pvec2_length($1), (void *)$3);
+		$$ = $1;
 	}
 ;
 

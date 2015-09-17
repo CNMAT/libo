@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "osc_bundle.h"
-typedef t_osc_bndl *(*t_osc_builtin)(t_osc_bndl*);
+typedef t_osc_bndl *(*t_osc_builtin)(t_osc_bndl*, t_osc_bndl*);
 
 char *osc_builtin_math;
 

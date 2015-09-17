@@ -20,8 +20,8 @@ struct _osc_msg
 	t_osc_pvec2 *atoms;
 	int serialized_len;
 	char *serialized_ptr;
-	int pretty_len;
-	char *pretty_ptr;
+	//int pretty_len;
+	//char *pretty_ptr;
 	int static_msg;
 };
 #pragma pack(pop)
@@ -29,22 +29,23 @@ struct _osc_msg
 #define a(m) ((m)->atoms)
 #define sl(m) ((m)->serialized_len)
 #define sp(m) ((m)->serialized_ptr)
-#define pl(m) ((m)->pretty_len)
-#define pp(m) ((m)->pretty_ptr)
+//#define pl(m) ((m)->pretty_len)
+//#define pp(m) ((m)->pretty_ptr)
 #define rc(m) ((m)->obj.refcount)
 
-t_osc_msg _osc_msg_empty = {{-1, NULL}, NULL, 0, NULL, 0, NULL, 1};
+t_osc_msg _osc_msg_empty = {{-1, NULL}, NULL, 0, NULL, 1};
 t_osc_msg *osc_msg_empty = &_osc_msg_empty;
 
-#define OSC_MSG_ALLOC(varname, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr, refcount) \
+//#define OSC_MSG_ALLOC(varname, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr, refcount) 
+#define OSC_MSG_ALLOC(varname, atomlist, serialized_len, serialized_ptr, refcount) \
 	void *OSC_UID(__osc_msg_alloc_ptr__) = osc_mem_alloc(sizeof(t_osc_msg));\
-	t_osc_msg OSC_UID(__osc_msg_alloc_m__) = {{refcount, osc_msg_free}, atomlist, serialized_len, serialized_ptr, pretty_len, pretty_ptr, 0}; \
+	t_osc_msg OSC_UID(__osc_msg_alloc_m__) = {{refcount, osc_msg_free}, atomlist, serialized_len, serialized_ptr, 0}; \
 	memcpy(OSC_UID(__osc_msg_alloc_ptr__), &OSC_UID(__osc_msg_alloc_m__), sizeof(t_osc_msg));\
 	t_osc_msg *varname = (t_osc_msg *)OSC_UID(__osc_msg_alloc_ptr__);
 
 t_osc_msg *osc_msg_allocWithPvec2(t_osc_pvec2 *pvec2)
 {
-	OSC_MSG_ALLOC(m, pvec2, 0, NULL, 0, NULL, 1);
+	OSC_MSG_ALLOC(m, pvec2, 0, NULL, 1);
 	return m;
 }
 
@@ -64,7 +65,7 @@ t_osc_msg *osc_msg_alloc(t_osc_atom *address, int n, ...)
 		}
 		va_end(argp);
 	}
-	OSC_MSG_ALLOC(m, pvec2, 0, NULL, 0, NULL, 1);
+	OSC_MSG_ALLOC(m, pvec2, 0, NULL, 1);
 	return m;
 }
 
@@ -77,13 +78,7 @@ t_osc_msg *osc_msg_clone(t_osc_msg *m)
 			sp = osc_mem_alloc(sl);
 			memcpy(sp, sp(m), sl);
 		}
-		int pl = pl(m);
-		char *pp = NULL;
-		if(pp(m) && pl){
-			pp = osc_mem_alloc(pl);
-			memcpy(pp, pp(m), pl);
-		}
-		OSC_MSG_ALLOC(clone, osc_pvec2_copy(a(m)), sl, sp, pl, pp, 1);
+		OSC_MSG_ALLOC(clone, osc_pvec2_copy(a(m)), sl, sp, 1);
 		return clone;
 	}
 	return osc_msg_empty;
@@ -114,10 +109,10 @@ void osc_msg_free(void *_m)
 		if(p){
 			osc_mem_free(p);
 		}
-		p = pp(m);
-		if(p){
-			osc_mem_free((void *)p);
-		}
+		/* p = pp(m); */
+		/* if(p){ */
+		/* 	osc_mem_free((void *)p); */
+		/* } */
 		memset(m, 0, sizeof(t_osc_msg));
 		osc_mem_free((void *)m);
 	}
@@ -237,45 +232,50 @@ static void _osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postf
 	osc_atom_release(a);
 }
 
-t_osc_msg_m *osc_msg_format_m(t_osc_msg_m *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level)
-{
-	if(!m){
-		OSC_MSG_ALLOC(ret, osc_pvec2_alloc(osc_atom_release), 0, NULL, 0, NULL, 1);
-		return (t_osc_msg_m *)ret;
-	}
-	if(pl(m) && pp(m)){
-		return m;
-	}
-	int len = 0;
-	char *ptr = NULL;
-	_osc_msg_format(m, prefixlen, prefix, postfixlen, postfix, &len, &ptr, level);
-	if(ptr){
-		pl(m) = len;
-		pp(m) = ptr;
-	}
-	return m;
-}
+/* t_osc_msg_m *osc_msg_format_m(t_osc_msg_m *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level) */
+/* { */
+/* 	if(!m){ */
+/* 		OSC_MSG_ALLOC(ret, osc_pvec2_alloc(osc_atom_release), 0, NULL, 0, NULL, 1); */
+/* 		return (t_osc_msg_m *)ret; */
+/* 	} */
+/* 	if(pl(m) && pp(m)){ */
+/* 		return m; */
+/* 	} */
+/* 	int len = 0; */
+/* 	char *ptr = NULL; */
+/* 	_osc_msg_format(m, prefixlen, prefix, postfixlen, postfix, &len, &ptr, level); */
+/* 	if(ptr){ */
+/* 		pl(m) = len; */
+/* 		pp(m) = ptr; */
+/* 	} */
+/* 	return m; */
+/* } */
 
-t_osc_msg *osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level)
+t_osc_atom *osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level)
 {
 	if(!m){
-		OSC_MSG_ALLOC(ret, osc_pvec2_alloc(osc_atom_release), 0, NULL, 0, NULL, 1);
-		return (t_osc_msg_m *)ret;
+		//OSC_MSG_ALLOC(ret, osc_pvec2_alloc(osc_atom_release), 0, NULL, 0, NULL, 1);
+		return osc_atom_emptystring;
 	}
-	if(pl(m) && pp(m)){
-		return osc_msg_retain(m);
-	}
+	/* if(pl(m) && pp(m)){ */
+	/* 	return osc_msg_retain(m); */
+	/* } */
 	int len = 0;
 	char *ptr = NULL;
 	_osc_msg_format(m, prefixlen, prefix, postfixlen, postfix, &len, &ptr, level);
 	if(ptr){
-		t_osc_msg *ret = osc_msg_clone(m);
-		pl((t_osc_msg_m *)ret) = len;
-		pp((t_osc_msg_m *)ret) = ptr;
-		return ret;
+		return osc_atom_allocString(ptr, 1);
 	}else{
-		return osc_msg_retain(m);
+		return osc_atom_emptystring;
 	}
+	/* if(ptr){ */
+	/* 	t_osc_msg *ret = osc_msg_clone(m); */
+	/* 	pl((t_osc_msg_m *)ret) = len; */
+	/* 	pp((t_osc_msg_m *)ret) = ptr; */
+	/* 	return ret; */
+	/* }else{ */
+	/* 	return osc_msg_retain(m); */
+	/* } */
 }
 
 //////////////////////////////////////////////////
@@ -297,21 +297,21 @@ char *osc_msg_getSerializedPtr(t_osc_msg *m)
 	return NULL;
 }
 
-int osc_msg_getPrettyLen(t_osc_msg *m)
-{
-	if(m){
-		return m->pretty_len;
-	}
-	return 0;
-}
+/* int osc_msg_getPrettyLen(t_osc_msg *m) */
+/* { */
+/* 	if(m){ */
+/* 		return m->pretty_len; */
+/* 	} */
+/* 	return 0; */
+/* } */
 
-char *osc_msg_getPrettyPtr(t_osc_msg *m)
-{
-	if(m){
-		return m->pretty_ptr;
-	}
-	return NULL;
-}
+/* char *osc_msg_getPrettyPtr(t_osc_msg *m) */
+/* { */
+/* 	if(m){ */
+/* 		return m->pretty_ptr; */
+/* 	} */
+/* 	return NULL; */
+/* } */
 
 int osc_msg_length(t_osc_msg *m)
 {
@@ -333,7 +333,7 @@ t_osc_msg *osc_msg_assocn(t_osc_msg *m, t_osc_atom *a, int idx)
 {
 	if(m){
 		t_osc_pvec2 *new = osc_pvec2_assocN(a(m), idx, (void *)a);
-		OSC_MSG_ALLOC(mm, new, 0, NULL, 0, NULL, 1);
+		OSC_MSG_ALLOC(mm, new, 0, NULL, 1);
 		return mm;
 	}
 	return osc_msg_empty;
@@ -373,7 +373,7 @@ t_osc_msg_m *osc_msg_prepend_m(t_osc_msg_m *m, t_osc_atom *a)
 		osc_pvec2_prepend_m(a(m), (void *)a);
 		return m;
 	}else{
-		return osc_msg_alloc(a, 0);
+		return (t_osc_msg_m *)osc_msg_alloc(a, 0);
 	}
 }
 
@@ -418,7 +418,7 @@ t_osc_msg *osc_msg_apply(t_osc_msg *(*fn)(t_osc_msg *, t_osc_bndl *), t_osc_msg 
 t_osc_msg *osc_msg_map(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context)
 {
 	if(!m){
-		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 0, NULL, 1);
+		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 1);
 		return ret;
 	}
 	if(!fn){
@@ -437,7 +437,7 @@ t_osc_msg *osc_msg_map(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg 
 t_osc_msg *osc_msg_filter(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context)
 {
 	if(!m){
-		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 0, NULL, 1);
+		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 1);
 		return ret;
 	}
 	if(!fn){
@@ -458,7 +458,7 @@ t_osc_msg *osc_msg_filter(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_m
 t_osc_msg *osc_msg_lreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context)
 {
 	if(!m){
-		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 0, NULL, 1);
+		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 1);
 		return ret;
 	}
 	if(!fn){
@@ -478,7 +478,7 @@ t_osc_msg *osc_msg_lreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_b
 t_osc_msg *osc_msg_rreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context)
 {
 	if(!m){
-		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 0, NULL, 1);
+		OSC_MSG_ALLOC(ret, NULL, 0, NULL, 1);
 		return ret;
 	}
 	if(!fn){
@@ -495,3 +495,32 @@ t_osc_msg *osc_msg_rreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_b
 	return ret;
 }
 
+t_osc_msg *osc_msg_evalStrict(t_osc_msg *m, t_osc_bndl *context)
+{
+	t_osc_msg *nm = osc_msg_alloc(osc_atom_retain(osc_msg_nth(m, 0)), 0);
+	for(int j = 1; j < osc_msg_length(m) + 1; j++){
+		t_osc_atom *a = osc_msg_nth(m, j);
+		t_osc_atom *e = osc_atom_evalStrict(a, context);
+		if(osc_atom_getTypetag(e) == OSC_TT_BNDL || osc_atom_getTypetag(e) == OSC_TT_EXPR){
+			t_osc_bndl *eb = osc_atom_getBndlPtr(e);
+			if(osc_bndl_statusOK(eb) == osc_atom_true){
+				t_osc_msg *vm = osc_bndl_lookup(eb, osc_atom_valueaddress, osc_atom_match);
+				if(vm){
+					for(int k = 1; k < osc_msg_length(vm) + 1; k++){
+						t_osc_atom *aa = osc_msg_nth(vm, k);
+						osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(aa));
+					}
+				}else{
+					osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(e));
+				}
+			}else{
+				osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(e));
+			}
+		}else{
+			osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(e));
+		}
+		osc_atom_release(e);
+		//osc_msg_append_m((t_osc_msg_m *)nm, e);
+	}
+	return nm;
+}

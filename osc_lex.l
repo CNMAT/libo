@@ -76,7 +76,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 
 #.*
 
-\+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\.|&|\||,|;|\(|\)|\{|\} {
+\+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\.|&|\||,|;|\(|\)|\{|\}|@|~ {
 	return *yytext;
 }
 
@@ -150,7 +150,8 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 					return OSC_PARSE_NATIVE;
 				}
 
-\/?[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
+	/* \/?[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  { */
+[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`@][^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
 						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
 						if(a){
 							yylval->atom = osc_atom_retain(a);
@@ -159,7 +160,6 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
 							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
 						}
-
 						return OSC_PARSE_SYMBOL;
 				 	}
 

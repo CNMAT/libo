@@ -19,11 +19,8 @@ void osc_msg_free(void *m);
 void osc_msg_release(t_osc_msg *m);
 int osc_msg_getSerializedLen(t_osc_msg *m);
 char *osc_msg_getSerializedPtr(t_osc_msg *m);
-int osc_msg_getPrettyLen(t_osc_msg *m);
-char *osc_msg_getPrettyPtr(t_osc_msg *m);
 t_osc_msg *osc_msg_serialize(t_osc_msg *m);
-t_osc_msg_m *osc_msg_format_m(t_osc_msg_m *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level);
-t_osc_msg *osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level);
+t_osc_atom *osc_msg_format(t_osc_msg *m, int prefixlen, char *prefix, int postfixlen, char *postfix, int level);
 
 int osc_msg_length(t_osc_msg *m);
 t_osc_atom *osc_msg_nth(t_osc_msg *m, int idx);
@@ -40,6 +37,8 @@ t_osc_msg *osc_msg_map(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg 
 t_osc_msg *osc_msg_filter(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
 t_osc_msg *osc_msg_lreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
 t_osc_msg *osc_msg_rreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
+
+t_osc_msg *osc_msg_evalStrict(t_osc_msg *m, t_osc_bndl *context);
 
 #ifdef __cplusplus
 }

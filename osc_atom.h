@@ -22,6 +22,9 @@ t_osc_atom *osc_atom_nil;
 t_osc_atom *osc_atom_undefined;
 t_osc_atom *osc_atom_emptystring;
 t_osc_atom *osc_atom_valueaddress;
+t_osc_atom *osc_atom_expraddress;
+t_osc_atom *osc_atom_contextaddress;
+t_osc_atom *osc_atom_evaluatedaddress;
 t_osc_atom *osc_atom_statusaddress;
 t_osc_atom *osc_atom_okaddress;
 t_osc_atom *osc_atom_messageaddress;
@@ -31,15 +34,31 @@ t_osc_atom *osc_atom_argsaddress;
 t_osc_atom *osc_atom_partialaddress;
 t_osc_atom *osc_atom_completeaddress;
 t_osc_atom *osc_atom_unmatchedaddress;
+t_osc_atom *osc_atom_strictaddress;
+t_osc_atom *osc_atom_testaddress;
+t_osc_atom *osc_atom_thenaddress;
+t_osc_atom *osc_atom_elseaddress;
 t_osc_atom *osc_atom_ps_add;
+t_osc_atom *osc_atom_ps_eql;
+t_osc_atom *osc_atom_ps_eqv;
 t_osc_atom *osc_atom_ps_nth;
 t_osc_atom *osc_atom_ps_lookup;
 t_osc_atom *osc_atom_ps_circularreference;
+t_osc_atom *osc_atom_ps_address;
+t_osc_atom *osc_atom_ps_if;
 t_osc_atom *osc_atom_yaddress;
 t_osc_atom *osc_atom_lhsaddress;
 t_osc_atom *osc_atom_rhsaddress;
 t_osc_atom *osc_atom_naddress;
 t_osc_atom *osc_atom_listaddress;
+t_osc_atom *osc_atom_stringaddress;
+
+t_osc_atom *osc_atom_e;
+t_osc_atom *osc_atom_exprtype;
+t_osc_atom *osc_atom_f;
+t_osc_atom *osc_atom_functype;
+t_osc_atom *osc_atom_B;
+t_osc_atom *osc_atom_bndltype;
 
 t_osc_atom *osc_atom_allocInt8(int8_t i);
 t_osc_atom *osc_atom_allocUInt8(uint8_t i);
@@ -110,8 +129,6 @@ t_osc_atom *osc_atom_format(t_osc_atom *a, int level);
 t_osc_atom *osc_atom_promote(t_osc_atom *a, char typetag);
 t_osc_atom *osc_atom_convertAny(t_osc_atom *a, char typetag);
 
-t_osc_atom *osc_atom_apply(t_osc_atom *(*fn)(t_osc_atom *, t_osc_bndl *), t_osc_atom *a, t_osc_bndl *context);
-
 t_osc_atom *osc_atom_match(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_indexable(t_osc_atom *a);
 t_osc_atom *osc_atom_nth(t_osc_atom *a, t_osc_atom *n);
@@ -126,7 +143,8 @@ t_osc_atom *osc_atom_le(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_gt(t_osc_atom *lhs, t_osc_atom *rhs);
 t_osc_atom *osc_atom_ge(t_osc_atom *lhs, t_osc_atom *rhs);
 
-t_osc_atom *osc_atom_eval(t_osc_atom *a, t_osc_bndl *context);
+t_osc_atom *osc_atom_evalStrict(t_osc_atom *a, t_osc_bndl *context);
+t_osc_atom *osc_atom_evalNonstrict(t_osc_atom *a, t_osc_bndl *context);
 
 #ifdef __cplusplus
 }
