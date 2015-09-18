@@ -3465,7 +3465,7 @@ t_osc_atom *osc_atom_evalStrictSymbol(t_osc_atom *a, t_osc_bndl *context)
 	for(int i = 0; i < osc_bndl_length(context); i++){
 		t_osc_msg *m = osc_bndl_nth(context, i);
 		t_osc_atom *address = osc_msg_nth(m, 0);
-		t_osc_atom *res = osc_atom_match(address, a);
+		t_osc_atom *res = osc_atom_match(a, address);
 		if(res == osc_atom_true){
 			// complete match
 			/* t_osc_msg *nm = osc_msg_alloc(osc_atom_retain(osc_msg_nth(m, 0)), 0); */

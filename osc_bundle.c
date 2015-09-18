@@ -751,7 +751,7 @@ t_osc_bndl *osc_bndl_evalNonstrict(t_osc_bndl *b, t_osc_bndl *context)
 	/* 	osc_bndl_release(sorted); */
 	/* 	return osc_bndl_append(b, status); */
 	/* } */
-	t_osc_bndl *sorted = b;
+	t_osc_bndl *sorted = osc_bndl_retain(b);
 	t_osc_bndl *u = osc_bndl_union(sorted, context);
 	t_osc_bndl *out = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
 	for(int i = 0; i < osc_bndl_length(b); i++){
@@ -790,6 +790,7 @@ t_osc_bndl *osc_bndl_evalNonstrict(t_osc_bndl *b, t_osc_bndl *context)
 		osc_bndl_release(oldu);
 		osc_bndl_release(tmp);
 	}
+	osc_bndl_release(sorted);
 	osc_bndl_release(u);
 	return out;
 }
