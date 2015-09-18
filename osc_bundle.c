@@ -579,50 +579,36 @@ t_osc_bndl *osc_bndl_rcomplement(t_osc_bndl *lhs, t_osc_bndl *rhs)
 	return out;
 }
 
-t_osc_bndl *osc_bndl_toposort(t_osc_bndl *b)
-{
-	struct elem
+struct elem
 	{
 		t_osc_msg *msg;
 		int ct;
-	} msgs[osc_bndl_length(b)];
-	t_osc_hashtab *ht = osc_hashtab_new(-1, NULL);
-	for(int i = 0; i < osc_bndl_length(b); i++){
-		t_osc_msg *m = osc_bndl_nth(b, i);
-		msgs[i] = (struct elem){m, 0};
-		t_osc_atom *address = osc_msg_nth(m, 0);
-		osc_hashtab_store(ht, osc_atom_getPrettyLen(address), osc_atom_getPrettyPtr(address), (void *)(msgs + i));
-	}
+} ;
+
+void osc_bndl_incRefs(t_osc_bndl *b, t_osc_hashtab *refs, t_osc_hashtab *free)
+{
 	for(int i = 0; i < osc_bndl_length(b); i++){
 		t_osc_msg *m = osc_bndl_nth(b, i);
 		for(int j = 1; j < osc_msg_length(m) + 1; j++){
 			t_osc_atom *a = osc_msg_nth(m, j);
 			if(osc_atom_getTypetag(a) == OSC_TT_SYM){
-				struct elem *e = (struct elem *)osc_hashtab_lookup(ht, osc_atom_getPrettyLen(a), osc_atom_getPrettyPtr(a));
+				struct elem *e = (struct elem *)osc_hashtab_lookup(refs, osc_atom_getPrettyLen(a), osc_atom_getPrettyPtr(a));
 				if(e){
 					e->ct++;
 				}else{
 					//printf("undefined ref: %s\n", osc_atom_getPrettyPtr(a));
 				}
+			}else if(osc_atom_getTypetag(a) == OSC_TT_BNDL){
+				//osc_bndl_incRefs(osc_atom_getBndlPtr(a), refs, free);
 			}
 		}
 	}
-	
-	t_osc_atom *q[osc_bndl_length(b)];
-	t_osc_atom *l[osc_bndl_length(b)];
-	int qlen = 0, llen = 0;
-	
-	for(int i = 0; i < osc_bndl_length(b); i++){
-		t_osc_msg *m = osc_bndl_nth(b, i);
-		t_osc_atom *address = osc_msg_nth(m, 0);
-		struct elem *e = (struct elem *)osc_hashtab_lookup(ht, osc_atom_getPrettyLen(address), osc_atom_getPrettyPtr(address));
-		if(!e){
-			continue;
-		}
-		if(e->ct == 0){
-			q[qlen++] = address;
-		}
-	}
+}
+
+void osc_bndl_decRefs(int *_qlen, t_osc_atom **q, int *_llen, t_osc_atom **l, t_osc_hashtab *ht)
+{
+	int qlen = *_qlen;
+	int llen = *_llen;
 	while(qlen){
 		t_osc_atom *a = q[--qlen];
 		l[llen++] = a;
@@ -643,9 +629,44 @@ t_osc_bndl *osc_bndl_toposort(t_osc_bndl *b)
 				if(ee->ct == 0){
 					q[qlen++] = aa;
 				}
+			}else if(osc_atom_getTypetag(aa) == OSC_TT_BNDL){
+				//osc_bndl_decRefs(&qlen, q, &llen, l, ht);
 			}
 		}
 	}
+	*_qlen = qlen;
+	*_llen = llen;
+}
+
+t_osc_bndl *osc_bndl_toposort(t_osc_bndl *b)
+{
+	struct elem msgs[osc_bndl_length(b)];
+	t_osc_hashtab *ht = osc_hashtab_new(-1, NULL);
+	for(int i = 0; i < osc_bndl_length(b); i++){
+		t_osc_msg *m = osc_bndl_nth(b, i);
+		msgs[i] = (struct elem){m, 0};
+		t_osc_atom *address = osc_msg_nth(m, 0);
+		osc_hashtab_store(ht, osc_atom_getPrettyLen(address), osc_atom_getPrettyPtr(address), (void *)(msgs + i));
+	}
+	t_osc_hashtab *free = osc_hashtab_new(-1, NULL);
+	osc_bndl_incRefs(b, ht, free);
+	
+	t_osc_atom *q[osc_bndl_length(b)];
+	t_osc_atom *l[osc_bndl_length(b)];
+	int qlen = 0, llen = 0;
+	
+	for(int i = 0; i < osc_bndl_length(b); i++){
+		t_osc_msg *m = osc_bndl_nth(b, i);
+		t_osc_atom *address = osc_msg_nth(m, 0);
+		struct elem *e = (struct elem *)osc_hashtab_lookup(ht, osc_atom_getPrettyLen(address), osc_atom_getPrettyPtr(address));
+		if(!e){
+			continue;
+		}
+		if(e->ct == 0){
+			q[qlen++] = address;
+		}
+	}
+	osc_bndl_decRefs(&qlen, q, &llen, l, ht);
 	t_osc_bndl *out = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
 	t_osc_bndl *status = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
 	if(llen == osc_bndl_length(b)){
@@ -723,13 +744,14 @@ t_osc_bndl *osc_bndl_evalNonstrict(t_osc_bndl *b, t_osc_bndl *context)
 	if(!b){
 		return osc_bndl_empty;
 	}
-	t_osc_bndl *sorted = osc_bndl_toposort(b);
-	if(osc_bndl_statusOK(sorted) == osc_atom_false){
-		t_osc_msg *status = osc_bndl_getStatusMsg(sorted);
-		osc_msg_retain(status);
-		osc_bndl_release(sorted);
-		return osc_bndl_append(b, status);
-	}
+	/* t_osc_bndl *sorted = osc_bndl_toposort(b); */
+	/* if(osc_bndl_statusOK(sorted) == osc_atom_false){ */
+	/* 	t_osc_msg *status = osc_bndl_getStatusMsg(sorted); */
+	/* 	osc_msg_retain(status); */
+	/* 	osc_bndl_release(sorted); */
+	/* 	return osc_bndl_append(b, status); */
+	/* } */
+	t_osc_bndl *sorted = b;
 	t_osc_bndl *u = osc_bndl_union(sorted, context);
 	t_osc_bndl *out = osc_bndl_alloc(osc_bndl_getTimetag(b), 0);
 	for(int i = 0; i < osc_bndl_length(b); i++){
@@ -956,4 +978,27 @@ t_osc_atom *osc_bndl_getType(t_osc_bndl *b)
 		return osc_atom_bndltype;
 	}
 	return osc_msg_nth(m, 1);
+}
+
+t_osc_atom *osc_bndl_eql(t_osc_bndl *b1, t_osc_bndl *b2)
+{
+	if(!b1 || !b2){
+		return osc_atom_false;
+	}
+	int len = osc_bndl_length(b1);
+	if(osc_bndl_length(b2) != len){
+		return osc_atom_false;
+	}
+	for(int i = 0; i < len; i++){
+		t_osc_msg *m1 = osc_bndl_nth(b1, i);
+		t_osc_atom *a = osc_msg_nth(m1, 0);
+		t_osc_msg *m2 = osc_bndl_lookup(b2, a, osc_atom_match);
+		if(!m2){
+			return osc_atom_false;
+		}
+		if(osc_msg_eql(m1, m2) == osc_atom_false){
+			return osc_atom_false;
+		}
+	}
+	return osc_atom_true;
 }

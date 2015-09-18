@@ -66,6 +66,7 @@ t_osc_bndl *osc_bndl_clearStatus(t_osc_bndl *b);
 t_osc_bndl *osc_bndl_clearAllStatus(t_osc_bndl *b);
 
 t_osc_atom *osc_bndl_getType(t_osc_bndl *b);
+t_osc_atom *osc_bndl_eql(t_osc_bndl *b1, t_osc_bndl *b2);
 
 #ifdef __cplusplus
 }

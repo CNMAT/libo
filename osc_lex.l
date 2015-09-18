@@ -159,7 +159,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 							yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
 							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
 							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-						}
+}
 						return OSC_PARSE_SYMBOL;
 				 	}
 
@@ -176,7 +176,7 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 						}
 						return OSC_PARSE_PATTERN;
 				 	}
-
+	/*
 [^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
 
 						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
@@ -188,7 +188,8 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
 }
 						return OSC_PARSE_STRING;
-					}
+}
+	*/
 
 [ \t\n]+	/* eat up whitespace */
 

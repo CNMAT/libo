@@ -39,6 +39,7 @@ t_osc_msg *osc_msg_lreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_b
 t_osc_msg *osc_msg_rreduce(t_osc_atom *(*fn)(t_osc_atom *, t_osc_atom *, t_osc_bndl *), t_osc_msg *m, t_osc_bndl *context);
 
 t_osc_msg *osc_msg_evalStrict(t_osc_msg *m, t_osc_bndl *context);
+t_osc_atom *osc_msg_eql(t_osc_msg *m1, t_osc_msg *m2);
 
 #ifdef __cplusplus
 }

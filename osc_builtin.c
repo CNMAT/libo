@@ -42,7 +42,7 @@ char *osc_builtin_math =
 		},\
 		lookup : {\
 			/expr/type : 'f',\
-			/doc : \"some foo\",\
+			/doc : \"some bar\",\
 			/nonstrict : {/rhs},\
 			/func : __native lookup,\
 			/y : /func {/__lhs : /lhs, /__rhs : /rhs},\
@@ -77,6 +77,12 @@ char *osc_builtin_math =
 			/nonstrict : {/then, /else},\
 			/func : __native if,\
 			/y : /func { /__test : /test, /__then : /then, /__else : /else },\
+			/return : /y\
+		},\
+		and : {\
+			/expr/type : 'f',\
+			/doc : \"some foo\",\
+			/y : if { /test : /lhs, /then : if { /test : /rhs, /then : true, /else : false }, /else : false },\
 			/return : /y\
 		}\
 	}";

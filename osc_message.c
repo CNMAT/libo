@@ -524,3 +524,22 @@ t_osc_msg *osc_msg_evalStrict(t_osc_msg *m, t_osc_bndl *context)
 	}
 	return nm;
 }
+
+t_osc_atom *osc_msg_eql(t_osc_msg *m1, t_osc_msg *m2)
+{
+	if(!m1 || !m2){
+		return osc_atom_false;
+	}
+	int len = osc_msg_length(m1);
+	if(len != osc_msg_length(m2)){
+		return osc_atom_false;
+	}
+	for(int i = 0; i < len + 1; i++){
+		t_osc_atom *a1 = osc_msg_nth(m1, i);
+		t_osc_atom *a2 = osc_msg_nth(m2, i);
+		if(osc_atom_eql(a1, a2) == osc_atom_false){
+			return osc_atom_false;
+		}
+	}
+	return osc_atom_true;
+}

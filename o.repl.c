@@ -18,13 +18,14 @@ t_osc_bndl *print(t_osc_bndl *b, t_osc_bndl *context)
 		return osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_emptystring));
 	}
 	t_osc_atom *a = osc_atom_format(osc_msg_nth(stm, 1), 0);
-	printf("%s\n", osc_atom_getPrettyPtr(a));
+	printf("%s: %s\n", __func__, osc_atom_getPrettyPtr(a));
 	return osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, a));
 }
 
 char *_mylib =
 	"{\
 		print : {\
+			/expr/type : 'f',\
 			/doc : \"prints to the console\", \
 			/func : _print, \
 			/out : /func {/__string : /string}, \
@@ -46,18 +47,31 @@ int main(int av, char **ac)
 	printf("EVALUATING\n");
 	t_osc_bndl *bb = osc_bndl_evalNonstrict(b, math);
 	
-	printf("EVAL'D:\n");
+	printf("EVALUATED:\n");
 	t_osc_atom *bbf = osc_bndl_format(bb, 0);
 	printf("%s\n", osc_atom_getPrettyPtr(bbf));
 
 	t_osc_bndl *mylib = osc_parse(_mylib);
 	t_osc_bndl *funcs = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("_print", 0), 1, osc_atom_allocNative(print, "_print")));
 	t_osc_bndl *uu = osc_bndl_union(mylib, funcs);
-	char *_prog = "{/a : \"some foo\", /b : print { /string : /a } }";
+	//char *_prog = "{/a : \"some foo\", /b : print { /string : /a } }";
+	char *_prog =
+		"{\
+			/a : 10,\n \
+			/e : /a,\n \
+			/b : print { /string : /f },\n \
+			/f : /e,\n \
+			/c : print { /string : /b },\n \
+			/h : \"foo\",\n \
+			/i : print { /string : /h }\n \
+		}";
 	t_osc_bndl *prog = osc_parse(_prog);
+	t_osc_atom *_p = osc_bndl_format(prog, 0);
+	printf("**************************************************\n");
+	printf("%s\n%s\n", _prog, osc_atom_getPrettyPtr(_p));
 	t_osc_bndl *eprog = osc_bndl_evalNonstrict(prog, uu);
-	//t_osc_bndl *_eprog = osc_bndl_format(eprog, 0);
-	//printf("%s\n", osc_bndl_getPrettyPtr(_eprog));
+	t_osc_atom *_eprog = osc_bndl_format(eprog, 0);
+	printf("%s\n", osc_atom_getPrettyPtr(_eprog));
 
 	return 0;
 }
