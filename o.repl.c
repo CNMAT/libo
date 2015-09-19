@@ -12,7 +12,7 @@
 
 t_osc_bndl *print(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *stm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__string", 0), osc_atom_match);
+	t_osc_msg *stm = osc_bndl_lookup(b, osc_atom_allocSymbol("/string", 0), osc_atom_match);
 	if(!stm || osc_msg_length(stm) == 0){
 		printf("\n");
 		return osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_emptystring));
@@ -27,9 +27,8 @@ char *_mylib =
 		print : {\
 			/expr/type : 'f',\
 			/doc : \"prints to the console\", \
-			/func : _print, \
-			/out : /func {/__string : /string}, \
-			/return : /out\
+			/params/strict : { /string },\
+			/body : { /value : _print { /string } }\
 		}\
 	}";
 
@@ -37,7 +36,7 @@ int main(int av, char **ac)
 {
 	char *st = ac[1];
 	t_osc_bndl *math = osc_parse(osc_builtin_math);
-	//t_osc_bndl *mathe = osc_bndl_evalStrict(math, NULL);
+	//osc_atom_print(osc_bndl_format(math, 0));
 	t_osc_bndl *b = osc_parse(st);
 
 	printf("PARSED:\n");
@@ -50,20 +49,30 @@ int main(int av, char **ac)
 	printf("EVALUATED:\n");
 	t_osc_atom *bbf = osc_bndl_format(bb, 0);
 	printf("%s\n", osc_atom_getPrettyPtr(bbf));
-
+	return 0;
 	t_osc_bndl *mylib = osc_parse(_mylib);
 	t_osc_bndl *funcs = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("_print", 0), 1, osc_atom_allocNative(print, "_print")));
 	t_osc_bndl *uu = osc_bndl_union(mylib, funcs);
+	osc_atom_print(osc_bndl_format(uu, 0));
+        uu = osc_bndl_union(uu, math);
+	osc_atom_print(osc_bndl_format(uu, 0));
 	//char *_prog = "{/a : \"some foo\", /b : print { /string : /a } }";
+	/* char *_prog = */
+	/* 	"{\ */
+	/* 		/a : 10,\n \ */
+	/* 		/e : /a,\n \ */
+	/* 		/b : print { /string : /f },\n \ */
+	/* 		/f : /e,\n \ */
+	/* 		/c : print { /string : /b },\n \ */
+	/* 		/h : \"foo\",\n \ */
+	/* 		/i : print { /string : /h }\n \ */
+	/* 	}"; */
 	char *_prog =
 		"{\
-			/a : 10,\n \
-			/e : /a,\n \
-			/b : print { /string : /f },\n \
-			/f : /e,\n \
-			/c : print { /string : /b },\n \
-			/h : \"foo\",\n \
-			/i : print { /string : /h }\n \
+			/a : \"yep\",\
+			/b : \"nope\",\
+			/c : 3,\
+			/d : /c ~ 3. ? print { /string : /a } : print { /string : /b }\
 		}";
 	t_osc_bndl *prog = osc_parse(_prog);
 	t_osc_atom *_p = osc_bndl_format(prog, 0);

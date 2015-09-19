@@ -367,7 +367,7 @@ funcall:
 		$$ = NULL;
 	}
 	| native bndl %prec OSC_PARSE_FUNCALL {
-		printf("hi there\n");
+		$$ = osc_parse_allocFuncall($1, osc_atom_allocBndl($2, 1));
 	}
 	| native OSC_PARSE_SYMBOL %prec OSC_PARSE_FUNCALL {
 

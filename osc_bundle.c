@@ -790,7 +790,7 @@ t_osc_bndl *osc_bndl_evalNonstrict(t_osc_bndl *b, t_osc_bndl *context)
 		osc_bndl_release(oldu);
 		osc_bndl_release(tmp);
 	}
-	osc_bndl_release(sorted);
+	//osc_bndl_release(sorted);
 	osc_bndl_release(u);
 	return out;
 }

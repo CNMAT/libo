@@ -3474,6 +3474,7 @@ t_osc_atom *osc_atom_evalStrictSymbol(t_osc_atom *a, t_osc_bndl *context)
 			/* } */
 			/* osc_bndl_append_m((t_osc_bndl_m *)completeb, nm); */
 			//osc_bndl_append_m((t_osc_bndl_m *)completeb, osc_msg_retain(m));
+			
 			t_osc_msg *nm = osc_msg_alloc(osc_atom_retain(osc_msg_nth(m, 0)), 0);
 			for(int j = 1; j < osc_msg_length(m) + 1; j++){
 				t_osc_atom *aa = osc_msg_nth(m, j);
@@ -3603,13 +3604,51 @@ t_osc_atom *osc_atom_evalSymNonstrict(t_osc_atom *a, t_osc_bndl *context)
 	return osc_atom_evalStrictSymbol(a, context);
 }
 
+t_osc_bndl *osc_atom_getFreeVars(t_osc_atom *_a)
+{
+	if(!_a || tt(_a) != OSC_TT_BNDL){
+		return osc_bndl_empty;
+	}
+	t_osc_bndl *lst = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+	t_osc_bndl *b = v(_a, OSC_TT_BNDL_ID);
+	for(int i = 0; i < osc_bndl_length(b); i++){
+		t_osc_msg *m = osc_bndl_nth(b, i);
+		for(int j = 1; j < osc_msg_length(m) + 1; j++){
+			t_osc_atom *a = osc_msg_nth(m, j);
+			if(tt(a) != OSC_TT_BNDL){
+				continue;
+			}
+			t_osc_bndl *bb = v(a, OSC_TT_BNDL_ID);
+			if(osc_atom_eql(osc_bndl_getType(bb), osc_atom_exprtype) == osc_atom_true){
+				t_osc_msg *argsm = osc_bndl_lookup(bb, osc_atom_argsaddress, osc_atom_match);
+				if(argsm){
+					t_osc_atom *argsa = osc_msg_nth(argsm, 1);
+					if(argsa){
+						if(tt(argsa) == OSC_TT_BNDL){
+							t_osc_bndl *args = v(argsa, OSC_TT_BNDL_ID);
+							for(int k = 0; k < osc_bndl_length(args); k++){
+								t_osc_msg *am = osc_bndl_nth(args, k);
+								for(int l = 1; l < osc_msg_length(am) + 1; l++){
+									t_osc_atom *aaa = osc_msg_nth(am, l);
+									if(aaa && tt(aaa) == OSC_TT_SYM){
+										osc_bndl_append_m((t_osc_bndl_m *)lst, osc_msg_alloc(osc_atom_retain(aaa), 0));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return lst;
+}
+
 t_osc_atom *osc_atom_apply(t_osc_atom *func, t_osc_bndl *args, t_osc_bndl *context)
 {
 	if(!func){
 		return osc_atom_undefined;
 	}
-	/* printf("%s: %c\n", __func__, tt(func)); */
-	/* osc_atom_print(func); */
 	if(tt(func) != OSC_TT_BNDL && tt(func) != OSC_TT_NATIVE && tt(func) != OSC_TT_SYM){
 		return osc_atom_allocBndl(osc_parse_allocFuncall(func, osc_atom_allocBndl(osc_bndl_retain(args), 1)), 1);
 	}
@@ -3619,54 +3658,85 @@ t_osc_atom *osc_atom_apply(t_osc_atom *func, t_osc_bndl *args, t_osc_bndl *conte
 			func = osc_msg_nth(m, 1);
 		}
 	}
-	if(tt(func) == OSC_TT_NATIVE){
-		//t_osc_bndl *a = osc_bndl_evalNonstrict(args, context);
-		t_osc_bndl *a = NULL;
-		while(1){
-			a = osc_bndl_evalNonstrict(args, context);
-			break;
-			if(osc_bndl_eql(a, args) == osc_atom_true){
-				break;
-			}
-			args = a;
-		}
-		t_osc_bndl *e = v(func, OSC_TT_NATIVE_ID)(a, context);
-		osc_bndl_release(a);
-		//return osc_atom_allocExpr(osc_parse_allocFuncall(func, osc_atom_allocBndl(r, 1)), 1);
-		if(!e || osc_bndl_length(e) == 0){
-			osc_bndl_release(e);
-			return osc_atom_allocExpr(osc_parse_allocFuncall(func, osc_atom_allocBndl(args, 1)), 1);
+	if(tt(func) == OSC_TT_BNDL){
+		t_osc_atom *strict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/params/strict", 0), osc_atom_match), 1);
+		t_osc_atom *nonstrict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/params/nonstrict", 0), osc_atom_match), 1);
+		t_osc_bndl *sb = NULL, *nsb = NULL;
+		if(strict){
+			sb = osc_bndl_retain(v(strict, OSC_TT_BNDL_ID));
 		}else{
-			return osc_atom_allocBndl(e, 1);
+			sb = osc_bndl_empty;
+		}
+		if(nonstrict){
+			nsb = osc_bndl_retain(v(nonstrict, OSC_TT_BNDL_ID));
+		}else{
+			nsb = osc_bndl_empty;
+		}
+		t_osc_bndl *sb_bound = osc_bndl_intersect(sb, args);
+		t_osc_bndl *nsb_bound = osc_bndl_intersect(nsb, args);
+		t_osc_bndl *sb_unbound = osc_bndl_rcomplement(sb, sb_bound);
+		t_osc_bndl *nsb_unbound = osc_bndl_rcomplement(nsb, nsb_bound);
+		t_osc_bndl *sb_bound_e = osc_bndl_evalNonstrict(sb_bound, context);
+		t_osc_msg *body = osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/body", 0), osc_atom_match);
+		if(!body || osc_msg_length(body) == 0){
+			// weird... return
+		}
+		t_osc_bndl *tmp = osc_bndl_union(sb_bound_e, context);
+		t_osc_bndl *new_context = osc_bndl_union(nsb_bound, tmp);
+		osc_bndl_release(tmp);
+		t_osc_atom *e = osc_atom_evalNonstrict(osc_msg_nth(body, 1), new_context);
+		t_osc_bndl *freevars = osc_atom_getFreeVars(e);
+		osc_atom_print(osc_bndl_format(freevars, 0));
+
+		if(osc_bndl_length(sb_unbound) > 0 || osc_bndl_length(nsb_unbound) > 0 || osc_bndl_length(freevars) > 0){
+			t_osc_bndl *_sb = osc_bndl_union(freevars, sb_unbound);
+			t_osc_bndl *nb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
+							osc_msg_alloc(osc_atom_allocSymbol("/params/strict", 0), 1, osc_atom_allocBndl(_sb, 1)),
+							osc_msg_alloc(osc_atom_allocSymbol("/params/nonstrict", 0), 1, osc_atom_allocBndl(nsb_unbound, 1)),
+							osc_msg_alloc(osc_atom_allocSymbol("/body", 0), 1, e));
+			t_osc_bndl *u = osc_bndl_union(nb, v(func, OSC_TT_BNDL_ID));
+			osc_bndl_release(nb);
+			return osc_atom_allocBndl(u, 1);
+		}else{
+			tmp = osc_bndl_union(v(e, OSC_TT_BNDL_ID), v(func, OSC_TT_BNDL_ID));
+			t_osc_bndl *emptyargs = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, osc_msg_alloc(osc_atom_allocSymbol("/params/strict", 0), 0), osc_msg_alloc(osc_atom_allocSymbol("/params/nonstrict", 0), 0));
+			t_osc_bndl *ret = osc_bndl_rcomplement(tmp, emptyargs);
+			osc_bndl_release(tmp);
+			osc_bndl_release(emptyargs);
+			if(osc_bndl_length(sb_unbound) > 0){
+				tmp = osc_bndl_union(sb_unbound, ret);
+				osc_bndl_release(ret);
+				ret = tmp;
+			}
+			if(osc_bndl_length(nsb_unbound) > 0){
+				tmp = osc_bndl_union(nsb_unbound, ret);
+				osc_bndl_release(ret);
+				ret = tmp;
+			}
+			return osc_atom_allocBndl(ret, 1);
+		}
+	}else if(tt(func) == OSC_TT_NATIVE){
+		t_osc_bndl *a = osc_bndl_intersect(args, context);
+		t_osc_bndl *aa = osc_bndl_union(a, args);
+		osc_bndl_release(a);
+		t_osc_bndl *ret = v(func, OSC_TT_NATIVE_ID)(aa, context);
+		if(ret){
+			t_osc_msg *vm = osc_bndl_lookup(ret, osc_atom_valueaddress, osc_atom_match);
+			if(vm){
+				return osc_atom_allocBndl(ret, 1);
+			}else{
+				printf("nope\n");
+				t_osc_bndl *u = osc_bndl_union(aa, args);
+				osc_bndl_release(aa);
+				osc_bndl_release(ret);
+				return osc_atom_allocBndl(osc_parse_allocFuncall(func, osc_atom_allocBndl(u, 1)), 1);
+			}
 		}
 	}else{
-		if(tt(func) == OSC_TT_BNDL){
-			t_osc_atom *nonstrict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/nonstrict", 0), osc_atom_match), 1);
-			if(nonstrict){
-				t_osc_bndl *comp = osc_bndl_rcomplement(args, v(nonstrict, OSC_TT_BNDL_ID));
-				t_osc_bndl *isect = osc_bndl_intersect(v(nonstrict, OSC_TT_BNDL_ID), args);
-				t_osc_bndl *u = osc_bndl_union(comp, v(func, OSC_TT_BNDL_ID));
-				t_osc_bndl *uu = osc_bndl_union(isect, context);
-				t_osc_bndl *e = osc_bndl_evalNonstrict(u, uu);
-				t_osc_bndl *uuu = osc_bndl_union(isect, e);
-				osc_bndl_release(comp);
-				osc_bndl_release(isect);
-				osc_bndl_release(u);
-				osc_bndl_release(uu);
-				osc_bndl_release(e);
-				return osc_atom_allocBndl(uuu, 1);
-			}else{
-				t_osc_bndl *u = osc_bndl_union(args, v(func, OSC_TT_BNDL_ID));
-				t_osc_atom *e = osc_atom_allocBndl(osc_bndl_evalNonstrict(u, context), 1);
-				osc_bndl_release(u);
-				return e;
-			}
-		}else{
-			t_osc_atom *f = osc_atom_evalNonstrict(func, context);
-			t_osc_atom *out = osc_atom_apply(f, args, context);
-			osc_atom_release(f);
-			return out;
-		}
+		t_osc_atom *f = osc_atom_evalNonstrict(func, context);
+		t_osc_atom *out = osc_atom_apply(f, args, context);
+		osc_atom_release(f);
+		return out;
 	}
 }
 
@@ -3691,28 +3761,6 @@ t_osc_atom *osc_atom_evalExprNonstrict(t_osc_atom *expr, t_osc_bndl *context)
 	t_osc_bndl *u = osc_bndl_union(b, context);
 	t_osc_atom *out = osc_atom_apply(func, a, u);
 	osc_bndl_release(u);
-
-	if(tt(out) == OSC_TT_BNDL || tt(out) == OSC_TT_EXPR){
-		t_osc_bndl *b = v(out, OSC_TT_BNDL_ID);
-		t_osc_msg *m = osc_bndl_lookup(b, osc_atom_allocSymbol("/return", 0), osc_atom_match);
-		if(m){
-			t_osc_msg *nm = osc_msg_alloc(osc_atom_valueaddress, 0);
-			for(int i = 1; i < osc_msg_length(m) + 1; i++){
-				t_osc_atom *a = osc_msg_nth(m, i);
-				if(a){
-					if(tt(a) == OSC_TT_BNDL && osc_atom_eql(osc_bndl_getType(v(a, OSC_TT_BNDL_ID)), osc_atom_exprtype) == osc_atom_true){
-						osc_msg_release(nm);
-						return out;
-					}else{
-						osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(a));
-					}
-				}
-			}
-			t_osc_bndl *nb = osc_bndl_append(b, nm);
-			osc_atom_release(out);
-			return osc_atom_allocBndl(nb, 1);
-		}
-	}
 	return out;
 }
 
@@ -3727,39 +3775,7 @@ t_osc_atom *osc_atom_evalNonstrict(t_osc_atom *a, t_osc_bndl *context)
 		//r = osc_atom_allocBndl(osc_bndl_evalNonstrict(v(a, OSC_TT_BNDL_ID), context), 1);
 		{
 			if(osc_atom_eql(osc_bndl_getType(v(a, OSC_TT_BNDL_ID)), osc_atom_functype) == osc_atom_true){
-				//return osc_atom_retain(a);
-				//r = osc_atom_retain(a);
-				//r = osc_atom_allocBndl(osc_bndl_evalNonstrict(v(a, OSC_TT_BNDL_ID), context), 1);
-				//return r;
-				//t_osc_atom *e = osc_atom_allocBndl(osc_parse_allocFuncall(osc_atom_retain(a), osc_atom_allocBndl(osc_bndl_empty, 1)), 1);
-				//r = osc_atom_evalNonstrict(e, context);
-				//osc_atom_release(e);
-				//abort();
-				t_osc_atom *out = osc_atom_allocBndl(osc_bndl_evalNonstrict(v(a, OSC_TT_BNDL_ID), context), 1);
-				{
-					if(tt(out) == OSC_TT_BNDL || tt(out) == OSC_TT_EXPR){
-						t_osc_bndl *b = v(out, OSC_TT_BNDL_ID);
-						t_osc_msg *m = osc_bndl_lookup(b, osc_atom_allocSymbol("/return", 0), osc_atom_match);
-						if(m){
-							t_osc_msg *nm = osc_msg_alloc(osc_atom_valueaddress, 0);
-							for(int i = 1; i < osc_msg_length(m) + 1; i++){
-								t_osc_atom *a = osc_msg_nth(m, i);
-								if(a){
-									if(tt(a) == OSC_TT_BNDL && osc_atom_eql(osc_bndl_getType(v(a, OSC_TT_BNDL_ID)), osc_atom_exprtype) == osc_atom_true){
-										osc_msg_release(nm);
-										return out;
-									}else{
-										osc_msg_append_m((t_osc_msg_m *)nm, osc_atom_retain(a));
-									}
-								}
-							}
-							t_osc_bndl *nb = osc_bndl_append(b, nm);
-							osc_atom_release(out);
-							return osc_atom_allocBndl(nb, 1);
-						}
-					}
-				}
-				//r = out;
+				return osc_atom_retain(a);
 			}else if(osc_atom_eql(osc_bndl_getType(v(a, OSC_TT_BNDL_ID)), osc_atom_exprtype) == osc_atom_true){
 				r = osc_atom_evalExprNonstrict(a, context);
 			}else{
@@ -3770,21 +3786,12 @@ t_osc_atom *osc_atom_evalNonstrict(t_osc_atom *a, t_osc_bndl *context)
 	case OSC_TT_SYM:
 			r = osc_atom_evalSymNonstrict(a, context);
 		break;
-	case OSC_TT_EXPR:
-		printf("**************************************************\nBAD %s:%d\n**************************************************\n", __func__, __LINE__);
-		r = osc_atom_evalExprNonstrict(a, context);
-		break;
 	case OSC_TT_NATIVE:
 		// intentional fallthrough
 	default:
 		r = osc_atom_retain(a);
 		break;
 	}
-	/* if(tt(r) == OSC_TT_SYM && osc_atom_eql(a, r) == osc_atom_false){ */
-	/* 	t_osc_atom *aa = osc_atom_evalNonstrict(r, context); */
-	/* 	osc_atom_release(r); */
-	/* 	r = aa; */
-	/* } */
 	return r;
 }
 

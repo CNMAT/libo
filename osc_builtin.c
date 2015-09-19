@@ -15,69 +15,59 @@ char *osc_builtin_math =
 		add : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/y : /func {/__lhs : /lhs, /__rhs : /rhs},\
-			/func : __native add,\
-			/return : /y\
+			/params/strict : {/lhs, /rhs},\
+			/body : { /value : __native add {/lhs, /rhs} }\
 		},\
 		eql : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/y : /func {/__lhs : /lhs, /__rhs : /rhs},\
-			/func : __native eql,\
-			/return : /y\
+			/params/strict : {/lhs, /rhs},\
+			/body : { /value : __native eql {/lhs, /rhs} }\
 		},\
 		eqv : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/y : /func {/__lhs : /lhs, /__rhs : /rhs},\
-			/func : __native eqv,\
-			/return : /y\
+			/params/strict : {/lhs, /rhs},\
+			/body : { /value : __native eqv {/lhs, /rhs} }\
 		},\
 		nth : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/func : __native nth,\
-			/nth : /func {/__n : /n, /__list : /list},\
-			/return : /nth\
+			/params/strict : {/n, /list},\
+			/body : { /value : __native nth {/n, /list} }\
 		},\
 		lookup : {\
 			/expr/type : 'f',\
 			/doc : \"some bar\",\
-			/nonstrict : {/rhs},\
-			/func : __native lookup,\
-			/y : /func {/__lhs : /lhs, /__rhs : /rhs},\
-			/return : /y\
+			/params/strict : {/lhs},\
+			/params/nonstrict : {/rhs},\
+			/body : { /value : __native lookup {/lhs, /rhs} }\
 		},\
 		address : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/func : __native address,\
-			/a : /func {/__string : /string},\
-			/return : /a\
+			/params/strict : {/string},\
+			/body : { /value : __native address {/string} }\
 		},\
 		function : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/nonstrict : {/bndl},\
-			/func : __native function,\
-			/function : /func { /__bndl : /bndl },\
-			/return : /function\
+			/params/nonstrict : {/bndl},\
+			/body : { /value : __native function {/bndl} }\
 		},\
 		map : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/nonstrict : {/fn},\
-			/func : __native map,\
-			/y : /func { /__fn : /fn, /__args : /args },\
-			/return : /y\
+			/params/strict : {/args},\
+			/params/nonstrict : {/fn},\
+			/body : { /value : __native map { /fn, /args } }\
 		},\
 		if : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
-			/nonstrict : {/then, /else},\
-			/func : __native if,\
-			/y : /func { /__test : /test, /__then : /then, /__else : /else },\
-			/return : /y\
+			/params/strict : {/test},\
+			/params/nonstrict : {/then, /else},\
+			/body : { /value : __native if { /test, /then, /else } }\
 		},\
 		and : {\
 			/expr/type : 'f',\
@@ -90,12 +80,12 @@ char *osc_builtin_math =
 #define OSC_BUILTIN_DEF_MATH_OP(op)\
 t_osc_bndl *osc_builtin_math_##op(t_osc_bndl *b, t_osc_bndl *context)\
 {\
-	t_osc_atom *lhsa = osc_atom_allocSymbol("/__lhs", 0);\
+	t_osc_atom *lhsa = osc_atom_allocSymbol("/lhs", 0);\
 	t_osc_msg *lm = osc_bndl_lookup(b, lhsa, osc_atom_match);\
 	if(!lm){\
 		return osc_bndl_empty;\
 	}\
-	t_osc_atom *rhsa = osc_atom_allocSymbol("/__rhs", 0);\
+	t_osc_atom *rhsa = osc_atom_allocSymbol("/rhs", 0);\
 	t_osc_msg *rm = osc_bndl_lookup(b, rhsa, osc_atom_match);\
 	if(!rm){\
 		return osc_bndl_empty;\
@@ -130,8 +120,8 @@ t_osc_bndl *osc_builtin_math_thing(t_osc_bndl *b, t_osc_bndl *context)
 
 t_osc_bndl *osc_builtin_math_nth(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *nthm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__n", 0), osc_atom_match);
-	t_osc_msg *listm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__list", 0), osc_atom_match);
+	t_osc_msg *nthm = osc_bndl_lookup(b, osc_atom_allocSymbol("/n", 0), osc_atom_match);
+	t_osc_msg *listm = osc_bndl_lookup(b, osc_atom_allocSymbol("/list", 0), osc_atom_match);
 	if(!nthm || !listm || osc_msg_length(listm) == 0){
 		return osc_bndl_empty;
 	}
@@ -168,8 +158,8 @@ t_osc_bndl *osc_builtin_math_nth(t_osc_bndl *b, t_osc_bndl *context)
 
 t_osc_bndl *osc_builtin_math_lookup(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *lhs = osc_bndl_lookup(b, osc_atom_allocSymbol("/__lhs", 0), osc_atom_match);
-	t_osc_msg *rhs = osc_bndl_lookup(b, osc_atom_allocSymbol("/__rhs", 0), osc_atom_match);
+	t_osc_msg *lhs = osc_bndl_lookup(b, osc_atom_allocSymbol("/lhs", 0), osc_atom_match);
+	t_osc_msg *rhs = osc_bndl_lookup(b, osc_atom_allocSymbol("/rhs", 0), osc_atom_match);
 	if(!lhs || !rhs || osc_msg_length(lhs) == 0 || osc_msg_length(rhs) == 0){
 		return osc_bndl_empty;
 	}
@@ -194,7 +184,7 @@ t_osc_bndl *osc_builtin_math_lookup(t_osc_bndl *b, t_osc_bndl *context)
 
 t_osc_bndl *osc_builtin_math_address(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *m = osc_bndl_lookup(b, osc_atom_allocSymbol("/__string", 0), osc_atom_match);
+	t_osc_msg *m = osc_bndl_lookup(b, osc_atom_allocSymbol("/string", 0), osc_atom_match);
 	if(!m || osc_msg_length(m) == 0){
 		return osc_bndl_empty;
 	}
@@ -218,8 +208,8 @@ t_osc_bndl *osc_builtin_math_function(t_osc_bndl *b, t_osc_bndl *context)
 
 t_osc_bndl *osc_builtin_math_map(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *fnm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__fn", 0), osc_atom_match);
-	t_osc_msg *argsm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__args", 0), osc_atom_match);
+	t_osc_msg *fnm = osc_bndl_lookup(b, osc_atom_allocSymbol("/fn", 0), osc_atom_match);
+	t_osc_msg *argsm = osc_bndl_lookup(b, osc_atom_allocSymbol("/args", 0), osc_atom_match);
 	if(!fnm || osc_msg_length(fnm) == 0 || !argsm || osc_msg_length(argsm) == 0){
 		return osc_bndl_empty;
 	}
@@ -255,7 +245,7 @@ t_osc_bndl *osc_builtin_math_map(t_osc_bndl *b, t_osc_bndl *context)
 
 t_osc_bndl *osc_builtin_math_if(t_osc_bndl *b, t_osc_bndl *context)
 {
-	t_osc_msg *testm = osc_bndl_lookup(b, osc_atom_allocSymbol("/__test", 0), osc_atom_match);
+	t_osc_msg *testm = osc_bndl_lookup(b, osc_atom_allocSymbol("/test", 0), osc_atom_match);
 	if(!testm || osc_msg_length(testm) == 0){
 		return osc_bndl_empty;
 	}
@@ -265,9 +255,9 @@ t_osc_bndl *osc_builtin_math_if(t_osc_bndl *b, t_osc_bndl *context)
 	}
 	t_osc_msg *m = NULL;
 	if(osc_atom_true == testa){
-		m = osc_bndl_lookup(b, osc_atom_allocSymbol("/__then", 0), osc_atom_match);
+		m = osc_bndl_lookup(b, osc_atom_allocSymbol("/then", 0), osc_atom_match);
 	}else{
-		m = osc_bndl_lookup(b, osc_atom_allocSymbol("/__else", 0), osc_atom_match);
+		m = osc_bndl_lookup(b, osc_atom_allocSymbol("/else", 0), osc_atom_match);
 	}
 	if(!m){
 		return osc_bndl_empty;
