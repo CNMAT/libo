@@ -126,16 +126,18 @@ OSC_ATOM_DEF_ADDRESS("", message)
 OSC_ATOM_DEF_ADDRESS("/expr", type)
 OSC_ATOM_DEF_ADDRESS("/expr", func)
 OSC_ATOM_DEF_ADDRESS("/expr", args)
-OSC_ATOM_DEF_ADDRESS("", partial)
 OSC_ATOM_DEF_ADDRESS("", complete)
 OSC_ATOM_DEF_ADDRESS("", unmatched)
+OSC_ATOM_DEF_ADDRESS("/params", strict)
+OSC_ATOM_DEF_ADDRESS("/params", nonstrict)
+OSC_ATOM_DEF_ADDRESS("", body)
+OSC_ATOM_DEF_ADDRESS("", partial)
 OSC_ATOM_DEF_ADDRESS("", y)
 OSC_ATOM_DEF_ADDRESS("", lhs)
 OSC_ATOM_DEF_ADDRESS("", rhs)
 OSC_ATOM_DEF_ADDRESS("", n)
 OSC_ATOM_DEF_ADDRESS("", list)
 OSC_ATOM_DEF_ADDRESS("", string)
-OSC_ATOM_DEF_ADDRESS("", strict)
 OSC_ATOM_DEF_ADDRESS("", test)
 OSC_ATOM_DEF_ADDRESS("", then)
 OSC_ATOM_DEF_ADDRESS("", else)
@@ -3659,8 +3661,8 @@ t_osc_atom *osc_atom_apply(t_osc_atom *func, t_osc_bndl *args, t_osc_bndl *conte
 		}
 	}
 	if(tt(func) == OSC_TT_BNDL){
-		t_osc_atom *strict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/params/strict", 0), osc_atom_match), 1);
-		t_osc_atom *nonstrict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/params/nonstrict", 0), osc_atom_match), 1);
+		t_osc_atom *strict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_strictaddress, osc_atom_match), 1);
+		t_osc_atom *nonstrict = osc_msg_nth(osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_nonstrictaddress, osc_atom_match), 1);
 		t_osc_bndl *sb = NULL, *nsb = NULL;
 		if(strict){
 			sb = osc_bndl_retain(v(strict, OSC_TT_BNDL_ID));
@@ -3677,7 +3679,7 @@ t_osc_atom *osc_atom_apply(t_osc_atom *func, t_osc_bndl *args, t_osc_bndl *conte
 		t_osc_bndl *sb_unbound = osc_bndl_rcomplement(sb, sb_bound);
 		t_osc_bndl *nsb_unbound = osc_bndl_rcomplement(nsb, nsb_bound);
 		t_osc_bndl *sb_bound_e = osc_bndl_evalNonstrict(sb_bound, context);
-		t_osc_msg *body = osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_allocSymbol("/body", 0), osc_atom_match);
+		t_osc_msg *body = osc_bndl_lookup(v(func, OSC_TT_BNDL_ID), osc_atom_bodyaddress, osc_atom_match);
 		if(!body || osc_msg_length(body) == 0){
 			// weird... return
 		}
@@ -3691,15 +3693,15 @@ t_osc_atom *osc_atom_apply(t_osc_atom *func, t_osc_bndl *args, t_osc_bndl *conte
 		if(osc_bndl_length(sb_unbound) > 0 || osc_bndl_length(nsb_unbound) > 0 || osc_bndl_length(freevars) > 0){
 			t_osc_bndl *_sb = osc_bndl_union(freevars, sb_unbound);
 			t_osc_bndl *nb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
-							osc_msg_alloc(osc_atom_allocSymbol("/params/strict", 0), 1, osc_atom_allocBndl(_sb, 1)),
-							osc_msg_alloc(osc_atom_allocSymbol("/params/nonstrict", 0), 1, osc_atom_allocBndl(nsb_unbound, 1)),
-							osc_msg_alloc(osc_atom_allocSymbol("/body", 0), 1, e));
+							osc_msg_alloc(osc_atom_strictaddress, 1, osc_atom_allocBndl(_sb, 1)),
+							osc_msg_alloc(osc_atom_nonstrictaddress, 1, osc_atom_allocBndl(nsb_unbound, 1)),
+							osc_msg_alloc(osc_atom_bodyaddress, 1, e));
 			t_osc_bndl *u = osc_bndl_union(nb, v(func, OSC_TT_BNDL_ID));
 			osc_bndl_release(nb);
 			return osc_atom_allocBndl(u, 1);
 		}else{
 			tmp = osc_bndl_union(v(e, OSC_TT_BNDL_ID), v(func, OSC_TT_BNDL_ID));
-			t_osc_bndl *emptyargs = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, osc_msg_alloc(osc_atom_allocSymbol("/params/strict", 0), 0), osc_msg_alloc(osc_atom_allocSymbol("/params/nonstrict", 0), 0));
+			t_osc_bndl *emptyargs = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, osc_msg_alloc(osc_atom_strictaddress, 0), osc_msg_alloc(osc_atom_nonstrictaddress, 0));
 			t_osc_bndl *ret = osc_bndl_rcomplement(tmp, emptyargs);
 			osc_bndl_release(tmp);
 			osc_bndl_release(emptyargs);
