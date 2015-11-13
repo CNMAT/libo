@@ -18,6 +18,12 @@ char *osc_builtin_math =
 			/params/strict : {/lhs, /rhs},\
 			/body : { /value : __native add {/lhs, /rhs} }\
 		},\
+		mul : {\
+			/expr/type : 'f',\
+			/doc : \"some foo\",\
+			/params/strict : {/lhs, /rhs},\
+			/body : { /value : __native mul {/lhs, /rhs} }\
+		},\
 		eql : {\
 			/expr/type : 'f',\
 			/doc : \"some foo\",\
@@ -102,6 +108,7 @@ t_osc_bndl *osc_builtin_math_##op(t_osc_bndl *b, t_osc_bndl *context)\
 }
 
 OSC_BUILTIN_DEF_MATH_OP(add)
+OSC_BUILTIN_DEF_MATH_OP(mul)
 OSC_BUILTIN_DEF_MATH_OP(eql)
 OSC_BUILTIN_DEF_MATH_OP(eqv)
 
@@ -275,6 +282,7 @@ struct osc_builtin_funcrec
 	t_osc_builtin func;
 } osc_builtin_funcrec [] = {
 	{"add", osc_builtin_math_add},
+	{"mul", osc_builtin_math_mul},
 	{"eql", osc_builtin_math_eql},
 	{"eqv", osc_builtin_math_eqv},
 	{"nth", osc_builtin_math_nth},

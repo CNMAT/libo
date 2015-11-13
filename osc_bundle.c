@@ -1003,3 +1003,15 @@ t_osc_atom *osc_bndl_eql(t_osc_bndl *b1, t_osc_bndl *b2)
 	}
 	return osc_atom_true;
 }
+
+t_osc_bndl *osc_bndl_allocFunction(t_osc_timetag tt, t_osc_atom *doc, t_osc_bndl *strict, t_osc_bndl *nonstrict, t_osc_atom *body, t_osc_atom *peval)
+{
+	return osc_bndl_alloc(tt, 6,
+			      osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_functype),
+			      osc_msg_alloc(osc_atom_docaddress, 1, doc),
+			      osc_msg_alloc(osc_atom_strictaddress, 1, osc_atom_allocBndl(strict, 1)),
+			      osc_msg_alloc(osc_atom_nonstrictaddress, 1, osc_atom_allocBndl(nonstrict, 1)),
+			      //osc_msg_alloc(osc_atom_bodyaddress, 1, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_allocBndl(body, 1))), 1)),
+			      osc_msg_alloc(osc_atom_bodyaddress, 1, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, body)), 1)),
+			      osc_msg_alloc(osc_atom_partialaddress, 1, peval));
+}

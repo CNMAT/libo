@@ -50,12 +50,17 @@ int main(int av, char **ac)
 	t_osc_atom *bbf = osc_bndl_format(bb, 0);
 	printf("%s\n", osc_atom_getPrettyPtr(bbf));
 	return 0;
+	t_osc_bndl *u = osc_bndl_union(bb, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("/a", 0), 1, osc_atom_allocFloat(3.2))));
+	t_osc_bndl *ue = osc_bndl_evalNonstrict(u, math);
+	printf("AGAIN\n");
+	osc_atom_print(osc_bndl_format(ue, 0));
+
 	t_osc_bndl *mylib = osc_parse(_mylib);
 	t_osc_bndl *funcs = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("_print", 0), 1, osc_atom_allocNative(print, "_print")));
 	t_osc_bndl *uu = osc_bndl_union(mylib, funcs);
-	osc_atom_print(osc_bndl_format(uu, 0));
+	//osc_atom_print(osc_bndl_format(uu, 0));
         uu = osc_bndl_union(uu, math);
-	osc_atom_print(osc_bndl_format(uu, 0));
+	//osc_atom_print(osc_bndl_format(uu, 0));
 	//char *_prog = "{/a : \"some foo\", /b : print { /string : /a } }";
 	/* char *_prog = */
 	/* 	"{\ */

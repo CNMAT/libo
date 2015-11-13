@@ -68,6 +68,8 @@ t_osc_bndl *osc_bndl_clearAllStatus(t_osc_bndl *b);
 t_osc_atom *osc_bndl_getType(t_osc_bndl *b);
 t_osc_atom *osc_bndl_eql(t_osc_bndl *b1, t_osc_bndl *b2);
 
+t_osc_bndl *osc_bndl_allocFunction(t_osc_timetag tt, t_osc_atom *doc, t_osc_bndl *strict, t_osc_bndl *nonstrict, t_osc_atom *body, t_osc_atom *peval);
+
 #ifdef __cplusplus
 }
 #endif

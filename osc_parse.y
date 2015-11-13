@@ -59,7 +59,7 @@
 #include "osc_util.h"
 
 
-	//#define OSC_EXPR_PARSER_DEBUG
+#define OSC_EXPR_PARSER_DEBUG
 #ifdef OSC_EXPR_PARSER_DEBUG
 #define PP(fmt, ...)printf(fmt, ##__VA_ARGS__)
 #else
@@ -67,9 +67,9 @@
 #endif
 
 #ifdef __cplusplus
-	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht);
+	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level);
 #else
-	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht);
+	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level);
 #endif
 
 }
@@ -88,9 +88,9 @@
 #endif
 
 #ifdef __cplusplus
-	#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht)
+#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
 #else
-	#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht)
+#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
 #endif
 #ifdef __cplusplus
 extern "C"{
@@ -104,9 +104,9 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args);
 
 %{
 
-int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, t_osc_hashtab *ht)
+	int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
 {
-	return osc_lex_lex(yylval_param, llocp, yyscanner, ht);
+	return osc_lex_lex(yylval_param, llocp, yyscanner, ht, strict, nonstrict, level);
 }
 
 t_osc_bndl *osc_parse(char *ptr)
@@ -117,10 +117,16 @@ t_osc_bndl *osc_parse(char *ptr)
 	osc_lex_set_out(NULL, scanner);
 	t_osc_bndl *b = NULL;
 	t_osc_hashtab *ht = osc_hashtab_new(-1, NULL);
-	osc_parse_parse(scanner, &b, ptr, NULL, ht);
+	t_osc_bndl *strict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+	t_osc_bndl *nonstrict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+	int level = 0;
+	//printf("parsing %s\n", ptr);
+	osc_parse_parse(scanner, &b, ptr, NULL, ht, &strict, &nonstrict, &level);
 	osc_lex__delete_buffer(buf_state, scanner);
 	osc_lex_lex_destroy(scanner);
 	osc_hashtab_destroy(ht);
+	osc_bndl_release(strict);
+	osc_bndl_release(nonstrict);
 	return b;
 }
 /*
@@ -153,7 +159,7 @@ void osc_parse_error(YYLTYPE *llocp,
 {
 }
 */
-void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, t_osc_hashtab *ht, char const *e)
+ void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level, char const *e)
 {
 }
 
@@ -175,6 +181,20 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 	return bb;
 }
 
+t_osc_atom *osc_parse_abstract(t_osc_atom *expr, t_osc_bndl **bndl, t_osc_bndl **strict, t_osc_bndl **nonstrict, int level)
+{
+	if((osc_bndl_length(*strict) > 0 || osc_bndl_length(*nonstrict) > 0) && (level == 0 || level == 1)){
+		t_osc_bndl *b = osc_bndl_allocFunction(OSC_TIMETAG_NULL, osc_atom_allocString(" ", 0), *strict, *nonstrict, expr, osc_atom_false);
+		*strict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+		*nonstrict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+		//*bndl = b;
+		return osc_atom_allocBndl(b, 1);
+	}else{
+		//return osc_atom_allocBndl(expr, 1);
+		return expr;
+	}
+}
+
 %}
 
 %define "api.pure"
@@ -186,9 +206,15 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 %parse-param{const char *input_string}
 %parse-param{t_osc_bndl *context}
 %parse-param{t_osc_hashtab *ht}
+%parse-param{t_osc_bndl **strict}
+%parse-param{t_osc_bndl **nonstrict}
+%parse-param{int *level}
 
 %lex-param{void *scanner}
 %lex-param{t_osc_hashtab *ht}
+%lex-param{t_osc_bndl **strict}
+%lex-param{t_osc_bndl **nonstrict}
+%lex-param{int *level}
 
 %union {
 	t_osc_bndl *bndl;
@@ -239,7 +265,7 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
 
 // level 2
  //%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
-%left '[' ']' '.' '\'' '@' OSC_PARSE_FUNCALL
+%left '[' ']' '.' '\'' '@' OSC_PARSE_FUNCALL '$'
 
  //%token START_EXPNS START_FUNCTION
  //%start start
@@ -253,9 +279,6 @@ bndl: '{' '}' {
 	| '{' msgs '}' {
 		$$ = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
 		*bndl = $$;
-		//t_osc_bndl *bx = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
-		//$$ = osc_parse_allocBindingExpr(osc_atom_allocBndl(bx, 1));
-		//*bndl = bx;
   	}
 ;
 
@@ -266,10 +289,12 @@ msg: OSC_PARSE_SYMBOL {
 		$$ = osc_msg_alloc($1, 0);
  	}
 	| OSC_PARSE_SYMBOL ':' expr {
-		$$ = osc_msg_alloc($1, 1, $3);
+		//$$ = osc_msg_alloc($1, 1, $3);
+		$$ = osc_msg_alloc($1, 1, osc_parse_abstract($3, bndl, strict, nonstrict, *level));
 	}
 	| OSC_PARSE_PATTERN ':' expr {
-		$$ = osc_msg_alloc($1, 1, $3);
+		//$$ = osc_msg_alloc($1, 1, $3);
+		$$ = osc_msg_alloc($1, 1, osc_parse_abstract($3, bndl, strict, nonstrict, *level));
 	}
 	| OSC_PARSE_SYMBOL ':' list{
 		osc_pvec2_assocN_m($3, 0, (void *)$1);
@@ -333,6 +358,11 @@ binop:
 											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
 											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
 	}
+	| expr '*' expr {
+		$$ = osc_parse_allocFuncall(osc_atom_ps_mul, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
+	}
 	| expr '=' expr {
 		$$ = osc_parse_allocFuncall(osc_atom_ps_eql, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
 											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
@@ -347,6 +377,18 @@ binop:
 		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
 										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
 										       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
+	}
+	| expr '.' '$' OSC_PARSE_SYMBOL {
+		osc_bndl_append_m((t_osc_bndl_m *)*strict, osc_msg_alloc(osc_atom_retain($4), 0));
+		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+										       osc_msg_alloc(osc_atom_rhsaddress, 1, $4)), 1));
+	}
+	| expr '.' '$' '$' OSC_PARSE_SYMBOL {
+		osc_bndl_append_m((t_osc_bndl_m *)*nonstrict, osc_msg_alloc(osc_atom_retain($5), 0));
+		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
+										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
+										       osc_msg_alloc(osc_atom_rhsaddress, 1, $5)), 1));
 	}
 ;
 
@@ -386,25 +428,39 @@ nth:
 
 expr:
 	OSC_PARSE_NUMBER | OSC_PARSE_SYMBOL | OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native
+	| '$' OSC_PARSE_SYMBOL {
+		osc_bndl_append_m((t_osc_bndl_m *)*strict, osc_msg_alloc(osc_atom_retain($2), 0));
+		$$ = $2;
+	}
+	| '$' '$' OSC_PARSE_SYMBOL {
+		osc_bndl_append_m((t_osc_bndl_m *)*nonstrict, osc_msg_alloc(osc_atom_retain($3), 0));
+		$$ = $3;
+	}
 	| '(' expr ')' {
 		$$ = $2;
 	}
 	| bndl {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocBndl($1, 1);
 	}
 	| unaryop {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| binop {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| ternaryop {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| funcall {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 	| nth {
+		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
 		$$ = osc_atom_allocExpr($1, 1);
 	}
 ;
