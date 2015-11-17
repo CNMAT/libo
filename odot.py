@@ -225,7 +225,7 @@ class message(object):
         elif t is timetag:
             atom = odot.osc_message_u_appendTimetag(message, value._timetag__tt)
         elif t is bundle:
-            atom = odot.osc_message_u_appendBndl_s(message, len(value._bundle__bundle), value._bundle__bundle)
+            atom = odot.osc_message_u_appendBndl_s(message, len(value.getBytes()), value.getBytes())
         elif t is list:
             for v in value:
                 self.__append__(message, v)
