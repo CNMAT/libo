@@ -605,9 +605,9 @@ t_osc_timetag osc_timetag_now(void)
 	gettimeofday(&tv, &tz);
     
 	n.sec = (uint32_t)2208988800UL + 
-		(uint32_t) tv.tv_sec - 
-		0 + //(uint32_t)(60 * tz.tz_minuteswest) +
-		(uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
+		(uint32_t) tv.tv_sec;// - 
+		//0 + //(uint32_t)(60 * tz.tz_minuteswest) +
+		//(uint32_t)(tz.tz_dsttime == 1 ? 3600 : 0);
     
 	n.frac_sec = (uint32_t)(tv.tv_usec * 4295); // 2^32-1 / 1.0e6
 
