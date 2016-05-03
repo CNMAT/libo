@@ -28,9 +28,10 @@
 #include <inttypes.h>
 #include "osc.h"
 #include "osc_serial.h"
+#include "osc_typetag.h"
 #include "osc_byteorder.h"
-#include "osc_bundle_u.h"
-#include "osc_message_u.h"
+//#include "osc_bundle_u.h"
+//#include "osc_message_u.h"
 
 //#define OSC_SERIAL_DEBUG
 #ifdef OSC_SERIAL_DEBUG

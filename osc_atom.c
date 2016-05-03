@@ -17,163 +17,27 @@
 #include <time.h>
 #include <stdio.h>
 
-void osc_atom_print(t_osc_atom *a);
-
-#pragma pack(push)
-#pragma pack(4)
-typedef struct _osc_value{
-	union _value {
-		int8_t c;
-		uint8_t C;
-		int16_t u;
-		uint16_t U;
-		int32_t i;
-		uint32_t I;
-		int64_t h;
-		uint64_t H;
-		float f;
-		double d;
-		//float q[4];
-		//double Q[4];
-		char *s;
-		char *S;
-		t_osc_bndl *OSC_TT_BNDL_ID;
-		t_osc_timetag t;
-		char *b;
-		//t_osc_bndl *(*OSC_TT_NATIVE_ID)(t_osc_bndl *);
-		t_osc_builtin OSC_TT_NATIVE_ID;
-		t_osc_bndl *OSC_TT_EXPR_ID;
-	} value;
-	char typetag;
-} t_osc_value;
-#pragma pack(pop)
-
-#pragma pack(push)
-#pragma pack(4)
-struct _osc_atom
+t_osc_atom *osc_atom_alloc(t_osc_value time, char type, t_osc_value value)
 {
-	t_osc_obj obj;
-	t_osc_value value;
-	int serialized_len;
-	char *serialized_ptr;
-	int pretty_len;
-	char *pretty_ptr;
-	int should_free;
-	int static_atom;
-};
-#pragma pack(pop)
+	char *a = OSC_PFX + "/value\0\0\0\0";
+	size_t al = osc_util_getPaddedStringLen(a);
+	size_t vl = osc_sizeof(type, value);
+	size_t l = OSC_HEADER_SIZE + 4 + vl;
+	char *b = osc_mem_alloc(l);
+	char *ptr = b;
+	memcpy(ptr, OSC_IDENTIFIER, OSC_IDENTIFIER_SIZE);
+	ptr += OSC_IDENTIFIER_SIZE;
+	memcpy(ptr, time, OSC_TIMETAG_SIZEOF);
+	ptr += OSC_TIMETAG_SIZEOF;
+	strncpy(ptr, a, al);
+	ptr += al;
+	*ptr++ = ',';
+	*ptr++ = type;
+	*ptr++ = 0;
+	*ptr++ = 0;
+	memcpy(ptr, (char *)value, vl);
 
-#define v(a, f) ((a)->value.value.f)
-#define vv(a) ((a)->value)
-#define tt(a) ((a)->value.typetag)
-#define sl(a) ((a)->serialized_len)
-#define sp(a) ((a)->serialized_ptr)
-#define pl(a) ((a)->pretty_len)
-#define pp(a) ((a)->pretty_ptr)
-#define rc(a) ((a)->obj.refcount)
-#define sf(a) ((a)->should_free)
-#define st(a) ((a)->static_atom)
-
-#define OSC_ATOM_STRLEN(s) ((sizeof(s)/sizeof(s[0])) - 1)
-
-#define OSC_ATOM_DEF_ADDRESS(pfx, s)					\
-	static const char __osc_atom_##s##address[] = pfx"/"#s;\
-	static t_osc_atom _osc_atom_##s##address = {{-1, NULL}, {{.S = (char *)__osc_atom_##s##address}, OSC_TT_SYM}, (OSC_ATOM_STRLEN(__osc_atom_##s##address) + 4) & 0xfffffffc, pfx"/"#s"\0\0\0\0", OSC_ATOM_STRLEN(__osc_atom_##s##address), (char *)__osc_atom_##s##address, 0, 1}; \
-	t_osc_atom *osc_atom_##s##address = &_osc_atom_##s##address;
-
-#define OSC_ATOM_DEF_SYM(s)					\
-	static const char __osc_atom_ps_##s[] = #s;\
-	static t_osc_atom _osc_atom_ps_##s = {{-1, NULL}, {{.S = (char *)__osc_atom_ps_##s}, OSC_TT_SYM}, (OSC_ATOM_STRLEN(__osc_atom_ps_##s) + 4) & 0xfffffffc, #s"\0\0\0\0", OSC_ATOM_STRLEN(__osc_atom_ps_##s), (char *)__osc_atom_ps_##s, 0, 1}; \
-	t_osc_atom *osc_atom_ps_##s = &_osc_atom_ps_##s;
-
-
-
-static t_osc_atom _osc_atom_true = { {-1, NULL}, {{0}, 'T'}, 0, NULL, 4, "true", 0, 1 };
-t_osc_atom *osc_atom_true = &_osc_atom_true;
-static t_osc_atom _osc_atom_false = { {-1, NULL}, {{0}, 'F'}, 0, NULL, 5, "false", 0, 1 };
-t_osc_atom *osc_atom_false = &_osc_atom_false;
-static t_osc_atom _osc_atom_nil = { {-1, NULL}, {{0}, 'N'}, 0, NULL, 3, "nil", 0, 1 };
-t_osc_atom *osc_atom_nil = &_osc_atom_nil;
-static t_osc_atom _osc_atom_undefined = { {-1, NULL}, {{0}, OSC_TT_UNDEF}, 0, NULL, 9, "undefined", 0, 1 };
-t_osc_atom *osc_atom_undefined = &_osc_atom_undefined;
-
-static t_osc_atom _osc_atom_emptystring = { {-1, NULL}, {{ .S = "\0" }, OSC_TT_SYM}, 4, "\0\0\0\0", 4, "\0\0\0\0", 0, 1};
-t_osc_atom *osc_atom_emptystring = &_osc_atom_emptystring;
-
-static t_osc_atom _osc_atom_B = { {-1, NULL}, {{ .c = 'B' }, 'c'}, 4, "\0\0\0B", 3, "'B'", 0, 1};
-t_osc_atom *osc_atom_B = &_osc_atom_B;
-t_osc_atom *osc_atom_bndltype = &_osc_atom_B;
-
-static t_osc_atom _osc_atom_e = { {-1, NULL}, {{ .c = 'e' }, 'c'}, 4, "\0\0\0e", 3, "'e'", 0, 1};
-t_osc_atom *osc_atom_e = &_osc_atom_e;
-t_osc_atom *osc_atom_exprtype = &_osc_atom_e;
-
-static t_osc_atom _osc_atom_f = { {-1, NULL}, {{ .c = 'f' }, 'c'}, 4, "\0\0\0f", 3, "'f'", 0, 1};
-t_osc_atom *osc_atom_f = &_osc_atom_f;
-t_osc_atom *osc_atom_functype = &_osc_atom_f;
-
-#define OSC_ATOM_PFX OSC_PFX
-OSC_ATOM_DEF_ADDRESS("", value)
-OSC_ATOM_DEF_ADDRESS("", expr)
-OSC_ATOM_DEF_ADDRESS("", context)
-OSC_ATOM_DEF_ADDRESS("", evaluated)
-OSC_ATOM_DEF_ADDRESS("", status)
-OSC_ATOM_DEF_ADDRESS("", ok)
-OSC_ATOM_DEF_ADDRESS("", message)
-/* OSC_ATOM_DEF_ADDRESS("/expr", type) */
-/* OSC_ATOM_DEF_ADDRESS("/expr", func) */
-/* OSC_ATOM_DEF_ADDRESS("/expr", args) */
-OSC_ATOM_DEF_ADDRESS("/expr", type)
-OSC_ATOM_DEF_ADDRESS("/expr", func)
-OSC_ATOM_DEF_ADDRESS("/expr", args)
-OSC_ATOM_DEF_ADDRESS("", complete)
-OSC_ATOM_DEF_ADDRESS("", unmatched)
-OSC_ATOM_DEF_ADDRESS("/params", strict)
-OSC_ATOM_DEF_ADDRESS("/params", nonstrict)
-OSC_ATOM_DEF_ADDRESS("", body)
-OSC_ATOM_DEF_ADDRESS("", doc)
-OSC_ATOM_DEF_ADDRESS("", partial)
-OSC_ATOM_DEF_ADDRESS("", y)
-OSC_ATOM_DEF_ADDRESS("", lhs)
-OSC_ATOM_DEF_ADDRESS("", rhs)
-OSC_ATOM_DEF_ADDRESS("", n)
-OSC_ATOM_DEF_ADDRESS("", list)
-OSC_ATOM_DEF_ADDRESS("", string)
-OSC_ATOM_DEF_ADDRESS("", test)
-OSC_ATOM_DEF_ADDRESS("", then)
-OSC_ATOM_DEF_ADDRESS("", else)
-
-OSC_ATOM_DEF_SYM(add)
-OSC_ATOM_DEF_SYM(mul)
-OSC_ATOM_DEF_SYM(eql)
-OSC_ATOM_DEF_SYM(eqv)
-OSC_ATOM_DEF_SYM(nth)
-OSC_ATOM_DEF_SYM(lookup)
-OSC_ATOM_DEF_SYM(circularreference)
-OSC_ATOM_DEF_SYM(address)
-OSC_ATOM_DEF_SYM(if)
-
-static int osc_atom_changeRefCount(t_osc_atom *a, int amount);
-t_osc_atom *osc_atom_evalStrictExpr(t_osc_atom *expr, t_osc_bndl *context);
-t_osc_atom *osc_atom_evalStrictSymbol(t_osc_atom *a, t_osc_bndl *context);
-t_osc_atom *osc_atom_evalExprNonstrict(t_osc_atom *a, t_osc_bndl *context);
-
-#define OSC_ATOM_ALLOC(varname, value, unionfield, typetag, serialized_len, serialized_ptr, pretty_len, pretty_ptr, refcount, should_free) \
-	void *OSC_UID(__osc_atom_alloc_ptr__) = osc_mem_alloc(sizeof(t_osc_atom));	\
-	t_osc_atom OSC_UID(__osc_atom_alloc_a__) = {{refcount, osc_atom_free}, {{.unionfield = value}, typetag}, serialized_len, serialized_ptr, pretty_len, pretty_ptr, should_free, 0}; \
-	memcpy(OSC_UID(__osc_atom_alloc_ptr__), &OSC_UID(__osc_atom_alloc_a__), sizeof(t_osc_atom)); \
-	t_osc_atom *varname = (t_osc_atom *)OSC_UID(__osc_atom_alloc_ptr__); \
-	osc_atom_format_m((t_osc_atom_m *)varname, 0);
-
-void osc_atom_print(t_osc_atom *a)
-{
-	if(a){
-		t_osc_atom *aa = osc_atom_format(a, 0);
-		printf("%s\n", osc_atom_getPrettyPtr(aa));
-		osc_atom_release(aa);
-	}else{
-		printf("nada\n");
-	}
+	t_osc_pvec2 *pvec = osc_pvec_alloc(osc_atom_free)
 }
 
 t_osc_atom *osc_atom_allocInt8(int8_t i)

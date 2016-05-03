@@ -46,29 +46,11 @@ extern "C" {
 #define OSC_ID OSC_IDENTIFIER
 #define OSC_ID_SIZE OSC_IDENTIFIER_SIZE
 
-#define OSC_TT_I8 'c'
-#define OSC_TT_U8 'C'
-#define OSC_TT_I16 'u'
-#define OSC_TT_U16 'U'
-#define OSC_TT_I32 'i'
-#define OSC_TT_U32 'I'
-#define OSC_TT_I64 'h'
-#define OSC_TT_U64 'H'
-#define OSC_TT_F32 'f'
-#define OSC_TT_F64 'd'
-#define OSC_TT_STR 's'
-#define OSC_TT_SYM 'S'
-#define OSC_TT_TIME 't'
-#define OSC_TT_BLOB 'b'
-// non-standard
-#define OSC_TT_BNDL 'B'
-#define OSC_TT_UNDEF 'r'
-#define OSC_TT_EXPR 'A'
-#define OSC_TT_NATIVE 'n'
+
 
 #define OSC_VALUE_ADDRESS "/odot/value"
 
-#define OSC_PFX "/odot"
+#define OSC_PFX 
 
 
 #define OSC_SUBBUNDLE_ACCESSOR_OPERATOR '.'
@@ -88,6 +70,10 @@ extern "C" {
 #else
 #define OSC_DEPRECATED(decl, msg) decl __attribute__((deprecated(msg)));
 #endif
+
+#include "osc_region.h"
+#include "osc_bundle.h"
+typedef t_osc_bndl (*t_osc_fn)(t_osc_region, t_osc_bndl, t_osc_bndl);
 
 #ifdef __cplusplus
 }

@@ -25,24 +25,6 @@
 
 */
 
-/*
-{
-	/a : 10,
-	/b : add { 
-		/lhs : 3, 
-		/rhs : /a
-	},
-	/c : {
-		/a : /a
-	},
-	/d : {
-		/a : {
-			/a : /c./a
-		},
-		/b : add {/lhs : 10, /rhs : /a./a}
-	}
-}
- */
 %code top{
 
 #include <math.h>
@@ -67,36 +49,40 @@
 #endif
 
 #ifdef __cplusplus
-	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level);
+	extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r);
 #else
-	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level);
+	int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r);
 #endif
 
 }
 %code requires{
 #include "osc.h"
 #include "osc_mem.h"
-#include "osc_bundle.h"
-#include "osc_message.h"
-#include "osc_atom.h"
-#include "osc_pvec.h"
-#include "osc_builtin.h"
+#include "osc_capi.h"
+#include "osc_capi_bundle.h"
+#include "osc_capi_message.h"
+#include "osc_capi_primitive.h"
+#include "osc_region.h"
+#include "osc_list.h"
 #include "osc_hashtab.h"
+#include "osc_builtin.h"
 
 #ifdef YY_DECL
 #undef YY_DECL
 #endif
 
 #ifdef __cplusplus
-#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
+#define YY_DECL extern "C" int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r)
 #else
-#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
+#define YY_DECL int osc_lex_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r)
 #endif
 #ifdef __cplusplus
 extern "C"{
 #endif
-t_osc_bndl *osc_parse(char *ptr);
-t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args);
+t_osc_bndl osc_parse(t_osc_region r, char *ptr);
+t_osc_bndl osc_parse_allocApply(t_osc_region r, t_osc_bndl lhs, t_osc_bndl rhs);
+t_osc_bndl osc_parse_allocApplication(t_osc_region r, t_osc_list lhs, t_osc_bndl applicator, t_osc_list rhs);
+t_osc_bndl osc_parse_allocApplicationWithLists(t_osc_region r, t_osc_list lhs, t_osc_bndl applicator, t_osc_list rhs);
 #ifdef __cplusplus
 }
 #endif
@@ -104,95 +90,73 @@ t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args);
 
 %{
 
-	int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level)
+	int osc_parse_lex(YYSTYPE *yylval_param, YYLTYPE *llocp, yyscan_t yyscanner, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r)
 {
-	return osc_lex_lex(yylval_param, llocp, yyscanner, ht, strict, nonstrict, level);
+	return osc_lex_lex(yylval_param, llocp, yyscanner, ht, strict, nonstrict, level, r);
 }
 
-t_osc_bndl *osc_parse(char *ptr)
+t_osc_bndl osc_parse(t_osc_region r, char *ptr)
 {
 	yyscan_t scanner;
 	osc_lex_lex_init(&scanner);
 	YY_BUFFER_STATE buf_state = osc_lex__scan_string(ptr, scanner);
 	osc_lex_set_out(NULL, scanner);
-	t_osc_bndl *b = NULL;
+	t_osc_bndl b = NULL;
 	t_osc_hashtab *ht = osc_hashtab_new(-1, NULL);
-	t_osc_bndl *strict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-	t_osc_bndl *nonstrict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
+	t_osc_bndl strict = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0);
+	t_osc_bndl nonstrict = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0);
 	int level = 0;
-	//printf("parsing %s\n", ptr);
-	osc_parse_parse(scanner, &b, ptr, NULL, ht, &strict, &nonstrict, &level);
+	osc_parse_parse(scanner, &b, ptr, NULL, ht, &strict, &nonstrict, &level, r);
 	osc_lex__delete_buffer(buf_state, scanner);
 	osc_lex_lex_destroy(scanner);
 	osc_hashtab_destroy(ht);
-	osc_bndl_release(strict);
-	osc_bndl_release(nonstrict);
 	return b;
 }
-/*
-void osc_parse_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
-{
-	int len = strlen(input_string);
-	if(llocp->first_column >= len || llocp->last_column >= len){
-		*buf = osc_mem_alloc(len + 1);
-		strncpy(*buf, input_string, len + 1);
-		return;
-	}
-	char s1[len * 2];
-	char s2[len * 2];
-	char s3[len * 2];
-	memcpy(s1, input_string, llocp->first_column);
-	s1[llocp->first_column] = '\0';
-	memcpy(s2, input_string + llocp->first_column, llocp->last_column - llocp->first_column);
-	s2[llocp->last_column - llocp->first_column] = '\0';
-	memcpy(s3, input_string + llocp->last_column, len - llocp->last_column);
-	s3[len - llocp->last_column] = '\0';
-	*buf = osc_mem_alloc(len * 3 + 24); // way too much
-	sprintf(*buf, "%s\n-->                %s\n%s\n", s1, s2, s3);
-}
 
-void osc_parse_error(YYLTYPE *llocp,
-		    char *input_string,
-		    t_osc_err errorcode,
-		    const char * const moreinfo_fmt,
-		    ...)
+void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl *bndl, const char *input_string, t_osc_bndl *context, t_osc_hashtab *ht, t_osc_bndl *strict, t_osc_bndl *nonstrict, int *level, t_osc_region r, char const *e)
 {
+	printf("%s: error\n", __func__);
+}
+/*
+t_osc_bndl osc_parse_allocApply(t_osc_region r, t_osc_bndl lhs, t_osc_bndl rhs)
+{
+	return osc_capi_bndl_alloc(r,
+				   OSC_TIMETAG_NULL,
+				   3,
+				   osc_capi_msg_alloc(r,
+						      1,
+						      osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "@")),
+				   osc_capi_msg_alloc(r,
+						      2,
+						      osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "@/fn"),
+						      lhs),
+				   osc_capi_msg_alloc(r,
+						      2,
+						      osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "@/args"),
+						      rhs));
 }
 */
- void yyerror(YYLTYPE *llocp, void *scanner, t_osc_bndl **bndl, const char *input_string, t_osc_bndl *context, t_osc_hashtab *ht, t_osc_bndl **strict, t_osc_bndl **nonstrict, int *level, char const *e)
+
+t_osc_bndl osc_parse_allocApplication(t_osc_region r, t_osc_msg lhs, t_osc_bndl applicator, t_osc_msg rhs)
 {
+	return osc_capi_bndl_alloc(r,
+				   OSC_TIMETAG_NULL,
+				   3,
+				   osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "@"), applicator),
+				   lhs,
+				   rhs);
 }
 
-t_osc_pvec2 *osc_parse_atom(t_osc_atom *a)
+t_osc_bndl osc_parse_allocApplicationWithLists(t_osc_region r, t_osc_list lhs, t_osc_bndl applicator, t_osc_list rhs)
 {
-	t_osc_pvec2 *pvec2 = osc_pvec2_alloc(osc_atom_release);
-	// leave room for the address
-	osc_pvec2_assocN_m(pvec2, 0, (void *)osc_atom_undefined);
-	osc_pvec2_assocN_m(pvec2, 1, (void *)a);
-	return pvec2;
-}
-
-t_osc_bndl *osc_parse_allocFuncall(t_osc_atom *func, t_osc_atom *args)
-{
-	t_osc_bndl *bb = osc_bndl_alloc(OSC_TIMETAG_NULL, 3,
-					osc_msg_alloc(osc_atom_typeaddress, 1, osc_atom_exprtype),
-					osc_msg_alloc(osc_atom_funcaddress, 1, func),
-					osc_msg_alloc(osc_atom_argsaddress, 1, args));
-	return bb;
-}
-
-t_osc_atom *osc_parse_abstract(t_osc_atom *expr, t_osc_bndl **bndl, t_osc_bndl **strict, t_osc_bndl **nonstrict, int level)
-{
-	if((osc_bndl_length(*strict) > 0 || osc_bndl_length(*nonstrict) > 0) && (level == 0 || level == 1)){
-		t_osc_bndl *b = osc_bndl_allocFunction(OSC_TIMETAG_NULL, osc_atom_allocString(" ", 0), *strict, *nonstrict, expr, osc_atom_false);
-		*strict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-		*nonstrict = osc_bndl_alloc(OSC_TIMETAG_NULL, 0);
-		//*bndl = b;
-		return osc_atom_allocBndl(b, 1);
+	t_osc_msg lhsmsg;
+	if(lhs){
+		lhsmsg = osc_capi_msg_allocWithList(r, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/lhs"), lhs);
 	}else{
-		//return osc_atom_allocBndl(expr, 1);
-		return expr;
+		lhsmsg = osc_capi_msg_alloc(r, 1, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/lhs"));
 	}
+	t_osc_msg rhsmsg = osc_capi_msg_allocWithList(r, (void *)osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/rhs"), rhs);
+	return osc_parse_allocApplication(r, lhsmsg, applicator, rhsmsg);
 }
 
 %}
@@ -202,31 +166,33 @@ t_osc_atom *osc_parse_abstract(t_osc_atom *expr, t_osc_bndl **bndl, t_osc_bndl *
 %require "2.4.2"
 
 %parse-param{void *scanner}
-%parse-param{t_osc_bndl **bndl}
+%parse-param{t_osc_bndl *bndl}
 %parse-param{const char *input_string}
 %parse-param{t_osc_bndl *context}
 %parse-param{t_osc_hashtab *ht}
-%parse-param{t_osc_bndl **strict}
-%parse-param{t_osc_bndl **nonstrict}
+%parse-param{t_osc_bndl *strict}
+%parse-param{t_osc_bndl *nonstrict}
 %parse-param{int *level}
+%parse-param{t_osc_region r}
 
 %lex-param{void *scanner}
 %lex-param{t_osc_hashtab *ht}
-%lex-param{t_osc_bndl **strict}
-%lex-param{t_osc_bndl **nonstrict}
+%lex-param{t_osc_bndl *strict}
+%lex-param{t_osc_bndl *nonstrict}
 %lex-param{int *level}
+%lex-param{t_osc_region r}
 
 %union {
-	t_osc_bndl *bndl;
-	t_osc_msg *msg;
-	t_osc_atom *atom;
-	t_osc_pvec2 *pvec2;
+	t_osc_bndl bndl;
+	t_osc_msg msg;
+	t_osc_list list;
 }
-%type <bndl> bndl funcall nth binop unaryop ternaryop
+%type <bndl> bndl expr number msgaddress //funcall nth binop unaryop ternaryop 
 %type <msg> msg
-%type <atom> native expr 
-%type <pvec2> msgs expns list
-%nonassoc <atom> OSC_PARSE_SYMBOL OSC_PARSE_NUMBER OSC_PARSE_STRING OSC_PARSE_BOOL OSC_PARSE_NIL OSC_PARSE_UNDEFINED OSC_PARSE_PATTERN
+ //%type <atom> native expr 
+%type <list> msgs expns list
+%nonassoc <bndl> OSC_PARSE_SYMBOL OSC_PARSE_INT OSC_PARSE_FLOAT OSC_PARSE_STRING OSC_PARSE_BOOL OSC_PARSE_NIL OSC_PARSE_PATTERN
+%left <bndl> OSC_PARSE_APPLICATOR
 %token OSC_PARSE_NATIVE
 
 //%type <atom> 
@@ -234,7 +200,7 @@ t_osc_atom *osc_parse_abstract(t_osc_atom *expr, t_osc_bndl **bndl, t_osc_bndl *
 
 // low to high precedence
 // adapted from http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B
-
+ /*
 // level 16
 %right OSC_EXPR_PLUSEQ OSC_EXPR_MINUSEQ OSC_EXPR_MULTEQ OSC_EXPR_DIVEQ OSC_EXPR_MODEQ OSC_EXPR_POWEQ
 
@@ -262,79 +228,50 @@ t_osc_atom *osc_parse_abstract(t_osc_atom *expr, t_osc_bndl **bndl, t_osc_bndl *
 
 // level 3
  //%right OSC_EXPR_PREFIX_INC OSC_EXPR_PREFIX_DEC OSC_EXPR_UPLUS OSC_EXPR_UMINUS '!' OSC_EXPR_DBLQMARK OSC_EXPR_DBLQMARKEQ
+ */
 
 // level 2
  //%left OSC_EXPR_INC OSC_EXPR_DEC OSC_EXPR_FUNC_CALL OSC_EXPR_QUOTED_EXPR OPEN_DBL_BRKTS CLOSE_DBL_BRKTS '.'
-%left '[' ']' '.' '\'' '@' OSC_PARSE_FUNCALL '$'
+%left '[' ']' '.' '\'' 
+%left OSC_PARSE_FUNCALL
+%left OSC_PARSE_LEFT_ASSOC
+%left OSC_PARSE_RIGHT_ASSOC
 
- //%token START_EXPNS START_FUNCTION
- //%start start
 
 %%
 
 bndl: '{' '}' {
-		$$ = osc_bndl_empty;
+		$$ = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0);
 		*bndl = $$;
  	}
 	| '{' msgs '}' {
-		$$ = osc_bndl_allocWithPvec2(OSC_TIMETAG_NULL, $2);
+		$$ = (t_osc_bndl)$2;
 		*bndl = $$;
   	}
 ;
 
-msg: OSC_PARSE_SYMBOL {
-		$$ = osc_msg_alloc($1, 0);
- 	}
-	| OSC_PARSE_PATTERN {
-		$$ = osc_msg_alloc($1, 0);
- 	}
-	| OSC_PARSE_SYMBOL ':' expr {
-		//$$ = osc_msg_alloc($1, 1, $3);
-		$$ = osc_msg_alloc($1, 1, osc_parse_abstract($3, bndl, strict, nonstrict, *level));
+msgaddress: OSC_PARSE_SYMBOL | OSC_PARSE_PATTERN | OSC_PARSE_APPLICATOR;
+msg:
+//msgaddress {
+//$$ = osc_capi_msg_alloc(r, 1, $1);
+//}
+	msgaddress ':' expr {
+		$$ = osc_capi_msg_alloc(r, 2, $1, $3);
 	}
-	| OSC_PARSE_PATTERN ':' expr {
-		//$$ = osc_msg_alloc($1, 1, $3);
-		$$ = osc_msg_alloc($1, 1, osc_parse_abstract($3, bndl, strict, nonstrict, *level));
+	| msgaddress ':' list {
+		$$ = (t_osc_msg)osc_list_prepend_m(r, (t_osc_list_m)$3, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$1));
 	}
-	| OSC_PARSE_SYMBOL ':' list{
-		osc_pvec2_assocN_m($3, 0, (void *)$1);
-		$$ = osc_msg_allocWithPvec2($3);
-	}
-	| OSC_PARSE_PATTERN ':' list {
-		osc_pvec2_assocN_m($3, 0, (void *)$1);
-		$$ = osc_msg_allocWithPvec2($3);
+	| expr {
+		$$ = osc_capi_msg_alloc(r, 1, $1);
 	}
 ;
-
 msgs: msg {
-		t_osc_pvec2 *pvec2 = osc_pvec2_alloc(osc_msg_release);
-		osc_pvec2_assocN_m(pvec2, 0, (void *)$1);
-		$$ = pvec2;
+		$$ = osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$1));
  	}
 	| msgs ',' msg {
-		osc_pvec2_assocN_m($1, osc_pvec2_length($1), (void *)$3);
-		$$ = $1;
+		$$ = osc_list_append_m(r, (t_osc_list_m)$1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$3));
  	}
 ;
-
-/*
-atom:
-	OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native | expr
-		//| bndl {
-		//$$ = osc_atom_allocBndl($1, 1);
-		//}
-;
-
-atoms:
-	atom {
-		$$ = osc_parse_atom($1);
-	}
-	| atoms ',' atom {
-		osc_pvec2_assocN_m($1, osc_pvec2_length($1), (void *)$3);
-		$$ = $1;
-	}
-;
-*/
 
 list:
 	'[' expns ']' {
@@ -342,148 +279,37 @@ list:
 	}
 ;
 
-unaryop:
-	'\'' expr {
-
-	}
-	| '@' expr {
-		printf("%s\n", osc_atom_getPrettyPtr($2));
-		$$ = osc_parse_allocFuncall(osc_atom_ps_address, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_stringaddress, 1, $2)), 1));
-	}
-;
-
-binop:
-	expr '+' expr {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_add, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
-	}
-	| expr '*' expr {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_mul, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
-	}
-	| expr '=' expr {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_eql, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
-	}
-	| expr '~' expr {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_eqv, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-											       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-											       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
-	}
-	| expr '.' OSC_PARSE_SYMBOL {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-										       osc_msg_alloc(osc_atom_rhsaddress, 1, $3)), 1));
-	}
-	| expr '.' '$' OSC_PARSE_SYMBOL {
-		osc_bndl_append_m((t_osc_bndl_m *)*strict, osc_msg_alloc(osc_atom_retain($4), 0));
-		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-										       osc_msg_alloc(osc_atom_rhsaddress, 1, $4)), 1));
-	}
-	| expr '.' '$' '$' OSC_PARSE_SYMBOL {
-		osc_bndl_append_m((t_osc_bndl_m *)*nonstrict, osc_msg_alloc(osc_atom_retain($5), 0));
-		$$ = osc_parse_allocFuncall(osc_atom_ps_lookup, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 2,
-										       osc_msg_alloc(osc_atom_lhsaddress, 1, $1),
-										       osc_msg_alloc(osc_atom_rhsaddress, 1, $5)), 1));
-	}
-;
-
-ternaryop:
-	expr '?' expr ':' expr %prec OSC_PARSE_TERNARYCOND {
-		$$ = osc_parse_allocFuncall(osc_atom_ps_if, osc_atom_allocBndl(osc_bndl_alloc(OSC_TIMETAG_NULL, 3, osc_msg_alloc(osc_atom_testaddress, 1, $1), osc_msg_alloc(osc_atom_thenaddress, 1, $3), osc_msg_alloc(osc_atom_elseaddress, 1, $5)), 1));
-	}
-;
-
-funcall:
-	bndl bndl %prec OSC_PARSE_FUNCALL {
-		$$ = NULL;
-	}
-	| OSC_PARSE_SYMBOL bndl %prec OSC_PARSE_FUNCALL {
-		$$ = osc_parse_allocFuncall($1, osc_atom_allocBndl($2, 1));
-	}
-	| OSC_PARSE_SYMBOL OSC_PARSE_SYMBOL %prec OSC_PARSE_FUNCALL {
-		$$ = NULL;
-	}
-	| native bndl %prec OSC_PARSE_FUNCALL {
-		$$ = osc_parse_allocFuncall($1, osc_atom_allocBndl($2, 1));
-	}
-	| native OSC_PARSE_SYMBOL %prec OSC_PARSE_FUNCALL {
-
-	}
-;
-
-nth:
-	expr list {
-		// /foo[1, 2, 3]
-		t_osc_msg *n = osc_msg_allocWithPvec2(osc_pvec2_assocN_m($2, 0, osc_atom_naddress));
-		t_osc_msg *list = osc_msg_alloc(osc_atom_listaddress, 1, $1);
-		t_osc_bndl *args = osc_bndl_alloc(OSC_TIMETAG_NULL, 2, n, list);
-		$$ = osc_parse_allocFuncall(osc_atom_ps_nth, osc_atom_allocBndl(args, 1));
-	}
-;
-
+number: OSC_PARSE_INT | OSC_PARSE_FLOAT;
 expr:
-	OSC_PARSE_NUMBER | OSC_PARSE_SYMBOL | OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_UNDEFINED | OSC_PARSE_PATTERN | native
-	| '$' OSC_PARSE_SYMBOL {
-		osc_bndl_append_m((t_osc_bndl_m *)*strict, osc_msg_alloc(osc_atom_retain($2), 0));
-		$$ = $2;
-	}
-	| '$' '$' OSC_PARSE_SYMBOL {
-		osc_bndl_append_m((t_osc_bndl_m *)*nonstrict, osc_msg_alloc(osc_atom_retain($3), 0));
-		$$ = $3;
-	}
+	number | OSC_PARSE_SYMBOL | OSC_PARSE_STRING | OSC_PARSE_BOOL | OSC_PARSE_NIL | OSC_PARSE_PATTERN | bndl | OSC_PARSE_APPLICATOR 
 	| '(' expr ')' {
 		$$ = $2;
 	}
-	| bndl {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocBndl($1, 1);
+	| OSC_PARSE_APPLICATOR expr {
+		$$ = osc_parse_allocApplicationWithLists(r, NULL, $1, osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$2)));
 	}
-	| unaryop {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocExpr($1, 1);
+	| expr OSC_PARSE_APPLICATOR expr {
+		$$ = osc_parse_allocApplicationWithLists(r, osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$1)), $2, osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$3)));
 	}
-	| binop {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocExpr($1, 1);
+	| OSC_PARSE_APPLICATOR list {
+		$$ = osc_parse_allocApplicationWithLists(r, NULL, $1, $2);
 	}
-	| ternaryop {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocExpr($1, 1);
+	| expr OSC_PARSE_APPLICATOR list {
+		$$ = osc_parse_allocApplicationWithLists(r, osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$1)), $2, $3);
 	}
-	| funcall {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocExpr($1, 1);
+	| list OSC_PARSE_APPLICATOR expr {
+		$$ = osc_parse_allocApplicationWithLists(r, $1, $2, osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$3)));
 	}
-	| nth {
-		//$$ = osc_parse_abstract($1, bndl, strict, nonstrict, *level);
-		$$ = osc_atom_allocExpr($1, 1);
+	| list OSC_PARSE_APPLICATOR list {
+		$$ = osc_parse_allocApplicationWithLists(r, $1, $2, $3);
 	}
 ;
-
 expns:
 	expr {
-		$$ = osc_parse_atom($1);
+		$$ = osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$1));
 	}
 	| expns ',' expr {
-		osc_pvec2_assocN_m($1, osc_pvec2_length($1), (void *)$3);
-		$$ = $1;
-	}
-;
-
-native:
-	OSC_PARSE_NATIVE OSC_PARSE_SYMBOL {
-		osc_atom_format_m((t_osc_atom_m *)$2, 0);
-		t_osc_builtin f = osc_builtin_lookup(osc_atom_getPrettyPtr($2));
-		if(f){
-			$$ = osc_atom_allocNative(f, osc_atom_getPrettyPtr($2));
-		}else{
-			$$ = NULL;
-		}
+		$$ = osc_list_append_m(r, (t_osc_list_m)$1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)$3));
 	}
 ;
 

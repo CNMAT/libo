@@ -1,91 +1,205 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "osc.h"
-#include "osc_mem.h"
+#include "osc_typetag.h"
+#define __OSC_PROFILE__
 #include "osc_parse.h"
-#include "osc_bundle.h"
-#include "osc_message.h"
-#include "osc_atom.h"
+#include "osc_profile.h"
+#include "osc_mem.h"
 #include "osc_timetag.h"
-#include "osc_builtin.h"
+#include "osc_capi.h"
+#include "osc_capi_bundle.h"
+#include "osc_capi_message.h"
+#include "osc_byteorder.h"
+#include "osc_list.h"
+#include "osc_native.h"
+#include "osc_capi_primitive.h"
+#include "osc_primitive.h"
+#include "osc_region.h"
+#include "osc_cvalue.h"
 
-t_osc_bndl *print(t_osc_bndl *b, t_osc_bndl *context)
-{
-	t_osc_msg *stm = osc_bndl_lookup(b, osc_atom_allocSymbol("/string", 0), osc_atom_match);
-	if(!stm || osc_msg_length(stm) == 0){
-		printf("\n");
-		return osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, osc_atom_emptystring));
-	}
-	t_osc_atom *a = osc_atom_format(osc_msg_nth(stm, 1), 0);
-	printf("%s: %s\n", __func__, osc_atom_getPrettyPtr(a));
-	return osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_valueaddress, 1, a));
-}
 
-char *_mylib =
-	"{\
-		print : {\
-			/expr/type : 'f',\
-			/doc : \"prints to the console\", \
-			/params/strict : { /string },\
-			/body : { /value : _print { /string } }\
-		}\
-	}";
-
+///f : $($/c$2)$2
 int main(int av, char **ac)
 {
-	char *st = ac[1];
-	t_osc_bndl *math = osc_parse(osc_builtin_math);
-	//osc_atom_print(osc_bndl_format(math, 0));
-	t_osc_bndl *b = osc_parse(st);
+	t_osc_region r = osc_region_alloc(8000000);
+	/*
+	char *_prog = "{			\
+			/a : 3,\
+			/b : [1, 2, 3],\
+			/c : { /a : 33, /b : \"foo\" },\
+			/d : @/c@0,\
+			/e : @/c@/a\
+		      }";
+	*/
+	/*
+	char *_prog = "{			\
+			/a : 3,\
+			/b : [1, 2, 3],\
+			/c : { /a : 33, /b : \"foo\" },\
+			/d : @/a,\
+			/e : @/b,\
+			/f : @/c,\
+			/g : @/std@2@/eval @ {/foo : 10}\
+		      }";
+	*/
+	//			/b : @/a@!2,
+	char *_prog = "{			\
+			/1 : {/lambda, /expr : 1},\
+			/a : [10, 1, 13],\
+			/a1 : @/a@2,\
+			/a2 : @/a!@2,\
+			/a3 : @/a!@! (@/d!@2),\
+			/b : (@/add!@2 !@ {/lhs : 3, /rhs : @/a3!@2}),\
+			/c : @/1!@2 @map {/arg : @/a},\
+			/d : 3,\
+			/e : 3 @+ 4,\
+			/f : @/a,\
+			/g : {/a : 1} @ {/b : @/a, /a : 4}\
+		      }";
 
-	printf("PARSED:\n");
-	t_osc_atom *bf = osc_bndl_format(b, 0);
-	printf("%s\n", osc_atom_getPrettyPtr(bf));
-
-	printf("EVALUATING\n");
-	t_osc_bndl *bb = osc_bndl_evalNonstrict(b, math);
+	t_osc_bndl prog = osc_parse(r, _prog);
 	
-	printf("EVALUATED:\n");
-	t_osc_atom *bbf = osc_bndl_format(bb, 0);
-	printf("%s\n", osc_atom_getPrettyPtr(bbf));
-	return 0;
-	t_osc_bndl *u = osc_bndl_union(bb, osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("/a", 0), 1, osc_atom_allocFloat(3.2))));
-	t_osc_bndl *ue = osc_bndl_evalNonstrict(u, math);
-	printf("AGAIN\n");
-	osc_atom_print(osc_bndl_format(ue, 0));
+	printf("parsed:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, prog))));
+	//printf("std:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, osc_builtin_std(r)))));
+	t_osc_bndl eval = osc_bndl_eval(r, prog, osc_builtin_std(r));
+	printf("eval'd:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, eval))));
 
-	t_osc_bndl *mylib = osc_parse(_mylib);
-	t_osc_bndl *funcs = osc_bndl_alloc(OSC_TIMETAG_NULL, 1, osc_msg_alloc(osc_atom_allocSymbol("_print", 0), 1, osc_atom_allocNative(print, "_print")));
-	t_osc_bndl *uu = osc_bndl_union(mylib, funcs);
-	//osc_atom_print(osc_bndl_format(uu, 0));
-        uu = osc_bndl_union(uu, math);
-	//osc_atom_print(osc_bndl_format(uu, 0));
-	//char *_prog = "{/a : \"some foo\", /b : print { /string : /a } }";
-	/* char *_prog = */
-	/* 	"{\ */
-	/* 		/a : 10,\n \ */
-	/* 		/e : /a,\n \ */
-	/* 		/b : print { /string : /f },\n \ */
-	/* 		/f : /e,\n \ */
-	/* 		/c : print { /string : /b },\n \ */
-	/* 		/h : \"foo\",\n \ */
-	/* 		/i : print { /string : /h }\n \ */
-	/* 	}"; */
-	char *_prog =
-		"{\
-			/a : \"yep\",\
-			/b : \"nope\",\
-			/c : 3,\
-			/d : /c ~ 3. ? print { /string : /a } : print { /string : /b }\
-		}";
-	t_osc_bndl *prog = osc_parse(_prog);
-	t_osc_atom *_p = osc_bndl_format(prog, 0);
-	printf("**************************************************\n");
-	printf("%s\n%s\n", _prog, osc_atom_getPrettyPtr(_p));
-	t_osc_bndl *eprog = osc_bndl_evalNonstrict(prog, uu);
-	t_osc_atom *_eprog = osc_bndl_format(eprog, 0);
-	printf("%s\n", osc_atom_getPrettyPtr(_eprog));
+	printf("%ld bytes used, %ld bytes free\n", osc_region_bytesUsed(r), osc_region_bytesFree(r));
+	osc_region_delete(r);
+	return 0;
+}
+/*
+{
+	t_osc_region r = osc_region_alloc(0);
+	t_osc_bndl b = osc_capi_bndl_alloc(r,
+					   osc_timetag_now(),
+					   6,
+					   osc_capi_msg_alloc(r,
+							      5,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/foo"),
+							      osc_capi_primitive_int32(r, osc_timetag_now(), 666),
+							      osc_capi_primitive_float(r, osc_timetag_now(), 33.2),
+							      osc_capi_primitive_string(r, osc_timetag_now(), "bar"),
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/jean")),
+					   osc_capi_msg_alloc(r,
+							      2,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/foo/bar"),
+							      osc_capi_primitive_unit(r, osc_timetag_now(), OSC_TT_TRUE)),
+					   osc_capi_msg_alloc(r,
+							      2,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/bndl"),
+							      osc_capi_bndl_alloc(r,
+										  osc_timetag_now(),
+										  1,
+										  osc_capi_msg_alloc(r,
+												     2,
+												     osc_capi_primitive_symbol(r, osc_timetag_now(), "/flarp"),
+												     osc_capi_primitive_symbol(r, osc_timetag_now(), "/x")))),
+					   osc_capi_msg_alloc(r,
+							      4,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/bndllist"),
+							      osc_capi_bndl_alloc(r,
+										  osc_timetag_now(),
+										  1,
+										  osc_capi_msg_alloc(r,
+												     2,
+												     osc_capi_primitive_symbol(r, osc_timetag_now(), "/x"),
+												     osc_capi_primitive_int32(r, osc_timetag_now(), 500))),
+							      osc_capi_bndl_alloc(r,
+										  osc_timetag_now(),
+										  1,
+										  osc_capi_msg_alloc(r,
+												     2,
+												     osc_capi_primitive_symbol(r, osc_timetag_now(), "/y"),
+												     osc_capi_primitive_int32(r, osc_timetag_now(), 600))),
+							      osc_capi_bndl_alloc(r,
+										  osc_timetag_now(),
+										  1,
+										  osc_capi_msg_alloc(r,
+												     2,
+												     osc_capi_primitive_symbol(r, osc_timetag_now(), "/z"),
+												     osc_capi_primitive_int32(r, osc_timetag_now(), 700)))),
+					   osc_capi_msg_alloc(r,
+							      3,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/jean"),
+							      osc_capi_primitive_int32(r, osc_timetag_now(), 666),
+							      osc_capi_primitive_float(r, osc_timetag_now(), 33.2)),
+					   osc_capi_msg_alloc(r,
+							      2,
+							      osc_capi_primitive_symbol(r, osc_timetag_now(), "/test"),
+							      osc_primitive_eql(r,
+										osc_capi_primitive_float(r, osc_timetag_now(), 66.6),
+										osc_capi_primitive_float(r, osc_timetag_now(), 66.4))));
+	osc_capi_bndl_append(r, b, osc_capi_msg_alloc(r, 1, osc_capi_primitive_symbol(r, osc_timetag_now(), "/suck")));
+	int len = osc_capi_bndl_nformat(r, NULL, 0, b, 0);
+	char buf[len + 1];
+	osc_capi_bndl_nformat(r, buf, len + 1, b, 0);
+	printf("%s\n", buf);
+	t_osc_bndl nth = osc_bndl_nth(r, b, osc_capi_primitive_int32(r, OSC_TIMETAG_NULL, 3));
+	t_osc_bndl nthf = osc_bndl_format(r, nth);
+	printf("%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, nthf)));
+
+	t_osc_bndl match = osc_bndl_match(r, b, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/foo/*"));
+	t_osc_bndl matchf = osc_bndl_format(r, match);
+	printf("matched:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, matchf)));
+
+	t_osc_bndl bbb = osc_parse(r,
+				   "{\
+					/foo : 10, \
+					/x : {/a : .1, /b : .2, /c : 0.2}, \
+					/bar : /foo, \
+					/barf : \"xxx\", \
+					/expr : add @ {/lhs : 10} @ { /rhs : 20}\
+				    }");
+	printf("bbb = %d\n", osc_capi_msg_length(osc_capi_bndl_nth(r, bbb, 0)));
+	len = osc_capi_bndl_nformat(r, NULL, 0, bbb, 0);
+	char buf1[len + 1];
+	osc_capi_bndl_nformat(r, buf1, len + 1, bbb, 0);
+	printf("%s\n", buf1);
+
+	t_osc_bndl p1 = osc_capi_primitive_int32(r, OSC_TIMETAG_NULL, 33);
+	t_osc_bndl p2 = osc_capi_primitive_string(r, OSC_TIMETAG_NULL, "33");
+	len = osc_capi_bndl_nformat(r, NULL, 0, p1, 0);
+	char s1[len + 1];
+	osc_capi_bndl_nformat(r, s1, len + 1, p1, 0);
+	len = osc_capi_bndl_nformat(r, NULL, 0, p2, 0);
+	char s2[len + 1];
+	osc_capi_bndl_nformat(r, s2, len + 1, p2, 0);
+	printf("%s %s %s\n", s1, osc_capi_primitive_eql(r, p1, p2) == 1 ? "=" : "!=", s2);
+	printf("%s %s %s\n", s1, osc_capi_primitive_eqv(r, p1, p2) == 1 ? "~" : "!~", s2);
+
+	t_osc_bndl u = osc_bndl_union(r, b, bbb);
+	t_osc_bndl uf = osc_bndl_format(r, u);
+	
+	t_osc_bndl isect = osc_bndl_intersection(r, b, bbb);
+	t_osc_bndl isectf = osc_bndl_format(r, isect);
+	
+	t_osc_bndl rc = osc_bndl_rcomplement(r, b, bbb);
+	t_osc_bndl rcf = osc_bndl_format(r, rc);
+
+	printf("union:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, uf)));
+	printf("intersection:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, isectf)));
+	printf("relative complement:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, rcf)));
+	printf("\n\n**************************************************\n\n");
+
+	printf("myfn %p\n", myfn);
+	t_osc_bndl fn = osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, myfn, "myfn");
+	t_osc_bndl fnf = osc_bndl_format(r, fn);
+	printf("fn:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, fnf)));
+	osc_bndl_apply(r, fn, osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0), osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0));
+
+	t_osc_bndl ev = osc_bndl_eval(r, bbb, osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "add"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, myfn, "add"))));
+	t_osc_bndl evf = osc_bndl_format(r, ev);
+	printf("ev:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, evf)));
+	printf("%ld bytes used, %ld bytes free\n", osc_region_bytesUsed(r), osc_region_bytesFree(r));
+	osc_region_delete(r);
+	while(1){
+		sleep(1);
+	}
 
 	return 0;
 }
+*/

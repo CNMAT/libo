@@ -26,9 +26,12 @@
 */
 %{
 #include "osc.h"
+#include "osc_typetag.h"
 #include "osc_parse.h"
 #include "osc_util.h"
 #include "osc_hashtab.h"
+#include "osc_capi_bundle.h"
+#include "osc_capi_primitive.h"
 
 int colnum;
 
@@ -58,11 +61,15 @@ hfc       (({hpref}{hfrac}{bexp}{fsuff_opt})|({hpref}{hdseq}{bexp}{fsuff_opt}))
 c99_floating_point_constant  ({dfc}|{hfc})
 
 range \[!?[a-zA-Z0-9]+-[a-zA-Z0-9]+\]
-pattern \/?({range}|[a-zA-Z0-9_\?])+
+pattern \/?({range}|[a-zA-Z0-9_\?\*])+
 
-quoted_string [^\"\\]
-oscaddress \/[^\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\)\"\'` \n\t]+
-reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
+
+illegal_symbols #
+wildcards \*|\?
+brackets \[|\]|\{|\}|\(|\)
+semantic_symbols {wildcards}|{brackets}|\/|\"|\'|,|\.|@|!|:
+alphanum [0-9a-zA-Z]
+non_semantic_symbols \$|%|&|\+|\-|<|=|>|\?|\^|_|\||~|`
 
 %option reentrant
 %option bison-bridge
@@ -85,121 +92,100 @@ reserved_chars \+|-|\*|\/|%|^|!|=|\[|\]|:|;|\?|<|>|\&|\||\\|\{|\}|\(|\)
 	*level = *level - 1;
 	return *yytext;
 }
+	/*
+\+|-|\*|\/|%|^|!|=|\?|<|>|`|&|\||@|~|\$ {
+	//return *yytext;
+	char buf[2] = {*yytext, 0};
+	yylval->bndl = osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, buf);
+	printf("sym %s\n", buf);
+	return OSC_PARSE_SYMBOL;
+}
+	*/
 
-\+|-|\*|\/|%|^|!|=|\[|\]|:|\?|<|>|`|\.|&|\||,|;|\(|\)|\{|\}|@|~|\$ {
+\"(\\.|[^\\"])*\" {
+	// string
+	char copy[yyleng];
+	memcpy(copy, yytext + 1, yyleng - 1);
+	copy[yyleng - 2] = 0;
+	yylval->bndl = osc_capi_primitive_string(r, OSC_TIMETAG_NULL, copy);
+	return OSC_PARSE_STRING;
+}
+
+(([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
+	// int
+	char *endp = NULL;
+	int32_t i = strtol(yytext, &endp, 0);
+	yylval->bndl = osc_capi_primitive_int32(r, OSC_TIMETAG_NULL, i);
+	return OSC_PARSE_INT;
+}
+
+{c99_floating_point_constant}		{
+	// float
+	char *endp = NULL;
+	double f = strtod(yytext, &endp);
+	yylval->bndl = osc_capi_primitive_double(r, OSC_TIMETAG_NULL, f);
+	return OSC_PARSE_FLOAT;
+}
+
+\'.\'					{
+	// int8 (char)
+	yylval->bndl = osc_capi_primitive_int8(r, OSC_TIMETAG_NULL, yytext[1]);
+	return OSC_PARSE_INT;
+}
+
+(true)			{
+	yylval->bndl = osc_capi_primitive_unit(r, OSC_TIMETAG_NULL, OSC_TT_TRUE);
+	return OSC_PARSE_BOOL;
+}
+
+(false)			{
+	yylval->bndl = osc_capi_primitive_unit(r, OSC_TIMETAG_NULL, OSC_TT_FALSE);
+	return OSC_PARSE_BOOL;
+}
+
+(nil)			{
+	yylval->bndl = osc_capi_primitive_unit(r, OSC_TIMETAG_NULL, OSC_TT_NIL);
+	return OSC_PARSE_NIL;
+}
+	/*
+	(undefined)				{
+						yylval->atom = osc_atom_undefined;
+						return OSC_PARSE_UNDEFINED;
+	}
+	*/
+
+	/*
+	"__native"			{
+					return OSC_PARSE_NATIVE;
+	}
+	*/
+
+	/*
+	[^\$.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`@][^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`@$]+  {
+	[^\[\]:,\{\}\(\) \n\t`\'][^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`@$]+  {
+	[^.\[\]:,\{\}\(\) \n\t`\'][^.\*\[\]:,\?<>\|\\\{\}\(\) \n\t]*  {
+	*/
+
+!?@!?({non_semantic_symbols}|[a-zA-Z_])* {
+	yylval->bndl = osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, yytext);
+	return OSC_PARSE_APPLICATOR;
+}
+
+(\/?({non_semantic_symbols}|{alphanum})+)+ {
+	yylval->bndl = osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, yytext);
+	return OSC_PARSE_SYMBOL;
+}
+
+{pattern}		{
+	yylval->bndl = osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, yytext);
+	return OSC_PARSE_PATTERN;
+}
+
+{semantic_symbols} {
 	return *yytext;
 }
 
-\"(\\.|[^\\"])*\" {
-			char *copy = osc_util_strcpy(yytext + 1);
-			copy[yyleng - 2] = 0;
-			yylval->atom = osc_atom_allocString(copy, 1);
-			osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-			return OSC_PARSE_STRING;
-			}
 
-(([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
-						// int
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							char *endptr = NULL;
-							int32_t i = strtol(yytext, &endptr, 0);
-							yylval->atom = osc_atom_allocInt32(i);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, (int)yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-						}
-						return OSC_PARSE_NUMBER;
-					}
-{c99_floating_point_constant}		{
-						// floating point
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							char *endptr = NULL;
-							double f = strtod(yytext, &endptr);
-							yylval->atom = osc_atom_allocDouble(f);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-						}
-						return OSC_PARSE_NUMBER;
-					}
-\'.\'					{
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							yylval->atom = osc_atom_allocInt8(yytext[1]);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-						}
-						return OSC_PARSE_NUMBER;
-					}
-(true)			{
-						yylval->atom = osc_atom_true;
-						return OSC_PARSE_BOOL;
-					}
-(false)			{
-						yylval->atom = osc_atom_false;
-						return OSC_PARSE_BOOL;
-					}
-
-(nil)				{
-						yylval->atom = osc_atom_nil;
-						return OSC_PARSE_NIL;
-					}
-
-(undefined)				{
-						yylval->atom = osc_atom_undefined;
-						return OSC_PARSE_UNDEFINED;
-					}
-
-"__native"			{
-					return OSC_PARSE_NATIVE;
-				}
-
-	/* \/?[^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  { */
-[^\$.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`@][^.\+\-\*%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]+  {
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-}
-						return OSC_PARSE_SYMBOL;
-				 	}
-
-{pattern}				{
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							// fixme---this should identify only correctly formatted patterns
-							printf("pattern: %s\n", yytext);
-							yylval->atom = osc_atom_allocSymbol(osc_util_strcpy(yytext), 1);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-						}
-						return OSC_PARSE_PATTERN;
-				 	}
-	/*
-[^\'\"0-9\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`][^\'\"\+\-\*\/%\^!=\[\]:;,\?<>\&\|\\\{\}\(\) \n\t`]* {
-
-						t_osc_atom *a = osc_hashtab_lookup(ht, (int)yyleng, yytext);
-						if(a){
-							yylval->atom = osc_atom_retain(a);
-						}else{
-							yylval->atom = osc_atom_allocString(osc_util_strcpy(yytext), 1);
-							osc_atom_setPrettyPtr((t_osc_atom_m *)yylval->atom, yyleng, osc_util_strcpy(yytext));
-							osc_hashtab_store(ht, (int)yyleng, osc_util_strcpy(yytext), (void *)yylval->atom);
-}
-						return OSC_PARSE_STRING;
-}
-	*/
 
 [ \t\n]+	/* eat up whitespace */
 

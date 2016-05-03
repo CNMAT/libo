@@ -28,8 +28,31 @@ extern "C" {
 #endif
 
 #include <inttypes.h>
-#include "osc_atom_u.h"
-#include "osc_atom_array_u.h"
+//#include "osc_atom_u.h"
+//#include "osc_atom_array_u.h"
+
+#define OSC_TT_I8 'c'
+#define OSC_TT_U8 'C'
+#define OSC_TT_I16 'u'
+#define OSC_TT_U16 'U'
+#define OSC_TT_I32 'i'
+#define OSC_TT_U32 'I'
+#define OSC_TT_I64 'h'
+#define OSC_TT_U64 'H'
+#define OSC_TT_F32 'f'
+#define OSC_TT_F64 'd'
+#define OSC_TT_STR 's'
+#define OSC_TT_SYM 'S'
+#define OSC_TT_TIME 't'
+#define OSC_TT_BLOB 'b'
+#define OSC_TT_TRUE 'T'
+#define OSC_TT_FALSE 'F'
+#define OSC_TT_NIL 'N'
+// non-standard
+#define OSC_TT_BNDL 'B'
+#define OSC_TT_UNDEF 'r'
+#define OSC_TT_EXPR 'A'
+#define OSC_TT_FN 'n'
 
 // define the least upper bound for a number of type classes
 #define OSC_TYPETAG_CLASS_NUMERIC OSC_TT_F64
@@ -37,9 +60,7 @@ extern "C" {
 #define OSC_TYPETAG_CLASS_INTEGER OSC_TT_I64
 #define OSC_TYPETAG_CLASS_BOOLEAN 'O'
 
-#define OSC_TYPETAG_TYPE(tt) 
-
-typedef struct _osc_typetag_type t_osc_typetag_type;
+typedef char t_osc_typetag;
 char osc_typetag_findLUB(char t1, char t2);
 char osc_typetag_isSubtype(char t1, char t2);
 char *osc_typetag_name(char typetag);
@@ -48,9 +69,8 @@ void osc_typetag_formatTypeLattice_dot(void);
 //////////////////////////////////////////////////
 // old
 //////////////////////////////////////////////////
-
 enum{
-	OSC_TYPES_NULL = 0,
+	OSC_TYPES_NIL = 0,
 	OSC_TYPES_FALSE,
 	OSC_TYPES_TRUE,
 	OSC_TYPES_INT8,
@@ -75,11 +95,11 @@ enum{
 #define OSC_TYPETAG_ISBOOL(tt) (tt == 'T' || tt == 'F')
 #define OSC_TYPETAG_ISSTRING(tt) (tt == OSC_TT_STR)
 #define OSC_TYPETAG_ISNUMERIC(tt) (tt == OSC_TT_F32 || tt == OSC_TT_F64 || tt == 'T' || tt == 'F' ||tt == OSC_TT_I32 || tt == OSC_TT_U32 || tt == OSC_TT_I64 || tt == OSC_TT_U64 || tt == OSC_TT_I16 || tt == OSC_TT_U16 || tt == OSC_TT_I8 || tt == OSC_TT_U8)
-
+/*
 char *osc_typetag_str(int8_t tt);
 int osc_typetag_compare(char tt1, char tt2);
 char osc_typetag_getLargestType(int argc, t_osc_atom_u **argv);
-
+*/
 #ifdef __cplusplus
 }
 #endif

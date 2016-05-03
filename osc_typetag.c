@@ -27,16 +27,16 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <stdio.h>
 #include "osc.h"
 #include "osc_typetag.h"
-#include "osc_atom_u.h"
-#include "osc_atom_array_u.h"
+//#include "osc_atom_u.h"
+//#include "osc_atom_array_u.h"
 #include "osc_hashtab.h"
 
-struct _osc_typetag_type {
+typedef struct _osc_typetag_type {
 	char typetag;
 	char *name;
 	int weight;
 	struct _osc_typetag_type **edges;
-};
+} t_osc_typetag_type;
 
 #define OSC_TYPETAG_DEFTYPE(typetag, name, weight, ...)		\
 	static t_osc_typetag_type _osc_typetag_##name = {	\
@@ -58,9 +58,9 @@ struct _osc_typetag_type {
 #endif 
 
 OSC_TYPETAG_DEFTYPE(OSC_TT_STR, string, 17, NULL);
-OSC_TYPETAG_DEFTYPE('B', bundle, 16, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(OSC_TT_BNDL, bundle, 16, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_BLOB, blob, 15, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('A', expr, 14, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(OSC_TT_FN, expr, 14, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_F64, double, 13, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_TIME, timetag, 12, &_osc_typetag_string, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_U64, uint64, 11, &_osc_typetag_string, NULL);
@@ -72,16 +72,16 @@ OSC_TYPETAG_DEFTYPE(OSC_TT_U16, uint16, 6, &_osc_typetag_int32, &_osc_typetag_ui
 OSC_TYPETAG_DEFTYPE(OSC_TT_I16, int16, 5, &_osc_typetag_int32, &_osc_typetag_float, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_U8, uint8, 4, &_osc_typetag_int16, &_osc_typetag_uint16, &_osc_typetag_float, NULL);
 OSC_TYPETAG_DEFTYPE(OSC_TT_I8, int8, 3, &_osc_typetag_int16, &_osc_typetag_float, NULL);
-OSC_TYPETAG_DEFTYPE('T', true, 2, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('F', false, 1, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE('N', null, 0, &_osc_typetag_string, NULL);
-OSC_TYPETAG_DEFTYPE(0, unknown, -1, &_osc_typetag_true, &_osc_typetag_false, &_osc_typetag_null, &_osc_typetag_int8, &_osc_typetag_uint8, &_osc_typetag_float, &_osc_typetag_timetag, &_osc_typetag_bundle, &_osc_typetag_string, &_osc_typetag_blob, &_osc_typetag_expr, NULL);
+OSC_TYPETAG_DEFTYPE(OSC_TT_TRUE, true, 2, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(OSC_TT_FALSE, false, 1, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(OSC_TT_NIL, nil, 0, &_osc_typetag_string, NULL);
+OSC_TYPETAG_DEFTYPE(0, bottom, -1, &_osc_typetag_true, &_osc_typetag_false, &_osc_typetag_nil, &_osc_typetag_int8, &_osc_typetag_uint8, &_osc_typetag_float, &_osc_typetag_timetag, &_osc_typetag_bundle, &_osc_typetag_string, &_osc_typetag_blob, &_osc_typetag_expr, NULL);
 
 // supported typetags:
 // N T F c C u U i I h H f d s OSC_TYPETAG_EXPR OSC_TYPETAG_BUNDLE OSC_TYPETAG_TIMETAG
 
 static t_osc_typetag_type *osc_typetag_map[128] = {
-	&_osc_typetag_unknown, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	&_osc_typetag_bottom, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -92,7 +92,7 @@ static t_osc_typetag_type *osc_typetag_map[128] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	// 64
 	NULL, &_osc_typetag_expr, &_osc_typetag_bundle, &_osc_typetag_uint8, NULL, NULL, &_osc_typetag_false, NULL,
-	&_osc_typetag_uint64, &_osc_typetag_uint32, NULL, NULL, NULL, NULL, &_osc_typetag_null, NULL,
+	&_osc_typetag_uint64, &_osc_typetag_uint32, NULL, NULL, NULL, NULL, &_osc_typetag_nil, NULL,
 	NULL, NULL, NULL, NULL, &_osc_typetag_true, &_osc_typetag_uint16, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	// 96
@@ -246,7 +246,7 @@ void osc_typetag_formatTypeLattice_dot(void)
 	memset(visited, '\0', sizeof(int) * 18);
 	printf("digraph typelattice {\n");
 	printf("rankdir = BT;\n");
-	osc_typetag_formatTypeLattice_dot_r(osc_typetag_unknown, visited);
+	osc_typetag_formatTypeLattice_dot_r(osc_typetag_bottom, visited);
 	printf("}\n");
 }
 
@@ -254,7 +254,7 @@ void osc_typetag_formatTypeLattice_dot(void)
 //////////////////////////////////////////////////
 // old
 //////////////////////////////////////////////////
-
+/*
 static char *osc_typetag_strings[] = {"unknown type: (decimal: 0)", "unknown type: (decimal: 1)", "unknown type: (decimal: 2)", "unknown type: (decimal: 3)", "unknown type: (decimal: 4)", "unknown type: (decimal: 5)", "unknown type: (decimal: 6)", "unknown type: (decimal: 7)", "unknown type: (decimal: 8)", "unknown type: (decimal: 9)", "unknown type: (decimal: 10)", "unknown type: (decimal: 11)", "unknown type: (decimal: 12)", "unknown type: (decimal: 13)", "unknown type: (decimal: 14)", "unknown type: (decimal: 15)", "unknown type: (decimal: 16)", "unknown type: (decimal: 17)", "unknown type: (decimal: 18)", "unknown type: (decimal: 19)", "unknown type: (decimal: 20)", "unknown type: (decimal: 21)", "unknown type: (decimal: 22)", "unknown type: (decimal: 23)", "unknown type: (decimal: 24)", "unknown type: (decimal: 25)", "unknown type: (decimal: 26)", "unknown type: (decimal: 27)", "unknown type: (decimal: 28)", "unknown type: (decimal: 29)", "unknown type: (decimal: 30)", "unknown type: (decimal: 31)", "unknown type: (decimal: 32)", "unknown type: '!'", "unknown type: '\"'", "unknown type: '#'", "unknown type: '$'", "unknown type: '\%'", "unknown type: '&'", "unknown type: '''", "unknown type: '('", "unknown type: ')'", "unknown type: '*'", "unknown type: '+'", "unknown type: ','", "unknown type: '-'", "bundle", "unknown type: '/'", "unknown type: '0'", "unknown type: '1'", "unknown type: '2'", "unknown type: '3'", "unknown type: '4'", "unknown type: '5'", "unknown type: '6'", "unknown type: '7'", "unknown type: '8'", "unknown type: '9'", "unknown type: ':'", "unknown type: ';'", "unknown type: '<'", "unknown type: '='", "unknown type: '>'", "unknown type: '?'", "unknown type: '@'", "unknown type: 'A'", "unknown type: 'B'", "unsigned int8", "unknown type: 'D'", "unknown type: 'E'", "false", "unknown type: 'G'", "unsigned int64", "unsigned int32", "unknown type: 'J'", "unknown type: 'K'", "unknown type: 'L'", "unknown type: 'M'", "null", "unknown type: 'O'", "unknown type: 'P'", "unknown type: 'Q'", "unknown type: 'R'", "unknown type: OSC_TT_SYM", "true", "unsigned int16", "unknown type: 'V'", "unknown type: 'W'", "unknown type: 'X'", "unknown type: 'Y'", "unknown type: 'Z'", "unknown type: '['", "unknown type: '\'", "unknown type: ']'", "unknown type: '^'", "unknown type: '_'", "unknown type: '`'", "unknown type: 'a'", "unknown type: OSC_TT_BLOB", "int8", "float64", "unknown type: 'e'", "float32", "unknown type: 'g'", "int64", "int32", "unknown type: 'j'", "unknown type: 'k'", "unknown type: 'l'", "unknown type: 'm'", "unknown type: 'n'", "unknown type: 'o'", "unknown type: 'p'", "unknown type: 'q'", "unknown type: 'r'", "string", "unknown type: OSC_TT_TIME", "int16", "unknown type: 'v'", "unknown type: 'w'", "unknown type: 'x'", "unknown type: 'y'", "unknown type: 'z'", "unknown type: '{'", "unknown type: '|'", "unknown type: '}'", "unknown type: '~'", "unknown type: (decimal: 127)"};
 
 static char osc_typetag_typetags[] = {'N', 'F', 'T', OSC_TT_I8, OSC_TT_U8, OSC_TT_I16, OSC_TT_U16, OSC_TT_I32, OSC_TT_U32, OSC_TT_I64, OSC_TT_U64, OSC_TT_F32, OSC_TT_F64, OSC_TT_TIME, OSC_TT_STR};
@@ -378,3 +378,4 @@ char osc_typetag_getLargestType(int argc, t_osc_atom_u **argv)
 	}
 	return osc_typetag_typetags[largest_type];
 }
+*/

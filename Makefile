@@ -1,16 +1,63 @@
-LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial osc_pvec osc_bundle osc_message osc_atom osc_builtin
+LIBO_BASENAMES = osc_match\
+osc_mem\
+osc_region\
+osc_util\
+osc_strfmt\
+osc_hashtab\
+osc_typetag\
+contrib/strptime\
+osc_timetag\
+osc_serial\
+osc_pvec\
+osc_native\
+osc_capi\
+osc_capi_bundle\
+osc_capi_message\
+osc_capi_primitive\
+osc_list\
+osc_bundle\
+osc_message\
+osc_primitive\
+osc_builtin
+#osc_capi\
+#osc_message\
+#osc_atom
+#osc_bundle_s\
+#osc_bundle_u\
+#osc_bundle_iterator_s\
+#osc_bundle_iterator_u\
+#osc_message_s\
+#osc_message_u\
+#osc_message_iterator_s\
+#osc_message_iterator_u\
+#osc_atom_s\
+#osc_atom_u\
+#osc_array\
+#osc_atom_array_s\
+#osc_atom_array_u\
+#osc_expr\
+#osc_vtable\
+#osc_dispatch\
+#osc_rset\
+#osc_query\
+#osc_expr_rec\
+#osc_linkedlist\
+#osc_error\
+
 
 LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c) 
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
 LIBO_OFILES = $(foreach F, $(LIBO_BASENAMES), $(F).o)
 
-LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner osc_legacy_scanner osc_lex
+#LIBO_SCANNER_BASENAMES = osc_scanner osc_expr_scanner osc_legacy_scanner osc_lex
+LIBO_SCANNER_BASENAMES = osc_lex
 LIBO_SCANNER_LFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).l)
 LIBO_SCANNER_CFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).c)
 LIBO_SCANNER_HFILES = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).h)
 LIBO_SCANNER_OBJECTS = $(foreach OBJ, $(LIBO_SCANNER_BASENAMES), $(OBJ).o)
 
-LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser osc_legacy_parser osc_parse
+#LIBO_PARSER_BASENAMES = osc_parser osc_expr_parser osc_legacy_parser osc_parse
+LIBO_PARSER_BASENAMES = osc_parse
 LIBO_PARSER_YFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).y)
 LIBO_PARSER_CFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).c)
 LIBO_PARSER_HFILES = $(foreach OBJ, $(LIBO_PARSER_BASENAMES), $(OBJ).h)
@@ -22,6 +69,7 @@ RELEASE-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O3 -funroll-loops -
 DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
 MAC-CFLAGS = -arch i386 -arch x86_64
+MAC-DEBUG-CFLAGS = -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 
@@ -47,11 +95,12 @@ arm: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libf
 arm: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
 debug: CFLAGS += $(DEBUG-CFLAGS)
-debug: CFLAGS += $(MAC-CFLAGS)
+debug: CFLAGS += $(MAC-DEBUG-CFLAGS)
 debug: CC = clang
 debug: I = $(MAC-INCLUDES)
 debug: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 debug: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
+debug: o.repl
 
 win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
@@ -119,7 +168,7 @@ osc_lex.c: osc_lex.l osc_parse.c
 osc_parse.c: osc_parse.y
 	bison -p $(basename $@)_ -d -v --report=itemset -o $(basename $@).c $(basename $@).y
 
-o.repl: o.repl.c $(LIBO_CFILES) osc_lex.c osc_parser.c
+o.repl: o.repl.c $(LIBO_CFILES) osc_lex.c osc_parse.c
 	$(CC) $(CFLAGS) $(I) -L. -lo -o o.repl o.repl.c
 
 .PHONY: doc

@@ -32,8 +32,11 @@
 extern "C" {
 #endif
 
+#include "osc_region.h"
+
 int osc_util_strdup(char **dest, char *src);
 char *osc_util_strcpy(char *src);
+char *osc_util_strcpy_r(t_osc_region r, char *src);
 size_t osc_util_getPaddedStringLen(char *s);
 size_t osc_util_getPaddingForNBytes(size_t n);
 size_t osc_util_getBlobLength(size_t blob_data_size);

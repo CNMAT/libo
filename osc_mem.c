@@ -24,6 +24,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <string.h>
 #include <inttypes.h>
 #include "osc.h"
+#include "osc_typetag.h"
 #include "osc_mem.h"
 #include "osc_util.h"
 #include "osc_byteorder.h"
@@ -252,7 +253,7 @@ int osc_mem_shouldByteswap(unsigned char typetag){
 		return 0;
 	}
 }
-
+/*
 t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out)
 {
 	size_t size = osc_sizeof(typetag, data);
@@ -308,3 +309,4 @@ t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out)
 	memcpy(*out, tmp, size);
 	return OSC_ERR_NONE;
 }
+*/

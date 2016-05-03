@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h> // for size_t
-#include "osc_error.h"
+//#include "osc_error.h"
 
 /**
  * Memory allocator used by libo.  Defaults to malloc.
@@ -105,7 +105,7 @@ int osc_mem_shouldByteswap(unsigned char typetag);
  * @param out The address of a char array where the result will be placed.
  * @return An error code or #OSC_ERR_NONE
  */
-t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out);
+//t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out);
 
 /**
  * Byteswap a piece of data if necessary.  This function calls osc_mem_shouldByteswap() on
@@ -116,7 +116,7 @@ t_osc_err osc_mem_encodeByteorder(unsigned char typetag, char *data, char **out)
  * @param out The address of a char array where the result will be placed.
  * @return An error code or #OSC_ERR_NONE
  */
-t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out);
+//t_osc_err osc_mem_decodeByteorder(unsigned char typetag, char *data, char **out);
 
 // #define this in osc.h
 #ifdef OSC_INVALIDATE_PTR

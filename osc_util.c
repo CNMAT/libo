@@ -26,6 +26,7 @@
 */
 
 #include <string.h>
+#include "osc_util.h"
 #include "osc_mem.h"
 #include "osc_byteorder.h"
 
@@ -48,6 +49,17 @@ char *osc_util_strcpy(char *src)
 	}
 	int len = strlen(src) + 1;
 	char *str = osc_mem_alloc(len);
+	memcpy(str, src, len);
+	return str;
+}
+
+char *osc_util_strcpy_r(t_osc_region r, char *src)
+{
+	if(!src){
+		return NULL;
+	}
+	int len = strlen(src) + 1;
+	char *str = osc_region_getBytes(r, len);
 	memcpy(str, src, len);
 	return str;
 }
