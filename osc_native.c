@@ -35,14 +35,16 @@ t_osc_native osc_native_alloc(t_osc_region r, t_osc_timetag time, char *address,
 	return (t_osc_native)buf;
 }
 
-/*
-void osc_native_free(t_osc_native n)
+t_osc_native osc_native_copy(t_osc_region r, t_osc_native n)
 {
 	if(n){
-		osc_mem_free(n);
+		int32_t len = ntoh32(*((int32_t *)n));
+		char *p = osc_region_getBytes(r, len + 4);
+		memcpy(p, n, len + 4);
+		return p;
 	}
+	return NULL;
 }
-*/
 
 size_t osc_native_nformat(t_osc_region r, char *s, size_t n, t_osc_native x)
 {

@@ -102,7 +102,7 @@ t_osc_list osc_list_popFirst(t_osc_region r, t_osc_list list)
 
 t_osc_list osc_list_popLast(t_osc_region r, t_osc_list list)
 {
-	return (t_osc_list)osc_pvec2_popFirst(r, (t_osc_pvec2 *)list);
+	return (t_osc_list)osc_pvec2_popLast(r, (t_osc_pvec2 *)list);
 }
 
 int osc_list_length(t_osc_list list)

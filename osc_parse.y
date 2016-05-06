@@ -187,7 +187,7 @@ t_osc_bndl osc_parse_allocApplicationWithLists(t_osc_region r, t_osc_list lhs, t
 	t_osc_msg msg;
 	t_osc_list list;
 }
-%type <bndl> bndl expr number msgaddress //funcall nth binop unaryop ternaryop 
+%type <bndl> bndl expr number msgaddress //applicator //funcall nth binop unaryop ternaryop 
 %type <msg> msg
  //%type <atom> native expr 
 %type <list> msgs expns list
@@ -249,8 +249,22 @@ bndl: '{' '}' {
 		*bndl = $$;
   	}
 ;
-
-msgaddress: OSC_PARSE_SYMBOL | OSC_PARSE_PATTERN | OSC_PARSE_APPLICATOR;
+/*
+applicator:
+	'@' OSC_PARSE_APPLICATOR
+	| '!' '@' OSC_PARSE_APPLICATOR {
+		$$ = 2;
+	}
+	| OSC_PARSE_APPLICATOR '!' {
+		$$ = 1;
+	}
+	| '!' OSC_PARSE_APPLICATOR '!' {
+		$$ = 2;
+	}
+;
+*/
+//msgaddress: OSC_PARSE_SYMBOL | OSC_PARSE_PATTERN | OSC_PARSE_APPLICATOR;
+msgaddress: expr;
 msg:
 //msgaddress {
 //$$ = osc_capi_msg_alloc(r, 1, $1);

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "osc.h"
 #include "osc_bundle.h"
+#include "osc_message.h"
 #include "osc_builtin.h"
 #include "osc_parse.h"
 #include "osc_typetag.h"
@@ -26,79 +27,111 @@ char *_std = "{\
 		/lambda,\
 		/doc : \"doc\",\
 		/args : {/lhs, /rhs},\
-		/expr : (@/lhs!@2 !@! @/rhs!@2)!@2,\
+		/expr : @/eval!@2 !@ {/expression : @/lhs!@2},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/value}\
 	},\
 	@+ : {\
 		/lambda,\
+		/name : @+,\
 		/doc : \"add\",\
 		/args : {/lhs, /rhs},\
-		/expr : (@/add!@2 !@ {@/lhs, @/rhs})!@/y!@2,\
+		/expr : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)},\
 		/conditions/pre,\
 		/conditions/post\
 	},\
-	@map : {\
+	/map : {\
 		/lambda,\
+		/name : /map,\
 		/doc : \"map\",\
-		/args : {/lhs, /rhs},\
-		/expr : @/_map!@2 !@! {@/lhs, @/rhs},\
+		/args : {/fn, /args},\
+		/expr : @/_map!@2 !@! {@/fn, @/args},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/result}\
 	},\
-	@filter : {\
+	/lreduce : {\
 		/lambda,\
-		/doc : \"filter\",\
-		/args : {/lhs, /rhs},\
-		/expr : @/_filter!@2 !@ {@/lhs, @/rhs},\
-		/conditions/pre,\
-		/conditions/post,\
-		/return : {/result}\
-	},\
-	@lreduce : {\
-		/lambda,\
+		/name : /lreduce,\
 		/doc : \"lreduce\",\
-		/args : {/lhs, /rhs},\
-		/expr : @/_lreduce!@2 !@ {@/lhs, @/rhs},\
+		/args : {/fn, /args},\
+		/expr : @/_lreduce!@2 !@! {@/fn, @/args},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/result}\
 	},\
 	/eval : {\
 		/lambda,\
+		/name : /eval,\
 		/doc : \"doc\",\
 		/args : {/expression},\
-		/expr : @/_eval!@2 !@ {@/foo},\
+		/expr : @/_eval!@2 !@ {@/expression},\
 		/conditions/pre,\
 		/conditions/post,\
-		/return : {/foo}\
+		/return : {/result}\
+	},\
+	/rest : {\
+		/lambda,\
+		/name : /rest,\
+		/doc : \"doc\",\
+		/args : {/list},\
+		/expr : @/_rest!@2 !@! {@/list},\
+		/conditions/pre,\
+		/conditions/post,\
+		/return : {/value}\
 	},\
 	/add : {\
 		/lambda,\
+		/name : /add,\
 		/doc : \"doc\",\
 		/args : {/lhs, /rhs},\
 		/expr : @/_add!@2 !@! {@/lhs, @/rhs},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/y}\
+	},\
+	/add_ : {\
+		/lambda,\
+		/name : /add,\
+		/doc : \"doc\",\
+		/args : {/lhs, /rhs},\
+		/expr : {/value : @/rest!@2 !@! {/list : (@/_add!@2 !@! {@/lhs, @/rhs})!@/y}},\
+		/conditions/pre,\
+		/conditions/post,\
+		/return : {/y}\
+	},\
+	/length : {\
+		/lambda,\
+		/name : /length,\
+		/doc : \"doc\",\
+		/args : {/list},\
+		/expr : @/lreduce!@2 !@ {/fn : @/add!@2, /list : (1 @! @/list)},\
+		/conditions/pre,\
+		/conditions/post,\
+		/return : {/y}\
+	},\
+	/repeat : {\
+		/lambda,\
+		/name : /repeat,\
+		/doc : \"doc\",\
+		/args : {/val},\
+		/expr : @/repeat!@2 @ @/val,\
+		/conditions/pre,\
+		/conditions/post,\
+		/return : {/xxx}\
 	}\
 }";
-
+///expr : (@/lreduce!@2 !@ {/fn : {/lambda, /expr : @/rest!@2 !@ {/list : @/add!@2}}, /args : {/list : @/map!@2 !@ {/fn : @/1!@2, /args : {/list : @/a}}}})!@/y!@2,
 t_osc_bndl std;
 
 t_osc_bndl osc_builtin_eval(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 {
-	//printf("**************************************************\n%s\n", __func__);
 	if(b){
-		//printf("%s: b:\n%s\n", __func__, osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, b))));
-		//printf("%s: context:\n%s\n", __func__, osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, context))));
-		//printf("%s: b:\n%s\n", __func__, osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, osc_bndl_eval(r, b, context)))));
-		//printf("%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, osc_bndl_eval(r, b, context)))));
+		t_osc_bndl e = osc_bndl_eval(r, b, context);
+		return e;
 	}
-	//printf("**************************************************\n");
-	return osc_bndl_eval(r, b, context);
+	return osc_bndl_create(r, OSC_TIMETAG_NULL);
 }
 
 t_osc_bndl osc_builtin_add(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
@@ -108,7 +141,7 @@ t_osc_bndl osc_builtin_add(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 		if(args){
 			t_osc_msg ll = osc_capi_bndl_simpleLookup(r, args, "/lhs");
 			t_osc_msg rr = osc_capi_bndl_simpleLookup(r, args, "/rhs");
-			if(ll && rr && osc_capi_msg_length(ll) > 0 && osc_capi_msg_length(rr) > 0){
+			if(ll && rr && osc_capi_msg_length(r, ll) > 0 && osc_capi_msg_length(r, rr) > 0){
 				t_osc_bndl lll = osc_capi_msg_nth(r, ll, 1);
 				t_osc_bndl rrr = osc_capi_msg_nth(r, rr, 1);
 				if(osc_capi_primitive_q(r, lll) && osc_capi_primitive_q(r, rrr)){
@@ -132,15 +165,25 @@ t_osc_bndl osc_builtin_add(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 	return osc_bndl_create(r, OSC_TIMETAG_NULL);
 }
 
+t_osc_bndl osc_builtin_rest(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
+{
+	t_osc_msg list = osc_capi_bndl_simpleLookup(r, b, "/list");
+	if(list && osc_capi_msg_length(r, list) > 0){
+		return osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, osc_capi_msg_prepend(r, osc_msg_rest(r, osc_msg_rest(r, list)), osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/value")));
+	}
+	return osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 0);
+}
+
 t_osc_bndl osc_builtin_map(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 {
-	printf("%s\n", __func__);
-	osc_capi_bndl_println(r, b);
-	printf("in context, /lhs is\n");
-	osc_capi_msg_println(r, osc_capi_bndl_simpleLookup(r, context, "/lhs"));
-	printf("and /rhs is\n");
-	osc_capi_msg_println(r, osc_capi_bndl_simpleLookup(r, context, "/rhs"));
-	return osc_bndl_create(r, OSC_TIMETAG_NULL);
+	t_osc_bndl out = osc_bndl_map(r, osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/fn"), 1), osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/args"), 1), context);
+	return out;
+}
+
+t_osc_bndl osc_builtin_lreduce(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
+{
+	t_osc_bndl out = osc_bndl_lreduce(r, osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/fn"), 1), osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/args"), 1), context);
+	return out;
 }
 
 t_osc_bndl osc_builtin_std(t_osc_region r)
@@ -149,8 +192,10 @@ t_osc_bndl osc_builtin_std(t_osc_region r)
 		return std;
 	}
 	t_osc_msg map = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_map"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_map, "map"));
+	t_osc_msg lreduce = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_lreduce"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_lreduce, "lreduce"));
 	t_osc_msg eval = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_eval"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_eval, "eval"));
+	t_osc_msg rest = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_rest"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_rest, "rest"));
 	t_osc_msg add = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_add"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_add, "add"));
-	t_osc_bndl fns = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 3, eval, add, map);
+	t_osc_bndl fns = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 5, rest, eval, add, map, lreduce);
 	return std = osc_bndl_union(r, osc_parse(r, _std), fns);
 }

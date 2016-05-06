@@ -1129,7 +1129,14 @@ t_osc_pvec2 *osc_pvec2_popFirst(t_osc_region r, t_osc_pvec2 *pvec2)
 	}
 	t_osc_pvec *head = pvec2->head;
 	t_osc_pvec *tail = pvec2->tail;
-	return _osc_pvec2_alloc(r, osc_pvec_pop(r, head), osc_pvec_copy(tail));
+	//return _osc_pvec2_alloc(r, osc_pvec_pop(r, head), osc_pvec_copy(tail));
+	if(osc_pvec_length(head)){
+		return _osc_pvec2_alloc(r, osc_pvec_pop(r, head), tail);
+	}else if(osc_pvec_length(tail)){
+		return _osc_pvec2_alloc(r, head, osc_pvec_pop(r, tail));
+	}else{
+		return NULL;
+	}
 }
 
 t_osc_pvec2 *osc_pvec2_popLast(t_osc_region r, t_osc_pvec2 *pvec2)

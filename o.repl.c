@@ -19,12 +19,13 @@
 #include "osc_primitive.h"
 #include "osc_region.h"
 #include "osc_cvalue.h"
+#include "osc_bundle.h"
 
 
 ///f : $($/c$2)$2
 int main(int av, char **ac)
 {
-	t_osc_region r = osc_region_alloc(8000000);
+	t_osc_region r = osc_region_alloc(20000000, 20000000);
 	/*
 	char *_prog = "{			\
 			/a : 3,\
@@ -45,10 +46,10 @@ int main(int av, char **ac)
 			/g : @/std@2@/eval @ {/foo : 10}\
 		      }";
 	*/
-	//			/b : @/a@!2,
+	/*
 	char *_prog = "{			\
-			/1 : {/lambda, /expr : 1},\
 			/a : [10, 1, 13],\
+			/aa : [100, 10, 130],\
 			/a1 : @/a@2,\
 			/a2 : @/a!@2,\
 			/a3 : @/a!@! (@/d!@2),\
@@ -57,14 +58,50 @@ int main(int av, char **ac)
 			/d : 3,\
 			/e : 3 @+ 4,\
 			/f : @/a,\
-			/g : {/a : 1} @ {/b : @/a, /a : 4}\
+			/g : {/a : 1} @ {/b : @/a, /a : 4},\
+			/h : @/add!@2 !@map {/lhs : @/a, /rhs : @/aa},\
+			/i : @/add!@2 !@lreduce {/list : [1, 2, 3]},\
+			/j : @/length!@2 !@ {/list : [1, 2, 3]}\
+		      }";
+	*/
+		char *_prog = "{			\
+			/sum : {/lambda, /expr : {/value : @/lreduce!@2 !@ {/fn : {/lambda, /expr : {/value : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)}}}, /args : {@/list}}}},\
+			/n : 3,\
+			/a : [10, 1, 13],\
+			/aa : [100, 10, 130],\
+			/aaa : @/rest!@2 !@! {/list : @/aa},\
+			/a1 : @/a@2,\
+			/a2 : @/a!@2,\
+			/a3 : @/a!@! (@/n!@2),\
+			/b : (@/add!@2 !@ {/lhs : 3, /rhs : @/a3!@2}),\
+			/c : @/map!@2 !@ {/fn : {/lambda, /expr : {/value : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)}}}, /args : {/lhs : @/rest!@2 !@ {/list : @/a}, /rhs : @/rest!@2 !@ {/list : @/aa}}},\
+			/ccc : @/lreduce!@2 !@ {/fn : {/lambda, /expr : {/value : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)}}}, /args : {/list : [1, 2, 3]}},\
+			/cc : @/lreduce!@2 !@ {/fn : {/lambda, /expr : @/add!@2!@/y!@2}, /args : {/list : @/map!@2 !@ {/fn : @/1!@2, /args : {/list : @/a}}}},\
+			/cccc : @/sum!@2 !@ {/list : [1, 2, 3]},\
+			/d : 3,\
+			/e : 3 @+ 4,\
+			/f : @/a,\
+			/g : {/a : 1} @ {/b : @/a, /a : 4},\
+			/h : @/length!@2 !@ {/list : [1, 2, 3]},\
+			/i : @/length!@2 !@ {/list : @/f},\
+			/j : 1 @ [1, 2, 3],\
+			/k : @/length!@2 !@ (1 @ [1, 2, 3]),\
+			/l : @/add!@2 !@ {/lhs : 3, /rhs : 5},\
+			/m : @/add_!@2 !@ {/lhs : 3, /rhs : 5}\
 		      }";
 
+	//t_osc_region tmp = osc_region_getTmp(r);
 	t_osc_bndl prog = osc_parse(r, _prog);
+	//osc_capi_bndl_println(tmp, prog);
+	//t_osc_bndl p2 = osc_bndl_copy(r, prog);
+	//osc_capi_bndl_println(r, p2);
+
+	//return 0;
 	
 	printf("parsed:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, prog))));
 	//printf("std:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, osc_builtin_std(r)))));
-	t_osc_bndl eval = osc_bndl_eval(r, prog, osc_builtin_std(r));
+	t_osc_bndl std = osc_builtin_std(r);
+	t_osc_bndl eval = osc_bndl_eval(r, prog, std);
 	printf("eval'd:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, eval))));
 
 	printf("%ld bytes used, %ld bytes free\n", osc_region_bytesUsed(r), osc_region_bytesFree(r));
@@ -154,7 +191,7 @@ int main(int av, char **ac)
 					/barf : \"xxx\", \
 					/expr : add @ {/lhs : 10} @ { /rhs : 20}\
 				    }");
-	printf("bbb = %d\n", osc_capi_msg_length(osc_capi_bndl_nth(r, bbb, 0)));
+	printf("bbb = %d\n", osc_capi_msg_length(r, osc_capi_bndl_nth(r, bbb, 0)));
 	len = osc_capi_bndl_nformat(r, NULL, 0, bbb, 0);
 	char buf1[len + 1];
 	osc_capi_bndl_nformat(r, buf1, len + 1, bbb, 0);

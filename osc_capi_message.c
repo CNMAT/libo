@@ -25,7 +25,7 @@ t_osc_msg osc_capi_msg_allocWithList(t_osc_region r, t_osc_bndl address, t_osc_l
 	return (t_osc_msg)osc_list_prepend_m(r, (t_osc_list_m)l, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)address));
 }
 
-int osc_capi_msg_length(t_osc_msg m)
+int osc_capi_msg_length(t_osc_region r, t_osc_msg m)
 {
 	if(m){
 		return osc_list_length((t_osc_list)m);
@@ -74,12 +74,36 @@ t_osc_msg osc_capi_msg_prepend(t_osc_region r, t_osc_msg m, t_osc_bndl e)
 	return m;
 }
 
+t_osc_msg_m osc_capi_msg_append_m(t_osc_region r, t_osc_msg_m m, t_osc_bndl e)
+{
+	if(e){
+		if(m){
+			return (t_osc_msg_m)osc_list_append_m(r, (t_osc_list_m)m, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)e));
+		}else{
+			return (t_osc_msg_m)osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)e));
+		}
+	}
+	return m;
+}
+
+t_osc_msg_m osc_capi_msg_prepend_m(t_osc_region r, t_osc_msg_m m, t_osc_bndl e)
+{
+	if(e){
+		if(m){
+			return (t_osc_msg_m)osc_list_prepend(r, (t_osc_msg_m)m, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)e));
+		}else{
+			return (t_osc_msg_m)osc_list_alloc(r, NULL, 1, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)e));
+		}
+	}
+	return m;
+}
+
 void _osc_capi_msg_print(t_osc_region r, t_osc_msg m, char eol)
 {
 	if(m){
 		osc_capi_bndl_print(r, osc_capi_msg_nth(r, m, 0));
 		printf(" : ");
-		for(int i = 1; i < osc_capi_msg_length(m); i++){
+		for(int i = 1; i < osc_capi_msg_length(r, m); i++){
 			osc_capi_bndl_print(r, osc_capi_msg_nth(r, m, i));
 		}
 		printf("%c", eol);

@@ -56,10 +56,23 @@ t_osc_bndl osc_capi_bndl_append(t_osc_region r, t_osc_bndl b, t_osc_msg m)
 	}
 }
 
+t_osc_bndl_m osc_capi_bndl_append_m(t_osc_region r, t_osc_bndl_m b, t_osc_msg m)
+{
+	if(b){
+		if(m){
+			return (t_osc_bndl_m)osc_list_append_m(r, (t_osc_list_m)b, osc_list_allocItem(r, OSC_CAPI_TYPE_LIST, (void *)m));
+		}else{
+			return b;
+		}
+	}else{
+		return (t_osc_bndl_m)osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, m);
+	}
+}
+
 size_t osc_capi_bndl_nformatMsgNArgs(t_osc_region r, char *s, size_t n, t_osc_msg m, int level)
 {
 	size_t pos = 0;
-	int msglen = osc_capi_msg_length(m);
+	int msglen = osc_capi_msg_length(r, m);
 	if(!s || n == 0){
 		// address
 		t_osc_bndl bb = osc_capi_msg_nth(r, m, 0);
@@ -183,7 +196,7 @@ size_t osc_capi_bndl_nformat(t_osc_region r, char *s, size_t n, t_osc_bndl b, in
 			for(int i = 0; i < nmsgs; i++){
 				t_osc_listitem *li = osc_list_nth((t_osc_list)b, i);
 				t_osc_msg m = (t_osc_msg)osc_list_itemGetPtr(li);
-				int msglen = osc_capi_msg_length(m);
+				int msglen = osc_capi_msg_length(r, m);
 				pos += snprintf(NULL, 0, "%s", tabs);
 				if(msglen == 1){
 					pos += osc_capi_bndl_nformatMsgNoArgs(r, NULL, 0, m, level);
@@ -208,7 +221,7 @@ size_t osc_capi_bndl_nformat(t_osc_region r, char *s, size_t n, t_osc_bndl b, in
 			for(int i = 0; i < nmsgs; i++){
 				t_osc_listitem *li = osc_list_nth((t_osc_list)b, i);
 				t_osc_msg m = (t_osc_msg)osc_list_itemGetPtr(li);
-				int msglen = osc_capi_msg_length(m);
+				int msglen = osc_capi_msg_length(r, m);
 				pos += snprintf(s + pos, n - pos, "%s", tabs);
 				if(msglen == 1){
 					pos += osc_capi_bndl_nformatMsgNoArgs(r, s + pos, n - pos, m, level);
@@ -244,10 +257,10 @@ int osc_capi_bndl_eql(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2)
 	for(int i = 0; i < osc_capi_bndl_getMsgCount(r, b1); i++){
 		t_osc_msg m1 = osc_capi_bndl_nth(r, b1, i);
 		t_osc_msg m2 = osc_capi_bndl_nth(r, b2, i);
-		if(osc_capi_msg_length(m1) != osc_capi_msg_length(m2)){
+		if(osc_capi_msg_length(r, m1) != osc_capi_msg_length(r, m2)){
 			return 0;
 		}
-		for(int j = 0; j < osc_capi_msg_length(m1); j++){
+		for(int j = 0; j < osc_capi_msg_length(r, m1); j++){
 			if(!osc_capi_bndl_eql(r, osc_capi_msg_nth(r, m1, j), osc_capi_msg_nth(r, m2, j))){
 				return 0;
 			}

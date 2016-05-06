@@ -10,6 +10,11 @@
 #include "osc_capi_primitive.h"
 #include "osc_match.h"
 
+t_osc_bndl osc_primitive_copy(t_osc_region r, t_osc_bndl b)
+{
+	return osc_capi_primitive_alloc(r, osc_native_copy(r, osc_capi_primitive_getNative(b)));
+}
+
 t_osc_bndl osc_primitive_isIndexable(t_osc_region r, t_osc_bndl b)
 {
 	int ret = osc_capi_primitive_isIndexable(r, b);

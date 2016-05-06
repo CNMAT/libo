@@ -8,6 +8,7 @@ extern "C" {
 #include "osc_bundle.h"
 #include "osc_native.h"
 #include "osc_region.h"
+t_osc_bndl osc_primitive_copy(t_osc_region r, t_osc_bndl b);
 
 t_osc_bndl osc_primitive_isIndexable(t_osc_region r, t_osc_bndl b);
 t_osc_bndl osc_primitive_nth(t_osc_region r, t_osc_bndl b, t_osc_bndl n);

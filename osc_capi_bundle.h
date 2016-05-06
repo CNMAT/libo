@@ -19,6 +19,7 @@ t_osc_bndl osc_capi_bndl_alloc(t_osc_region r, t_osc_timetag time, int n, ...);
 int osc_capi_bndl_getMsgCount(t_osc_region r, t_osc_bndl b);
 t_osc_msg osc_capi_bndl_nth(t_osc_region r, t_osc_bndl b, int32_t n);
 t_osc_bndl osc_capi_bndl_append(t_osc_region r, t_osc_bndl b, t_osc_msg m);
+t_osc_bndl_m osc_capi_bndl_append_m(t_osc_region r, t_osc_bndl_m b, t_osc_msg m);
 
 size_t osc_capi_bndl_nformat(t_osc_region r, char *s, size_t n, t_osc_bndl b, int level);
 int osc_capi_bndl_eql(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2);

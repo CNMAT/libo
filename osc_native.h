@@ -14,7 +14,7 @@ extern "C" {
 typedef char* t_osc_native;
 
 t_osc_native osc_native_alloc(t_osc_region r, t_osc_timetag time, char *address, char typetag, int32_t num_bytes, int32_t num_padded_bytes, char *bytes);
-//void osc_native_free(t_osc_native n);
+t_osc_native osc_native_copy(t_osc_region r, t_osc_native n);
 t_osc_timetag osc_native_getTimetag(t_osc_native n);
 int32_t osc_native_getSize(t_osc_native n);
 char osc_native_getTypetag(t_osc_native n);
