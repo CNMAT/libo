@@ -17,6 +17,7 @@ t_osc_bndl osc_bndl_getMsgCount(t_osc_region r, t_osc_bndl b);
 t_osc_msg osc_bndl_nth(t_osc_region r, t_osc_bndl b, t_osc_bndl n);
 t_osc_bndl osc_bndl_match(t_osc_region r, t_osc_bndl b, t_osc_bndl pattern);
 t_osc_msg osc_bndl_simpleLookup(t_osc_region r, t_osc_bndl b, t_osc_bndl pattern);
+t_osc_bndl osc_bndl_eql(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2);
 t_osc_bndl osc_bndl_union(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2);
 t_osc_bndl osc_bndl_intersection(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2);
 t_osc_bndl osc_bndl_rcomplement(t_osc_region r, t_osc_bndl b1, t_osc_bndl b2);

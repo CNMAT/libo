@@ -25,46 +25,8 @@
 ///f : $($/c$2)$2
 int main(int av, char **ac)
 {
-	t_osc_region r = osc_region_alloc(20000000, 20000000);
-	/*
-	char *_prog = "{			\
-			/a : 3,\
-			/b : [1, 2, 3],\
-			/c : { /a : 33, /b : \"foo\" },\
-			/d : @/c@0,\
-			/e : @/c@/a\
-		      }";
-	*/
-	/*
-	char *_prog = "{			\
-			/a : 3,\
-			/b : [1, 2, 3],\
-			/c : { /a : 33, /b : \"foo\" },\
-			/d : @/a,\
-			/e : @/b,\
-			/f : @/c,\
-			/g : @/std@2@/eval @ {/foo : 10}\
-		      }";
-	*/
-	/*
-	char *_prog = "{			\
-			/a : [10, 1, 13],\
-			/aa : [100, 10, 130],\
-			/a1 : @/a@2,\
-			/a2 : @/a!@2,\
-			/a3 : @/a!@! (@/d!@2),\
-			/b : (@/add!@2 !@ {/lhs : 3, /rhs : @/a3!@2}),\
-			/c : @/1!@2 @map {/arg : @/a},\
-			/d : 3,\
-			/e : 3 @+ 4,\
-			/f : @/a,\
-			/g : {/a : 1} @ {/b : @/a, /a : 4},\
-			/h : @/add!@2 !@map {/lhs : @/a, /rhs : @/aa},\
-			/i : @/add!@2 !@lreduce {/list : [1, 2, 3]},\
-			/j : @/length!@2 !@ {/list : [1, 2, 3]}\
-		      }";
-	*/
-		char *_prog = "{			\
+	t_osc_region r = osc_region_alloc(100000000);
+	/*		char *_prog = "{				\
 			/sum : {/lambda, /expr : {/value : @/lreduce!@2 !@ {/fn : {/lambda, /expr : {/value : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)}}}, /args : {@/list}}}},\
 			/n : 3,\
 			/a : [10, 1, 13],\
@@ -87,8 +49,44 @@ int main(int av, char **ac)
 			/j : 1 @ [1, 2, 3],\
 			/k : @/length!@2 !@ (1 @ [1, 2, 3]),\
 			/l : @/add!@2 !@ {/lhs : 3, /rhs : 5},\
-			/m : @/add_!@2 !@ {/lhs : 3, /rhs : 5}\
-		      }";
+			/m : @/add_!@2 !@! {/lhs : 3, /rhs : 5},\
+			/p : @!(@/o!@2)\
+}";
+	*/
+	/*
+			char *_prog = "{				\
+			/t : true @ {/then : 10} !@ {/else : 20},\
+			/f : @/sub!@2 !@ {/lhs : 3, /rhs : 4},\
+			/g : @/sub,\
+			/r : @/lreduce!@2 !@! {/fn : {/lambda, /expr : {/value : (@/add!@2 !@! {/lhs : @/lhs!@2, /rhs : @/rhs!@2})}}, /args : {/list : 1 @ [1, 2, 3]}}\
+}";
+	*/
+	/*
+	char *_prog = "{				\
+			/r : @/rest!@2 !@! {/list : @/lreduce!@2 !@! {/fn : {/lambda, /expr : {/value : (@/add!@2 !@! {@/lhs, @/rhs})!@/y!@2}}, /args : {/list : 1 @ [1, 2, 3]}}!@/result}\
+}";
+	*/
+	/*
+	char *_prog = "{\
+			/a : (@/lreduce!@2 !@! {/fn : {/lambda, /expr : {/value : @/rest!@2 !@! {/list : (@/add!@2 !@! {@/lhs, @/rhs})!@/y}}}, /args : [1, 2, 3]})!@/result!@2,\
+			/b : @/mul!@2 !@! {/lhs : (@/add!@2 !@! {/lhs : 3, /rhs : 5})!@/y!@2, /rhs : 7},\
+			/c : (@/length!@2 !@ {/list : @/rest!@2 !@! {/list : @/lst}})!@/result!@2,\
+			/lst : [1, 2, 3],\
+			/t : @/rest!@2 !@! {/list : ((@/eql!@2 !@! {/lhs : @/rest!@2 !@! {/list : @/c}, /rhs : 5})!@/y!@2 !@ {/then : @/rest!@2 !@! {/list : @/lst}} !@ {/else : [4, 5, 6]})!@/result},\
+			/add_ : {/lambda, /expr : {/value : @/rest!@2 !@! {/list : (@/add!@2 !@! {@/lhs, @/rhs})!@/y}}},\
+			@` : {/lambda, /expr : {/value : @/rest!@2 !@! {/list : @/rest!@2 !@! {/list : (@/lhs !@! @/rhs)}}}},\
+			/x : {/rest : [1, 2, 3]} @`/rest\
+}";
+	*/
+	/*
+/r : {/lambda, /lst, /expr : @/eql!@2 !@! {/lhs : 6, /rhs : ((@/length!@2 !@! {/list : @/rest!@2 !@! {/list : @/lst}})!@/result!@2)} !@ {/then : @/rest!@2 !@! {/list : @/lst}} !@ {/else : @/r!@2 !@! {/lst : [{/value : @/rest!@2 !@! {/list : @/lst}}, 10]}}},\
+	*/
+	char *_prog = "{\
+			/r : {/lambda, /lst, /expr : {/value : (((@/eql!@2 !@! {/lhs : 10, /rhs : ((@/length!@2 !@! {/list : @/rest!@2 !@! {/list : @/lst}})!@/result!@2)})!@/y!@2) !@ {/then : @/rest!@2 !@! {/list : @/lst}} !@ {/else : @/rest!@2 !@! {/list : (@/r!@2 !@! {[@/lst, 10]})!@/result}})}},\
+			/s : @/rest!@2 !@! {/list : (@/r!@2 !@ {/lst : [1, 2, 3]})!@/result}\
+}";/*
+			/t : true !@ {/then : 10} !@ {/else : 20}\
+			}";*/
 
 	//t_osc_region tmp = osc_region_getTmp(r);
 	t_osc_bndl prog = osc_parse(r, _prog);
@@ -103,7 +101,8 @@ int main(int av, char **ac)
 	t_osc_bndl std = osc_builtin_std(r);
 	t_osc_bndl eval = osc_bndl_eval(r, prog, std);
 	printf("eval'd:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, eval))));
-
+	//eval = osc_bndl_eval(r, eval, std);
+	//printf("eval'd:\n%s\n", osc_cvalue_value(osc_capi_primitive_getPtr(r, osc_bndl_format(r, eval))));
 	printf("%ld bytes used, %ld bytes free\n", osc_region_bytesUsed(r), osc_region_bytesFree(r));
 	osc_region_delete(r);
 	return 0;

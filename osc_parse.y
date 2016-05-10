@@ -248,6 +248,9 @@ bndl: '{' '}' {
 		$$ = (t_osc_bndl)$2;
 		*bndl = $$;
   	}
+	| '{' list '}' {
+		$$ = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, (t_osc_msg)$2);
+	}
 ;
 /*
 applicator:

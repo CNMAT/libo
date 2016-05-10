@@ -12,10 +12,8 @@ extern "C" {
 
 typedef struct _osc_region* t_osc_region;
 
-// allocates a block of nbytes + ntmpbytes
-t_osc_region osc_region_alloc(size_t nbytes, size_t ntmpbytes);
-// bytes should be a pointer to a block of memory nbytes + ntmpbytes long
-t_osc_region osc_region_allocWithBytes(size_t nbytes, size_t ntmpbytes, char *bytes);
+t_osc_region osc_region_alloc(size_t nbytes);
+t_osc_region osc_region_allocWithBytes(size_t nbytes, char *bytes);
 void osc_region_delete(t_osc_region r);
 void osc_region_deleteWithoutFreeingBytes(t_osc_region r);
 //#define OSC_REGION_LOG 1
@@ -26,8 +24,7 @@ void *_osc_region_getBytes(t_osc_region r, size_t nbytes, const char *func);
 void *_osc_region_getBytes(t_osc_region r, size_t nbytes);
 #define osc_region_getBytes(r, nbytes) _osc_region_getBytes(r, nbytes)
 #endif
-t_osc_region osc_region_getTmp(t_osc_region r);
-void osc_region_releaseTmp(t_osc_region r);
+void *osc_region_move(t_osc_region r, char *to, char *from, size_t nbytes);
 char *osc_region_getPtr(t_osc_region r);
 void osc_region_unwind(t_osc_region r, char *ptr);
 size_t osc_region_bytesUsed(t_osc_region r);

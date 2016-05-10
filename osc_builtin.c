@@ -27,7 +27,7 @@ char *_std = "{\
 		/lambda,\
 		/doc : \"doc\",\
 		/args : {/lhs, /rhs},\
-		/expr : @/eval!@2 !@ {/expression : @/lhs!@2},\
+		/expr : @(@/lhs!@2),\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/value}\
@@ -38,6 +38,15 @@ char *_std = "{\
 		/doc : \"add\",\
 		/args : {/lhs, /rhs},\
 		/expr : @/rest!@2 !@ {/list : ((@/add!@2 !@! {@/lhs, @/rhs})!@/y)},\
+		/conditions/pre,\
+		/conditions/post\
+	},\
+	@= : {\
+		/lambda,\
+		/name : @+,\
+		/doc : \"test for equality\",\
+		/args : {/lhs, /rhs},\
+		/expr : {/value : @/rest!@2 !@ {/list : ((@/eql!@2 !@! {@/lhs, @/rhs})!@/y)}},\
 		/conditions/pre,\
 		/conditions/post\
 	},\
@@ -66,7 +75,7 @@ char *_std = "{\
 		/name : /eval,\
 		/doc : \"doc\",\
 		/args : {/expression},\
-		/expr : @/_eval!@2 !@ {@/expression},\
+		/expr : @/_eval!@2 !@! {@/expression},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/result}\
@@ -91,6 +100,16 @@ char *_std = "{\
 		/conditions/post,\
 		/return : {/y}\
 	},\
+	/eql : {\
+		/lambda,\
+		/name : /eql,\
+		/doc : \"doc\",\
+		/args : {/lhs, /rhs},\
+		/expr : @/_eql!@2 !@! {@/lhs, @/rhs},\
+		/conditions/pre,\
+		/conditions/post,\
+		/return : {/y}\
+	},\
 	/add_ : {\
 		/lambda,\
 		/name : /add,\
@@ -106,7 +125,7 @@ char *_std = "{\
 		/name : /length,\
 		/doc : \"doc\",\
 		/args : {/list},\
-		/expr : @/lreduce!@2 !@ {/fn : @/add!@2, /list : (1 @! @/list)},\
+		/expr : @/lreduce!@2 !@! {/fn : {/lambda, /expr : {/value : @/rest!@2 !@! {/list : (@/add!@2 !@! {@/lhs, @/rhs})!@/y}}}, /args : (1 @! @/list)},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/y}\
@@ -116,7 +135,7 @@ char *_std = "{\
 		/name : /repeat,\
 		/doc : \"doc\",\
 		/args : {/val},\
-		/expr : @/repeat!@2 @ @/val,\
+		/expr : {/val : [@/rest!@2 !@! {/list : @/val}, @/rest!@2 !@! {/list : (@/repeat!@2 !@! {@/val})!@/val}]},\
 		/conditions/pre,\
 		/conditions/post,\
 		/return : {/xxx}\
@@ -165,6 +184,24 @@ t_osc_bndl osc_builtin_add(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 	return osc_bndl_create(r, OSC_TIMETAG_NULL);
 }
 
+t_osc_bndl osc_builtin_eql(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
+{
+	if(b){
+		t_osc_bndl args = osc_bndl_eval(r, b, context);
+		if(args){
+			t_osc_msg ll = osc_capi_bndl_simpleLookup(r, args, "/lhs");
+			t_osc_msg rr = osc_capi_bndl_simpleLookup(r, args, "/rhs");
+			if(ll && rr && osc_capi_msg_length(r, ll) > 0 && osc_capi_msg_length(r, rr) > 0){
+				t_osc_bndl lll = osc_capi_msg_nth(r, ll, 1);
+				t_osc_bndl rrr = osc_capi_msg_nth(r, rr, 1);
+				t_osc_bndl out = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/y"), osc_bndl_eql(r, lll, rrr)));
+				return out;
+			}
+		}
+	}
+	return osc_bndl_create(r, OSC_TIMETAG_NULL);
+}
+
 t_osc_bndl osc_builtin_rest(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 {
 	t_osc_msg list = osc_capi_bndl_simpleLookup(r, b, "/list");
@@ -182,8 +219,15 @@ t_osc_bndl osc_builtin_map(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 
 t_osc_bndl osc_builtin_lreduce(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
 {
-	t_osc_bndl out = osc_bndl_lreduce(r, osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/fn"), 1), osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/args"), 1), context);
+	//t_osc_bndl out = osc_bndl_lreduce(r, osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/fn"), 1), osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/args"), 1), context);
+	t_osc_bndl out = osc_bndl_lreduce(r, osc_capi_msg_nth(r, osc_capi_bndl_simpleLookup(r, b, "/fn"), 1), osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 1, osc_capi_bndl_simpleLookup(r, b, "/args")), context);
 	return out;
+}
+
+t_osc_bndl osc_builtin_println(t_osc_region r, t_osc_bndl b, t_osc_bndl context)
+{
+	osc_capi_bndl_println(r, b);
+	return b;
 }
 
 t_osc_bndl osc_builtin_std(t_osc_region r)
@@ -196,6 +240,8 @@ t_osc_bndl osc_builtin_std(t_osc_region r)
 	t_osc_msg eval = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_eval"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_eval, "eval"));
 	t_osc_msg rest = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_rest"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_rest, "rest"));
 	t_osc_msg add = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_add"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_add, "add"));
-	t_osc_bndl fns = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 5, rest, eval, add, map, lreduce);
+	t_osc_msg eql = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_eql"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_eql, "eql"));
+	t_osc_msg println = osc_capi_msg_alloc(r, 2, osc_capi_primitive_symbol(r, OSC_TIMETAG_NULL, "/_println"), osc_capi_primitive_fn(r, OSC_TIMETAG_NULL, osc_builtin_println, "println"));
+	t_osc_bndl fns = osc_capi_bndl_alloc(r, OSC_TIMETAG_NULL, 7, rest, eval, add, map, lreduce, eql, println);
 	return std = osc_bndl_union(r, osc_parse(r, _std), fns);
 }
