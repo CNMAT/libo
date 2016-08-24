@@ -1103,7 +1103,7 @@ expr:
 		osc_expr_setRec($$, osc_expr_lookupFunction("!"));
 		osc_expr_setArg($$, $2);
 	}
-	| '-' arg {
+	| '-' arg %prec '!'{
 		$$ = osc_expr_alloc();
 		osc_expr_setRec($$, osc_expr_lookupFunction("-"));
 		t_osc_expr_arg *zero = osc_expr_arg_alloc();
