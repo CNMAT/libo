@@ -114,7 +114,7 @@ static void osc_match_printState(const char *pattern, const char *address, int p
 		if(__r >= 0x100){					\
 			printf("return: ERROR: %s\n", osc_match_errstr(__r)); \
 		}else{							\
-			printf("return: NO MATCH\n");			\
+			printf("return: NO MATCH (%d)\n", __LINE__);		\
 		}							\
 		return __r;						\
 	}
@@ -141,7 +141,11 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 	if(*address != '/'){
 		OSC_MATCH_RETURN_FAILURE(OSC_MATCH_ERROR_ADDRESS_NO_LEADING_SLASH);
 	}
-
+	/*
+	if(!strcmp(address, pattern)){
+		OSC_MATCH_RETURN_SUCCESS((OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE));
+	}
+	*/
 	*pattern_offset = 0;
 	*address_offset = 0;
 
@@ -257,6 +261,7 @@ int osc_match(const char *pattern, const char *address, int *pattern_offset, int
 					sp->p++;
 					break;
 				default:
+
 					OSC_MATCH_RETURN_FAILURE(ret);
 				}
 			}

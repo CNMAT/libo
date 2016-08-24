@@ -332,7 +332,6 @@ t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bn
 
 t_osc_err osc_bundle_s_removeMessage(char *pattern, long *len, char *ptr, int fullmatch)
 {
-	printf("%s: %s\n", __func__, pattern);
 	char tmp[*len];
 	memset(tmp, '\0', *len);
 	char *p1 = tmp, *p2 = ptr + OSC_HEADER_SIZE, *p3 = ptr + OSC_HEADER_SIZE;
@@ -343,7 +342,6 @@ t_osc_err osc_bundle_s_removeMessage(char *pattern, long *len, char *ptr, int fu
 		char *address = p3 + 4;
 		int po = 0, ao = 0;
 		int ret = osc_match(pattern, address, &po, &ao);
-		printf("%s: %s %s %d\n", __func__, pattern, address, ret);
 		if(ret){
 			if(fullmatch){
 				if(ret != (OSC_MATCH_PATTERN_COMPLETE | OSC_MATCH_ADDRESS_COMPLETE)){
