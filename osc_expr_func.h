@@ -1645,7 +1645,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/statistics", NULL},
 	 "Range of the arguments",
-	 osc_expr_extrema,
+	 osc_expr_range,
 	 NULL},
 	//////////////////////////////////////////////////
 	{"extrema",
