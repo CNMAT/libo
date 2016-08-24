@@ -1226,6 +1226,15 @@ static int osc_expr_specFunc_delete(t_osc_expr *f,
 	while(f_argv){
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
 			osc_bundle_s_removeMessage(osc_expr_arg_getOSCAddress(f_argv), len, *oscbndl, 1);
+		}else if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_ATOM){
+			printf("%s: atom\n", __func__);
+			t_osc_atom_u *a = osc_expr_arg_getOSCAtom(f_argv);
+			printf("%s: tt = %c\n", __func__, osc_atom_u_getTypetag(a));
+			if(osc_atom_u_getTypetag(a) == 's'){
+				char *st = NULL;
+				osc_atom_u_getString(a, 0, &st);
+				osc_bundle_s_removeMessage(st, len, *oscbndl, 1);
+			}
 		}
 		f_argv = f_argv->next;
 	}
