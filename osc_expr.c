@@ -3364,6 +3364,9 @@ int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	int n = osc_atom_u_getInt(osc_atom_array_u_get(*argv, 0));
+	if(n < 0){
+		n = 0;
+	}
 	t_osc_atom_u *val = NULL;
 
 	int outlen = n * osc_atom_array_u_getLen(argv[1]);
