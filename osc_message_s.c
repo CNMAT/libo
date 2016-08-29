@@ -134,11 +134,12 @@ int32_t osc_message_s_renameCopy(char *dest, t_osc_msg_s *src, int32_t new_addre
 		return 0;
 	}
 	int32_t oldlen = osc_message_s_getSize(src);
-	int32_t old_address_len = strlen(osc_message_s_getAddress(src));
-	int32_t newlen = oldlen - (old_address_len - new_address_len);
-	while(newlen % 4){
-		newlen++;
-	}
+	//int32_t old_address_len = strlen(osc_message_s_getAddress(src));
+	//int32_t newlen = oldlen - (old_address_len - new_address_len);
+	//while(newlen % 4){
+	//newlen++;
+	//}
+	int32_t newlen = oldlen - osc_util_getPaddedStringLen(osc_message_s_getAddress(src)) + osc_util_getPaddingForNBytes(new_address_len);
 	*((int32_t *)dest) = hton32(newlen);
 	char *ptr = dest + 4;
 	if(new_address_len > 0){

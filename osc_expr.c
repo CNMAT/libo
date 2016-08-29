@@ -5279,6 +5279,28 @@ int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 	return 0;
 }
 
+int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 1){
+		osc_expr_err_argnum(1, argc, 0, "strtotime");
+	}
+	if(osc_atom_array_u_getLen(argv[0]) > 1){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "strtotime takes a single string as an argument. found a list\n");
+		return 1;
+	}
+	t_osc_atom_u *a = osc_atom_array_u_get(argv[0], 0);
+	if(osc_atom_u_getTypetag(a) != 's'){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "argument to strtotime must be a string\n");
+		return 1;
+	}
+	char *st = osc_atom_u_getStringPtr(a);
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_timetag tt;
+	osc_timetag_fromISO8601(st, &tt);
+	osc_atom_u_setTimetag(osc_atom_array_u_get(*out, 0), tt);
+	return 0;
+}
+
 t_osc_expr *osc_expr_alloc(void)
 {
 	t_osc_expr *expr = (t_osc_expr *)osc_mem_alloc(sizeof(t_osc_expr));
