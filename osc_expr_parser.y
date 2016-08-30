@@ -731,23 +731,57 @@ function:
 		*/
 		osc_expr_rec_setFunction(func, osc_expr_lambda);
 		t_osc_expr_arg *aaa = $7;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
+		t_osc_expr *exprlist = NULL;
+		//t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+			exprlist = osc_expr_arg_getExpr(aaa);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+		}else{
+			t_osc_expr *e = osc_expr_alloc();
+			osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+			t_osc_expr_arg *aaacpy = NULL;
+			osc_expr_arg_copy(&aaacpy, aaa);
+			osc_expr_prependArg(e, aaacpy);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+			exprlist = e;
+		}
+		
 		int i = 1;
 		while(aaa){
+			/*
 			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
 				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
 				return 1;
 			}
+			*/
+			if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+				t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+				osc_expr_appendExpr(exprlist, e);
+				osc_expr_arg_setExpr(aaa, NULL);
+				t_osc_expr_arg *old = aaa;
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_arg_free(old);
+			}else{
+				t_osc_expr *e = osc_expr_alloc();
+				osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+				osc_expr_prependArg(e, aaa);
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_appendExpr(exprlist, e);
+			}
+			/*
 			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
 			osc_expr_appendExpr(exprlist, e);
 			osc_expr_arg_setExpr(aaa, NULL);
 			t_osc_expr_arg *old = aaa;
 			aaa = osc_expr_arg_next(aaa);
 			osc_expr_arg_free(old);
+			*/
 			i++;
 		}
 		osc_expr_rec_setExtra(func, exprlist);
@@ -816,23 +850,61 @@ function:
 		*/
 		osc_expr_rec_setFunction(func, osc_expr_lambda);
 		t_osc_expr_arg *aaa = $5;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
+		//t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		t_osc_expr *exprlist = NULL;
+		if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+			exprlist = osc_expr_arg_getExpr(aaa);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+		}else{
+			t_osc_expr *e = osc_expr_alloc();
+			osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+			t_osc_expr_arg *aaacpy = NULL;
+			osc_expr_arg_copy(&aaacpy, aaa);
+			osc_expr_prependArg(e, aaacpy);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+			exprlist = e;
+		}
 		int i = 1;
 		while(aaa){
+			/*
 			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
 				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
 				return 1;
 			}
+			*/
+			if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+				t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+				osc_expr_appendExpr(exprlist, e);
+				osc_expr_arg_setExpr(aaa, NULL);
+				t_osc_expr_arg *old = aaa;
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_arg_free(old);
+			}else{
+				t_osc_expr *e = osc_expr_alloc();
+				osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+				t_osc_expr_arg *aaacpy = NULL;
+				osc_expr_arg_copy(&aaacpy, aaa);
+				osc_expr_prependArg(e, aaacpy);
+				osc_expr_arg_setExpr(aaa, NULL);
+				t_osc_expr_arg *old = aaa;
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_arg_free(old);
+				osc_expr_appendExpr(exprlist, e);
+			}
+			/*
 			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
 			osc_expr_appendExpr(exprlist, e);
 			osc_expr_arg_setExpr(aaa, NULL);
 			t_osc_expr_arg *old = aaa;
 			aaa = osc_expr_arg_next(aaa);
 			osc_expr_arg_free(old);
+			*/
 			i++;
 		}
 		osc_expr_rec_setExtra(func, exprlist);
@@ -880,23 +952,61 @@ function:
 		*/
 		osc_expr_rec_setFunction(func, osc_expr_lambda);
 		t_osc_expr_arg *aaa = $6;
-		t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
-		osc_expr_arg_setExpr(aaa, NULL);
-		t_osc_expr_arg *old = aaa;
-		aaa = osc_expr_arg_next(aaa);
-		osc_expr_arg_free(old);
+		//t_osc_expr *exprlist = osc_expr_arg_getExpr(aaa);
+		t_osc_expr *exprlist = NULL;
+		if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+			exprlist = osc_expr_arg_getExpr(aaa);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+		}else{
+			t_osc_expr *e = osc_expr_alloc();
+			osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+			t_osc_expr_arg *aaacpy = NULL;
+			osc_expr_arg_copy(&aaacpy, aaa);
+			osc_expr_prependArg(e, aaacpy);
+			osc_expr_arg_setExpr(aaa, NULL);
+			t_osc_expr_arg *old = aaa;
+			aaa = osc_expr_arg_next(aaa);
+			osc_expr_arg_free(old);
+			exprlist = e;
+		}
 		int i = 1;
 		while(aaa){
+			/*
 			if(osc_expr_arg_getType(aaa) != OSC_EXPR_ARG_TYPE_EXPR){
 				osc_expr_error(&yylloc, input_string, OSC_ERR_EXPPARSE, "arg %d of lambda expression is not an expression\n", i);
 				return 1;
 			}
+			*/
+			if(osc_expr_arg_getType(aaa) == OSC_EXPR_ARG_TYPE_EXPR){
+				t_osc_expr *e = osc_expr_arg_getExpr(aaa);
+				osc_expr_appendExpr(exprlist, e);
+				osc_expr_arg_setExpr(aaa, NULL);
+				t_osc_expr_arg *old = aaa;
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_arg_free(old);
+			}else{
+				t_osc_expr *e = osc_expr_alloc();
+				osc_expr_setRec(e, osc_expr_lookupFunction("prog1"));
+				t_osc_expr_arg *aaacpy = NULL;
+				osc_expr_arg_copy(&aaacpy, aaa);
+				osc_expr_prependArg(e, aaacpy);
+				osc_expr_arg_setExpr(aaa, NULL);
+				t_osc_expr_arg *old = aaa;
+				aaa = osc_expr_arg_next(aaa);
+				osc_expr_arg_free(old);
+				osc_expr_appendExpr(exprlist, e);
+			}
+			/*
 			t_osc_expr *e = osc_expr_arg_getExpr(aaa);
 			osc_expr_appendExpr(exprlist, e);
 			osc_expr_arg_setExpr(aaa, NULL);
 			t_osc_expr_arg *old = aaa;
 			aaa = osc_expr_arg_next(aaa);
 			osc_expr_arg_free(old);
+			*/
 			i++;
 		}
 		osc_expr_rec_setExtra(func, exprlist);
