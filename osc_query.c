@@ -120,9 +120,6 @@ int osc_query_select_impl(int nselectors,
 					osc_message_s_renameCopy(buf, msg, strlen(address) - po, address + po);
 					char msg_s[osc_message_s_getStructSize()];
 					osc_message_s_wrap((t_osc_msg_s *)msg_s, buf);
-					long ll = osc_message_s_nformat(NULL, 0, (t_osc_msg_s *)msg_s, 0);
-					char bb[ll + 1];
-					osc_message_s_nformat(bb, ll + 1, (t_osc_msg_s *)msg_s, 0);
 					//osc_bundle_s_appendMessage_b(partial_match, (t_osc_msg_s *)msg_s);
 					osc_rset_addPartialMatch(*rset,
 								 rec_selector ? rec_selector : selector,
