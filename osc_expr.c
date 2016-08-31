@@ -307,7 +307,7 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 				}
 				osc_rset_free(rset);
 			}
-		}
+	}
 		/*
 		  osc_error_handler(__FILE__,
 		  __func__,
@@ -318,7 +318,11 @@ t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 		*/
 		return OSC_ERR_EXPR_ADDRESSUNBOUND;
 #endif
-	}
+			case OSC_EXPR_ARG_TYPE_FUNCTION:
+		*out = osc_atom_array_u_alloc(1);
+		osc_atom_u_setRec(osc_atom_array_u_get(*out, 0), (void *)osc_expr_arg_getFunction(arg));
+		return 0;
+}
 	return OSC_ERR_INVAL; // this really shouldn't happen unless there's a bug somewhere
 }
 
@@ -405,6 +409,23 @@ static int osc_expr_specFunc_apply(t_osc_expr *f,
 			}
 			*/
 			r = osc_expr_lookupFunction(osc_atom_u_getStringPtr(osc_expr_arg_getOSCAtom(f_argv)));
+			if(!r){
+				// maybe we're in a lambda and should look it up in the lexenv
+				t_osc_atom_ar_u *xx = osc_expr_lookupBindingInLexenv(lexenv, osc_atom_u_getStringPtr(osc_expr_arg_getOSCAtom(f_argv)));
+				if(osc_atom_u_getTypetag(osc_atom_array_u_get(xx, 0)) == 'r'){
+					r = osc_atom_u_getRec(osc_atom_array_u_get(xx, 0));
+					t_osc_expr_arg *a = osc_expr_arg_alloc();
+					osc_expr_arg_setFunction(a, r);
+					osc_expr_arg_setNext(a, f_argv->next);
+					osc_expr_setArg(f, a);
+					int ret = osc_expr_specFunc_apply(f, lexenv, len, oscbndl, out);
+					//osc_expr_setArg(f, f_argv);
+					//osc_expr_arg_setNext(a, NULL);
+					//osc_expr_arg_free(a);
+					return ret;
+				}
+				//osc_atom_array_u_free(xx);
+			}
 		}else{
 			t_osc_atom_ar_u *ar = NULL;
 			t_osc_err e = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &ar);

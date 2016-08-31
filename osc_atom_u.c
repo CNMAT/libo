@@ -1234,6 +1234,24 @@ void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob)
 	a->typetag = 'b';
 }
 
+void osc_atom_u_setRec(t_osc_atom_u *a, void *r)
+{
+	if(a){
+		a->w.rec = r;
+		a->typetag = 'r';
+	}
+}
+
+void *osc_atom_u_getRec(t_osc_atom_u *a)
+{
+	if(a){
+		if(a->typetag == 'r'){
+			return a->w.rec;
+		}
+	}
+	return NULL;
+}
+
 void osc_atom_u_negate(t_osc_atom_u *a)
 {
 	if(!a){

@@ -55,6 +55,7 @@ struct _osc_atom_u{
 		t_osc_bndl_u *bndl;
 		t_osc_timetag t;
 		char *b;
+		void *rec;
 	} w;
 	int typetag;
 	int alloc;

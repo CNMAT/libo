@@ -424,6 +424,8 @@ void osc_atom_u_setTimetag(t_osc_atom_u *a, t_osc_timetag timetag);
 
 void osc_atom_u_setBlob(t_osc_atom_u *a, char *blob);
 void osc_atom_u_setBlobPtr(t_osc_atom_u *a, char *blob);
+void osc_atom_u_setRec(t_osc_atom_u *a, void *r);
+void *osc_atom_u_getRec(t_osc_atom_u *a);
 
 /** \brief Return the size of the data represented by the #t_osc_atom_u.
 
