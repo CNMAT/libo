@@ -1203,6 +1203,21 @@ expr:
 		osc_mem_free($1);
 		osc_mem_free($3);
 	}
+	| OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS {
+		printf("hi\n");
+		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		//osc_atom_u_getString($1, 0, &ptr);
+		//osc_expr_arg_setOSCAddress(a1, ptr);
+		osc_expr_arg_setOSCAtom(a1, $1);
+		//ptr = NULL;
+		osc_atom_u_getString($3, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		$$ = osc_expr_parser_reduce_InfixOperator(&yylloc, input_string, ".", a1, a2);
+		//osc_mem_free($1);
+		osc_mem_free($3);
+	}
 	/* | OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg CLOSE_DBL_BRKTS '.' OSC_EXPR_OSCADDRESS{ */
 	/* 	printf("here\n"); */
 	/* } */
