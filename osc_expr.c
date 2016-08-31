@@ -48,6 +48,7 @@
 #include "osc_rset.h"
 #include "osc_query.h"
 #include "osc_typetag.h"
+#include "osc_match.h"
 
 #include "osc_expr.h"
 #include "osc_expr.r"
@@ -1694,6 +1695,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 
 		t_osc_atom_array_u *ar = NULL;
 		osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &ar);
+		int ret = 0;
 		if(!ar){
 			goto cleanup;
 		}
@@ -1712,7 +1714,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 		}
 		osc_expr_arg_append(target, val);
 		osc_expr_setArg(assign, target);
-		int ret = osc_expr_specFunc_assign(assign, lexenv, &bndl_len_s, &bndl_s, out);
+		ret = osc_expr_specFunc_assign(assign, lexenv, &bndl_len_s, &bndl_s, out);
 		osc_expr_arg_freeList(target);
 		target = NULL;
 		assign->argv = NULL;
@@ -3367,7 +3369,7 @@ int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	if(n < 0){
 		n = 0;
 	}
-	t_osc_atom_u *val = NULL;
+	//t_osc_atom_u *val = NULL;
 
 	int outlen = n * osc_atom_array_u_getLen(argv[1]);
 	*out = osc_atom_array_u_alloc(outlen);
@@ -5299,6 +5301,108 @@ int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_at
 	osc_timetag_fromISO8601(st, &tt);
 	osc_atom_u_setTimetag(osc_atom_array_u_get(*out, 0), tt);
 	return 0;
+}
+
+int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 2){
+		osc_expr_err_argnum(2, argc, 0, "match");
+	}
+	int npatterns = osc_atom_array_u_getLen(argv[0]);
+	int naddresses = osc_atom_array_u_getLen(argv[1]);
+	*out = osc_atom_array_u_alloc(npatterns);
+	for(int i = 0; i < npatterns; i++){
+		t_osc_atom_u *pattern = osc_atom_array_u_get(argv[0], i);
+		if(osc_atom_u_getTypetag(pattern) != 's'){
+			continue;
+		}
+		char *pattern_string = osc_atom_u_getStringPtr(pattern);
+		t_osc_bndl_u *b = osc_bundle_u_alloc();
+		t_osc_msg_u *pattern_msg = osc_message_u_allocWithString("/pattern", pattern_string);
+		t_osc_msg_u *full = osc_message_u_allocWithAddress("/full");
+		t_osc_msg_u *partial = osc_message_u_allocWithAddress("/partial");
+		t_osc_msg_u *unmatched = osc_message_u_allocWithAddress("/unmatched");
+		int matches[naddresses];
+		memset(matches, 0, sizeof(int) * naddresses);
+		for(int j = 0; j < naddresses; j++){
+			t_osc_atom_u *address = osc_atom_array_u_get(argv[1], j);
+			if(osc_atom_u_getTypetag(address) != 's'){
+				continue;
+			}
+			char *address_string = osc_atom_u_getStringPtr(address);
+			int po = 0, ao = 0;
+			int ret = osc_match(pattern_string, address_string, &po, &ao);
+			if((ret & OSC_MATCH_ADDRESS_COMPLETE) && ((ret & OSC_MATCH_PATTERN_COMPLETE))){
+				// complete match
+				osc_message_u_appendString(full, address_string);
+				matches[j]++;
+			}else if(po > 0 && ((pattern_string[po] == '/'))){
+				// partial match
+				osc_message_u_appendString(partial, address_string);
+				matches[j]++;
+			}
+		}
+		for(int j = 0; j < naddresses; j++){
+			if(matches[j] == 0){
+				t_osc_atom_u *address = osc_atom_array_u_get(argv[1], j);
+				if(osc_atom_u_getTypetag(address) != 's'){
+					continue;
+				}
+				char *address_string = osc_atom_u_getStringPtr(address);
+				osc_message_u_appendString(unmatched, address_string);
+			}
+		}
+		osc_bundle_u_addMsg(b, pattern_msg);
+		osc_bundle_u_addMsg(b, full);
+		osc_bundle_u_addMsg(b, partial);
+		osc_bundle_u_addMsg(b, unmatched);
+		osc_atom_u_setBndl_u(osc_atom_array_u_get(*out, i), b);
+	}
+	return 0;
+	/*
+	int nselectors = osc_atom_array_u_getLen(argv[1]);
+	char *selectors[nselectors];
+	for(int i = 0; i < nselectors; i++){
+		if(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[1], i)) != 's'){
+			selectors[i] = NULL;
+		}else{
+			selectors[i] = osc_atom_u_getStringPtr(osc_atom_array_u_get(argv[1], i));
+		}
+	}
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	for(int i = 0; i < osc_atom_array_u_getLen(argv[0]); i++){
+		if(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], i)) != 's'){
+			continue;
+		}else{
+			t_osc_msg_u *m = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr(osc_atom_array_u_get(argv[0], i)));
+			osc_bundle_u_addMsg(b, m);
+		}
+	}
+	t_osc_bndl_s *bs = osc_bundle_u_serialize(b);
+	osc_bundle_u_free(b);
+	t_osc_rset *rset = osc_rset_alloc();
+	t_osc_err e = osc_query_select(nselectors, selectors, osc_bundle_s_getLen(bs), osc_bundle_s_getPtr(bs), 1, &rset);
+	osc_rset_initIterator(rset);
+	*out = osc_atom_array_u_alloc(nselectors + 1);
+	int i = 0;
+	while(osc_rset_hasNext(rset)){
+		t_osc_rset_result *rr = osc_rset_next(rset);
+		t_osc_bndl_u *b = osc_bundle_u_alloc();
+		t_osc_msg_u *full = osc_message_u_allocWithAddress("/full");
+		t_osc_bndl_s *fullb = osc_rset_result_getCompleteMatches(rr);
+		t_osc_msg_u *partial = osc_message_u_allocWithAddress("/partial");
+		t_osc_bndl_s *partialb = osc_rset_result_getPartialMatches(rr);
+		osc_message_u_appendBndl(full, osc_bundle_s_getLen(fullb), osc_bundle_s_getPtr(fullb));
+		osc_message_u_appendBndl(partial, osc_bundle_s_getLen(partialb), osc_bundle_s_getPtr(partialb));
+		osc_bundle_u_addMsg(b, full);
+		osc_bundle_u_addMsg(b, partial);
+		osc_atom_u_setBndl_u(osc_atom_array_u_get(*out, i), b);
+		i++;
+	}
+	t_osc_bndl_s *unmatched = osc_rset_getUnmatched(rset);
+	osc_atom_u_setBndl(osc_atom_array_u_get(*out, i), osc_bundle_s_getLen(unmatched), osc_bundle_s_getPtr(unmatched));
+	return 0;
+	*/
 }
 
 t_osc_expr *osc_expr_alloc(void)

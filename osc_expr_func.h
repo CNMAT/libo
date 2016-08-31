@@ -186,6 +186,7 @@ int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	// infix
@@ -2592,6 +2593,18 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Converts the contents of a string to a timetag.",
 	 osc_expr_strtotime,
+	 NULL},
+	{"match",
+	 "/result = match($1, $2)",
+	 2,
+	 0,
+	 (char *[]){"String", "String"},
+	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_LIST, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_LIST},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "matches the pattern(s) in arg 1 against the string(s) in arg 2.",
+	 osc_expr_match,
 	 NULL},
 };
 
