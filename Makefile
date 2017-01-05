@@ -23,7 +23,7 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
 MAC-CFLAGS = -arch i386 -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s
-WIN-CFLAGS = -mno-cygwin -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
+WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
 
 MAC-INCLUDES = -I/usr/include
 ARM-INCLUDES = -I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/usr/include -I/usr/include
