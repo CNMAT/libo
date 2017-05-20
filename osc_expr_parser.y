@@ -1110,6 +1110,7 @@ expr:
 		osc_expr_arg_setOSCAddress(a, address);
 		osc_expr_arg_append(a, $3);
 		osc_expr_setArg(e, a);
+		osc_atom_u_free($1);
 		$$ = e;
 	}
 	| OSC_EXPR_OSCADDRESS '(' ')' %prec OSC_EXPR_FUNC_CALL {
@@ -1121,6 +1122,7 @@ expr:
 		osc_atom_u_getString($1, 0, &address);
 		osc_expr_arg_setOSCAddress(a, address);
 		osc_expr_setArg(e, a);
+		osc_atom_u_free($1);
 		$$ = e;
 	}
 // Infix operators

@@ -227,7 +227,7 @@ quote[[:space:]]*\( {
 	}
 	osc_atom_u_setString(yylval->atom, "");
 	return OSC_EXPR_STRING;
-}
+	}
 
 (([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						// int 

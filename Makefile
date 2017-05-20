@@ -70,7 +70,7 @@ swig: CFLAGS += -std=c99
 swig: libo.i libo_wrap.c libo.py _libo.so
 
 libo_wrap.c libo.py:
-	swig -python libo.i
+	swig -python -py3 libo.i
 
 _libo.so: libo.py libo_wrap.c setup.py
 	python setup.py build_ext --inplace

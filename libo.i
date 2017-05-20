@@ -3,6 +3,7 @@
 %include "stdint.i"
 
 %{
+#define SWIG_PYTHON_STRICT_BYTE_CHAR
 #include "osc_match.h"
 #include "osc_bundle_s.h"
 #include "osc_bundle_u.h"
@@ -80,7 +81,30 @@
 %inline %{
 
 PyObject *osc_bundle_s_swugged( t_osc_bundle_s *b ) {
-    return PyString_FromStringAndSize( osc_bundle_s_getPtr(b), osc_bundle_s_getLen(b) );
+	//return PyBytes_AsString(PyBytes_FromStringAndSize( osc_bundle_s_getPtr(b), osc_bundle_s_getLen(b) ));
+	return PyBytes_FromStringAndSize( osc_bundle_s_getPtr(b), osc_bundle_s_getLen(b) );
 }
+
+ t_osc_bndl_s *osc_bundle_s_alloc_py(long len, PyObject *ptr)
+ {
+	 char *buf = osc_mem_alloc(len);
+	 size_t l = len;
+	 PyBytes_AsStringAndSize(ptr, &buf, &l);
+	 return osc_bundle_s_alloc(len, buf);
+ }
+
+ t_osc_bndl_u *osc_bundle_u_intersection_py(t_osc_bndl_u *bndl1, t_osc_bndl_u *bndl2)
+ {
+	 t_osc_bndl_u *out = NULL;
+	 osc_bundle_u_intersection(bndl1, bndl2, &out);
+	 return out;
+ }
+
+ t_osc_bndl_u *osc_bundle_u_copy_py(t_osc_bndl_u *bndl)
+ {
+	 t_osc_bndl_u *out = NULL;
+	 osc_bundle_u_copy(&out, bndl);
+	 return out;
+ }
 
 %}
