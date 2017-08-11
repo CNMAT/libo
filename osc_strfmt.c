@@ -90,7 +90,7 @@ int osc_strfmt_float64(char *buf, size_t n, double f)
 #else
 int osc_strfmt_float64(char *buf, size_t n, double f)
 {
-	int need_point = f - floor(f) == 0 ? 1 : 0;
+	int need_point = f - floor(f) == 0 && f < 1000000. && f > -1000000. ? 1 : 0;
 	if(need_point){
 		return snprintf(buf, n, "%g.", f);
 	}else{
