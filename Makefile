@@ -60,7 +60,7 @@ win: CC = i686-w64-mingw32-gcc
 win: I = $(WIN-INCLUDES)
 win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
-win: PLACE = rm -f libs/i686/*.a; cp libo.a libs/i686
+win: PLACE = rm -f libs/i686/*.a; mkdir -p libs/i686; cp libo.a libs/i686
 
 win64: CFLAGS += $(RELEASE-CFLAGS)
 win64: CFLAGS += $(WIN-CFLAGS)
@@ -68,7 +68,7 @@ win64: CC = x86_64-w64-mingw32-gcc
 win64: I = $(WIN64-INCLUDES)
 win64: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
 win64: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
-win64: PLACE = rm -f libs/x86_64/*.a; cp libo.a libs/x86_64
+win64: PLACE = rm -f libs/x86_64/*.a; mkdir -p libs/x86_64; cp libo.a libs/x86_64
 
 linux: CC = clang
 linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
