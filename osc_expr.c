@@ -3386,6 +3386,10 @@ int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 
 int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
+    if(argc < 2){
+        osc_expr_err_argnum(2, argc, 1, "osc_expr: nfill()");
+        return 1;
+    }
 	int n = osc_atom_u_getInt(osc_atom_array_u_get(*argv, 0));
 	if(n < 0){
 		n = 0;
