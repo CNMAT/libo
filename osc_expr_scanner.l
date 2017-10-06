@@ -150,7 +150,7 @@ quote[[:space:]]*\( {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
-	while(np){
+	while(np && *end != '\0'){
 		if(*end == ')'){
 			np--;
 		}else if(*end == '('){
@@ -158,6 +158,12 @@ quote[[:space:]]*\( {
 		}
 		end++;
 	}
+    
+    if( np != 0 )
+    {
+        return 0;
+    }
+
 	yyless(end - start);
 	if(alloc_atom){
 		yylval->atom = osc_atom_u_alloc();
