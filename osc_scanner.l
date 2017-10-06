@@ -106,6 +106,12 @@ quoted_string [^\"\\]
 	}
 }
 
+\"\" {
+    yylval->atom = osc_atom_u_alloc();
+    osc_atom_u_setString(yylval->atom, "");
+    return OSCVALUE;
+}
+
 -?{c99_floating_point_constant}	{
 					char *endp = NULL;
 					double d = strtod(yytext, &endp); 
