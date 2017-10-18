@@ -146,14 +146,14 @@ quote[[:space:]]*\( {
 	BEGIN(quote_function);
 	}
 
-<quote_function>.* {
+<quote_function>[^<<EOF>>]* {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
 	while(np && *end != '\0'){
-		if(*end == ')'){
+		if(*end == ')' && *(end-1) != '\\'){
 			np--;
-		}else if(*end == '('){
+		}else if(*end == '(' && *(end-1) != '\\'){
 			np++;
 		}
 		end++;
