@@ -146,7 +146,7 @@ quote[[:space:]]*\( {
 	BEGIN(quote_function);
 	}
 
-<quote_function>[^<<EOF>>]* {
+<quote_function>(.|\n)* {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
