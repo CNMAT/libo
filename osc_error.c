@@ -1,7 +1,7 @@
 /*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
 University of California, Berkeley.  Copyright (c) 2009-12, The Regents of
-the University of California (Regents). 
+the University of California (Regents).
 Permission to use, copy, modify, distribute, and distribute modified versions
 of this software and its documentation without fee and without a signed
 licensing agreement, is hereby granted, provided that the above copyright
@@ -29,14 +29,15 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_s.h"
 #include "osc_byteorder.h"
 
-int osc_error_defaultHandler(const char * const errorstr)
+int osc_error_defaultHandler(void *context, const char * const errorstr)
 {
 	return fprintf(stderr, "%s\n", errorstr);
 }
 
 static t_osc_error_handler _osc_error_handler = osc_error_defaultHandler;
 
-int osc_error_handler(const char * const filename,
+int osc_error_handler(void *context,
+					const char * const filename,
 		      const char * const functionname,
 		      int linenum,
 		      t_osc_err errorcode,
@@ -69,7 +70,7 @@ int osc_error_handler(const char * const filename,
 		pos += vsnprintf(newbuf, (buflen - (pos - newbuf)), buf, ap);
 		va_end(ap);
 
-		return _osc_error_handler(newbuf);
+		return _osc_error_handler(context, newbuf);
 	}
 	return 0;
 }
