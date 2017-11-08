@@ -44,6 +44,8 @@ int osc_error_handler(void *context,
 		      const char * const moreinfo_fmt,
 		      ...)
 {
+	return 0;
+
 	if(_osc_error_handler){
 		int buflen = MAX_ERR_STRING_LEN;
 		char buf[buflen];
@@ -69,7 +71,7 @@ int osc_error_handler(void *context,
 		pos = newbuf;
 		pos += vsnprintf(newbuf, (buflen - (pos - newbuf)), buf, ap);
 		va_end(ap);
-
+		printf("%s context %p\n", __func__, context);
 		return _osc_error_handler(context, newbuf);
 	}
 	return 0;

@@ -264,7 +264,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		    const char * const moreinfo_fmt,
 		    ...)
 {
-	//printf("%s context %p\n", __func__, context);
+	printf("%s context %p\n", __func__, context);
 	char *loc = NULL;
 	osc_expr_error_formatLocation(context, llocp, input_string, &loc);
 	int loclen = 0;
@@ -289,6 +289,8 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
+		printf("%s A context %p\n", __func__, context);
+
 		osc_error_handler(context,
 					__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
 				  NULL,
@@ -296,6 +298,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  buf);
 	}else{
+		printf("%s B context %p\n", __func__, context);
 	  osc_error_handler(context,
 					__FILE__,//basename(__FILE__),
 				  NULL,
@@ -303,9 +306,14 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  "");
 	}
+	printf("%s POST context %p\n", __func__, context);
+
 	if(loc){
 		osc_mem_free(loc);
 	}
+
+	printf("%s END context %p\n", __func__, context);
+
 }
 
 int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string, t_osc_expr_rec *r, t_osc_expr_arg *arglist)
@@ -364,7 +372,7 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 
  void yyerror(YYLTYPE *llocp, t_osc_expr **exprstack, t_osc_expr **tmp_exprstack, t_osc_expr_rec **rec, void *scanner, char *input_string, long *buflen, char **buf, int startcond, int *started, void *context, char const *e)
 {
-	//printf("%s context %p\n", __func__, context);
+	printf("(yyerror) %s context %p\n", __func__, context);
 	osc_expr_error(context, llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
 
