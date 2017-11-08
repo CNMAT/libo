@@ -487,7 +487,8 @@ static int osc_expr_specFunc_apply(t_osc_expr *f,
 			osc_atom_array_u_free(ar);
 		}
 		if(!r){
-			osc_error_handler(basename(__FILE__),
+			osc_error_handler(context,
+						basename(__FILE__),
 					  __func__,
 					  __LINE__,
 					  OSC_ERR_EXPPARSE,

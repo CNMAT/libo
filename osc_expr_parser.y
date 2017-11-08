@@ -235,7 +235,7 @@ t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f)
 }
 */
 
-void osc_expr_error_formatLocation(void * context, YYLTYPE *llocp, char *input_string, char **buf)
+void osc_expr_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
 {
 	//printf("%s context %p\n", __func__, context);
 
@@ -264,9 +264,9 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		    const char * const moreinfo_fmt,
 		    ...)
 {
-	printf("%s context %p\n", __func__, context);
+	printf("%s context %p\t\n input_string %s\t\n errorcode %d\t\n moreinfo_fmt %s\t\n", __func__, context, input_string, (int)errorcode, moreinfo_fmt);
 	char *loc = NULL;
-	osc_expr_error_formatLocation(context, llocp, input_string, &loc);
+	osc_expr_error_formatLocation(llocp, input_string, &loc);
 	int loclen = 0;
 	if(loc){
 		loclen = strlen(loc);
@@ -306,13 +306,13 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  "");
 	}
-	printf("%s POST context %p\n", __func__, context);
+	printf("POST\n");
 
 	if(loc){
 		osc_mem_free(loc);
 	}
 
-	printf("%s END context %p\n", __func__, context);
+	printf("END\n" );
 
 }
 

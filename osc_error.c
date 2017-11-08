@@ -44,9 +44,11 @@ int osc_error_handler(void *context,
 		      const char * const moreinfo_fmt,
 		      ...)
 {
-	return 0;
 
 	if(_osc_error_handler){
+
+		printf("%s context %p \n\tfilename %s \n\tfunctionname %s \n\tlinenum %d \n\terrorcode %d \n\tmoreinfo_fmt %s \n", __func__, context, filename, functionname, linenum, (int)errorcode, moreinfo_fmt );
+
 		int buflen = MAX_ERR_STRING_LEN;
 		char buf[buflen];
 		char *pos = buf;
@@ -71,7 +73,6 @@ int osc_error_handler(void *context,
 		pos = newbuf;
 		pos += vsnprintf(newbuf, (buflen - (pos - newbuf)), buf, ap);
 		va_end(ap);
-		printf("%s context %p\n", __func__, context);
 		return _osc_error_handler(context, newbuf);
 	}
 	return 0;
