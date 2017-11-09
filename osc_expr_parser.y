@@ -161,7 +161,7 @@ static void osc_expr_parser_foldConstants(t_osc_expr *expr)
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f, void *context)
 {
 	//printf("parsing %s\n", ptr);
-	//printf("%s context %p\n", __func__, context);
+	printf("%s context %p sizeof: %d \n", __func__, context, sizeof(void*));
 	int len = strlen(ptr);
 	int alloc = 0;
 
@@ -264,7 +264,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		    const char * const moreinfo_fmt,
 		    ...)
 {
-	printf("%s context %p\t\n input_string %s\t\n errorcode %d\t\n moreinfo_fmt %s\t\n", __func__, context, input_string, (int)errorcode, moreinfo_fmt);
+	//printf("%s context %p sizeof %d \n", __func__, context, sizeof(context));
 	char *loc = NULL;
 	osc_expr_error_formatLocation(llocp, input_string, &loc);
 	int loclen = 0;
@@ -289,7 +289,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
-		printf("%s A context %p\n", __func__, context);
+		// printf("%s A context %p\n", __func__, context);
 
 		osc_error_handler(context,
 					__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
@@ -298,7 +298,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  buf);
 	}else{
-		printf("%s B context %p\n", __func__, context);
+//		printf("%s B context %p\n", __func__, context);
 	  osc_error_handler(context,
 					__FILE__,//basename(__FILE__),
 				  NULL,
@@ -306,13 +306,13 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  "");
 	}
-	printf("POST\n");
+	//printf("POST\n");
 
 	if(loc){
 		osc_mem_free(loc);
 	}
 
-	printf("END\n" );
+	//printf("END\n" );
 
 }
 
@@ -372,7 +372,7 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 
  void yyerror(YYLTYPE *llocp, t_osc_expr **exprstack, t_osc_expr **tmp_exprstack, t_osc_expr_rec **rec, void *scanner, char *input_string, long *buflen, char **buf, int startcond, int *started, void *context, char const *e)
 {
-	printf("(yyerror) %s context %p\n", __func__, context);
+	 printf("(yyerror) %s context %p\n", __func__, context);
 	osc_expr_error(context, llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
 

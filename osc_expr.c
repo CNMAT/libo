@@ -1777,7 +1777,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			// cleanup
 			return ret;
 		}
-		int free_arg1 = 1;
+		int free_arg1 = 1; // << might need to be allocated before the goto cleanup above?
 
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
