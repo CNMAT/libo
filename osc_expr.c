@@ -3365,6 +3365,70 @@ int osc_expr_sort(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	return 0;
 }
 
+typedef struct _sortIndexStruct {
+    t_osc_atom_u *a;
+    int32_t index;
+} t_sortIndexStruct;
+
+static int osc_expr_qsortIndexcb(const void *a1, const void *a2)
+{
+    
+    t_osc_atom_u *aa1 = ((t_sortIndexStruct *)a1)->a;
+    t_osc_atom_u *aa2 = ((t_sortIndexStruct *)a2)->a;
+    char t1 = osc_atom_u_getTypetag(aa1);
+    char t2 = osc_atom_u_getTypetag(aa2);
+    if(t1 == 's' && t2 == 's'){
+        return strcmp(osc_atom_u_getStringPtr(aa1), osc_atom_u_getStringPtr(aa2));
+    }else if(t1 == 's'){
+        return 1;
+    }else if(t2 == 's'){
+        return -1;
+    }else{
+        double d1 = osc_atom_u_getDouble(aa1);
+        double d2 = osc_atom_u_getDouble(aa2);
+        if(d1 < d2){
+            return -1;
+        }else{
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int osc_expr_sortIndex(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+/*
+    if( argc > 1 )
+    {
+        osc_expr_err_argnum(1, argc, 1, "osc_expr: sortIndex()");
+        return 1;
+    }
+*/
+    long n = osc_atom_array_u_getLen(argv[0]);
+    
+    *out = osc_atom_array_u_alloc(n);
+    t_sortIndexStruct sort_ar[n];
+    
+    for(int i = 0; i < n; i++)
+    {
+        sort_ar[i].index = i;
+        sort_ar[i].a = osc_atom_u_alloc();
+        osc_atom_u_copyInto(&sort_ar[i].a, osc_atom_array_u_get(argv[0], i));
+    }
+
+    
+    qsort((void *)sort_ar, n, sizeof(t_sortIndexStruct), osc_expr_qsortIndexcb);
+    
+    for( int i = 0; i < n; i++ )
+    {
+        osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), sort_ar[i].index);
+        osc_mem_free(sort_ar[i].a);
+    }
+    
+    return 0;
+}
+
+
 int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	int outlen = 0;
