@@ -3386,11 +3386,7 @@ static int osc_expr_qsortIndexcb(const void *a1, const void *a2)
     }else{
         double d1 = osc_atom_u_getDouble(aa1);
         double d2 = osc_atom_u_getDouble(aa2);
-        if(d1 < d2){
-            return -1;
-        }else{
-            return 1;
-        }
+        return (d1 < d2) ? -1 : ((d1 > d2) ? 1 : 0);
     }
     return 0;
 }
