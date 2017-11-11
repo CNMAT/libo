@@ -88,7 +88,7 @@ int osc_expr_mean(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 int osc_expr_median(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_reverse(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_sort(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
-int osc_expr_sortIndex(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_sortidx(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_nfill(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_range(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -1443,7 +1443,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_sort,
 	 NULL},
     //////////////////////////////////////////////////
-    {"sortIndex",
+    {"sortidx",
         "/result = sortIndex($1)",
         1,
         0,
@@ -1453,7 +1453,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
         (int []){},
         (char *[]){"/vector", NULL},
         "Sort the elements of a list and return the indexes corresponding to the original list",
-        osc_expr_sortIndex,
+        osc_expr_sortidx,
         NULL},
 	//////////////////////////////////////////////////
 	{"list",

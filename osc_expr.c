@@ -3395,7 +3395,7 @@ static int osc_expr_qsortIndexcb(const void *a1, const void *a2)
     return 0;
 }
 
-int osc_expr_sortIndex(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+int osc_expr_sortidx(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 /*
     if( argc > 1 )
