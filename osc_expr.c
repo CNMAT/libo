@@ -4032,7 +4032,7 @@ int osc_expr_scale(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 		return 0;
 	}
 	double m = (max_out - min_out) / (max_in - min_in);
-	float b = (min_out - (m * min_in));
+	double b = (min_out - (m * min_in));
 		
 	int i;
 	for(i = 0; i < len; i++){
