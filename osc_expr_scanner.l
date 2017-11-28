@@ -146,18 +146,24 @@ quote[[:space:]]*\( {
 	BEGIN(quote_function);
 	}
 
-<quote_function>.* {
+<quote_function>(.|\n)* {
 	char *start = yytext;
 	char *end = start;
 	int np = 1;
-	while(np){
-		if(*end == ')'){
+	while(np && *end != '\0'){
+		if(*end == ')' && *(end-1) != '\\'){
 			np--;
-		}else if(*end == '('){
+		}else if(*end == '(' && *(end-1) != '\\'){
 			np++;
 		}
 		end++;
 	}
+    
+    if( np != 0 )
+    {
+        return 0;
+    }
+
 	yyless(end - start);
 	if(alloc_atom){
 		yylval->atom = osc_atom_u_alloc();

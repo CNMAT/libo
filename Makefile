@@ -1,4 +1,4 @@
-LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial 
+LIBO_BASENAMES = osc_match  osc_bundle_s osc_bundle_u osc_bundle_iterator_s osc_bundle_iterator_u osc_error osc_mem osc_message_s osc_message_u osc_message_iterator_s osc_message_iterator_u osc_atom_s osc_atom_u osc_array osc_atom_array_s osc_atom_array_u osc_expr osc_vtable osc_dispatch osc_hashtab osc_linkedlist osc_util osc_rset osc_query osc_strfmt osc_expr_rec osc_typetag contrib/strptime osc_timetag osc_serial
 
 LIBO_CFILES = $(foreach F, $(LIBO_BASENAMES), $(F).c)
 LIBO_HFILES = $(foreach F, $(LIBO_BASENAMES), $(F).h) osc.h
@@ -23,11 +23,13 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
 MAC-CFLAGS = -arch i386 -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s
-WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -std=c99
+WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE
+#WIN64-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -fPIC
 
 MAC-INCLUDES = -I/usr/include
 ARM-INCLUDES = -I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/usr/include -I/usr/include
-WIN-INCLUDES = 
+WIN-INCLUDES = -I\usr\i686-w64-mingw32\sys-root\mingw\include
+WIN64-INCLUDES = -I\usr\x86_64-w64-mingw32\sys-root\mingw\include
 
 all: CFLAGS += $(RELEASE-CFLAGS)
 all: CFLAGS += $(MAC-CFLAGS)
@@ -56,8 +58,17 @@ win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
 win: CC = i686-w64-mingw32-gcc
 win: I = $(WIN-INCLUDES)
-win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a 
+win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+win: PLACE = rm -f libs/i686/*.a; mkdir -p libs/i686; cp libo.a libs/i686
+
+win64: CFLAGS += $(RELEASE-CFLAGS)
+win64: CFLAGS += $(WIN-CFLAGS)
+win64: CC = x86_64-w64-mingw32-gcc
+win64: I = $(WIN64-INCLUDES)
+win64: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
+win64: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+win64: PLACE = rm -f libs/x86_64/*.a; mkdir -p libs/x86_64; cp libo.a libs/x86_64
 
 linux: CC = clang
 linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
@@ -100,12 +111,13 @@ build/Release/odot.node:
 libo.a: $(LIBO_OBJECTS)
 	rm -f libo.a
 	$(STATIC-LINK)
+	$(PLACE)
 
 libo.dylib: $(LIBO_OBJECTS)
 	rm -f libo.dylib
 	$(DYNAMIC-LINK)
 
-%.o: %.c 
+%.o: %.c
 	$(CC) $(CFLAGS) $(I) -c -o $(basename $@).o $(basename $@).c
 
 %_scanner.c: %_scanner.l %_parser.c
@@ -119,7 +131,7 @@ doc:
 	cd doc && doxygen Doxyfile
 
 .PHONY: test test-clean
-test: 
+test:
 	$(MAKE) -C test
 
 test-clean:

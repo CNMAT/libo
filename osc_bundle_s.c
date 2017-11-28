@@ -397,7 +397,7 @@ t_osc_err osc_bundle_s_replaceMessage(long *buflen,
 	oldptr += old_size + 4;
     
 	long r = *bufpos - (oldptr - *bndl);
-	if(r){
+	if(r > 0){
 		memcpy(newptr, oldptr, r);
 	}
 	if(newbuflen > *buflen){

@@ -491,14 +491,12 @@ void osc_timetag_fromISO8601(char *s, t_osc_timetag *timetag)
 			sec += SEC_PER_DAY;
 		}
 	}
-	int leap = osc_timetag_isleap(t.tm_year);
-	int days_in_months[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
-	if(leap){
-		for(int i = 2; i < sizeof(days_in_months) / sizeof(int); i++){
-			days_in_months[i] += 1;
-		}
-	}
-	sec += ((days_in_months[t.tm_mon] + (t.tm_mday - 1)) * SEC_PER_DAY);
+    int leap = osc_timetag_isleap(t.tm_year + 1900);
+    
+    int days_in_months[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
+    
+    int offset = leap && (t.tm_mon > 1) ? 1 : 0;
+    sec += ((days_in_months[t.tm_mon] + offset + t.tm_mday ) * SEC_PER_DAY);
 	sec += (t.tm_hour * SEC_PER_HR);
 	sec += (t.tm_min * SEC_PER_MIN);
 	sec += t.tm_sec;

@@ -61,7 +61,12 @@ void osc_atom_u_free(t_osc_atom_u *a)
 		//osc_mem_free(osc_bundle_s_getPtr(a->w.bndl));
 			osc_bundle_u_free(a->w.bndl);
 			//}
-	}
+    }
+    else if(a->typetag == 'b'){
+        if(a->w.s){
+            osc_mem_free(a->w.b);
+        }
+    }
 	osc_mem_free(a);
 }
 
@@ -121,7 +126,10 @@ void osc_atom_u_clear(t_osc_atom_u *a)
 	}else if(a->typetag == OSC_BUNDLE_TYPETAG){
 		osc_bundle_u_free(a->w.bndl);
 		a->w.bndl = NULL;
-	}
+	}else if(a->alloc && a->typetag == 'b' && a->w.b){
+        osc_bundle_u_free(a->w.b);
+        a->w.b = NULL;
+    }
 	a->alloc = 0;
 }
 
