@@ -2059,7 +2059,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 {
     if( argc != 2 )
     {
-        osc_expr_err_argnum(2, argc, 0  , f->rec->name );
+        osc_expr_err_argnum( 2, argc, 0, f->rec->name );
         return 0;
     }
     
