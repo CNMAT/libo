@@ -2027,7 +2027,7 @@ int osc_expr_1arg_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 {
 	long ac = osc_atom_array_u_getLen(*argv);
 	if(argc == 0){
-        osc_expr_err_argnum( 1, 0, 0, f->rec->name );
+        osc_expr_err_argnum( context, 1, 0, 0, f->rec->name );
 		return 0;
 	}
 	*out = osc_atom_array_u_alloc(ac);
@@ -2045,7 +2045,7 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 {
     if( argc != 2 )
     {
-        osc_expr_err_argnum( 2, argc, 0, f->rec->name );
+        osc_expr_err_argnum( context, 2, argc, 0, f->rec->name );
         return 0;
     }
 

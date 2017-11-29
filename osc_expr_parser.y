@@ -161,7 +161,7 @@ static void osc_expr_parser_foldConstants(t_osc_expr *expr)
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f, void *context)
 {
 	//printf("parsing %s\n", ptr);
-	printf("%s context %p sizeof: %d \n", __func__, context, sizeof(void*));
+	// printf("%s context %p sizeof: %d \n", __func__, context, sizeof(void*));
 	int len = strlen(ptr);
 	int alloc = 0;
 
@@ -237,12 +237,11 @@ t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f)
 
 void osc_expr_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
 {
-	//printf("%s context %p\n", __func__, context);
-
+    
 	int len = strlen(input_string);
 	if(llocp->first_column >= len || llocp->last_column >= len){
 		*buf = osc_mem_alloc(len + 1);
-		strncpy(*buf, input_string, len + 1);
+		strncpy(*buf, input_string, len );
 		return;
 	}
 	char s1[len * 2];
@@ -264,9 +263,12 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		    const char * const moreinfo_fmt,
 		    ...)
 {
-	//printf("%s context %p sizeof %d \n", __func__, context, sizeof(context));
+//	printf("%s context %p sizeof %d \n", __func__, context, sizeof(context));
+//    printf("input string %s context %p \n", input_string, context );
+
 	char *loc = NULL;
 	osc_expr_error_formatLocation(llocp, input_string, &loc);
+    
 	int loclen = 0;
 	if(loc){
 		loclen = strlen(loc);
@@ -278,10 +280,11 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 	int more_len = 0;
 	if(ap){
 		more_len += vsnprintf(more, 256, moreinfo_fmt, ap);
-		va_end(ap);
 	}
+    va_end(ap);
+    
 	if(loclen || more_len){
-		char buf[loclen + more_len];
+		char buf[loclen + more_len + 3];
 		char *ptr = buf;
 		if(loclen){
 			ptr += sprintf(ptr, "%s\n", loc);
@@ -289,8 +292,9 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
-		// printf("%s A context %p\n", __func__, context);
-
+        //printf("\n");
+		//printf("%s A context %p\n", __func__, context);
+        
 		osc_error_handler(context,
 					__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
 				  NULL,
@@ -313,6 +317,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 	}
 
 	//printf("END\n" );
+    
 
 }
 
@@ -372,7 +377,7 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 
  void yyerror(YYLTYPE *llocp, t_osc_expr **exprstack, t_osc_expr **tmp_exprstack, t_osc_expr_rec **rec, void *scanner, char *input_string, long *buflen, char **buf, int startcond, int *started, void *context, char const *e)
 {
-	 printf("(yyerror) %s context %p\n", __func__, context);
+//	printf("(yyerror) %s context %p\n", __func__, context);
 	osc_expr_error(context, llocp, input_string, OSC_ERR_EXPPARSE, e);
 }
 
