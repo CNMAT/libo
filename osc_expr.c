@@ -171,7 +171,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
-		int f_argc = osc_expr_getArgCount(f);
+		long f_argc = osc_expr_getArgCount(f);
 		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 		t_osc_atom_ar_u *argv[f_argc];
 		memset(argv, '\0', sizeof(argv));
@@ -2085,6 +2085,12 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 
 int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
 {
+    if( argc != 2 )
+    {
+        osc_expr_err_argnum( context, 2, argc, 0, f->rec->name );
+        return 0;
+    }
+    
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
 	uint32_t min_argc = argc0, max_argc = argc1;
@@ -3395,6 +3401,67 @@ int osc_expr_sort(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	return 0;
 }
 
+
+typedef struct _sortIndexStruct {
+    t_osc_atom_u *a;
+    int32_t index;
+} t_sortIndexStruct;
+
+static int osc_expr_qsortIndexcb(const void *a1, const void *a2)
+{
+    
+    t_osc_atom_u *aa1 = ((t_sortIndexStruct *)a1)->a;
+    t_osc_atom_u *aa2 = ((t_sortIndexStruct *)a2)->a;
+    char t1 = osc_atom_u_getTypetag(aa1);
+    char t2 = osc_atom_u_getTypetag(aa2);
+    if(t1 == 's' && t2 == 's'){
+        return strcmp(osc_atom_u_getStringPtr(aa1), osc_atom_u_getStringPtr(aa2));
+    }else if(t1 == 's'){
+        return 1;
+    }else if(t2 == 's'){
+        return -1;
+    }else{
+        double d1 = osc_atom_u_getDouble(aa1);
+        double d2 = osc_atom_u_getDouble(aa2);
+        return (d1 < d2) ? -1 : ((d1 > d2) ? 1 : 0);
+    }
+    return 0;
+}
+
+int osc_expr_sortidx(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+/*
+    if( argc > 1 )
+    {
+        osc_expr_err_argnum(1, argc, 1, "osc_expr: sortIndex()");
+        return 1;
+    }
+*/
+    long n = osc_atom_array_u_getLen(argv[0]);
+    
+    *out = osc_atom_array_u_alloc(n);
+    t_sortIndexStruct sort_ar[n];
+    
+    for(int i = 0; i < n; i++)
+    {
+        sort_ar[i].index = i;
+        sort_ar[i].a = osc_atom_u_alloc();
+        osc_atom_u_copyInto(&sort_ar[i].a, osc_atom_array_u_get(argv[0], i));
+    }
+
+    
+    qsort((void *)sort_ar, n, sizeof(t_sortIndexStruct), osc_expr_qsortIndexcb);
+    
+    for( int i = 0; i < n; i++ )
+    {
+        osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), sort_ar[i].index);
+        osc_mem_free(sort_ar[i].a);
+    }
+    
+    return 0;
+}
+
+
 int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
 {
 	int outlen = 0;
@@ -4066,8 +4133,8 @@ int osc_expr_scale(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 		return 0;
 	}
 	double m = (max_out - min_out) / (max_in - min_in);
-	float b = (min_out - (m * min_in));
-
+	double b = (min_out - (m * min_in));
+		
 	int i;
 	for(i = 0; i < len; i++){
 		char type = osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, i));
