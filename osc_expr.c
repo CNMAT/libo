@@ -169,7 +169,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
-		int f_argc = osc_expr_getArgCount(f);
+		long f_argc = osc_expr_getArgCount(f);
 		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 		t_osc_atom_ar_u *argv[f_argc];
 		memset(argv, '\0', sizeof(argv));
@@ -2057,6 +2057,9 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 
 int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
+    if( argc != 2 )
+        return 0;
+    
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
 	uint32_t min_argc = argc0, max_argc = argc1;
