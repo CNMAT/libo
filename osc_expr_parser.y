@@ -264,7 +264,6 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		    ...)
 {
 //	printf("%s context %p sizeof %d \n", __func__, context, sizeof(context));
-//    printf("input string %s context %p \n", input_string, context );
 
 	char *loc = NULL;
 	osc_expr_error_formatLocation(llocp, input_string, &loc);
@@ -292,8 +291,6 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
-        //printf("\n");
-		//printf("%s A context %p\n", __func__, context);
         
 		osc_error_handler(context,
 					__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
@@ -302,7 +299,6 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  buf);
 	}else{
-//		printf("%s B context %p\n", __func__, context);
 	  osc_error_handler(context,
 					__FILE__,//basename(__FILE__),
 				  NULL,
@@ -310,23 +306,21 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 				  errorcode,
 				  "");
 	}
-	//printf("POST\n");
 
 	if(loc){
 		osc_mem_free(loc);
 	}
 
-	//printf("END\n" );
-    
 
 }
 
 int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string, t_osc_expr_rec *r, t_osc_expr_arg *arglist)
 {
+
 	if(!r){
+        printf("no r\n");
 		return 1;
 	}
-	//printf("%s context %p\n", __func__, context);
 
 	/*
 	if(r->arity < 0){
@@ -340,9 +334,12 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 		i++;
 		a = osc_expr_arg_next(a);
 	}
+    printf("%s i %d %d \n", __func__, i, r->num_required_args);
+
 	if(i == r->num_required_args){
 		return 0;
 	}
+    
 	if(i < r->num_required_args){
 		osc_expr_error(context,
 						 llocp,
@@ -1127,6 +1124,13 @@ expr:
 		$$ = e;
 		osc_atom_u_free($1);
   	}
+    | OSC_EXPR_STRING '(' args ',' ')' %prec OSC_EXPR_FUNC_CALL {
+        char *ptr = NULL;
+        osc_atom_u_getString($1, 0, &ptr);
+        osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "trailing comma", ptr, ptr);
+        osc_atom_u_free($1);
+        return 1;
+    }
 	| OSC_EXPR_STRING '(' ')' %prec OSC_EXPR_FUNC_CALL {
 		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, osc_atom_u_getStringPtr($1), NULL);
 		if(!e){
@@ -1341,6 +1345,7 @@ expr:
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
 			osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
+            osc_atom_u_free($1);
 			return 1;
 		}
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
@@ -1353,6 +1358,7 @@ expr:
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
 			osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
+            osc_atom_u_free($1);
 			return 1;
 		}
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
@@ -1391,6 +1397,7 @@ expr:
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
 			osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
+            osc_atom_u_free($1);
 			return 1;
 		}
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();
@@ -1412,6 +1419,7 @@ expr:
 		osc_atom_u_getString($1, 0, &ptr);
 		if(*ptr != '/'){
 			osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "osc_expr_parser: expected \"%s\" in \"%s = ... to be an OSC address\n", ptr, ptr);
+            osc_atom_u_free($1);
 			return 1;
 		}
 		t_osc_expr_arg *arg = osc_expr_arg_alloc();

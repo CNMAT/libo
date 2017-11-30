@@ -991,7 +991,8 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 					void *context)
 {
 	int f_argc = osc_expr_getArgCount(f);
-	if(f_argc < 2 && f_argc > 3){
+    printf("n args %d\n", f_argc);
+	if(f_argc < 2 || f_argc > 3){
 		osc_expr_err_argnum(context, 2, f_argc, 1, "osc_expr: if()");
 		return 1;
 	}
