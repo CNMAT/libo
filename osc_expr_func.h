@@ -112,6 +112,8 @@ int osc_expr_mtof(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 int osc_expr_ftom(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_sign(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_if(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_strlen(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_split(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_join(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -1754,6 +1756,32 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "Conditionally execute <arg2> or optional <arg3> based on the result of <arg1>",
 	 osc_expr_if,
 	 NULL},
+    //////////////////////////////////////////////////
+    {"strlen",
+        "/result = strlen($1)",
+        1,
+        0,
+        (char *[]){"String, or list of strings"},
+        (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+        (char *[]){},
+        (int []){},
+        (char *[]){"/string/function", NULL},
+        "Get length of string(s).",
+        osc_expr_strlen,
+        NULL},
+    //////////////////////////////////////////////////
+    {"strchar",
+        "/result = strchar($1, $2)",
+        2,
+        0,
+        (char *[]){"Index, or list of indexes of characters.", "String, or list of strings"},
+        (int []){OSC_EXPR_ARG_TYPE_NUMBER | OSC_EXPR_ARG_TYPE_LIST, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_LIST | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+        (char *[]){},
+        (int []){},
+        (char *[]){"/string/function", NULL},
+        "Get one or more characters from string as new string.",
+        osc_expr_strchar,
+        NULL},
 	//////////////////////////////////////////////////
 	{"strcmp",
 	 "/result = strcmp($1, $2)",

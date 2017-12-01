@@ -4415,6 +4415,67 @@ int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	return 0;
 }
 
+int osc_expr_strlen(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if( argc == 0 )
+        return 1;
+    
+    long len = osc_atom_array_u_getLen(*argv);
+    *out = osc_atom_array_u_alloc(len);
+    
+    int i;
+    for(i = 0; i < len; i++)
+    {
+        char *str = NULL;
+        osc_atom_u_getString(osc_atom_array_u_get(*argv, i), 0, &str);
+        long len = strlen(str);
+        osc_atom_u_setInt64(osc_atom_array_u_get(*out, i), len);
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
+
+int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if( argc != 2 )
+        return 1;
+    
+    // strcharat( [1,2,3], /str )
+    long numchars = osc_atom_array_u_getLen(argv[0]);
+    long len = osc_atom_array_u_getLen(argv[1]);
+    *out = osc_atom_array_u_alloc(len);
+    
+    int i, j;
+    for(i = 0; i < len; i++)
+    {
+        char *str = NULL;
+        osc_atom_u_getString(osc_atom_array_u_get(argv[1], i), 0, &str);
+        long len = strlen(str);
+        
+        char buf[numchars+1];
+        for( j = 0; j < numchars; j++ )
+        {
+            int pos = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], j));
+            if( pos >= 0 && pos < len )
+            {
+                buf[j] = str[pos];
+            }
+            else
+            {
+                osc_error(OSC_ERR_EXPR_ARGCHK, "char index out of range.");
+                osc_mem_free(str);
+                return 1;
+            }
+        }
+        buf[numchars] = '\0';
+        osc_atom_u_setString(osc_atom_array_u_get(*out, i), buf );
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
+
 int osc_expr_split(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
 	if(argc != 2){
