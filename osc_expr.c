@@ -4441,7 +4441,7 @@ int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
     if( argc != 2 )
         return 1;
     
-    // strcharat( [1,2,3], /str )
+    // strchar( [1,2,3], /str )
     long numchars = osc_atom_array_u_getLen(argv[0]);
     long len = osc_atom_array_u_getLen(argv[1]);
     *out = osc_atom_array_u_alloc(len);
@@ -4470,6 +4470,50 @@ int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
         }
         buf[numchars] = '\0';
         osc_atom_u_setString(osc_atom_array_u_get(*out, i), buf );
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
+int osc_expr_strfind(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if(argc != 2){
+        return 1;
+    }
+    char *str = NULL;
+    char *substr = NULL;
+    osc_atom_u_getString(osc_atom_array_u_get(argv[1], 0), 0, &str);
+    osc_atom_u_getString(osc_atom_array_u_get(argv[0], 0), 0, &substr);
+    if(!substr || !str){
+        return 1;
+    }
+    // strfind( "/foo", "/foo/bar" )
+
+    // return first character position of found substring
+    long substrlen = strlen(substr);
+    if(substrlen == 0)
+    {
+        return 0;
+    }
+    
+    long n = strlen(str);
+    t_osc_atom_ar_u *ar = osc_atom_array_u_alloc(n);
+    int i = 0;
+    char *p = str;
+    while( (p = strstr(p, substr)) != NULL )
+    {
+        long pos = p - str;
+        p += substrlen;
+        osc_atom_u_setInt64(osc_atom_array_u_get(ar, i++), pos);
+    }
+    osc_atom_array_u_resize(ar, i);
+    
+    *out = ar;
+    
+    if(substr){
+        osc_mem_free(substr);
+    }
+    if(str){
         osc_mem_free(str);
     }
     return 0;
