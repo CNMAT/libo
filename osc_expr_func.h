@@ -1699,7 +1699,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){NULL},
 	 (int []){},
 	 (char *[]){"/math/conversion", NULL},
-	 "Scale arg1 from arg1:arg2 to arg3:arg4",
+	 "Scale arg1 from arg2:arg3 to arg4:arg5",
 	 osc_expr_scale,
 	 NULL},
 	//////////////////////////////////////////////////
