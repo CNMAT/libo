@@ -59,6 +59,8 @@
 #include "osc_expr_scanner.h"
 #include "osc_expr_privatedecls.h"
 
+#include "regex.h"
+
 //#define __OSC_PROFILE__
 #include "osc_profile.h"
 
@@ -4413,6 +4415,138 @@ int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	*out = osc_atom_array_u_alloc(1);
 	osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), ret);
 	return 0;
+}
+
+int osc_expr_regex(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if(argc != 2){
+        return 1;
+    }
+    char *pattrn = NULL, *str = NULL;
+    osc_atom_u_getString(osc_atom_array_u_get(*argv, 0), 0, &pattrn);
+    osc_atom_u_getString(osc_atom_array_u_get(argv[1], 0), 0, &str);
+    
+    if( !pattrn || !str )
+        return 1;
+    
+    long pattrnlen = strlen(pattrn);
+    long strlength = strlen(str);
+    if( !pattrnlen || !strlength )
+    {
+        return 0;
+    }
+    
+    regex_t regex;
+    
+    int err = regcomp(&regex, pattrn, REG_EXTENDED);
+    if (err) {
+        osc_error(OSC_ERR_EXPR_ARGCHK, "Could not compile regex.");
+        return 1;
+    }
+    
+    regmatch_t match[strlength];
+    
+    t_osc_bndl_u *b = osc_bundle_u_alloc();
+    t_osc_msg_u *start = osc_message_u_allocWithAddress("/group/start");
+    t_osc_msg_u *end = osc_message_u_allocWithAddress("/group/end");
+    t_osc_msg_u *groupstr = osc_message_u_allocWithAddress("/group/str");
+    
+    int count = 0;
+    
+    char *p = str;
+    //while( p && !err ) // << was previously iterating through the string with the offset below but maybe this is the wrong approach?
+    while( count == 0 )
+    {
+        err = regexec(&regex, p, strlength, match, 0);
+
+        if( err )
+        {
+            if( err == REG_NOMATCH )
+                break;
+            else
+            {
+                if( err == REG_BADPAT ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid regular expression");
+                }else if( err == REG_ECOLLATE ) {
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid collating element");
+                }else if( err == REG_ECTYPE ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid character class");
+                }else if( err == REG_EESCAPE ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: trailing backslash");
+                }else if( err == REG_ESUBREG ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid backreference number");
+                }else if( err == REG_EBRACK ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: brackets ([ ]) not balanced");
+                }else if( err == REG_EPAREN ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: parentheses not balanced");
+                }else if( err == REG_EBRACE ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: braces not balanced");
+                }else if( err == REG_BADBR ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid character range");
+                }else if( err == REG_ERANGE ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: invalid character range");
+                }else if( err == REG_ESPACE ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: out of memory");
+                }else if( err == REG_BADRPT ){
+                    osc_error(OSC_ERR_EXPR_ARGCHK, "regex: repetition-operator operand invalid");
+                }
+                
+                break;
+            }
+        }
+        
+        long size = 0;
+        int i;
+        // printf("----\n");
+        long offset = 0;
+        //get groups
+        for( i = 0; i < strlength; i++ )
+        {
+            // printf("%d %lld %lld\n", i, match[i].rm_so, match[i].rm_eo);
+            if (match[i].rm_so == (size_t) -1)
+                break;
+            
+            size = match[i].rm_eo - match[i].rm_so;
+            
+            char buf[size + 1];
+            memcpy(buf, str + match[i].rm_so, size);
+            buf[size] = '\0';
+            
+            osc_message_u_appendInt64(start, match[i].rm_so);
+            osc_message_u_appendInt64(end, match[i].rm_eo);
+            osc_message_u_appendString(groupstr, buf);
+            
+            offset = match[i].rm_eo; // last valid offset
+        }
+
+        p += offset;
+        
+        count++;
+    }
+    
+    osc_bundle_u_addMsg(b, start);
+    osc_bundle_u_addMsg(b, end);
+    osc_bundle_u_addMsg(b, groupstr);
+    
+    if( count > 0 )
+    {
+        *out = osc_atom_array_u_alloc(1);
+        osc_atom_u_setBndl_u(osc_atom_array_u_get(*out, 0), b);
+    }
+    else
+    {
+        osc_bundle_u_free(b);
+    }
+    
+    if(pattrn){
+        osc_mem_free(pattrn);
+    }
+    if(str){
+        osc_mem_free(str);
+    }
+
+    regfree(&regex);
+    return 0;
 }
 
 int osc_expr_strlen(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)

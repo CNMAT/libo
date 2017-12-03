@@ -115,6 +115,7 @@ int osc_expr_if(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u
 int osc_expr_strlen(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strfind(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_regex(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_split(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_join(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
@@ -1796,8 +1797,20 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
         "Get first index corresponding to each instance of the sub-string found in the source string.",
         osc_expr_strfind,
         NULL},
+    //////////////////////////////////////////////////
+    {"regex",
+        "/result = regex($1, $2)",
+        2,
+        0,
+        (char *[]){"Regular expresison mpattern", "String to search for patterns"},
+        (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
+        (char *[]){},
+        (int []){},
+        (char *[]){"/string/function", NULL},
+        "Returns all matching substrings found by regex.",
+        osc_expr_regex,
+        NULL},
 	//////////////////////////////////////////////////
-    
 	{"strcmp",
 	 "/result = strcmp($1, $2)",
 	 2,
