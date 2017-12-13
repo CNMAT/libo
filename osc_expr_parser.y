@@ -334,7 +334,7 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 		i++;
 		a = osc_expr_arg_next(a);
 	}
-    printf("%s i %d %d \n", __func__, i, r->num_required_args);
+//    printf("%s i %d %d \n", __func__, i, r->num_required_args);
 
 	if(i == r->num_required_args){
 		return 0;
