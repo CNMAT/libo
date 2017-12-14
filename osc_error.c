@@ -47,7 +47,7 @@ int osc_error_handler(void *context,
 
 	if(_osc_error_handler){
 
-		printf("%s context %p \n\tfilename %s \n\tfunctionname %s \n\tlinenum %d \n\terrorcode %d \n\tmoreinfo_fmt %s \n", __func__, context, filename, functionname, linenum, (int)errorcode, moreinfo_fmt );
+		// printf("%s context %p \n\tfilename %s \n\tfunctionname %s \n\tlinenum %d \n\terrorcode %d \n\tmoreinfo_fmt %s \n", __func__, context, filename, functionname, linenum, (int)errorcode, moreinfo_fmt );
         
 		int buflen = MAX_ERR_STRING_LEN;
 		char buf[buflen];

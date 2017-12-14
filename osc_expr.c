@@ -117,7 +117,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 			  t_osc_atom_ar_u **out,
 				void *context)
 {
-	 // printf("%s context %p\n",__func__, context );
+	// printf("%s context %p\n",__func__, context );
 	//////////////////////////////////////////////////
 	// Special functions
 	//////////////////////////////////////////////////
@@ -765,6 +765,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 	if(!len || !oscbndl){
 		return 1;
 	}
+  //  printf("%s context %p\n",__func__, context );
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *address_ar = NULL;
 	char *address = NULL;
@@ -821,7 +822,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		osc_atom_u_getString(address_atom, 0, &address);
 		osc_atom_array_u_free(address_ar);
 	}
-
+    
     t_osc_err err;
 	if((err = osc_error_validateAddress(address))){
 		return err;
@@ -839,10 +840,12 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
             {
                 osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next), "=");
             }
+            /*
+             // we can assume that the inner expression printed an error
             else if ( argtype == OSC_EXPR_ARG_TYPE_EXPR )
             {
                 osc_error(context, OSC_ERR_EXPR_EVAL, "%s = %s : assignment from expression result is unbound", osc_expr_arg_getOSCAddress(f_argv), osc_expr_arg_getExpr(f_argv->next)->rec->name );
-            }
+            }*/
         }
         else
             osc_error(context, OSC_ERR_EXPR_EVAL, NULL);
@@ -894,7 +897,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, f_argv->arg.osc_address, 1);
 	if(!msg_ar){
-		osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "=");
+		osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "assign to index =");
 		return 1;
 	}
 
@@ -909,7 +912,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
         // get data at target address
         err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, out, context);
         if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-            osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "=");
+            osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "assign to index");
             goto bail;
         }
         int outlen = osc_atom_array_u_getLen(*out);
@@ -917,14 +920,17 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
         // get index(es)
         err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, &indexes, context);
         if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-            osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "=");
+            osc_error(context, OSC_ERR_EXPR_ADDRESSUNBOUND, "%s assign to index : address %s is unbound", osc_expr_arg_getOSCAddress(f_argv), osc_expr_arg_getOSCAddress(f_argv->next));
+            // osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next), "assign to index 2");
             goto bail;
         }
         int nindexes = osc_atom_array_u_getLen(indexes);
         // get data
         err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, &data, context);
         if(err == OSC_ERR_EXPR_ADDRESSUNBOUND){
-            osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "=");
+            //osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next->next), "assign to index 3");
+            osc_error(context, OSC_ERR_EXPR_ADDRESSUNBOUND, "%s assign to index : address %s is unbound", osc_expr_arg_getOSCAddress(f_argv), osc_expr_arg_getOSCAddress(f_argv->next->next));
+
             goto bail;
         }
         int ndata = osc_atom_array_u_getLen(data);
@@ -934,7 +940,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
         }else if(nindexes == 1 && ndata > 1){
             int idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, 0));
             if(idx >= outlen || idx < 0){
-                osc_error(context, OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                osc_error(context, OSC_ERR_EXPR_EVAL, "%s : assign to index %d exceeds array length %d", osc_expr_arg_getOSCAddress(f_argv), idx, outlen);
                 err = 1;
                 goto bail;
             }
@@ -946,7 +952,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
             for(i = 0; i < nindexes; i++){
                 idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
                 if(idx >= outlen || idx < 0){
-                    osc_error(context, OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                    osc_error(context, OSC_ERR_EXPR_EVAL, "%s : assign to index %d exceeds array length %d", osc_expr_arg_getOSCAddress(f_argv), idx, outlen);
                     continue;
                 }
                 t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
@@ -961,7 +967,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
             for(i = 0; i < n; i++){
                 idx = osc_atom_u_getInt(osc_atom_array_u_get(indexes, i));
                 if(idx >= outlen || idx < 0){
-                    osc_error(context, OSC_ERR_EXPR_EVAL, "index %d exceeds array length %d", idx, outlen);
+                    osc_error(context, OSC_ERR_EXPR_EVAL, "%s : assign to index %d exceeds array length %d", osc_expr_arg_getOSCAddress(f_argv), idx, outlen);
                     continue;
                 }
                 t_osc_atom_u *dest = osc_atom_array_u_get(*out, idx);
@@ -1016,7 +1022,25 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 	t_osc_atom_ar_u *argv = NULL;
 	t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &argv, context);
 	if(err){
-		osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating test argument");
+        if(err == OSC_ERR_EXPR_ADDRESSUNBOUND)
+        {
+            int argtype = osc_expr_arg_getType(f_argv);
+            if( argtype == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+            {
+                osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), "if(): error evaluating test argument");
+            }
+            else
+            {
+                // we can assume that the inner expression printed an error
+                // printf("argytpe %i\n", argtype);
+            }
+        }
+        else
+        {
+            osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating test argument" );
+        }
+        
+        //printf("err %llu %i %i\n", err, OSC_ERR_EXPR_ADDRESSUNBOUND, OSC_ERR_NOBUNDLE );
 		if(argv){
 			osc_atom_array_u_free(argv);
 		}
@@ -1032,16 +1056,48 @@ static int osc_expr_specFunc_if(t_osc_expr *f,
 		if(osc_atom_u_getInt32(osc_atom_array_u_get(argv, j))){
 			err = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, boolvec + j, context);
 			if(err){
-				osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"then\" expression");
-				goto out;
+                if(err == OSC_ERR_EXPR_ADDRESSUNBOUND)
+                {
+                    int argtype = osc_expr_arg_getType(f_argv->next);
+                    if( argtype == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+                    {
+                        osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next), "if(): error evaluating \"then\" argument");
+                    }
+                    else
+                    {
+                        // we can assume that the inner expression printed an error
+                     //  printf("%s argytpe %i\n", __func__, argtype);
+                    }
+                }
+                else
+                {
+                    osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"then\" argument" );
+                }
+                goto out;
 			}
 			outlen += osc_atom_array_u_getLen(boolvec[j]);
 		}else{
 			if(f_argc > 2){
 				err = osc_expr_evalArgInLexEnv(f_argv->next->next, lexenv, len, oscbndl, boolvec + j, context);
 				if(err){
-					osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"else\" expression");
-					goto out;
+                    if(err == OSC_ERR_EXPR_ADDRESSUNBOUND)
+                    {
+                        int argtype = osc_expr_arg_getType(f_argv->next->next);
+                        if( argtype == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+                        {
+                            osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next->next), "if(): error evaluating \"else\" argument");
+                        }
+                        else
+                        {
+                            // we can assume that the inner expression printed an error
+                            // printf("argytpe %i\n", argtype);
+                        }
+                    }
+                    else
+                    {
+                        osc_error(context, OSC_ERR_EXPR_EVAL, "osc_expr if(): error evaluating \"else\" argument" );
+                    }
+                    goto out;
 				}
 				outlen += osc_atom_array_u_getLen(boolvec[j]);
 			}
@@ -4407,6 +4463,7 @@ int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 			char tt = osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, i));
 			osc_atom_u_setInt8(osc_atom_array_u_get(*out, i), tt);
 		}
+
 	}
 	return 0;
 }
