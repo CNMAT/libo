@@ -117,7 +117,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 			  t_osc_atom_ar_u **out,
 				void *context)
 {
-	 //printf("%s context %p\n",__func__, context );
+	 // printf("%s context %p\n",__func__, context );
 	//////////////////////////////////////////////////
 	// Special functions
 	//////////////////////////////////////////////////
@@ -171,6 +171,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
+        // printf("function call \n" );
 		long f_argc = osc_expr_getArgCount(f);
 		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 		t_osc_atom_ar_u *argv[f_argc];
@@ -820,7 +821,8 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		osc_atom_u_getString(address_atom, 0, &address);
 		osc_atom_array_u_free(address_ar);
 	}
-	t_osc_err err;
+
+    t_osc_err err;
 	if((err = osc_error_validateAddress(address))){
 		return err;
 	}
@@ -830,7 +832,21 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 	t_osc_err ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, out, context);
 
 	if(ret){
-		osc_error(context, OSC_ERR_EXPR_EVAL, NULL);
+        if(ret == OSC_ERR_EXPR_ADDRESSUNBOUND)
+        {
+            int argtype = osc_expr_arg_getType(f_argv->next);
+            if( argtype == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+            {
+                osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv->next), "=");
+            }
+            else if ( argtype == OSC_EXPR_ARG_TYPE_EXPR )
+            {
+                osc_error(context, OSC_ERR_EXPR_EVAL, "%s = %s : assignment from expression result is unbound", osc_expr_arg_getOSCAddress(f_argv), osc_expr_arg_getExpr(f_argv->next)->rec->name );
+            }
+        }
+        else
+            osc_error(context, OSC_ERR_EXPR_EVAL, NULL);
+        
 		if(address){
 			osc_mem_free(address);
 		}
