@@ -46,7 +46,7 @@ typedef int (*t_osc_error_handler)(void *context, const char * const errorstr);
 #define osc_error OSC_ERROR_SIMPLE
 #endif
 
-#define MAX_ERR_STRING_LEN 512
+#define MAX_ERR_STRING_LEN 4096
 
 #define OSC_ERR_NONE 0
 #define OSC_ERR_BUNDLETOOSMALL 0x1
