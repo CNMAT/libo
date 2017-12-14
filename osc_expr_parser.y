@@ -663,7 +663,10 @@ expns:  {
 			*tmp_exprstack = $3;
 		}
  	}
-//| expns ','
+    | expns ',' {
+        osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "trailing comma", NULL, NULL);
+        return 1;
+    }
 ;
 /*
 number: OSC_EXPR_NUM
