@@ -169,7 +169,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		//////////////////////////////////////////////////
 		// Call normal function
 		//////////////////////////////////////////////////
-		int f_argc = osc_expr_getArgCount(f);
+		long f_argc = osc_expr_getArgCount(f);
 		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 		t_osc_atom_ar_u *argv[f_argc];
 		memset(argv, '\0', sizeof(argv));
@@ -1999,6 +1999,7 @@ int osc_expr_1arg_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 {
 	long ac = osc_atom_array_u_getLen(*argv);
 	if(argc == 0){
+        osc_expr_err_argnum( 1, 0, 0, f->rec->name );
 		return 0;
 	}
 	*out = osc_atom_array_u_alloc(ac);
@@ -2014,6 +2015,12 @@ int osc_expr_1arg_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 
 int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
+    if( argc != 2 )
+    {
+        osc_expr_err_argnum( 2, argc, 0, f->rec->name );
+        return 0;
+    }
+
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
 	uint32_t min_argc = argc0, max_argc = argc1;
@@ -2057,6 +2064,12 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 
 int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
+    if( argc != 2 )
+    {
+        osc_expr_err_argnum( 2, argc, 0, f->rec->name );
+        return 0;
+    }
+    
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
 	uint32_t min_argc = argc0, max_argc = argc1;
@@ -4405,6 +4418,111 @@ int osc_expr_strcmp(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	osc_atom_u_setInt32(osc_atom_array_u_get(*out, 0), ret);
 	return 0;
 }
+
+int osc_expr_strlen(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if( argc == 0 )
+        return 1;
+    
+    long len = osc_atom_array_u_getLen(*argv);
+    *out = osc_atom_array_u_alloc(len);
+    
+    int i;
+    for(i = 0; i < len; i++)
+    {
+        char *str = NULL;
+        osc_atom_u_getString(osc_atom_array_u_get(*argv, i), 0, &str);
+        long len = strlen(str);
+        osc_atom_u_setInt64(osc_atom_array_u_get(*out, i), len);
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
+
+int osc_expr_strchar(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if( argc != 2 )
+        return 1;
+    
+    // strchar( [1,2,3], /str )
+    long numchars = osc_atom_array_u_getLen(argv[0]);
+    long len = osc_atom_array_u_getLen(argv[1]);
+    *out = osc_atom_array_u_alloc(len);
+    
+    int i, j;
+    for(i = 0; i < len; i++)
+    {
+        char *str = NULL;
+        osc_atom_u_getString(osc_atom_array_u_get(argv[1], i), 0, &str);
+        long len = strlen(str);
+        
+        char buf[numchars+1];
+        for( j = 0; j < numchars; j++ )
+        {
+            int pos = osc_atom_u_getInt32(osc_atom_array_u_get(argv[0], j));
+            if( pos >= 0 && pos < len )
+            {
+                buf[j] = str[pos];
+            }
+            else
+            {
+                osc_error(OSC_ERR_EXPR_ARGCHK, "char index out of range.");
+                osc_mem_free(str);
+                return 1;
+            }
+        }
+        buf[numchars] = '\0';
+        osc_atom_u_setString(osc_atom_array_u_get(*out, i), buf );
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
+int osc_expr_strfind(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+    if(argc != 2){
+        return 1;
+    }
+    char *str = NULL;
+    char *substr = NULL;
+    osc_atom_u_getString(osc_atom_array_u_get(argv[1], 0), 0, &str);
+    osc_atom_u_getString(osc_atom_array_u_get(argv[0], 0), 0, &substr);
+    if(!substr || !str){
+        return 1;
+    }
+    // strfind( "/foo", "/foo/bar" )
+
+    // return first character position of found substring
+    long substrlen = strlen(substr);
+    if(substrlen == 0)
+    {
+        return 0;
+    }
+    
+    long n = strlen(str);
+    t_osc_atom_ar_u *ar = osc_atom_array_u_alloc(n);
+    int i = 0;
+    char *p = str;
+    while( (p = strstr(p, substr)) != NULL )
+    {
+        long pos = p - str;
+        p += substrlen;
+        osc_atom_u_setInt64(osc_atom_array_u_get(ar, i++), pos);
+    }
+    osc_atom_array_u_resize(ar, i);
+    
+    *out = ar;
+    
+    if(substr){
+        osc_mem_free(substr);
+    }
+    if(str){
+        osc_mem_free(str);
+    }
+    return 0;
+}
+
 
 int osc_expr_split(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
 {
