@@ -2498,6 +2498,10 @@ int osc_expr_eq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result)
 	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
 		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
 		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) == 0);
+	}else if(tt1 == 'N' && tt2 == 'N'){
+		osc_atom_u_setBool(*result, 1);
+	}else if(tt1 == 'N' || tt2 == 'N'){
+		osc_atom_u_setBool(*result, 0);
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg("==", tt1, 1, f1, f2);
@@ -5384,6 +5388,27 @@ int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_at
 	*out = osc_atom_array_u_alloc(1);
 	t_osc_timetag tt;
 	osc_timetag_fromISO8601(st, &tt);
+	osc_atom_u_setTimetag(osc_atom_array_u_get(*out, 0), tt);
+	return 0;
+}
+
+int osc_expr_floattotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out)
+{
+	if(argc != 1){
+		osc_expr_err_argnum(1, argc, 0, "floattotime");
+	}
+	if(osc_atom_array_u_getLen(argv[0]) > 1){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "floattotime takes a single float as an argument. found a list\n");
+		return 1;
+	}
+	t_osc_atom_u *a = osc_atom_array_u_get(argv[0], 0);
+	if(osc_atom_u_getTypetag(a) != 'f' && osc_atom_u_getTypetag(a) != 'd'){
+		osc_error(OSC_ERR_EXPR_ARGCHK, "argument to strtotime must be a float or a double\n");
+		return 1;
+	}
+	double d = osc_atom_u_getDouble(a);
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_timetag tt = osc_timetag_floatToTimetag(d);
 	osc_atom_u_setTimetag(osc_atom_array_u_get(*out, 0), tt);
 	return 0;
 }

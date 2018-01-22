@@ -187,6 +187,7 @@ int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 int osc_expr_typetags(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+int osc_expr_floattotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
 
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
@@ -2607,6 +2608,18 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "Converts the contents of a string to a timetag.",
 	 osc_expr_strtotime,
+	 NULL},
+	{"floattotime",
+	 "/result = floattotime($1)",
+	 1,
+	 0,
+	 (char *[]){"Float or double"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUMBER},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/core", NULL},
+	 "Converts a float or double to a timetag.",
+	 osc_expr_floattotime,
 	 NULL},
 	{"match",
 	 "/result = match($1, $2)",
