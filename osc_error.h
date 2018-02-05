@@ -1,7 +1,7 @@
 /*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
 University of California, Berkeley.  Copyright (c) 2009-ll, The Regents of
-the University of California (Regents). 
+the University of California (Regents).
 Permission to use, copy, modify, distribute, and distribute modified versions
 of this software and its documentation without fee and without a signed
 licensing agreement, is hereby granted, provided that the above copyright
@@ -32,12 +32,12 @@ extern "C" {
 
 typedef uint64_t t_osc_err;
 
-typedef int (*t_osc_error_handler)(const char * const errorstr);
+typedef int (*t_osc_error_handler)(void *context, const char * const errorstr);
 
-#define OSC_ERROR_VERBOSE(errorcode, moreinfo_fmt, args...)				\
-	osc_error_handler(basename(__FILE__), __func__, __LINE__, errorcode, moreinfo_fmt, ##args);
-#define OSC_ERROR_SIMPLE(errorcode, moreinfo_fmt, args...)				\
-	osc_error_handler(NULL, NULL, -1, errorcode, moreinfo_fmt, ##args);
+#define OSC_ERROR_VERBOSE(context, errorcode, moreinfo_fmt, args...)				\
+	osc_error_handler(context, basename(__FILE__), __func__, __LINE__, errorcode, moreinfo_fmt, ##args);
+#define OSC_ERROR_SIMPLE(context, errorcode, moreinfo_fmt, args...)				\
+	osc_error_handler(context, NULL, NULL, -1, errorcode, moreinfo_fmt, ##args);
 
 //#define OSC_ERROR_VERBOSE_REPORTING
 #ifdef OSC_ERROR_VERBOSE_REPORTING
@@ -46,7 +46,7 @@ typedef int (*t_osc_error_handler)(const char * const errorstr);
 #define osc_error OSC_ERROR_SIMPLE
 #endif
 
-#define MAX_ERR_STRING_LEN 512
+#define MAX_ERR_STRING_LEN 4096
 
 #define OSC_ERR_NONE 0
 #define OSC_ERR_BUNDLETOOSMALL 0x1
@@ -71,7 +71,8 @@ typedef int (*t_osc_error_handler)(const char * const errorstr);
 
 #define OSC_ERR_PARSER 0x1000
 
-int osc_error_handler(const char * const filename,
+int osc_error_handler(void *context,
+					const char * const filename,
 		      const char * const functionname,
 		      int linenum,
 		      t_osc_err errorcode,

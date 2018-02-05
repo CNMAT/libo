@@ -1,7 +1,7 @@
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
   University of California, Berkeley.  Copyright (c) 2011, The Regents of
-  the University of California (Regents). 
+  the University of California (Regents).
   Permission to use, copy, modify, distribute, and distribute modified versions
   of this software and its documentation without fee and without a signed
   licensing agreement, is hereby granted, provided that the above copyright
@@ -40,7 +40,7 @@ typedef t_osc_hashtab t_osc_expr_lexenv;
 
 #include "osc_atom_array_u.h"
 
-typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out);
+typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 
 #include <math.h>
 #include "osc_message_s.h"
@@ -52,8 +52,9 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 			  t_osc_expr_lexenv *lexenv,
 			  long *len,
 			  char **oscbndl,
-			  t_osc_atom_ar_u **out);
-int osc_expr_eval(t_osc_expr *function, long *len, char **oscbndl, t_osc_atom_ar_u **out);
+			  t_osc_atom_ar_u **out,
+				void *context);
+int osc_expr_eval(t_osc_expr *function, long *len, char **oscbndl, t_osc_atom_ar_u **out, void *context);
 //int osc_expr_evalLexExprsInBndl(long *len, char **oscbndl, t_osc_atom_ar_u **out);
 t_osc_expr_rec *osc_expr_lookupFunction(char *name);
 t_osc_expr_lexenv *osc_expr_makeLexenv(void);

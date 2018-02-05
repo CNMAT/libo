@@ -1,7 +1,7 @@
 /*
 Written by John MacCallum, The Center for New Music and Audio Technologies,
 University of California, Berkeley.  Copyright (c) 2009-12, The Regents of
-the University of California (Regents). 
+the University of California (Regents).
 Permission to use, copy, modify, distribute, and distribute modified versions
 of this software and its documentation without fee and without a signed
 licensing agreement, is hereby granted, provided that the above copyright
@@ -29,26 +29,31 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_s.h"
 #include "osc_byteorder.h"
 
-int osc_error_defaultHandler(const char * const errorstr)
+int osc_error_defaultHandler(void *context, const char * const errorstr)
 {
 	return fprintf(stderr, "%s\n", errorstr);
 }
 
 static t_osc_error_handler _osc_error_handler = osc_error_defaultHandler;
 
-int osc_error_handler(const char * const filename,
+int osc_error_handler(void *context,
+					const char * const filename,
 		      const char * const functionname,
 		      int linenum,
 		      t_osc_err errorcode,
 		      const char * const moreinfo_fmt,
 		      ...)
 {
+
 	if(_osc_error_handler){
+
+		// printf("%s context %p \n\tfilename %s \n\tfunctionname %s \n\tlinenum %d \n\terrorcode %d \n\tmoreinfo_fmt %s \n", __func__, context, filename, functionname, linenum, (int)errorcode, moreinfo_fmt );
+        
 		int buflen = MAX_ERR_STRING_LEN;
 		char buf[buflen];
 		char *pos = buf;
 		if(filename){
-			pos += snprintf(pos, buflen, "%s: ", filename);
+			pos += snprintf(pos, buflen, "%s:\n", filename);
 		}
 		if(functionname){
 			pos += snprintf(pos, (buflen - (pos - buf)), "%s(): ", functionname);
@@ -57,7 +62,7 @@ int osc_error_handler(const char * const filename,
 			pos += snprintf(pos, (buflen - (pos - buf)), "%d: ", linenum);
 		}
 		if(errorcode){
-			pos += snprintf(pos, (buflen - (pos - buf)), "%s: ", osc_error_string(errorcode));
+			pos += snprintf(pos, (buflen - (pos - buf)), "%s: \n", osc_error_string(errorcode));
 		}
 		if(moreinfo_fmt){
 			pos += snprintf(pos, (buflen - (pos - buf)), "%s", moreinfo_fmt);
@@ -68,8 +73,7 @@ int osc_error_handler(const char * const filename,
 		pos = newbuf;
 		pos += vsnprintf(newbuf, (buflen - (pos - newbuf)), buf, ap);
 		va_end(ap);
-
-		return _osc_error_handler(newbuf);
+		return _osc_error_handler(context, newbuf);
 	}
 	return 0;
 }
