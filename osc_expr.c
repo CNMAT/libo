@@ -885,7 +885,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
                                            long *len,
                                            char **oscbndl,
                                            t_osc_atom_ar_u **out,
-																 					 void *context)
+                                           void *context)
 {
 	if(!len || !oscbndl){
 		return 1;
