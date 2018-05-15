@@ -53,6 +53,7 @@ void osc_mem_free(void *ptr)
 {
 	OSC_MEM_INVALIDATE(ptr);
 	osc_mem_free_fp(ptr);
+    ptr = NULL;
 }
 
 void osc_set_mem(void *(*malloc_func)(size_t),

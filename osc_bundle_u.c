@@ -279,7 +279,7 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
                     // later maybe try to maintain memmory location if the value is a bundle?
                     // in that case we might not clear first, but copy the new value into the bundle at this message
                     osc_message_u_clearArgs(m);
-                    osc_message_u_setArgArrayCopy(m, osc_message_u_getArgArrayCopy(msg));
+                    osc_message_u_deepCopy(&m, msg);
                     osc_message_u_free(msg);
                     msg = NULL;
                     return OSC_ERR_NONE;
