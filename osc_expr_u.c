@@ -204,7 +204,9 @@ int osc_expr_u_evalInLexEnv(t_osc_expr *f,
 			f_argv = f_argv->next;
 			i++;
 		}
-	        ret = f->rec->func(f, f_argc, argv, out, context);
+        
+        ret = f->rec->func(f, f_argc, argv, out, context);
+        
 		for(i = 0; i < f_argc; i++){
 			if(argv[i]){
 				osc_atom_array_u_free(argv[i]);
