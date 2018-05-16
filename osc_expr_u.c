@@ -801,7 +801,7 @@ static int osc_expr_u_specFunc_assign(t_osc_expr *f,
 		osc_message_u_appendAtom(mm, cpy);
 	}
 
-    osc_bundle_u_replaceMessage( u_bndl, mm );
+    ret = osc_bundle_u_replaceMessage( u_bndl, mm );
     
     if(address){
         osc_mem_free(address);
@@ -809,7 +809,7 @@ static int osc_expr_u_specFunc_assign(t_osc_expr *f,
 
     // message free is handled in replace message
     // osc_message_u_free(mm);
-	return 0;
+	return ret;
 }
 
 static int osc_expr_u_specFunc_assigntoindex(t_osc_expr *f,
@@ -1686,12 +1686,27 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
 {
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
-	osc_expr_u_evalArgInLexEnv(f_argv, lexenv, u_bndl, &arg1, context);
-	if(!arg1){
-		return 1;
-	}
+	t_osc_err error = osc_expr_u_evalArgInLexEnv(f_argv, lexenv, u_bndl, &arg1, context);
+    int free_arg1 = 1;
     t_osc_bndl_u *b = NULL;
-	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+	if(!arg1)
+    {
+        if( error == OSC_ERR_EXPR_ADDRESSUNBOUND && osc_expr_getArgCount(f) > 2 &&
+           f_argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS && f_argv->next->type == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+        {
+            t_osc_msg_u *m = osc_message_u_allocWithAddress( f_argv->arg.osc_address );
+            b = osc_bundle_u_alloc();
+            osc_message_u_appendBndl_u(m, b);
+            osc_bundle_u_addMsg(u_bndl, m);
+            arg1 = osc_message_u_getArgArrayCopy(m);
+        }
+        else
+        {
+            return 1;
+        }
+	}
+	else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's')
+    {
 		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
         t_osc_msg_u *m = osc_bundle_u_getFirstFullMatch(u_bndl, string);
         if ( m ) {
@@ -1714,7 +1729,6 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
 		t_osc_atom_array_u *ar = NULL;
 		osc_expr_u_evalArgInLexEnv(f_argv->next->next, lexenv, u_bndl, &ar, context);
 		int ret = 0;
-        int free_arg1 = 1; // just moved this above the goto cleanup here, should it be 1 already?
 		if(!ar){
 			goto cleanup;
 		}
@@ -1744,12 +1758,11 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
 		}
 
 		if(ret){
-			// cleanup
+			// cleanup?
 			return ret;
 		}
-		free_arg1 = 1; // this was the original definition
 
-		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR) {
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
 			t_osc_expr_rec *r = osc_expr_getRec(e);
 			if(osc_expr_rec_getFunction(r) == osc_expr_nth){
@@ -1771,14 +1784,14 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
 				osc_expr_setArg(assign, target);
 				*out = NULL;
 				ret = osc_expr_u_specFunc_assigntoindex(assign, lexenv, u_bndl, out, context);
-			}else{
+			} else {
 				return 1;
 			}
-		}else{
+		} else {
             
             t_osc_bndl_u *bcpy = osc_bundle_u_alloc();
             osc_bundle_u_copy(&bcpy, b);
-            osc_atom_u_setBndl_u(osc_atom_array_u_get(arg1, 0), b);
+            osc_atom_u_setBndl_u(osc_atom_array_u_get(arg1, 0), bcpy);
 
 			t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
 			osc_expr_arg_setList(arg_bndl, arg1);
@@ -1787,10 +1800,14 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
 			osc_expr_arg_append(target, arg_bndl);
 			osc_expr_setArg(assign, target);
 			*out = NULL;
+            
+            // internally assign uses the replace message function, which frees the input message
+            // so if there is no error, from the assign(), then I think we can skip freeing the assign
 			ret = osc_expr_u_specFunc_assign(assign, lexenv, u_bndl, out, context);
+
 		}
 
-	cleanup:
+    cleanup:
 		if(arg1 && free_arg1){
 			osc_atom_array_u_free(arg1);
 		}
