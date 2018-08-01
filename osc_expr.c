@@ -1781,6 +1781,7 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 {
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
+    printf("osc_expr_specFunc_assignToBundleMember n args %ld\n", osc_expr_getArgCount(f) );
 
 	t_osc_err error = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1, context);
 	if(!arg1){

@@ -237,7 +237,7 @@ t_osc_err osc_expr_parser_parseString(char *ptr, t_osc_expr **f)
 
 void osc_expr_error_formatLocation(YYLTYPE *llocp, char *input_string, char **buf)
 {
-    
+
 	int len = strlen(input_string);
 	if(llocp->first_column >= len || llocp->last_column >= len){
 		*buf = osc_mem_alloc(len + 1);
@@ -267,7 +267,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 
 	char *loc = NULL;
 	osc_expr_error_formatLocation(llocp, input_string, &loc);
-    
+
 	int loclen = 0;
 	if(loc){
 		loclen = strlen(loc);
@@ -281,7 +281,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		more_len += vsnprintf(more, 256, moreinfo_fmt, ap);
 		//}
     va_end(ap);
-    
+
 	if(loclen || more_len){
 		char buf[loclen + more_len + 3];
 		char *ptr = buf;
@@ -291,7 +291,7 @@ void osc_expr_error(void *context, YYLTYPE *llocp,
 		if(more_len){
 			ptr += sprintf(ptr, "%s\n", more);
 		}
-        
+
 		osc_error_handler(context,
 					__FILE__, //basename(__FILE__), // basename() seems to crash under cygwin...
 				  NULL,
@@ -339,7 +339,7 @@ int osc_expr_parser_checkArity(void* context, YYLTYPE *llocp, char *input_string
 	if(i == r->num_required_args){
 		return 0;
 	}
-    
+
 	if(i < r->num_required_args){
 		osc_expr_error(context,
 						 llocp,
@@ -1240,28 +1240,54 @@ expr:
 	| arg OSC_EXPR_POWEQ arg {
 		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(context, &yylloc, input_string, "^", $1, $3);
  	}
+  | arg '.' OSC_EXPR_OSCADDRESS  {
+
+    t_osc_expr_arg *arg_ar = $1;
+    char *ptr = NULL;
+    osc_atom_u_getString($3, 0, &ptr);
+    t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+    osc_expr_arg_setOSCAddress(a1, ptr);
+    osc_expr_arg_append(arg_ar, a1);
+
+    t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc,
+                     input_string,
+                     "getbundlemember",
+                     arg_ar);
+    if(!e){
+      osc_atom_u_free($3);
+      return 1;
+    }
+    $$ = e;
+    osc_atom_u_free($3);
+
+ 	}
 	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS {
 		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
 		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
 		char *ptr = NULL;
 		osc_atom_u_getString($1, 0, &ptr);
 		osc_expr_arg_setOSCAddress(a1, ptr);
-		ptr = NULL;
-		osc_atom_u_getString($3, 0, &ptr);
+    ptr = NULL;
+    osc_atom_u_getString($3, 0, &ptr);
 		osc_expr_arg_setOSCAddress(a2, ptr);
 		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
-		osc_mem_free($1);
-		osc_mem_free($3);
+    osc_atom_u_free($1);
+    osc_atom_u_free($3);
 	}
 	| OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS {
+    printf("OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS :" );
 		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
 		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
 		char *ptr = NULL;
 		//osc_atom_u_getString($1, 0, &ptr);
 		//osc_expr_arg_setOSCAddress(a1, ptr);
+    printf(" %s ", $1);
+
 		osc_expr_arg_setOSCAtom(a1, $1);
 		//ptr = NULL;
 		osc_atom_u_getString($3, 0, &ptr);
+    printf(" %s\n", ptr);
+
 		osc_expr_arg_setOSCAddress(a2, ptr);
 		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
 		//osc_mem_free($1);
@@ -1380,7 +1406,26 @@ expr:
 		$$ = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "assign_to_index", arg);
 		osc_atom_u_free($1);
 	}
-	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS '=' arg{
+  | arg '.' OSC_EXPR_OSCADDRESS '=' arg {
+
+		t_osc_expr_arg *arg_ar = $1;
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		osc_atom_u_getString($3, 0, &ptr);
+    printf("~ %s\n", ptr);
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		ptr = NULL;
+		osc_expr_arg_append(arg_ar, a2);
+		osc_expr_arg_append(arg_ar, $5);
+		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "assigntobundlemember", arg_ar);
+    if(!e){
+      osc_atom_u_free($3);
+      return 1;
+    }
+    $$ = e;
+    osc_atom_u_free($3);
+  }
+	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS '=' arg {
 		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
 		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
 		char *ptr = NULL;
