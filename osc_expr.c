@@ -885,7 +885,7 @@ static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
                                            long *len,
                                            char **oscbndl,
                                            t_osc_atom_ar_u **out,
-																 					 void *context)
+                                           void *context)
 {
 	if(!len || !oscbndl){
 		return 1;
@@ -1777,14 +1777,33 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 					     long *len,
 					     char **oscbndl,
 					     t_osc_atom_ar_u **out,
-		 					 void *context)
+                         void *context )
 {
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
-	osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1, context);
+
+	t_osc_err error = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1, context);
 	if(!arg1){
-		return 1;
+        
+        if( error == OSC_ERR_EXPR_ADDRESSUNBOUND && osc_expr_getArgCount(f) > 2 &&
+           f_argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS && f_argv->next->type == OSC_EXPR_ARG_TYPE_OSCADDRESS )
+        {
+            t_osc_msg_u *m = osc_message_u_allocWithAddress( f_argv->arg.osc_address );
+            t_osc_bundle_u * b = osc_bundle_u_alloc();
+            osc_message_u_appendBndl_u(m, b);
+            
+            osc_bundle_s_appendMessage(len, oscbndl, osc_message_u_serialize(m) );
+            
+            arg1 = osc_message_u_getArgArrayCopy(m);
+            
+        }
+        else
+        {
+            return 1;
+        }
+        
 	}
+    int free_arg1 = 1;
 	long bndl_len_s = 0;
 	char *bndl_s = NULL;
 	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
@@ -1850,7 +1869,6 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 			// cleanup
 			return ret;
 		}
-		int free_arg1 = 1; // << might need to be allocated before the goto cleanup above?
 
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);

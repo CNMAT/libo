@@ -59,6 +59,9 @@ int osc_bundle_u_getMsgCount(t_osc_bndl_u *bndl);
 t_osc_msg_u *osc_bundle_u_getFirstMsg(t_osc_bndl_u *bndl);
 t_osc_err osc_bundle_u_getMessagesWithCallback(t_osc_bndl_u *bndl, void (*f)(t_osc_msg_u*, void *), void *context);
 t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int fullmatch, int *res);
+t_osc_err osc_bundle_u_addressIsBound(t_osc_bndl_u *bndl, char *address, int fullmatch, int *res);
+t_osc_msg_u *osc_bundle_u_getFirstFullMatch(t_osc_bndl_u *bndl, char *address);
+t_osc_err osc_bundle_u_replaceMessage(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
 t_osc_msg_ar_u *osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, int fullmatch);
 t_osc_err osc_bundle_u_addMsg(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
 t_osc_err osc_bundle_u_addMsgWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msg);
@@ -67,6 +70,7 @@ t_osc_err osc_bundle_u_addMsgWithoutDupsCopy(t_osc_bndl_u *bndl, t_osc_msg_u *ms
 t_osc_err osc_bundle_u_addMsgArrayCopy(t_osc_bndl_u *bndl, t_osc_array *ar);
 t_osc_err osc_bundle_u_addMsgList(t_osc_bndl_u *bndl, t_osc_msg_u *msgs);
 t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m);
+void osc_bundle_u_removeMessage(t_osc_bndl_u * bndl, const char *address);
 t_osc_err osc_bundle_u_explode(t_osc_bndl_u **dest,
 			       t_osc_bndl_u *src,
 			       int maxlevel,

@@ -159,6 +159,56 @@ t_osc_err osc_bundle_u_addressExists(t_osc_bndl_u *bndl, char *address, int full
 	return OSC_ERR_NONE;
 }
 
+t_osc_err osc_bundle_u_addressIsBound(t_osc_bndl_u *bndl, char *address, int fullmatch, int *res)
+{
+    *res = 0;
+    t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
+    while(osc_bndl_it_u_hasNext(it)){
+        t_osc_msg_u *m = osc_bndl_it_u_next(it);
+        int po, ao;
+        char *a = osc_message_u_getAddress(m);
+        if(!a){
+            continue;
+        }
+        int r = osc_match(address, osc_message_u_getAddress(m), &po, &ao);
+        if(fullmatch){
+            if(r != (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE)){
+                continue;
+            }
+        }else{
+            if(r == 0 || (((r & OSC_MATCH_PATTERN_COMPLETE) == 0) && address[po] != '/')){
+                continue;
+            }
+        }
+        *res = (osc_message_u_getArgCount(m) > 0);
+        break;
+    }
+    osc_bndl_it_u_destroy(it);
+    return OSC_ERR_NONE;
+}
+
+t_osc_msg_u *osc_bundle_u_getFirstFullMatch(t_osc_bndl_u *bndl, char *address)
+{
+    t_osc_bndl_it_u *it = osc_bndl_it_u_get(bndl);
+    while(osc_bndl_it_u_hasNext(it)){
+        t_osc_msg_u *m = osc_bndl_it_u_next(it);
+        int po, ao;
+        char *a = osc_message_u_getAddress(m);
+        if(!a){
+            continue;
+        }
+
+        if( osc_match(address, osc_message_u_getAddress(m), &po, &ao) ==
+           (OSC_MATCH_ADDRESS_COMPLETE | OSC_MATCH_PATTERN_COMPLETE))
+        {
+            osc_bndl_it_u_destroy(it);
+            return m;
+        }
+    }
+    osc_bndl_it_u_destroy(it);
+    return NULL;
+}
+
 t_osc_msg_ar_u *osc_bundle_u_lookupAddress(t_osc_bndl_u *bndl, const char *address, int fullmatch)
 {
 	int matchbuflen = 16, n = 0;
@@ -202,7 +252,8 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
 	if(!bndl || !msg){
 		return OSC_ERR_NONE;
 	}
-	if(remove_dups){
+	if(remove_dups == 1)
+    {
 		char *address = osc_message_u_getAddress(msg);
 		if(address){
 			t_osc_msg_u *m = bndl->msghead;
@@ -217,6 +268,34 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
 			}
 		}
 	}
+    else if(remove_dups == 2)
+    {
+        char *address = osc_message_u_getAddress(msg);
+        if(address){
+            t_osc_msg_u *m = bndl->msghead;
+            while(m){
+                t_osc_msg_u *next = m->next;
+                if(!strcmp(address, osc_message_u_getAddress(m))){
+                    // later maybe try to maintain memmory location if the value is a bundle?
+                    // in that case we might not clear first, but copy the new value into the bundle at this message
+                    t_osc_msg_u * next = m->next;
+                    t_osc_msg_u * prev = m->prev;
+                    
+                    osc_message_u_clearArgs(m);
+                    osc_message_u_deepCopy(&m, msg);
+                    
+                    m->next = next;
+                    m->prev = prev;
+                    
+                    osc_message_u_free(msg);
+                    msg = NULL;
+                    return OSC_ERR_NONE;
+                }
+                m = next;
+            }
+        }
+    }
+    
 	bndl->msgcount++;
 	if(!(bndl->msghead)){
 		bndl->msghead = msg;
@@ -246,6 +325,12 @@ t_osc_err osc_bundle_u_addMsg(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
 t_osc_err osc_bundle_u_addMsgWithoutDups(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
 {
 	return osc_bundle_u_addMsg_impl(bndl, msg, 1);
+}
+
+t_osc_err osc_bundle_u_replaceMessage(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
+{
+    return osc_bundle_u_addMsg_impl(bndl, msg, 2);
+    
 }
 
 t_osc_err osc_bundle_u_addMsgCopy(t_osc_bndl_u *bndl, t_osc_msg_u *msg)
@@ -325,6 +410,22 @@ t_osc_err osc_bundle_u_removeMsg(t_osc_bndl_u *bndl, t_osc_msg_u *m)
 		bndl->msgtail = m->prev;
 	}
 	return OSC_ERR_NONE;
+}
+
+void osc_bundle_u_removeMessage(t_osc_bndl_u * bndl, const char *address)
+{
+    if(address){
+        t_osc_msg_u *m = bndl->msghead;
+        while(m){
+            t_osc_msg_u *next = m->next;
+            if(!strcmp(address, osc_message_u_getAddress(m))){
+                osc_bundle_u_removeMsg(bndl, m);
+                osc_message_u_free(m);
+                bndl->msgcount--;
+            }
+            m = next;
+        }
+    }
 }
 
 static t_osc_err osc_bundle_u_flatten_impl(t_osc_bndl_u **dest,
