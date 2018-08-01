@@ -26,6 +26,13 @@
 #include "osc_strfmt.h"
 #include "osc_mem.h"
 
+#ifdef LINUX_VERSION
+struct timezone {
+  int tz_minuteswest;
+  int tz_dsttime;
+};
+#endif
+
 void osc_timetag_ut_to_ntp(time_t ut, t_osc_timetag_ntptime *n);
 time_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n);
 void osc_timetag_float_to_ntp(double d, t_osc_timetag_ntptime *t);

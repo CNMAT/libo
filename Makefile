@@ -74,7 +74,8 @@ linux: CC = clang
 linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
 linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 #linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
-linux: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+linux: STATIC-LINK = ar rcs libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+#; ranlib libo.a
 
 swig: CC = clang
 swig: CFLAGS += -std=c99
