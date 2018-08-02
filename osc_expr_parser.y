@@ -460,7 +460,8 @@ t_osc_expr *osc_expr_parser_reduce_PrefixFunction(void *context,
 		return NULL;
 	}
 	if(osc_expr_parser_checkArity(context, llocp, input_string, r, arglist)){
-		return NULL;
+    printf("osc_expr_parser_checkArity fail\n");
+    return NULL;
 	}
 	t_osc_expr *e = osc_expr_alloc();
 	osc_expr_setRec(e, r);
@@ -1408,17 +1409,31 @@ expr:
 	}
   | arg '.' OSC_EXPR_OSCADDRESS '=' arg {
 
-		t_osc_expr_arg *arg_ar = $1;
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+    t_osc_expr_arg *arg1 = $1;
+
+    t_osc_expr_arg *addr_list = NULL;
+    osc_expr_arg_recursiveCopyAddrs(&addr_list, arg1);
+
 		char *ptr = NULL;
 		osc_atom_u_getString($3, 0, &ptr);
     printf("~ %s\n", ptr);
+
+    t_osc_expr_arg *a2 = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAddress(a2, ptr);
-		ptr = NULL;
-		osc_expr_arg_append(arg_ar, a2);
-		osc_expr_arg_append(arg_ar, $5);
-		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "assigntobundlemember", arg_ar);
+		osc_expr_arg_append(addr_list, a2);
+		osc_expr_arg_append(addr_list, $5);
+
+        t_osc_expr_arg *a = addr_list;
+        int count = 0;
+        while(a)
+        {
+          printf("%d type 0x%x\n", count++, osc_expr_arg_getType(a));
+          a = osc_expr_arg_next(a);
+        }
+
+		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "assigntobundlemember", addr_list);
     if(!e){
+      printf("parse error\n");
       osc_atom_u_free($3);
       return 1;
     }

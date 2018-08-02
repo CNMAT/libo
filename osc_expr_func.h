@@ -2126,7 +2126,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	{"assigntobundlemember",
 	 "assigntobundlemember(/bundle, /member, /val)",
 	 3,
-	 0,
+	 -1,
 	 (char *[]){"The address of a message containing a nested bundle", "The address of the message to extract from the nested bundle.", "The value to assign."},
 	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
 	 (char *[]){NULL},

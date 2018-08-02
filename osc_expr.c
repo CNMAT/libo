@@ -1779,14 +1779,14 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 					     t_osc_atom_ar_u **out,
                          void *context )
 {
-	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
-	t_osc_atom_ar_u *arg1 = NULL;
-    printf("osc_expr_specFunc_assignToBundleMember n args %ld\n", osc_expr_getArgCount(f) );
+
+    t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+    t_osc_atom_ar_u *arg1 = NULL;
+    printf("s osc_expr_specFunc_assignToBundleMember n args %ld\n", osc_expr_getArgCount(f) );
 
 	t_osc_err error = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1, context);
 	if(!arg1){
-        
-        if( error == OSC_ERR_EXPR_ADDRESSUNBOUND && osc_expr_getArgCount(f) > 2 &&
+        if( error == OSC_ERR_EXPR_ADDRESSUNBOUND &&
            f_argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS && f_argv->next->type == OSC_EXPR_ARG_TYPE_OSCADDRESS )
         {
             t_osc_msg_u *m = osc_message_u_allocWithAddress( f_argv->arg.osc_address );
@@ -1800,6 +1800,8 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
         }
         else
         {
+            printf("%d %s\n", __LINE__, __func__);
+
             return 1;
         }
         
@@ -1808,6 +1810,8 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 	long bndl_len_s = 0;
 	char *bndl_s = NULL;
 	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+        printf("s %d %s\n", __LINE__, __func__);
+
 		char *string = osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0));
 		t_osc_message_array_s *msgar = osc_bundle_s_lookupAddress(*len, *oscbndl, string, 1);
 		if(msgar){
@@ -6163,6 +6167,64 @@ int osc_expr_arg_append(t_osc_expr_arg *a, t_osc_expr_arg *arg_to_append)
 t_osc_expr_arg *osc_expr_arg_next(t_osc_expr_arg *a)
 {
 	return a->next;
+}
+
+void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *arg)
+{
+    printf("arg type: 0x%x\n", osc_expr_arg_getType(arg));
+    switch (arg->type)
+    {
+        case OSC_EXPR_ARG_TYPE_EXPR:
+        {
+            int i = 0;
+            t_osc_expr * e = osc_expr_arg_getExpr(arg);
+            t_osc_expr_arg * inner_arg = osc_expr_getArgs(e);
+            printf("searching sub expr %p with %ld args\n", e, osc_expr_getArgCount(e));
+            
+            while(inner_arg){
+                printf("%d\n", i++);
+                osc_expr_arg_recursiveCopyAddrs(addrlist, inner_arg);
+                inner_arg = osc_expr_arg_next(inner_arg);
+            }
+            printf("ended sub expr search\n");
+            break;
+        }
+        case OSC_EXPR_ARG_TYPE_OSCADDRESS:
+        {
+            printf("found address %s\n", osc_expr_arg_getOSCAddress(arg));
+            if( !(*addrlist) )
+            {
+                osc_expr_arg_copy(addrlist, arg);
+            }
+            else
+            {
+                t_osc_expr_arg *copy = NULL;
+                osc_expr_arg_copy(&copy, arg);
+                printf("finished copy, copy next %p\n", copy->next);
+                
+                t_osc_expr_arg *aa = *addrlist;
+                t_osc_expr_arg *next = aa;
+                int count = 0;
+                while(aa){
+                    printf("current arg %d type: 0x%x\n", count, osc_expr_arg_getType(aa));
+                    next = aa;
+                    aa = aa->next;
+                    count++;
+                }
+                next->next = copy;
+
+              // int count = osc_expr_arg_append(addrlist, copy);
+                printf("added addr %d\n", count);
+
+            }
+
+            break;
+        }
+         
+        default:
+            printf("unsupported type: 0x%x\n", osc_expr_arg_getType(arg));
+            break;
+    }
 }
 
 void osc_expr_funcobj_dtor(char *key, void *val)

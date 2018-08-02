@@ -105,6 +105,8 @@ int osc_expr_arg_append(t_osc_expr_arg *a, t_osc_expr_arg *arg_to_append);
 void osc_expr_arg_setNext(t_osc_expr_arg *a, t_osc_expr_arg *next);
 t_osc_expr_arg *osc_expr_arg_next(t_osc_expr_arg *a);
 
+void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *arg);
+    
 void osc_expr_format(t_osc_expr *fg, long *buflen, char **fmt);
 void osc_expr_formatFunctionTable(long *buflen, char **buf);
 
