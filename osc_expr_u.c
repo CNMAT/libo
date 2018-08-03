@@ -284,6 +284,7 @@ static int osc_expr_u_specFunc_apply(t_osc_expr *f,
 			    t_osc_atom_ar_u **out,
 					void *context)
 {
+    printf("osc_expr_u_specFunc_apply\n");
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	if((osc_expr_arg_getType(f_argv) != OSC_EXPR_ARG_TYPE_ATOM) &&
 	   (osc_expr_arg_getType(f_argv) != OSC_EXPR_ARG_TYPE_FUNCTION) &&
@@ -1611,6 +1612,7 @@ static int osc_expr_u_specFunc_getBundleMember(t_osc_expr *f,
 					     t_osc_atom_ar_u **out,
 		 					 void *context)
 {
+    printf("osc_expr_u_specFunc_getBundleMember argc = %d\n", osc_expr_getArgCount(f));
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
 	osc_expr_u_evalArgInLexEnv(f_argv, lexenv, u_bndl, &arg1, context);
@@ -1673,6 +1675,13 @@ static int osc_expr_u_specFunc_getBundleMember(t_osc_expr *f,
 			}
 		}else{
 			ret = osc_expr_u_evalArgInLexEnv(f_argv->next, lexenv, b, out, context);
+            long ar_len = 0;
+            char *ar_str = NULL;
+            const char * sep = "\t";
+            osc_atom_array_u_getStringArray(*out, &ar_len, &ar_str, sep);
+            
+            printf("get ar(%d) 1st type: %c array %s\n", osc_atom_array_u_getLen(*out), osc_atom_u_getTypetag(osc_atom_array_u_get(*out,0)), ar_str);
+
 		}
 		osc_atom_array_u_free(arg1);
         return ret;
@@ -1680,109 +1689,94 @@ static int osc_expr_u_specFunc_getBundleMember(t_osc_expr *f,
 	return 1;
 }
 
-
-int osc_expr_u_specFunc_assignToBundleMember_factory( t_osc_bundle_u *bndl, long argc, t_osc_expr_arg *argv, t_osc_bundle_u **target_bndl, t_osc_expr_arg **target_addr, t_osc_expr_arg **value )
+static int osc_expr_u_assignToBundleMember_createEmpties(t_osc_bundle_u *bndl, long argc, t_osc_expr_arg *argv, t_osc_msg_u **target_msg, t_osc_expr_arg **value )
 {
-    // to do: iterate args in order and check if each sub-bundle is there, if not, create empty bundles for sub-bunldes and an unassigned (no-value) message for the last address.
-    
-    // the last address is the target message in the sub-bundle
-    // the last argument is the value to assign to the target
-    
+//    printf("creating empties argc %d\n", argc );
+    t_osc_bundle_u *parent = bndl;
     t_osc_expr_arg *arg = argv;
     long count = 0;
-    while (arg && count < argc )
+    while( arg && count < argc-1 )
     {
+        t_osc_msg_u * m = osc_message_u_allocWithAddress( arg->arg.osc_address );
+        t_osc_bundle_u * child = osc_bundle_u_alloc();
+        osc_message_u_appendBndl_u( m, child );
+        osc_bundle_u_addMsg(parent, m); // new messsage, so no need to check for replace routine
         
-        t_osc_msg_u *m = NULL;
-        if( arg->type == OSC_EXPR_ARG_TYPE_OSCADDRESS  )
-        {
-            m = osc_bundle_u_getFirstFullMatch(bndl, arg->arg.osc_address);
-        }
-        else if( arg->type == OSC_EXPR_ARG_TYPE_ATOM )
-        {
-            // in case of use in lambda ?
-            // something like:
-            // m = firstFullMatch(... arg.string)
-            return 1;
-        }
-        
-        
-        if( m )
-        {
-            t_osc_atom_u * at = osc_message_u_getArg(m, 0);
-            if( osc_atom_u_getTypetag( at ) != OSC_BUNDLE_TYPETAG )
-            {
-                // or maybe we should wipe out whatever was there? throwing an error for now
-                return 1;
-            }
-            
-            t_osc_bundle_u * sub = osc_atom_u_getBndl(at);
-            
-            // figure out if we're done looking or not and set the target bundle once we're done
-            if( (argc - 1) == 0 )
-            {
-                if( !sub || !arg->next)
-                    return 1;
-                else
-                {
-                    *target_bndl = sub;
-                    *target_addr = arg->next;
-                }
-                
-                if( !arg->next->next )
-                    return 1;
-                else
-                    *value = arg->next->next;
-                
-                return 0;
-            }
-            
-            // if we're not at the target yet, keep checking for sub-bundles
-            int err = osc_expr_u_specFunc_assignToBundleMember_factory( sub, argc-1, arg, target_bndl, target_addr, value );
-            if( err )
-                return err;
-            
-        }
-        else
-        {
-            // not found, so make all the rest of the needed sub-bundles
-            t_osc_bundle_u *parent = bndl;
-            while( arg && count < argc )
-            {
-                t_osc_msg_u * m = osc_message_u_allocWithAddress( arg->arg.osc_address );
-                t_osc_bundle_u * child = osc_bundle_u_alloc();
-                osc_message_u_appendBndl_u( m, child );
-                osc_bundle_u_addMsg(parent, m);
-                
-                parent = child;
-                
-                count++;
-                arg = arg->next;
-            }
-            
-            if( !arg )
-                return 1;
-            else
-            {
-                *target_bndl = parent;
-                *target_addr = arg;
-            }
-            
-            if( !arg->next )
-                return 1;
-            else
-                *value = arg->next;
-            
-            
-        }
+        parent = child;
         
         count++;
         arg = arg->next;
     }
+    
+    if( !arg || !arg->next )
+    {
+//        printf("arg %p arg->next %p\n", arg, arg->next  );
+        return 1;
+    }
+    else
+    {
+        t_osc_msg_u * m = osc_message_u_allocWithAddress( arg->arg.osc_address );
+        osc_bundle_u_addMsg(parent, m);
+        *target_msg = m;
+        *value = arg->next;
+    }
     return 0;
 }
 
-int osc_expr_u_specFunc_assignToBundleMember_proc(t_osc_expr *f,
+t_osc_err osc_expr_u_specFunc_assignToBundleMember_factory( t_osc_bundle_u *bndl, long argc, t_osc_expr_arg *argv, t_osc_msg_u **target_msg, t_osc_expr_arg **value )
+{
+    // printf("parsing bundle %p argc %ld \n", bndl, argc );
+    t_osc_msg_u *m = NULL;
+    if( argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS  )
+    {
+        m = osc_bundle_u_getFirstFullMatch(bndl, argv->arg.osc_address);
+    }
+    else if( argv->type == OSC_EXPR_ARG_TYPE_ATOM )
+    {
+        // in case of use in lambda ?
+        // something like:
+        // m = firstFullMatch(... arg.string)
+        return 1;
+    }
+    
+    if( m )
+    {
+//        printf("found addr %s -- argc %ld\n", osc_message_u_getAddress(m), argc );
+
+        // figure out if we're done looking or not and set the target bundle once we're done
+        if( argc == 1 )
+        {
+            if(!argv->next)
+                return 1;
+            else
+            {
+                *target_msg = m;
+                *value = argv->next;
+//                printf("returning %p and addr %s -- b should be %p \n", m, argv->arg.osc_address, *target_msg );
+                return 0;
+            }
+        }
+        // if we're not at the target yet, keep checking for sub-bundles
+        
+        // if the currnet message doesn't have a subbundle, we need to create the reset of them
+        t_osc_atom_u * at = osc_message_u_getArg(m, 0);
+        if( osc_atom_u_getTypetag( at ) != OSC_BUNDLE_TYPETAG )
+        {
+            return osc_expr_u_assignToBundleMember_createEmpties(bndl, argc-1, argv, target_msg, value);
+        }
+        
+        t_osc_bundle_u * sub = osc_atom_u_getBndl(at);
+        return osc_expr_u_specFunc_assignToBundleMember_factory( sub, argc-1, argv->next, target_msg, value );
+    }
+    else
+    {
+        return osc_expr_u_assignToBundleMember_createEmpties(bndl, argc, argv, target_msg, value);
+    }
+
+    return 0;
+}
+
+t_osc_err osc_expr_u_specFunc_assignToBundleMember_proc(t_osc_expr *f,
                                                          t_osc_expr_lexenv *lexenv,
                                                          t_osc_bndl_u *u_bndl,
                                                          t_osc_atom_ar_u **out,
@@ -1791,134 +1785,47 @@ int osc_expr_u_specFunc_assignToBundleMember_proc(t_osc_expr *f,
     t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
     long f_argc = osc_expr_getArgCount(f);
     
-    long value_idx = f_argc - 1;
-    long target_idx = value_idx - 1;
-    
-    t_osc_bundle_u *b = NULL; // the subbundle to assign the message to
-    t_osc_expr_arg *target_arg = NULL;
+    t_osc_msg_u *target_msg = NULL;
     t_osc_expr_arg *value_arg = NULL;
     
-    printf("n bundle msg %d\n", osc_bundle_u_getMsgCount(u_bndl));
+//    printf("n bundle nmsg %d target_msg %p\n", osc_bundle_u_getMsgCount(u_bndl), target_msg);
     
-    int err = osc_expr_u_specFunc_assignToBundleMember_factory(u_bndl, target_idx, f_argv, &b, &target_arg, &value_arg);
+    t_osc_err err = osc_expr_u_specFunc_assignToBundleMember_factory(u_bndl, f_argc - 1, f_argv, &target_msg, &value_arg);
     if( err )
         return err;
     
+//    printf("n bundle nmsg %d target_msg %p \n", osc_bundle_u_getMsgCount(u_bndl), target_msg);
     
-    printf("n bundle msg %d\n", osc_bundle_u_getMsgCount(u_bndl));
-    
-    if( !b || !target_arg || !value_arg )
+    if( !target_msg || !value_arg )
     {
-        printf("b || target || value error\n");
+//        printf("target_msg || value error\n");
         return 1;
     }
+
+    // evaluate the value argument before assigning the results
+    t_osc_atom_array_u *ar = NULL;
+    t_osc_err errlex = osc_expr_u_evalArgInLexEnv(value_arg, lexenv, u_bndl, &ar, context);
+    if( errlex )
+        return errlex;
     
-    
-    if(b)
-    {
-        // evaluate the value argument before assigning the results
-        t_osc_atom_array_u *ar = NULL;
-        t_osc_err errlex = osc_expr_u_evalArgInLexEnv(value_arg, lexenv, u_bndl, &ar, context);
-        if(!ar) {
-            return 1;
+/*
+    long ar_len = 0;
+    char *ar_str = NULL;
+    const char * sep = "\t";
+    osc_atom_array_u_getStringArray(ar, &ar_len, &ar_str, sep);
+    printf("ar array %s\n", ar_str);
+*/
+    osc_message_u_clearArgs(target_msg);
+    t_osc_err e = OSC_ERR_NONE;
+    for(int i = 0; i < osc_atom_array_u_getLen(ar); i++){
+        e = osc_message_u_appendAtom(target_msg, osc_atom_array_u_get(ar, i));
+        if(e){
+            return e;
         }
-        
-        t_osc_expr_arg *val = osc_expr_arg_alloc();
-        if(osc_atom_array_u_getLen(ar) == 1){
-            t_osc_atom_u *copy = osc_atom_u_alloc();
-            osc_atom_u_copyInto(&copy, osc_atom_array_u_get(ar, 0));
-            osc_expr_arg_setOSCAtom(val, copy);
-            osc_atom_array_u_free(ar);
-        } else {
-            t_osc_atom_ar_u *copy = osc_atom_array_u_copy(ar);
-            osc_expr_arg_setList(val, copy);
-            osc_atom_array_u_free(ar);
-        }
-        
-        t_osc_expr_arg *target = NULL;
-        osc_expr_arg_copy(&target, target_arg);
-        osc_expr_arg_append(target, val);
-        
-        t_osc_expr *assign = osc_expr_alloc();
-        t_osc_expr_rec *r = osc_expr_lookupFunction("assign");
-        osc_expr_setRec(assign, r);
-        
-        osc_expr_setArg(assign, target);
-        int ret = osc_expr_u_specFunc_assign(assign, lexenv, b, out, context);
-        osc_expr_arg_freeList(target);
-        target = NULL;
-        assign->argv = NULL;
-        assign->argc = 0;
-        if(*out){
-            osc_atom_array_u_free(*out);
-            *out = NULL;
-        }
-        
-        if(ret){
-            if(assign)
-                osc_expr_free(assign);
-            
-            return ret;
-        }
-        
-        if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR) {
-            printf("tell rama if you see this printed\n");
-            t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
-            t_osc_expr_rec *r = osc_expr_getRec(e);
-            if(osc_expr_rec_getFunction(r) == osc_expr_nth){
-                osc_expr_setRec(assign, osc_expr_lookupFunction("assign_to_index"));
-                t_osc_expr_arg *nth_args = osc_expr_getArgs(e);
-                osc_expr_arg_copy(&target, nth_args);
-                t_osc_expr_arg *nth_arg2 = NULL;
-                osc_expr_arg_copy(&nth_arg2, osc_expr_arg_next(nth_args));
-                osc_expr_arg_append(target, nth_arg2);
-                t_osc_atom_u *a = osc_atom_u_alloc();
-                
-                t_osc_bndl_u *bcpy = osc_bundle_u_alloc();
-                osc_bundle_u_copy(&bcpy, b);
-                osc_atom_u_setBndl_u(a, bcpy);
-                
-                t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
-                osc_expr_arg_setOSCAtom(arg_bndl, a);
-                osc_expr_arg_append(target, arg_bndl);
-                osc_expr_setArg(assign, target);
-                *out = NULL;
-                ret = osc_expr_u_specFunc_assigntoindex(assign, lexenv, u_bndl, out, context);
-            } else {
-                return 1;
-            }
-        } else {
-            //didn't we already do the assignment above?
-            
-            /*
-             t_osc_bndl_u *bcpy = osc_bundle_u_alloc();
-             osc_bundle_u_copy(&bcpy, b);
-             osc_atom_u_setBndl_u(osc_atom_array_u_get(arg1, 0), bcpy);
-             
-             t_osc_expr_arg *arg_bndl = osc_expr_arg_alloc();
-             osc_expr_arg_setList(arg_bndl, arg1);
-             free_arg1 = 0;
-             osc_expr_arg_copy(&target, f_argv);
-             osc_expr_arg_append(target, arg_bndl);
-             osc_expr_setArg(assign, target);
-             *out = NULL;
-             
-             // internally assign uses the replace message function, which frees the input message
-             // so if there is no error, from the assign(), then I think we can skip freeing the assign
-             ret = osc_expr_u_specFunc_assign(assign, lexenv, u_bndl, out, context);
-             */
-        }
-        
-    cleanup:
-        
-        if(assign){
-            osc_expr_free(assign);
-        }
-        
-        return ret;
     }
-    
-    return 1;
+
+    return 0;
+
 }
 
 
@@ -1934,7 +1841,7 @@ static int osc_expr_u_specFunc_assignToBundleMember(t_osc_expr *f,
     // the last argument is the value to assign to the target
     
     long f_argc = osc_expr_getArgCount(f);
-    if( f_argc > 3 )
+    if( f_argc > 2 )
     {
         int err = osc_expr_u_specFunc_assignToBundleMember_proc(f, lexenv, u_bndl, out, context);
         if( err )

@@ -6171,7 +6171,7 @@ t_osc_expr_arg *osc_expr_arg_next(t_osc_expr_arg *a)
 
 void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *arg)
 {
-    printf("arg type: 0x%x\n", osc_expr_arg_getType(arg));
+    //printf("arg type: 0x%x\n", osc_expr_arg_getType(arg));
     switch (arg->type)
     {
         case OSC_EXPR_ARG_TYPE_EXPR:
@@ -6179,19 +6179,19 @@ void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *
             int i = 0;
             t_osc_expr * e = osc_expr_arg_getExpr(arg);
             t_osc_expr_arg * inner_arg = osc_expr_getArgs(e);
-            printf("searching sub expr %p with %ld args\n", e, osc_expr_getArgCount(e));
+      //      printf("searching sub expr %p with %ld args\n", e, osc_expr_getArgCount(e));
             
             while(inner_arg){
-                printf("%d\n", i++);
+          //      printf("%d\n", i++);
                 osc_expr_arg_recursiveCopyAddrs(addrlist, inner_arg);
                 inner_arg = osc_expr_arg_next(inner_arg);
             }
-            printf("ended sub expr search\n");
+        //    printf("ended sub expr search\n");
             break;
         }
         case OSC_EXPR_ARG_TYPE_OSCADDRESS:
         {
-            printf("found address %s\n", osc_expr_arg_getOSCAddress(arg));
+//            printf("found address %s\n", osc_expr_arg_getOSCAddress(arg));
             if( !(*addrlist) )
             {
                 osc_expr_arg_copy(addrlist, arg);
@@ -6200,13 +6200,13 @@ void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *
             {
                 t_osc_expr_arg *copy = NULL;
                 osc_expr_arg_copy(&copy, arg);
-                printf("finished copy, copy next %p\n", copy->next);
+  //              printf("finished copy, copy next %p\n", copy->next);
                 
                 t_osc_expr_arg *aa = *addrlist;
                 t_osc_expr_arg *next = aa;
                 int count = 0;
                 while(aa){
-                    printf("current arg %d type: 0x%x\n", count, osc_expr_arg_getType(aa));
+    //                printf("current arg %d type: 0x%x\n", count, osc_expr_arg_getType(aa));
                     next = aa;
                     aa = aa->next;
                     count++;
@@ -6214,7 +6214,7 @@ void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *
                 next->next = copy;
 
               // int count = osc_expr_arg_append(addrlist, copy);
-                printf("added addr %d\n", count);
+      //          printf("added addr %d\n", count);
 
             }
 
@@ -6222,7 +6222,9 @@ void osc_expr_arg_recursiveCopyAddrs(t_osc_expr_arg **addrlist, t_osc_expr_arg *
         }
          
         default:
-            printf("unsupported type: 0x%x\n", osc_expr_arg_getType(arg));
+            // this seems ok, becuase strings shouldn't be supported with the assign function (where this is called)
+            // string shouldn't be supported because the string value input inside a lambda is probably a copy
+            printf("unsupported type: 0x%x -- maybe we need more types, let rama if you see this printed \n", osc_expr_arg_getType(arg));
             break;
     }
 }

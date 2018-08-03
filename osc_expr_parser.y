@@ -1241,8 +1241,39 @@ expr:
 	| arg OSC_EXPR_POWEQ arg {
 		$$ = osc_expr_parser_reduce_InfixAssignmentOperator(context, &yylloc, input_string, "^", $1, $3);
  	}
-  | arg '.' OSC_EXPR_OSCADDRESS  {
+	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS {
+		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		osc_atom_u_getString($1, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a1, ptr);
+    ptr = NULL;
+    osc_atom_u_getString($3, 0, &ptr);
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
+    osc_atom_u_free($1);
+    osc_atom_u_free($3);
+	}
+	| OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS {
+    printf("string OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS :" );
+		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+		char *ptr = NULL;
+		//osc_atom_u_getString($1, 0, &ptr);
+		//osc_expr_arg_setOSCAddress(a1, ptr);
+    printf(" %s ", $1);
 
+		osc_expr_arg_setOSCAtom(a1, $1);
+		//ptr = NULL;
+		osc_atom_u_getString($3, 0, &ptr);
+    printf(" %s\n", ptr);
+
+		osc_expr_arg_setOSCAddress(a2, ptr);
+		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
+		//osc_mem_free($1);
+		osc_mem_free($3);
+	}
+  | arg '.' OSC_EXPR_OSCADDRESS  {
     t_osc_expr_arg *arg_ar = $1;
     char *ptr = NULL;
     osc_atom_u_getString($3, 0, &ptr);
@@ -1262,38 +1293,67 @@ expr:
     osc_atom_u_free($3);
 
  	}
-	| OSC_EXPR_OSCADDRESS '.' OSC_EXPR_OSCADDRESS {
-		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
-		char *ptr = NULL;
-		osc_atom_u_getString($1, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a1, ptr);
-    ptr = NULL;
+  | arg '.' OSC_EXPR_OSCADDRESS '(' ')' %prec OSC_EXPR_FUNC_CALL {
+
+    printf("arg . OSC_EXPR_OSCADDRESS ( )\n");
+
+    t_osc_expr_arg *arg_ar = $1;
+
+    char *ptr = NULL;
     osc_atom_u_getString($3, 0, &ptr);
-		osc_expr_arg_setOSCAddress(a2, ptr);
-		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
-    osc_atom_u_free($1);
+
+    t_osc_expr_arg *a1 = osc_expr_arg_alloc();
+    osc_expr_arg_setOSCAddress(a1, ptr);
+    osc_expr_arg_append(arg_ar, a1);
+
+    t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc,
+                     input_string,
+                     "getbundlemember",
+                     arg_ar);
+
+    if(!e){
+      osc_atom_u_free($3);
+      return 1;
+    }
+
+    t_osc_expr *e_apply = osc_expr_alloc();
+    t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
+    osc_expr_setRec(e_apply, r);
+
+    t_osc_expr_arg *a = osc_expr_arg_alloc();
+    char *address = NULL;
+    osc_atom_u_getString($3, 0, &address);
+    osc_expr_arg_setOSCAddress(a, address);
+
+    osc_expr_setArg(e_apply, a);
+
+    t_osc_expr_arg * apply_arg = osc_expr_arg_alloc();
+    osc_expr_arg_setExpr(apply_arg, e_apply);
+
+    osc_expr_appendArg(e, apply_arg);
+
     osc_atom_u_free($3);
-	}
-	| OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS {
-    printf("OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS :" );
-		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
-		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
-		char *ptr = NULL;
-		//osc_atom_u_getString($1, 0, &ptr);
-		//osc_expr_arg_setOSCAddress(a1, ptr);
-    printf(" %s ", $1);
+    $$ = e;
 
-		osc_expr_arg_setOSCAtom(a1, $1);
-		//ptr = NULL;
-		osc_atom_u_getString($3, 0, &ptr);
-    printf(" %s\n", ptr);
+  }
+  | arg '.' OSC_EXPR_OSCADDRESS '(' args ')' %prec OSC_EXPR_FUNC_CALL {
 
-		osc_expr_arg_setOSCAddress(a2, ptr);
-		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
-		//osc_mem_free($1);
-		osc_mem_free($3);
-	}
+  printf("arg . OSC_EXPR_OSCADDRESS\n");
+
+          /*
+    t_osc_expr *e = osc_expr_alloc();
+    t_osc_expr_rec *r = osc_expr_lookupFunction("apply");
+    osc_expr_setRec(e, r);
+    t_osc_expr_arg *a = osc_expr_arg_alloc();
+    char *address = NULL;
+    osc_atom_u_getString($3, 0, &address);
+    osc_expr_arg_setOSCAddress(a, address);
+    osc_expr_arg_append(a, $5);
+    osc_expr_setArg(e, a);
+    osc_atom_u_free($3);
+    $$ = e;
+    */
+  }
 	/* | OSC_EXPR_OSCADDRESS OPEN_DBL_BRKTS arg CLOSE_DBL_BRKTS '.' OSC_EXPR_OSCADDRESS{ */
 	/* 	printf("here\n"); */
 	/* } */
@@ -1416,13 +1476,13 @@ expr:
 
 		char *ptr = NULL;
 		osc_atom_u_getString($3, 0, &ptr);
-    printf("~ %s\n", ptr);
+    // printf("~ %s\n", ptr);
 
     t_osc_expr_arg *a2 = osc_expr_arg_alloc();
 		osc_expr_arg_setOSCAddress(a2, ptr);
 		osc_expr_arg_append(addr_list, a2);
 		osc_expr_arg_append(addr_list, $5);
-
+/*
         t_osc_expr_arg *a = addr_list;
         int count = 0;
         while(a)
@@ -1430,7 +1490,7 @@ expr:
           printf("%d type 0x%x\n", count++, osc_expr_arg_getType(a));
           a = osc_expr_arg_next(a);
         }
-
+*/
 		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "assigntobundlemember", addr_list);
     if(!e){
       printf("parse error\n");
