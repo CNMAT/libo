@@ -142,6 +142,7 @@ void osc_atom_u_append(t_osc_atom_u *a1, t_osc_atom_u *a2)
 		a1 = a1->next;
 	}
 	a1->next = a2;
+    a2->prev = a1;
 }
 
 char osc_atom_u_getTypetag(t_osc_atom_u *a)
