@@ -181,7 +181,7 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		while(f_argv){
 			int ret = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, argv + i, context);
 			if(ret){
-				if(ret == OSC_ERR_EXPR_ADDRESSUNBOUND){
+				if(ret == OSC_ERR_EXPR_ADDRESSUNBOUND) {
 					// if the type arg type is something else, it will be an expression which means an
 					// error has already been posted
 					if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){

@@ -1253,18 +1253,20 @@ expr:
 		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
     osc_atom_u_free($1);
     osc_atom_u_free($3);
-	}
+	}/*
 	| OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS {
     printf("string OSC_EXPR_STRING '.' OSC_EXPR_OSCADDRESS :" );
 		t_osc_expr_arg *a1 = osc_expr_arg_alloc();
 		t_osc_expr_arg *a2 = osc_expr_arg_alloc();
+
 		char *ptr = NULL;
-		//osc_atom_u_getString($1, 0, &ptr);
-		//osc_expr_arg_setOSCAddress(a1, ptr);
-    printf(" %s ", $1);
+		osc_atom_u_getString($1, 0, &ptr);
+    printf(" %s ", ptr);
+    osc_mem_free(ptr);
+    ptr = NULL;
 
 		osc_expr_arg_setOSCAtom(a1, $1);
-		//ptr = NULL;
+
 		osc_atom_u_getString($3, 0, &ptr);
     printf(" %s\n", ptr);
 
@@ -1272,7 +1274,7 @@ expr:
 		$$ = osc_expr_parser_reduce_InfixOperator(context, &yylloc, input_string, ".", a1, a2);
 		//osc_mem_free($1);
 		osc_mem_free($3);
-	}
+	}*/
   | arg '.' OSC_EXPR_OSCADDRESS  {
     t_osc_expr_arg *arg_ar = $1;
     char *ptr = NULL;
