@@ -864,19 +864,19 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 
 	t_osc_msg_s *osc_msg_s = osc_message_u_serialize(mm);
 	t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, address, 1);
-        if(msg_ar){
-                osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), osc_msg_s);
-                osc_message_array_s_free(msg_ar);
-        }else{
-                osc_bundle_s_appendMessage(len, oscbndl, osc_msg_s);
-        }
+    if(msg_ar){
+            osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), osc_msg_s);
+            osc_message_array_s_free(msg_ar);
+    }else{
+            osc_bundle_s_appendMessage(len, oscbndl, osc_msg_s);
+    }
 	//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
 
-        if(address){
-                osc_mem_free(address);
-        }
+    if(address){
+        osc_mem_free(address);
+    }
 	osc_message_s_deepFree(osc_msg_s);
-        osc_message_u_free(mm);
+    osc_message_u_free(mm);
 	return 0;
 }
 

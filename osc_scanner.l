@@ -1,7 +1,7 @@
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
   University of California, Berkeley.  Copyright (c) 2011-14, The Regents of
-  the University of California (Regents). 
+  the University of California (Regents).
   Permission to use, copy, modify, distribute, and distribute modified versions
   of this software and its documentation without fee and without a signed
   licensing agreement, is hereby granted, provided that the above copyright
@@ -114,7 +114,7 @@ quoted_string [^\"\\]
 
 -?{c99_floating_point_constant}	{
 					char *endp = NULL;
-					double d = strtod(yytext, &endp); 
+					double d = strtod(yytext, &endp);
 					yylval->atom = osc_atom_u_allocWithDouble(d);
 					return OSCVALUE;
 				}

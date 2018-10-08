@@ -56,6 +56,7 @@ void osc_message_u_free(t_osc_msg_u *m)
 	}
 	if(m->address){
 		osc_mem_free(m->address);
+        m->address = NULL;
 	}
 	t_osc_atom_u *a = m->arghead;
 	while(a){

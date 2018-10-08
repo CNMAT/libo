@@ -1,7 +1,7 @@
 /*
   Written by John MacCallum, The Center for New Music and Audio Technologies,
   University of California, Berkeley.  Copyright (c) 2011, The Regents of
-  the University of California (Regents). 
+  the University of California (Regents).
   Permission to use, copy, modify, distribute, and distribute modified versions
   of this software and its documentation without fee and without a signed
   licensing agreement, is hereby granted, provided that the above copyright
@@ -158,7 +158,7 @@ quote[[:space:]]*\( {
 		}
 		end++;
 	}
-    
+
     if( np != 0 )
     {
         return 0;
@@ -179,7 +179,7 @@ quote[[:space:]]*\( {
 	BEGIN(quote);
 }
 
-<quote>[^\"]+ { 
+<quote>[^\"]+ {
 	if(*buf){
 		*buf = osc_mem_resize(*buf, *buflen + yyleng + 1);
 		*buflen += yyleng + 1;
@@ -200,7 +200,7 @@ quote[[:space:]]*\( {
 <quote>\" {
 	BEGIN(0);
 	if(*buf){
-		t_osc_atom_u *a = osc_atom_u_alloc();
+		//t_osc_atom_u *a = osc_atom_u_alloc();
 		//osc_atom_u_setStringPtr(a, *buf);
 		//osc_atom_u_setShouldFreePtr(a, 1);
 		yylval->atom = osc_atom_u_allocWithString(*buf);
@@ -236,7 +236,7 @@ quote[[:space:]]*\( {
 	}
 
 (([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
-						// int 
+						// int
 						char *endptr = NULL;
 						int32_t i = strtol(yytext, &endptr, 0);
 						if(alloc_atom){
