@@ -192,6 +192,7 @@ int osc_expr_readstring(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_a
 int osc_expr_strtotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_floattotime(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
+int osc_expr_quickhull(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 
 static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	// infix
@@ -2675,6 +2676,18 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/core", NULL},
 	 "matches the pattern(s) in arg 1 against the string(s) in arg 2.",
 	 osc_expr_match,
+	 NULL},
+	{"quickhull",
+	 "/result = quickhull($1, $2)",
+	 1,
+	 1,
+	 (char *[]){"Address or list", "Address or list"},
+	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_LIST, OSC_EXPR_ARG_TYPE_OSCADDRESS | OSC_EXPR_ARG_TYPE_LIST},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/statistics", NULL},
+	 "computes the convex hull of a set of points. points are expressed either as two arguments (xs and ys), or as a single interleaved list.",
+	 osc_expr_quickhull,
 	 NULL},
 };
 
