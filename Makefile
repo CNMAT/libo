@@ -21,7 +21,12 @@ LIBO_OBJECTS = $(LIBO_OFILES) $(LIBO_SCANNER_OBJECTS) $(LIBO_PARSER_OBJECTS)
 RELEASE-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O3 -funroll-loops -std=c99
 DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
-MAC-CFLAGS = -arch x86_64
+# option to set flex location in case of brew install
+# currently set to /usr/local/lib for typical make install
+FLEX_LIB_FOLDER = /usr/local/lib
+#FLEX_LIB_FOLDER = /usr/local/Cellar/flex/2.6.4/lib
+
+MAC-CFLAGS = -arch i386 -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE
 #WIN64-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -fPIC
@@ -36,7 +41,7 @@ all: CFLAGS += $(MAC-CFLAGS)
 all: CC = clang
 all: I = $(MAC-INCLUDES)
 all: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
-all: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
+all: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) $(FLEX_LIB_FOLDER)/libfl.a
 all: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
 arm: CFLAGS += $(RELEASE-CFLAGS)
