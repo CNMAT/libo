@@ -4070,6 +4070,115 @@ int osc_expr_l2norm(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 	return 0;
 }
 
+double osc_expr_qhdist(double x1, double y1, double x2, double y2, double x, double y)
+{
+	return (y - y1) * (x2 - x1) - (y2 - y1) * (x - x1);
+}
+
+int osc_expr_qhwhichside(double d)
+{
+	if(d > 0){
+		return 1;
+	}else if(d < 0){
+		return -1;
+	}else{
+		return 0;
+	}
+}
+
+int _osc_expr_quickhull(int hulln, int *hull, int p1, int p2, int n, double *xs, double *ys, int side)
+{
+	int idx = -1;
+	double max = 0;
+	for(int i = 0; i < n; i++){
+		double d = osc_expr_qhdist(xs[p1], ys[p1], xs[p2], ys[p2], xs[i], ys[i]);
+		double absd = fabs(d);
+		int w = osc_expr_qhwhichside(d);
+		if(w == side && absd > max){
+			idx = i;
+			max = absd;
+		}
+	}
+	if(idx == -1){
+		if(!hull[p1]){
+			hulln++;
+		}
+		hull[p1] = 1;
+		if(!hull[p2]){
+			hulln++;
+		}
+		hull[p2] = 1;
+		return hulln;
+	}
+
+	hulln = _osc_expr_quickhull(hulln, hull, idx, p1, n, xs, ys, -osc_expr_qhwhichside(osc_expr_qhdist(xs[p1], ys[p1], xs[p2], ys[p2], xs[idx], ys[idx])));
+	hulln = _osc_expr_quickhull(hulln, hull, idx, p2, n, xs, ys, -osc_expr_qhwhichside(osc_expr_qhdist(xs[p2], ys[p2], xs[p1], ys[p1], xs[idx], ys[idx])));
+	return hulln;
+}
+
+int osc_expr_quickhull(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+	if(argc != 1 && argc != 2){
+		osc_expr_err_argnum(context, 1, argc, 1, "error: quickhull()");
+		return 0;
+	}
+	int n = 0;
+	if(argc == 1){
+		// interleaved
+		n = osc_atom_array_u_getLen(argv[0]) / 2;
+	}else{
+		// argv[0] == xs, argv[1] == ys
+		if(osc_atom_array_u_getLen(argv[0]) != osc_atom_array_u_getLen(argv[1])){
+			// post error
+			osc_error(context, OSC_ERR_INVAL, "quickhull(): both arguments should be the same length");
+			return 0;
+		}
+		n = osc_atom_array_u_getLen(argv[0]);
+	}
+	if(n < 3){
+		// post error
+		osc_error(context, OSC_ERR_INVAL, "quickhull(): requires at least three points");
+		return 0;
+	}
+	double xs[n];
+	double ys[n];
+	if(argc == 1){
+		for(int i = 0; i < n; i++){
+			xs[i] = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i * 2));
+			ys[i] = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i * 2 + 1));
+		}
+	}else{
+		for(int i = 0; i < n; i++){
+			xs[i] = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i));
+			ys[i] = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i));
+		}
+	}
+	int minx = 0, maxx = 0;
+	for(int i = 1; i < n; i++){
+		if(xs[i] < xs[minx]){
+			minx = i;
+		}else if(xs[i] > xs[maxx]){
+			maxx = i;
+		}
+	}
+	int hull[n];
+	memset(hull, 0, n * sizeof(int));
+	int hulln = 0;
+	hulln = _osc_expr_quickhull(hulln, hull, minx, maxx, n, xs, ys, 1);
+	hulln = _osc_expr_quickhull(hulln, hull, minx, maxx, n, xs, ys, -1);
+
+	*out = osc_atom_array_u_alloc(hulln * 2);
+	int j = 0;
+	for(int i = 0; i < n; i++){
+		if(hull[i]){
+			osc_atom_u_setDouble(osc_atom_array_u_get(*out, j * 2), xs[i]);
+			osc_atom_u_setDouble(osc_atom_array_u_get(*out, j * 2 + 1), ys[i]);
+			j++;
+		}
+	}
+	return 0;
+}
+
 int osc_expr_min(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context){
 	if(argc == 0){
 		return 0;

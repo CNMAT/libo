@@ -26,7 +26,7 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 #FLEX_LIB_FOLDER = /usr/local/lib
 FLEX_LIB_FOLDER = /usr/local/Cellar/flex/2.6.4/lib
 
-MAC-CFLAGS = -arch i386 -arch x86_64
+MAC-CFLAGS = -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE
 #WIN64-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -fPIC
