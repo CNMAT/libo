@@ -23,8 +23,8 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 
 # option to set flex location in case of brew install
 # currently set to /usr/local/lib for typical make install
-FLEX_LIB_FOLDER = /usr/local/lib
-#FLEX_LIB_FOLDER = /usr/local/Cellar/flex/2.6.4/lib
+#FLEX_LIB_FOLDER = /usr/local/lib
+FLEX_LIB_FOLDER = /usr/local/Cellar/flex/2.6.4/lib
 
 MAC-CFLAGS = -arch i386 -arch x86_64
 ARM-CFLAGS = -arch armv7 -arch armv7s

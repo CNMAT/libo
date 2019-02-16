@@ -313,6 +313,21 @@ char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address)
 	return NULL;
 }
 
+char *osc_bundle_s_getFirstEqualAddr(long len, char* ptr, char* address)
+{
+    char *msg = ptr + OSC_HEADER_SIZE;
+    while( (msg - ptr) < len)
+    {
+        char *msg_address = msg + 4;
+        if( !strcmp(address, msg_address) ){
+            return msg;
+        }
+        msg += ntoh32(*((int32_t *)msg)) + 4;
+    }
+    
+    return NULL;
+}
+
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc)
 {
 	*alloc = 0;
@@ -337,9 +352,12 @@ t_osc_err osc_bundle_s_removeMessage(char *pattern, long *len, char *ptr, int fu
 	char *p1 = tmp, *p2 = ptr + OSC_HEADER_SIZE, *p3 = ptr + OSC_HEADER_SIZE;
 	memcpy(p1, ptr, OSC_HEADER_SIZE);
 	p1 += OSC_HEADER_SIZE;
-	while((p3 - ptr) < *len){
+	while((p3 - ptr) < *len)
+    {
 		int32_t size = ntoh32(*((int32_t *)p3));
 		char *address = p3 + 4;
+        
+        /*
 		int po = 0, ao = 0;
 		int ret = osc_match(pattern, address, &po, &ao);
 		if(ret){
@@ -349,15 +367,21 @@ t_osc_err osc_bundle_s_removeMessage(char *pattern, long *len, char *ptr, int fu
 				}
 			}
 		}
-		if(ret){
+        
+         if( ret ) {
+        */
+        
+		if( !strcmp(address, pattern) ) {
 			if(p2 != p3){
 				memcpy(p1, p2, p3 - p2);
 				p1 += p3 - p2;
 			}
 			p2 = p3 + size + 4;
 		}
+        
 		p3 += size + 4;
 	}
+    
 	if(p2 != p3){
 		memcpy(p1, p2, p3 - p2);
 		p1 += p3 - p2;

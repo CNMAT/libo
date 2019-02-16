@@ -83,20 +83,19 @@ void osc_atom_u_copyInto(t_osc_atom_u **dest, t_osc_atom_u *src)
 	aa->typetag = src->typetag;
 	aa->alloc = src->alloc;
 	switch(aa->typetag){
-	case 's':
-		{
-			aa->w.s = osc_mem_alloc(strlen(src->w.s) + 1);
-			strcpy(aa->w.s, src->w.s);
-		}
-		break;
-	case OSC_BUNDLE_TYPETAG:
-		{
-			aa->w.bndl = NULL;
-			osc_bundle_u_copy(&(aa->w.bndl), src->w.bndl);
-		}
-		break;
-	default:
-		aa->w = src->w;
+        case 's':
+            aa->w.s = osc_mem_alloc(strlen(src->w.s) + 1);
+            strcpy(aa->w.s, src->w.s);
+        break;
+        case OSC_BUNDLE_TYPETAG:
+            aa->w.bndl = NULL;
+            osc_bundle_u_copy(&(aa->w.bndl), src->w.bndl);
+        break;
+        default:
+      //      memcpy(&aa->w, &src->w, sizeof(union _word));
+      //      printf("%s %i copied %p %p size %ld \n", __func__, __LINE__, &aa->w, &src->w, sizeof(union _word) );
+            aa->w = src->w;
+        break;
 	}
 	*dest = aa;
 }

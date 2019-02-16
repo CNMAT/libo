@@ -760,15 +760,15 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 			    long *len,
 			    char **oscbndl,
 			    t_osc_atom_ar_u **out,
-					void *context)
+                void *context )
 {
 	if(!len || !oscbndl){
 		return 1;
 	}
-  //  printf("%s context %p\n",__func__, context );
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *address_ar = NULL;
 	char *address = NULL;
+
 	if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
 		osc_util_strdup(&address, f_argv->arg.osc_address);
 	}else{
@@ -793,6 +793,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
 			t_osc_expr *e = osc_expr_arg_getExpr(f_argv);
 			t_osc_expr_rec *r = osc_expr_getRec(e);
+            
 			if(r){
 				if(!strcmp(osc_expr_rec_getName(r), "value")){
 					t_osc_expr_arg *value_args = osc_expr_getArgs(e);
@@ -830,6 +831,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 
 	t_osc_msg_u *mm = osc_message_u_alloc();
 	osc_message_u_setAddress(mm, address);
+
 	t_osc_err ret = osc_expr_evalArgInLexEnv(f_argv->next, lexenv, len, oscbndl, out, context);
 
 	if(ret){
@@ -853,30 +855,59 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
 		if(address){
 			osc_mem_free(address);
 		}
+        
 		osc_message_u_free(mm);
 		return ret;
 	}
-	for(int i = 0; i < osc_atom_array_u_getLen(*out); i++){
+    
+    
+    long natoms = osc_atom_array_u_getLen(*out);
+	for( int i = 0; i < natoms; i++ )
+    {
 		t_osc_atom_u *cpy = NULL;
 		osc_atom_u_copyInto(&cpy, osc_atom_array_u_get(*out, i));
 		osc_message_u_appendAtom(mm, cpy);
 	}
 
 	t_osc_msg_s *osc_msg_s = osc_message_u_serialize(mm);
-	t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, address, 1);
-        if(msg_ar){
-                osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), osc_msg_s);
-                osc_message_array_s_free(msg_ar);
-        }else{
-                osc_bundle_s_appendMessage(len, oscbndl, osc_msg_s);
-        }
-	//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+	
+    
+    char *found_ptr = osc_bundle_s_getFirstEqualAddr(*len, *oscbndl, address);
+    
+    if( found_ptr )
+    {
+        t_osc_msg_s *m = osc_message_s_alloc();
+        osc_message_s_wrap(m, found_ptr);
+        osc_bundle_s_replaceMessage(len, len, oscbndl, m, osc_msg_s);
+        osc_message_s_free(m);
+    }
+    else
+    {
+        osc_bundle_s_appendMessage(len, oscbndl, osc_msg_s);
+    }
+    
+    /*
+    t_osc_msg_ar_s *msg_ar = osc_bundle_s_lookupAddress(*len, *oscbndl, address, 1);
 
-        if(address){
-                osc_mem_free(address);
-        }
+    if(msg_ar){
+        char * test = osc_message_s_format( osc_message_array_s_get(msg_ar, 0) );
+                                           
+        printf("%s %s \n", address,  test );
+
+        osc_bundle_s_replaceMessage(len, len, oscbndl, osc_message_array_s_get(msg_ar, 0), osc_msg_s);
+        osc_message_array_s_free(msg_ar);
+    }else{
+        osc_bundle_s_appendMessage(len, oscbndl, osc_msg_s);
+    }
+     */
+//err = osc_bundle_s_getMsgCount(*len, *oscbndl, &mc);
+
+    if(address){
+        osc_mem_free(address);
+    }
+
 	osc_message_s_deepFree(osc_msg_s);
-        osc_message_u_free(mm);
+    osc_message_u_free(mm);
 	return 0;
 }
 

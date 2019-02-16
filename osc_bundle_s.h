@@ -91,6 +91,8 @@ t_osc_err osc_bundle_s_addressExists(long len, char *buf, char *address, int ful
 t_osc_msg_ar_s *osc_bundle_s_lookupAddress(long len, char *buf, const char *address, int fullmatch);
 t_osc_msg_ar_s *osc_bundle_s_lookupAddress_b(t_osc_bndl_s *bndl, const char *address, int fullmatch);
 char *osc_bundle_s_getFirstFullMatch(long len, char *ptr, char *address);
+    
+char *osc_bundle_s_getFirstEqualAddr(long len, char *ptr, char *address);
 
 t_osc_err osc_bundle_s_wrapMessage(long len, char *msg, long *bndllen, char **bndl, char *alloc);
 t_osc_err osc_bundle_s_removeMessage(char *pattern, long *len, char *ptr, int fullmatch);
