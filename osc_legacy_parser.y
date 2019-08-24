@@ -129,7 +129,7 @@ void yyerror (YYLTYPE *yylloc, t_osc_parser_bndl_list **bndl, t_osc_msg_u **msg,
 
 %}
 
-%define "api.pure"
+%define api.pure full
 %locations
 %require "2.4.2"
 

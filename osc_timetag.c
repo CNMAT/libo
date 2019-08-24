@@ -27,10 +27,10 @@
 #include "osc_mem.h"
 
 #ifdef LINUX_VERSION
-struct timezone {
-  int tz_minuteswest;
-  int tz_dsttime;
-};
+// struct timezone {
+//   int tz_minuteswest;
+//   int tz_dsttime;
+// };
 #endif
 
 void osc_timetag_ut_to_ntp(time_t ut, t_osc_timetag_ntptime *n);

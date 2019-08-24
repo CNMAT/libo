@@ -559,7 +559,7 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(void *context, YYLTYPE
 
 %}
 
-%define "api.pure"
+%define api.pure full
 %locations
 %require "2.4.2"
 
