@@ -599,7 +599,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/arithmetic", "/string/function", NULL},
 	 "Less than or equal",
 	 osc_expr_2arg,
-	 (void *)osc_expr_add},
+	 (void *)osc_expr_le},
 	//////////////////////////////////////////////////
 	{"gt",
 	 "/result = gt($1, $2)",
