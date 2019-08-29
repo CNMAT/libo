@@ -29,7 +29,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "osc_bundle_s.h"
 #include "osc_byteorder.h"
 
-int osc_error_defaultHandler(void *context, const char * const errorstr)
+int osc_error_defaultHandler(void *context, t_osc_err errorcode, const char * const errorstr)
 {
 	return fprintf(stderr, "%s\n", errorstr);
 }
@@ -73,7 +73,7 @@ int osc_error_handler(void *context,
 		pos = newbuf;
 		pos += vsnprintf(newbuf, (buflen - (pos - newbuf)), buf, ap);
 		va_end(ap);
-		return _osc_error_handler(context, newbuf);
+		return _osc_error_handler(context, errorcode, newbuf);
 	}
 	return 0;
 }
@@ -81,6 +81,48 @@ int osc_error_handler(void *context,
 void osc_error_setHandler(t_osc_error_handler eh)
 {
 	_osc_error_handler = eh;
+}
+
+char *osc_error_type(t_osc_err err)
+{
+	switch(err){
+	case OSC_ERR_NONE:
+		return "/none";
+	case OSC_ERR_BUNDLETOOSMALL:
+	case OSC_ERR_NOBUNDLEID:
+	case OSC_ERR_MSGTOOSMALL:
+	// case OSC_ERR_MSGTOOLARGE:
+	// 	return "OSC message size is incorrect; message extends beyond the end of the bundle";
+	case OSC_ERR_MALFORMEDADDRESS:
+	case OSC_ERR_NOBUNDLE:
+		return "/bundle";
+	case OSC_ERR_OUTOFMEM:
+	case OSC_ERR_NULLPTR:
+		return "/memory";
+	// case OSC_ERR_BADTYPETAG:
+	// 	return "encountered a discrepancy between a typetag and a piece of data";
+	// case OSC_ERR_MALFORMEDMSG:
+	// 	return "malformed message";
+	case OSC_ERR_INVAL:
+		return "/address";
+	case OSC_ERR_EXPR_FUNCTIONNOTFOUND:
+	case OSC_ERR_PARSER_FUNCTIONNOTFOUND:
+		return "/expr/function/unbound";
+	case OSC_ERR_EXPR_ADDRESSUNBOUND:
+		return "/expr/address/unbound";
+	case OSC_ERR_EXPPARSE:
+		return "/expr/parser";
+	case OSC_ERR_PARSER:
+		return "/parser";
+	case OSC_ERR_EXPR_ARGCHK:
+		return "/expr/function/arguments";
+	case OSC_ERR_EXPR_EVAL:
+		return "/expr/eval";
+	case OSC_ERR_INVALIDCHARINADDRESS:
+		return "/address";
+	default:
+		return "/";
+	}
 }
 
 char *osc_error_string(t_osc_err err)
@@ -97,9 +139,9 @@ char *osc_error_string(t_osc_err err)
 	case OSC_ERR_NOBUNDLEID:
 		return "no bundle id ("OSC_IDENTIFIER") found at beginning of bundle";
 	case OSC_ERR_MSGTOOSMALL:
-		return "OSC message was too small (< 4 bytes)";
-	case OSC_ERR_MSGTOOLARGE:
-		return "OSC message size is incorrect; message extends beyond the end of the bundle";
+	// 	return "OSC message was too small (< 4 bytes)";
+	// case OSC_ERR_MSGTOOLARGE:
+	// 	return "OSC message size is incorrect; message extends beyond the end of the bundle";
 	case OSC_ERR_MALFORMEDADDRESS:
 		return "malformed OSC address (probably missing an initial '/')";
 	case OSC_ERR_NOBUNDLE:
@@ -108,10 +150,10 @@ char *osc_error_string(t_osc_err err)
 		return "out of memory";
 	case OSC_ERR_NULLPTR:
 		return "got a NULL pointer unexpectedly";
-	case OSC_ERR_BADTYPETAG:
-		return "encountered a discrepancy between a typetag and a piece of data";
-	case OSC_ERR_MALFORMEDMSG:
-		return "malformed message";
+	// case OSC_ERR_BADTYPETAG:
+	// 	return "encountered a discrepancy between a typetag and a piece of data";
+	// case OSC_ERR_MALFORMEDMSG:
+	// 	return "malformed message";
 	case OSC_ERR_INVAL:
 		return "invalid address";
 	case OSC_ERR_EXPR_FUNCTIONNOTFOUND:

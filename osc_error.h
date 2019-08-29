@@ -32,7 +32,7 @@ extern "C" {
 
 typedef uint64_t t_osc_err;
 
-typedef int (*t_osc_error_handler)(void *context, const char * const errorstr);
+typedef int (*t_osc_error_handler)(void *context, t_osc_err errorcode, const char * const errorstr);
 
 #define OSC_ERROR_VERBOSE(context, errorcode, moreinfo_fmt, args...)				\
 	osc_error_handler(context, basename(__FILE__), __func__, __LINE__, errorcode, moreinfo_fmt, ##args);
@@ -56,8 +56,8 @@ typedef int (*t_osc_error_handler)(void *context, const char * const errorstr);
 #define OSC_ERR_NOBUNDLE 0x10
 #define OSC_ERR_OUTOFMEM 0x11
 #define OSC_ERR_NULLPTR 0x12
-#define OSC_ERR_BADTYPETAG 0x14
-#define OSC_ERR_MALFORMEDMSG 0x18
+// #define OSC_ERR_BADTYPETAG 0x14
+// #define OSC_ERR_MALFORMEDMSG 0x18
 #define OSC_ERR_INVAL 0x20
 #define OSC_ERR_EXPPARSE 0x21
 #define OSC_ERR_MSGTOOLARGE 0x22
@@ -80,6 +80,8 @@ int osc_error_handler(void *context,
 		      ...);
 
 void osc_error_setHandler(t_osc_error_handler eh);
+
+char *osc_error_type(t_osc_err err);
 
 /**
  * Get a description of an error code.
