@@ -66,7 +66,7 @@ int osc_expr_subtract(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result,
 int osc_expr_multiply(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
 int osc_expr_divide(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
 int osc_expr_lt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
-int osc_expr_lte(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
+int osc_expr_le(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
 int osc_expr_gt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
 int osc_expr_gte(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
 int osc_expr_eq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context);
@@ -272,7 +272,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/operator/relational", "/string/operator", NULL},
 	 "Less than or equal to",
 	 osc_expr_2arg,
-	 (void *)osc_expr_lte},
+	 (void *)osc_expr_le},
 	//////////////////////////////////////////////////
 	{">",
 	 "/result = $1 > $2",
