@@ -2556,7 +2556,7 @@ int osc_expr_lt(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void*
 	return 0;
 }
 
-int osc_expr_lte(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context)
+int osc_expr_le(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void* context)
 {
 	if(!f1 || !f2){
 		osc_atom_u_setFalse(*result);
