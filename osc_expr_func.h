@@ -146,6 +146,7 @@ int osc_expr_bitand(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 int osc_expr_bitor(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_andalso(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_orelse(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
+int osc_expr_bundle(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 
 int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 
@@ -2687,7 +2688,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/statistics", NULL},
 	 "computes the convex hull of a set of points. points are expressed either as two arguments (xs and ys), or as a single interleaved list.",
-	 osc_expr_quickhull,
+	 osc_expr_bundle,
+	 NULL},
+	{"bundle",
+	 "",
+	 0,
+	 -1,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"", NULL},
+	 "makes a bundle from a list of bindings",
+	 osc_expr_bundle,
 	 NULL},
 };
 

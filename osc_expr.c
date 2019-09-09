@@ -167,6 +167,8 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_andalso(f, lexenv, len, oscbndl, out, context);
 	}else if(f->rec->func == osc_expr_orelse){
 		return osc_expr_specFunc_orelse(f, lexenv, len, oscbndl, out, context);
+	}else if(f->rec->func == osc_expr_bundle){
+		return osc_expr_specFunc_bundle(f, lexenv, len, oscbndl, out, context);
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -2847,6 +2849,56 @@ static int osc_expr_specFunc_orelse(t_osc_expr *f,
 		osc_atom_array_u_free(rhs);
 	}
 	return ret;
+}
+
+static int osc_expr_specFunc_bundle(t_osc_expr *f,
+				   t_osc_expr_lexenv *lexenv,
+				   long *len,
+				   char **oscbndl,
+				   t_osc_atom_ar_u **out,
+				    void* context)
+{
+	t_osc_bndl_u *b = osc_bundle_u_alloc();
+	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+	while(f_argv){
+		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_OSCADDRESS){
+			t_osc_msg_u *m = osc_message_u_allocWithAddress(osc_expr_arg_getOSCAddress(f_argv));
+			f_argv = osc_expr_arg_next(f_argv);
+			if(*out){
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+			}
+			t_osc_err err = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, out, context);
+			if(err){
+				osc_message_u_free(m);
+				osc_bundle_u_free(b);
+				return err;
+			}
+			if(*out){
+				int n = osc_atom_array_u_getLen(*out);
+				for(int i = 0; i < n; i++){
+					osc_message_u_appendAtom(m, osc_atom_u_copy(osc_atom_array_u_get(*out, i)));
+				}
+			}
+			osc_bundle_u_addMsg(b, m);
+		}else{
+			if(*out){
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+			}
+			osc_bundle_u_free(b);
+			return 1;
+		}
+		f_argv = osc_expr_arg_next(f_argv);
+	}
+	if(*out){
+		osc_atom_array_u_free(*out);
+		*out = NULL;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_atom_u *a = osc_atom_array_u_get(*out, 0);
+	osc_atom_u_setBndl_u(a, b);
+	return 0;
 }
 
 double _osc_expr_fmod(double x, double m)
@@ -5896,6 +5948,11 @@ int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	osc_atom_u_setBndl(osc_atom_array_u_get(*out, i), osc_bundle_s_getLen(unmatched), osc_bundle_s_getPtr(unmatched));
 	return 0;
 	*/
+}
+
+int osc_expr_bundle(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
+{
+	return 0;
 }
 
 t_osc_expr *osc_expr_alloc(void)

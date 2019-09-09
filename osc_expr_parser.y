@@ -589,9 +589,9 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(void *context, YYLTYPE
 	t_osc_expr_arg *arg;
 }
 
-%type <expr>expr
+%type <expr>expr bundle
 %type <func>function
-%type <arg>arg args
+%type <arg>arg args msg msgs
 %type <atom> OSC_EXPR_QUOTED_EXPR parameters parameter
 %nonassoc <atom>OSC_EXPR_NUM OSC_EXPR_STRING OSC_EXPR_OSCADDRESS OSC_EXPR_LAMBDA
 
@@ -1110,10 +1110,36 @@ parameter: OSC_EXPR_STRING {
 	}
 ;
 
+msg:
+	OSC_EXPR_OSCADDRESS ':' arg {
+		t_osc_expr_arg *a = osc_expr_arg_alloc();
+		long len = osc_atom_u_getStringLen($1);
+		char *buf = NULL;
+		osc_atom_u_getString($1, len, &buf);
+		osc_expr_arg_setOSCAddress(a, buf);
+		osc_expr_arg_append(a, $3);
+		$$ = a;
+		osc_atom_u_free($1);
+	  }
+;
+msgs: msg
+	| msgs ',' msg {
+		osc_expr_arg_append($1, $3);
+		$$ = $1;
+	}
+
+bundle: '{' '}' {
+		$$ = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "bundle", NULL);
+	  }
+	| '{' msgs '}' {
+		$$ = osc_expr_parser_reduce_PrefixFunction(context, &yylloc, input_string, "bundle", $2);
+	  }
+
 expr:
 	'(' expr ')' {
 		$$ = $2;
   	}
+	| bundle
 // prefix function call
 	| OSC_EXPR_STRING '(' args ')' %prec OSC_EXPR_FUNC_CALL {
 		t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, &yylloc,
