@@ -321,7 +321,7 @@ int16_t osc_atom_u_getInt16(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int16_t)strtol(a->w.s, &endp, 0);
+			return (int16_t)strtol(a->w.s, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -367,7 +367,7 @@ int32_t osc_atom_u_getInt32(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int32_t)strtol(a->w.s, &endp, 0);
+			return (int32_t)strtol(a->w.s, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -421,7 +421,7 @@ int64_t osc_atom_u_getInt64(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int64_t)strtoll(a->w.s, &endp, 0);
+			return (int64_t)strtoll(a->w.s, &endp, 10);
 		}
 	case 'c': // signed 8-bit int
 		return (int64_t)a->w.c;
@@ -523,7 +523,7 @@ uint16_t osc_atom_u_getUInt16(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (uint16_t)strtoul(a->w.s, &endp, 0);
+			return (uint16_t)strtoul(a->w.s, &endp, 10);
 		}
 	case 'c': // signed 8-bit int
 		return (uint16_t)a->w.c;
@@ -567,7 +567,7 @@ uint32_t osc_atom_u_getUInt32(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (uint32_t)strtoul(a->w.s, &endp, 0);
+			return (uint32_t)strtoul(a->w.s, &endp, 10);
 		}
 	case 'c': // signed 8-bit int
 		return (uint32_t)a->w.c;
@@ -615,7 +615,7 @@ uint64_t osc_atom_u_getUInt64(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (uint64_t)strtoull(a->w.s, &endp, 0);
+			return (uint64_t)strtoull(a->w.s, &endp, 10);
 		}
 	case 'c': // signed 8-bit int
 		return (uint64_t)a->w.c;
@@ -663,7 +663,7 @@ int osc_atom_u_getInt(t_osc_atom_u *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int)strtol(a->w.s, &endp, 0);
+			return (int)strtol(a->w.s, &endp, 10);
 		}
 	case 'c': // signed 8-bit int
 		return (int)a->w.c;

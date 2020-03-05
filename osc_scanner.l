@@ -152,7 +152,7 @@ nil					{
 
 (-?([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						char *endp = NULL;
-					        long i = strtol(yytext, &endp, 0);
+					        long i = strtol(yytext, &endp, 10);
 						yylval->atom = osc_atom_u_allocWithInt32(i);
 						return OSCVALUE;
 					}
