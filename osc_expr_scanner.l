@@ -238,7 +238,7 @@ quote[[:space:]]*\( {
 (([[:digit:]]{-}[0])[[:digit:]]*|0) 	{
 						// int 
 						char *endptr = NULL;
-						int32_t i = strtol(yytext, &endptr, 0);
+						int32_t i = strtol(yytext, &endptr, 10);
 						if(alloc_atom){
 							yylval->atom = osc_atom_u_alloc();
 						}

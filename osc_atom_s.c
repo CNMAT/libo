@@ -207,7 +207,7 @@ int32_t osc_atom_s_getInt32(t_osc_atom_s *a)
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int32_t)strtol(a->data, &endp, 0);
+			return (int32_t)strtol(a->data, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -250,7 +250,7 @@ int64_t osc_atom_s_getInt64(t_osc_atom_s *a)
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int64_t)strtoll(a->data, &endp, 0);
+			return (int64_t)strtoll(a->data, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -303,7 +303,7 @@ uint32_t osc_atom_s_getUInt32(t_osc_atom_s *a)
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (uint32_t)strtoul(a->data, &endp, 0);
+			return (uint32_t)strtoul(a->data, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -345,7 +345,7 @@ uint64_t osc_atom_s_getUInt64(t_osc_atom_s *a){
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (uint64_t)strtoull(a->data, &endp, 0);
+			return (uint64_t)strtoull(a->data, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
@@ -388,7 +388,7 @@ int osc_atom_s_getInt(t_osc_atom_s *a)
 	case 's': // string
 		{
 			char *endp = NULL;
-			return (int)strtol(a->data, &endp, 0);
+			return (int)strtol(a->data, &endp, 10);
 		}
 	case 'T': // true
 		return 1;
