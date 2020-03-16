@@ -4912,7 +4912,13 @@ int osc_expr_join(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 	for(int i = 1; i < argc; i++){
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			char *ptr = NULL;
-			osc_atom_u_getString(osc_atom_array_u_get(argv[i], j), 0, &ptr);
+			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
+			osc_atom_u_getString(a, 0, &ptr);
+			char tt = osc_atom_u_getTypetag(a);
+			if(tt == 'c' || tt == 'C'){
+				ptr[0] = ptr[1];
+				ptr[1] = 0;
+			}
 			ptrs[n++] = ptr;
 			if(ptr){
 				len += strlen(ptr) + seplen;
