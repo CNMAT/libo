@@ -2491,11 +2491,94 @@ int osc_expr_divide(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, v
 				osc_atom_u_setDouble(*result, osc_atom_u_getDouble(f1) / d2);
 			}
 		}else{
-			int32_t i2 = osc_atom_u_getInt32(f2);
-			if(i2 == 0){
-				osc_atom_u_setString(*result, "Inf");
-			}else{
-				osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) / i2);
+			// int32_t i2 = osc_atom_u_getInt32(f2);
+			// if(i2 == 0){
+			// 	osc_atom_u_setString(*result, "Inf");
+			// }else{
+			// 	osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) / i2);
+			// }
+			char tt = osc_typetag_compare(tt1, tt2) > 0 ? tt1 : tt2;
+			switch(tt){
+			case 'i':
+				{
+					int32_t i2 = osc_atom_u_getInt32(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setInt32(*result, osc_atom_u_getInt32(f1) / i2);
+					}
+				}
+				break;
+			case 'I':
+				{
+					uint32_t i2 = osc_atom_u_getUInt32(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setUInt32(*result, osc_atom_u_getUInt32(f1) / i2);
+					}
+				}
+				break;
+			case 'h':
+				{
+					int64_t i2 = osc_atom_u_getInt64(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setInt64(*result, osc_atom_u_getInt64(f1) / i2);
+					}
+				}
+				break;
+			case 'H':
+				{
+					uint64_t i2 = osc_atom_u_getUInt64(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setUInt64(*result, osc_atom_u_getUInt64(f1) / i2);
+					}
+				}
+				break;
+			case 'u':
+				{
+					int16_t i2 = osc_atom_u_getInt16(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setInt16(*result, osc_atom_u_getInt16(f1) / i2);
+					}
+				}
+				break;
+			case 'U':
+				{
+					uint16_t i2 = osc_atom_u_getUInt16(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setUInt16(*result, osc_atom_u_getUInt16(f1) / i2);
+					}
+				}
+				break;
+			case 'c':
+				{
+					int8_t i2 = osc_atom_u_getInt8(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) / i2);
+					}
+				}
+				break;
+			case 'C':
+				{
+					int8_t i2 = osc_atom_u_getInt8(f2);
+					if(i2 == 0){
+						osc_atom_u_setString(*result, "Inf");
+					}else{
+						osc_atom_u_setInt8(*result, osc_atom_u_getInt8(f1) / i2);
+					}
+				}
+				break;
 			}
 		}
 	}else{
