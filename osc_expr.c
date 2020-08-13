@@ -1162,11 +1162,36 @@ static int osc_expr_specFunc_emptybundle(t_osc_expr *f,
 		return 1;
 	}
 	*out = osc_atom_array_u_alloc(1);
-
-	if(*len == OSC_HEADER_SIZE){
-		osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+	
+	int f_argc = osc_expr_getArgCount(f);
+	if(f_argc){
+		t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
+		t_osc_atom_ar_u *ar = NULL;
+		t_osc_err r = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &ar, context);
+		if(r == OSC_ERR_EXPR_ADDRESSUNBOUND){
+			osc_expr_err_unbound(context, osc_expr_arg_getOSCAddress(f_argv), osc_expr_rec_getName(osc_expr_getRec(f)));
+			return r;
+		}
+		if(ar && osc_atom_array_u_getLen(ar) > 0){
+			t_osc_atom_u *a = osc_atom_array_u_get(ar, 0);
+			if(osc_atom_u_getTypetag(a) == OSC_BUNDLE_TYPETAG){
+				if(osc_bundle_u_getMsgCount(osc_atom_u_getBndl(a))){
+					osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+				}else{
+					osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+				}
+			}else{
+				osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+			}
+		}else{
+			osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+		}
 	}else{
-		osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+		if(*len == OSC_HEADER_SIZE){
+			osc_atom_u_setTrue(osc_atom_array_u_get(*out, 0));
+		}else{
+			osc_atom_u_setFalse(osc_atom_array_u_get(*out, 0));
+		}
 	}
 	return 0;
 }
