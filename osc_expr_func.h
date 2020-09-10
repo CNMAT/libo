@@ -148,7 +148,7 @@ int osc_expr_andalso(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
 int osc_expr_orelse(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_bundle(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 
-int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
+//int osc_expr_imu(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 
 // constants
 int osc_expr_pi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
@@ -1044,7 +1044,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"/math/specialfunction", NULL},
 	 "Log gamma function (same as \"lgamma\")",
 	 osc_expr_1arg_dbl,
-	 (void *)lgamma},
+	 (void *)tgamma},
 	//////////////////////////////////////////////////
 	{"hypot",
 	 "/result = hypot($1, $2)",
@@ -1279,19 +1279,6 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 "Round to nearest integral value",
 	 osc_expr_1arg_dbl,
 	 (void *)round},
-	//////////////////////////////////////////////////
-	{"mod",
-	 "/result = mod($1, $2)",
-	 2,
-	 0,
-	 (char *[]){"x"},
-	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/math/arithmetic", NULL},
-	 "Modulo",
-	 osc_expr_2arg,
-	 (void *)osc_expr_mod},
 	//////////////////////////////////////////////////
 	{"nth",
 	 "/result = nth($1, $2)",
@@ -1568,6 +1555,19 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	//////////////////////////////////////////////////
 	{"!",
 	 "/result = !$1",
+	 1,
+	 0,
+	 (char *[]){"argument"},
+	 (int []){OSC_EXPR_ARG_TYPE_NUM_LIST_ADDR},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/operator/logical", NULL},
+	 "Logical not",
+	 osc_expr_not,
+	 NULL},
+	//////////////////////////////////////////////////
+	{"not",
+	 "/result = not($1)",
 	 1,
 	 0,
 	 (char *[]){"argument"},
@@ -2164,18 +2164,18 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 osc_expr_bitor,
 	 NULL},
 	//////////////////////////////////////////////////
-	{"imu",
-	 "imu(/imu_values, /quaternion)",
-	 2,
-	 0,
-	 (char *[]){"The imu data with optional temperature in the final position of the list", "The quaternion."},
-	 (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_OSCADDRESS},
-	 (char *[]){NULL},
-	 (int []){},
-	 (char *[]){"/core", NULL},
-	 "Sensor fusion....",
-	 osc_expr_imu,
-	 NULL},
+	// {"imu",
+	//  "imu(/imu_values, /quaternion)",
+	//  2,
+	//  0,
+	//  (char *[]){"The imu data with optional temperature in the final position of the list", "The quaternion."},
+	//  (int []){OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_OSCADDRESS},
+	//  (char *[]){NULL},
+	//  (int []){},
+	//  (char *[]){"/core", NULL},
+	//  "Sensor fusion....",
+	//  osc_expr_imu,
+	//  NULL},
 	//////////////////////////////////////////////////
 	{"pi",
 	 "/result = pi()",
