@@ -1042,7 +1042,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){NULL},
 	 (int []){},
 	 (char *[]){"/math/specialfunction", NULL},
-	 "Log gamma function (same as \"lgamma\")",
+	 "Log gamma function",
 	 osc_expr_1arg_dbl,
 	 (void *)tgamma},
 	//////////////////////////////////////////////////
@@ -1107,7 +1107,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){NULL},
 	 (int []){},
 	 (char *[]){"/math/specialfunction", NULL},
-	 "Log gamma function (same as \"gamma\")",
+	 "Log gamma function",
 	 osc_expr_1arg_dbl,
 	 (void *)lgamma},
 	//////////////////////////////////////////////////
