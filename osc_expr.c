@@ -4250,8 +4250,134 @@ int osc_expr_cross(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 	}
 }
 
+// https://en.wikipedia.org/wiki/Determinant
+int LUPDecompose(double **A, int N, double Tol, int *P) {
+
+	int i, j, k, imax;
+	double maxA, *ptr, absA;
+
+	for (i = 0; i <= N; i++)
+		P[i] = i; //Unit permutation matrix, P[N] initialized with N
+
+	for (i = 0; i < N; i++) {
+		maxA = 0.0;
+		imax = i;
+
+		for (k = i; k < N; k++)
+			if ((absA = fabs(A[k][i])) > maxA) {
+				maxA = absA;
+				imax = k;
+			}
+
+		if (maxA < Tol) return 0; //failure, matrix is degenerate
+
+		if (imax != i) {
+			//pivoting P
+			j = P[i];
+			P[i] = P[imax];
+			P[imax] = j;
+
+			//pivoting rows of A
+			ptr = A[i];
+			A[i] = A[imax];
+			A[imax] = ptr;
+
+			//counting pivots starting from N (for determinant)
+			P[N]++;
+		}
+
+		for (j = i + 1; j < N; j++) {
+			A[j][i] /= A[i][i];
+
+			for (k = i + 1; k < N; k++)
+				A[j][k] -= A[j][i] * A[i][k];
+		}
+	}
+
+	return 1;  //decomposition done
+}
+
+double LUPDeterminant(double **A, int *P, int N) {
+
+	double det = A[0][0];
+
+	for (int i = 1; i < N; i++)
+		det *= A[i][i];
+
+	return (P[N] - N) % 2 == 0 ? det : -det;
+}
+
 int osc_expr_det(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
 {
+	if(argc < 1){
+		osc_error(context, OSC_ERR_EXPR_ARGCHK, "det requires at least one argument");
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	if(argc == 1){
+		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), osc_atom_u_getDouble(osc_atom_array_u_get(*argv, 0)));
+	}else if(argc == 2){
+		if(osc_atom_array_u_getLen(argv[0]) != 2 || osc_atom_array_u_getLen(argv[1]) != 2){
+			osc_error(context, OSC_ERR_EXPR_ARGCHK, "arguments to det() are the rows of a matrix; each must have the same number of elements, equal to the number of rows (arguments)");
+			return 1;
+		}
+		double a = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 0));
+		double b = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 1));
+		double c = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0));
+		double d = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 1));
+		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), (a * d) - (b * c));
+	}else if(argc == 3){
+		if(osc_atom_array_u_getLen(argv[0]) != 3
+		   || osc_atom_array_u_getLen(argv[1]) != 3
+		   || osc_atom_array_u_getLen(argv[2]) != 3){
+			osc_error(context, OSC_ERR_EXPR_ARGCHK, "arguments to det() are the rows of a matrix; each must have the same number of elements, equal to the number of rows (arguments)");
+			return 1;
+		}
+		double a = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 0));
+		double b = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 1));
+		double c = osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 2));
+		double d = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0));
+		double e = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 1));
+		double f = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 2));
+		double g = osc_atom_u_getDouble(osc_atom_array_u_get(argv[2], 0));
+		double h = osc_atom_u_getDouble(osc_atom_array_u_get(argv[2], 1));
+		double i = osc_atom_u_getDouble(osc_atom_array_u_get(argv[2], 2));
+		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), (a*e*i)+(b*f*g)+(c*d*h)-(c*e*g)-(b*d*i)-(a*f*h));
+	}else{
+		double **cells = (double **)osc_mem_alloc(argc * sizeof(double *));
+		for(int i = 0; i < argc; i++){
+			if(argc != osc_atom_array_u_getLen(argv[i])){
+				osc_error(context, OSC_ERR_EXPR_ARGCHK, "arguments to det() are the rows of a matrix; each must have the same number of elements, equal to the number of rows (arguments)");
+				for(int j = 0; j < i; j++){
+					if(cells[j]){
+						osc_mem_free(cells[j]);
+					}
+				}
+				if(cells){
+					osc_mem_free(cells);
+				}
+				return 1;
+			}
+			cells[i] = (double *)osc_mem_alloc(argc * sizeof(double));
+			for(int j = 0; j < argc; j++){
+				cells[i][j] = osc_atom_u_getDouble(osc_atom_array_u_get(argv[i], j));
+			}
+		}
+		int P[argc + 1];
+		memset(P, 0, sizeof(int) * (argc + 1));
+		LUPDecompose(cells, argc, 0, P);
+		double d = LUPDeterminant(cells, P, argc);
+		osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), d);
+		for(int j = 0; j < argc; j++){
+			if(cells[j]){
+				osc_mem_free(cells[j]);
+			}
+		}
+		if(cells){
+			osc_mem_free(cells);
+		}
+	}
+	
 	return 0;
 }
 
