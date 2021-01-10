@@ -245,6 +245,21 @@ quote[[:space:]]*\( {
 						osc_atom_u_setInt32(yylval->atom, i);
 						return OSC_EXPR_NUM;
 					}
+0[xX][[:digit:]abcdefABCDEF]+ 	{
+						// hex int 
+						char *endptr = NULL;
+						if(alloc_atom){
+						    yylval->atom = osc_atom_u_alloc();
+						}
+						if(strlen(yytext) > 10){
+							int64_t i = strtoll(yytext, &endptr, 16);
+							osc_atom_u_setInt64(yylval->atom, i);
+						}else{
+							int32_t i = strtol(yytext, &endptr, 16);
+							osc_atom_u_setInt32(yylval->atom, i);
+						}
+						return OSC_EXPR_NUM;
+					}
 {c99_floating_point_constant}		{
 						// floating point number
 						char *endptr = NULL;

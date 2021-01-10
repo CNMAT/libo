@@ -156,6 +156,19 @@ nil					{
 						yylval->atom = osc_atom_u_allocWithInt32(i);
 						return OSCVALUE;
 					}
+0[xX][[:digit:]abcdefABCDEF]+ 	{
+						// hex int 
+						char *endptr = NULL;
+						yylval->atom = osc_atom_u_alloc();
+						if(strlen(yytext) > 10){
+							int64_t i = strtoll(yytext, &endptr, 16);
+							osc_atom_u_setInt64(yylval->atom, i);
+						}else{
+							int32_t i = strtol(yytext, &endptr, 16);
+							osc_atom_u_setInt32(yylval->atom, i);
+						}
+						return OSCVALUE;
+					}
 
 \/[^ \t\n#]+	{
 			if(yytext[yyleng - 2] == ','){
