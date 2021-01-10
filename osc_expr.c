@@ -4455,12 +4455,13 @@ int osc_expr_quickhull(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_at
 		n = osc_atom_array_u_getLen(argv[0]) / 2;
 	}else{
 		// argv[0] == xs, argv[1] == ys
-		if(osc_atom_array_u_getLen(argv[0]) != osc_atom_array_u_getLen(argv[1])){
+		int len = osc_atom_array_u_getLen(argv[0]);
+		if(len != osc_atom_array_u_getLen(argv[1])){
 			// post error
 			osc_error(context, OSC_ERR_INVAL, "quickhull(): both arguments should be the same length");
 			return 0;
 		}
-		n = osc_atom_array_u_getLen(argv[0]);
+		n = len;
 	}
 	if(n < 3){
 		// post error

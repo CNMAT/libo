@@ -2691,7 +2691,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/statistics", NULL},
 	 "computes the convex hull of a set of points. points are expressed either as two arguments (xs and ys), or as a single interleaved list.",
-	 osc_expr_bundle,
+	 osc_expr_quickhull,
 	 NULL},
 	{"bundle",
 	 "",
