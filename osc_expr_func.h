@@ -78,6 +78,9 @@ int osc_expr_mod(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void
 int osc_expr_assign(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_plus1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_minus1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
+int osc_expr_ilogb(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
+int osc_expr_jn(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
+int osc_expr_yn(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_assign_to_index(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 int osc_expr_product(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
@@ -1095,8 +1098,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/specialfunction", NULL},
 	 "nth Bessel function of the first kind",
-	 osc_expr_2arg_dbl_dbl,
-	 (void *)jn},
+	 osc_expr_jn,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"lgamma",
 	 "/result = lgamma($1)",
@@ -1147,8 +1150,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/specialfunction", NULL},
 	 "nth Bessel function of the second kind",
-	 osc_expr_2arg_dbl_dbl,
-	 (void *)yn},
+	 osc_expr_yn,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"acosh",
 	 "/result = acosh($1)",
@@ -1225,8 +1228,8 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){},
 	 (char *[]){"/math/power", NULL},
 	 "Unbiased exponent",
-	 osc_expr_1arg_dbl,
-	 (void *)ilogb},
+	 osc_expr_ilogb,
+	 NULL},
 	//////////////////////////////////////////////////
 	{"logb",
 	 "/result = logb($1)",

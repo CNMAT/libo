@@ -2182,10 +2182,11 @@ int osc_expr_1arg_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	*out = osc_atom_array_u_alloc(ac);
 
 	t_osc_atom_ar_u *result = *out;
-	double (*func)(double, void*) = (double (*)(double, void*))(f->rec->extra);
+	double (*func)(double) = (double (*)(double))(f->rec->extra);
+
 	int i;
 	for(i = 0; i < ac; i++){
-		osc_atom_u_setDouble(osc_atom_array_u_get(result, i), func(osc_atom_u_getDouble(osc_atom_array_u_get(*argv, i)), context) );
+		osc_atom_u_setDouble(osc_atom_array_u_get(result, i), func(osc_atom_u_getDouble(osc_atom_array_u_get(*argv, i))) );
 	}
 	return 0;
 }
@@ -2205,7 +2206,7 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 		min_argc = argc1, max_argc = argc0;
 	}
 	int i;
-	double (*func)(double,double,void*) = (double (*)(double,double,void*))(f->rec->extra);
+	double (*func)(double,double) = (double (*)(double,double))(f->rec->extra);
 	if(argc0 == 1){
 		*out = osc_atom_array_u_alloc(max_argc);
 
@@ -2213,7 +2214,7 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 		for(i = 0; i < max_argc; i++){
 			osc_atom_u_setDouble(osc_atom_array_u_get(*out, i),
 					     func(osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], 0)),
-						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i)), context) );
+						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i))));
 		}
 		return 0;
 	}else if(argc1 == 1){
@@ -2223,7 +2224,7 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 		for(i = 0; i < max_argc; i++){
 			osc_atom_u_setDouble(osc_atom_array_u_get(*out, i),
 					     func(osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i)),
-						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0)), context) );
+						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0))));
 		}
 		return 0;
 	}else{
@@ -2233,7 +2234,7 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 		for(i = 0; i < min_argc; i++){
 			osc_atom_u_setDouble(osc_atom_array_u_get(*out, i),
 					     func(osc_atom_u_getDouble(osc_atom_array_u_get(argv[0], i)),
-						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i)), context) );
+						  osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], i))));
 		}
 		return 0;
 	}
@@ -2255,7 +2256,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		min_argc = argc1, max_argc = argc0;
 	}
 	int i;
-	int (*func)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**,void*) = (int (*)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**,void*))(f->rec->extra);
+	int (*func)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**) = (int (*)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**))(f->rec->extra);
 	int ret = 0;
 	if(argc0 == 1){
 		*out = osc_atom_array_u_alloc(max_argc);
@@ -2263,7 +2264,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], 0), osc_atom_array_u_get(argv[1], i), &a, context);
+			ret = func(osc_atom_array_u_get(argv[0], 0), osc_atom_array_u_get(argv[1], i), &a);
 			if(ret){
 				return ret;
 			}
@@ -2275,7 +2276,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], 0), &a, context);
+			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], 0), &a);
 			if(ret){
 				return ret;
 			}
@@ -2287,7 +2288,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < min_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], i), &a, context);
+			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], i), &a);
 			if(ret){
 				return ret;
 			}
@@ -3143,6 +3144,46 @@ int osc_expr_minus1(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 			break;
 		}
 	}
+	return 0;
+}
+
+int osc_expr_ilogb(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
+{
+	if(argc != 1){
+		osc_error(context, OSC_ERR_EXPR_ARGCHK, "ilogb expects a single argument (may be a list)");
+		return 1;
+	}
+	int n = osc_atom_array_u_getLen(*argv);
+	*out = osc_atom_array_u_alloc(n);
+	for(int i = 0; i < n; i++){
+		osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), ilogb(osc_atom_u_getDouble(osc_atom_array_u_get(*argv, i))));
+	}
+	return 0;
+}
+
+int osc_expr_jn(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
+{
+	if(argc != 2){
+		osc_error(context, OSC_ERR_EXPR_ARGCHK, "jn expects two arguments: n (int), x (float)");
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	int n = osc_atom_u_getInt32(osc_atom_array_u_get(*argv, 0));
+	double x = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0));
+	osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), jn(n, x));
+	return 0;
+}
+
+int osc_expr_yn(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
+{
+	if(argc != 2){
+		osc_error(context, OSC_ERR_EXPR_ARGCHK, "jn expects two arguments: n (int), x (float)");
+		return 1;
+	}
+	*out = osc_atom_array_u_alloc(1);
+	int n = osc_atom_u_getInt32(osc_atom_array_u_get(*argv, 0));
+	double x = osc_atom_u_getDouble(osc_atom_array_u_get(argv[1], 0));
+	osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), yn(n, x));
 	return 0;
 }
 
