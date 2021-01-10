@@ -503,7 +503,8 @@ void osc_timetag_fromISO8601(char *s, t_osc_timetag *timetag)
     int days_in_months[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
     
     int offset = leap && (t.tm_mon > 1) ? 1 : 0;
-    sec += ((days_in_months[t.tm_mon] + offset + t.tm_mday ) * SEC_PER_DAY);
+
+    sec += ((days_in_months[t.tm_mon] + offset + (t.tm_mday - 1) ) * SEC_PER_DAY);
 	sec += (t.tm_hour * SEC_PER_HR);
 	sec += (t.tm_min * SEC_PER_MIN);
 	sec += t.tm_sec;
