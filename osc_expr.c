@@ -2175,9 +2175,9 @@ t_osc_expr_rec *osc_expr_lookupFunction(char *name)
 int osc_expr_1arg_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
 {
 	long ac = osc_atom_array_u_getLen(*argv);
-	if(argc == 0){
+	if(argc == 0 || osc_atom_array_u_getLen(*argv) < 1){
         osc_expr_err_argnum( context, 1, 0, 0, f->rec->name );
-		return 0;
+		return 1;
 	}
 	*out = osc_atom_array_u_alloc(ac);
 
@@ -2196,11 +2196,15 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
     if( argc != 2 )
     {
         osc_expr_err_argnum( context, 2, argc, 0, f->rec->name );
-        return 0;
+        return 1;
     }
 
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
+	if(argc0 < 1 || argc1 < 1){
+		osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name);
+		return 1;
+	}
 	uint32_t min_argc = argc0, max_argc = argc1;
 	if(argc0 > argc1){
 		min_argc = argc1, max_argc = argc0;
@@ -2246,17 +2250,21 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
     if( argc != 2 )
     {
         osc_expr_err_argnum( context, 2, argc, 0, f->rec->name );
-        return 0;
+        return 1;
     }
     
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
+	if(argc0 < 1 || argc1 < 1){
+		osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name);
+		return 1;
+	}
 	uint32_t min_argc = argc0, max_argc = argc1;
 	if(argc0 > argc1){
 		min_argc = argc1, max_argc = argc0;
 	}
 	int i;
-	int (*func)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**) = (int (*)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**))(f->rec->extra);
+	int (*func)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**,void*) = (int (*)(t_osc_atom_u*,t_osc_atom_u*,t_osc_atom_u**,void*))(f->rec->extra);
 	int ret = 0;
 	if(argc0 == 1){
 		*out = osc_atom_array_u_alloc(max_argc);
@@ -2264,7 +2272,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], 0), osc_atom_array_u_get(argv[1], i), &a);
+			ret = func(osc_atom_array_u_get(argv[0], 0), osc_atom_array_u_get(argv[1], i), &a, context);
 			if(ret){
 				return ret;
 			}
@@ -2276,7 +2284,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < max_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], 0), &a);
+			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], 0), &a, context);
 			if(ret){
 				return ret;
 			}
@@ -2288,7 +2296,7 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
 		osc_atom_array_u_clear(*out);
 		for(i = 0; i < min_argc; i++){
 			t_osc_atom_u *a = osc_atom_array_u_get(*out, i);
-			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], i), &a);
+			ret = func(osc_atom_array_u_get(argv[0], i), osc_atom_array_u_get(argv[1], i), &a, context);
 			if(ret){
 				return ret;
 			}
@@ -6028,9 +6036,11 @@ int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
+			case 'h':
 			case 'i':
-				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getInt64(a)));
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
 				break;
+			case 'H':
 			case 'I':
 				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
 				break;
@@ -6053,9 +6063,11 @@ int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
+			case 'h':
 			case 'i':
-				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getInt64(a)));
+				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
 				break;
+			case 'H':
 			case 'I':
 				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
 				break;

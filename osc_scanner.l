@@ -161,11 +161,11 @@ nil					{
 						char *endptr = NULL;
 						yylval->atom = osc_atom_u_alloc();
 						if(strlen(yytext) > 10){
-							int64_t i = strtoll(yytext, &endptr, 16);
-							osc_atom_u_setInt64(yylval->atom, i);
+							int64_t i = strtoull(yytext, &endptr, 16);
+							osc_atom_u_setUInt64(yylval->atom, i);
 						}else{
-							int32_t i = strtol(yytext, &endptr, 16);
-							osc_atom_u_setInt32(yylval->atom, i);
+							int32_t i = strtoul(yytext, &endptr, 16);
+							osc_atom_u_setUInt32(yylval->atom, i);
 						}
 						return OSCVALUE;
 					}
