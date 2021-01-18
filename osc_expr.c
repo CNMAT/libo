@@ -5986,9 +5986,13 @@ int osc_expr_hton32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
+			case 'c':
+			case 'u':
 			case 'i':
 				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getInt32(a)));
 				break;
+			case 'C':
+			case 'U':
 			case 'I':
 				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), hton32(osc_atom_u_getUInt32(a)));
 				break;
@@ -6011,9 +6015,13 @@ int osc_expr_ntoh32(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
+			case 'c':
+			case 'u':
 			case 'i':
 				osc_atom_u_setInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getInt32(a)));
 				break;
+			case 'C':
+			case 'U':
 			case 'I':
 				osc_atom_u_setUInt32(osc_atom_array_u_get(*out, k), ntoh32(osc_atom_u_getUInt32(a)));
 				break;
@@ -6036,12 +6044,16 @@ int osc_expr_hton64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
-			case 'h':
+			case 'c':
+			case 'u':
 			case 'i':
+			case 'h':
 				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
 				break;
-			case 'H':
+			case 'C':
+			case 'U':
 			case 'I':
+			case 'H':
 				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), hton64(osc_atom_u_getUInt64(a)));
 				break;
 			}
@@ -6063,12 +6075,16 @@ int osc_expr_ntoh64(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_
 		for(int j = 0; j < osc_atom_array_u_getLen(argv[i]); j++){
 			t_osc_atom_u *a = osc_atom_array_u_get(argv[i], j);
 			switch(osc_atom_u_getTypetag(a)){
-			case 'h':
+			case 'c':
+			case 'u':
 			case 'i':
-				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
+			case 'h':
+				osc_atom_u_setInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getInt64(a)));
 				break;
-			case 'H':
+			case 'C':
+			case 'U':
 			case 'I':
+			case 'H':
 				osc_atom_u_setUInt64(osc_atom_array_u_get(*out, k), ntoh64(osc_atom_u_getUInt64(a)));
 				break;
 			}
