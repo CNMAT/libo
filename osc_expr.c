@@ -167,8 +167,8 @@ int osc_expr_evalInLexEnv(t_osc_expr *f,
 		return osc_expr_specFunc_andalso(f, lexenv, len, oscbndl, out, context);
 	}else if(f->rec->func == osc_expr_orelse){
 		return osc_expr_specFunc_orelse(f, lexenv, len, oscbndl, out, context);
-	}else if(f->rec->func == osc_expr_bundle){
-		return osc_expr_specFunc_bundle(f, lexenv, len, oscbndl, out, context);
+	/* }else if(f->rec->func == osc_expr_bundle){ */
+	/* 	return osc_expr_specFunc_bundle(f, lexenv, len, oscbndl, out, context); */
 	}else{
 		//////////////////////////////////////////////////
 		// Call normal function
@@ -6262,7 +6262,69 @@ int osc_expr_match(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_a
 
 int osc_expr_bundle(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context)
 {
-	return 0;
+	*out = osc_atom_array_u_alloc(1);
+	t_osc_atom_u *aout = osc_atom_array_u_get(*out, 0);
+	if(argc == 1){
+		// if there's only one argument, it's either:
+		// -- a blob: convert it to a subbundle
+		// -- a list: treat it as a list of bytes and convert it to a subbundle
+		// -- a string: create a subbundle and make that string the address of the only message
+		int32_t n = osc_atom_array_u_getLen(argv[0]);
+		if(n == 1){
+			t_osc_atom_u *a = osc_atom_array_u_get(*argv, 0);
+			if(osc_atom_u_getTypetag(a) == 'b'){
+				int32_t len = 0;
+				char *ptr = NULL;
+				osc_atom_u_getBlobCopy(a, &len, &ptr);
+				len -= 4;
+				osc_atom_u_setBndl(aout, len, ptr);
+				return 0;
+			}else if(osc_atom_u_getTypetag(a) == 's'){
+				t_osc_bndl_u *b = osc_bundle_u_alloc();
+				t_osc_msg_u *m = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr(a));
+				osc_bundle_u_addMsg(b, m);
+				osc_atom_u_setBndl_u(aout, b);
+				return 0;
+			}
+		}else{
+			int np = n;
+			while(np % 4){
+				np++;
+			}
+			char buf[np];
+			memset(buf, 0, np);
+			for(int i = 0; i < n; i++){
+				buf[i] = osc_atom_u_getInt32(osc_atom_array_u_get(*argv, i));
+			}
+			osc_atom_u_setBndl(aout, np, buf);
+			return 0;
+		}
+	}else{
+		// multiple arguments means at least one message
+		t_osc_bndl_u *b = osc_bundle_u_alloc();
+		for(int i = 0; i < argc; i++){
+			t_osc_atom_u *aa = osc_atom_array_u_get(argv[i], 0);
+			if(osc_atom_u_getTypetag(aa) != 's'){
+				osc_bundle_u_free(b);
+				osc_atom_array_u_free(*out);
+				*out = NULL;
+				return 1;
+			}
+			t_osc_msg_u *m = osc_message_u_allocWithAddress(osc_atom_u_getStringPtr(aa));
+			if(i + 1 < argc){
+				for(int j = 0; j < osc_atom_array_u_getLen(argv[i + 1]); j++){
+					osc_message_u_appendAtom(m, osc_atom_u_copy(osc_atom_array_u_get(argv[i + 1], j)));
+				}
+				i++;
+			}
+			osc_bundle_u_addMsg(b, m);
+		}
+		/* *out = osc_atom_array_u_alloc(1); */
+		/* t_osc_atom_u *a = osc_atom_array_u_get(*out, 0); */
+		osc_atom_u_setBndl_u(aout, b);
+		return 0;
+	}
+	return 1;
 }
 
 t_osc_expr *osc_expr_alloc(void)

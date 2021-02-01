@@ -170,7 +170,7 @@ nil					{
 						return OSCVALUE;
 					}
 
-\/[^ \t\n#,]+	{
+\/[^ \t\n#]+	{
 			if(yytext[yyleng - 2] == ','){
 				yyless(yyleng - 2);
 			}
