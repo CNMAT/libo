@@ -171,8 +171,8 @@ nil					{
 					}
 
 \/[^ \t\n#]+	{
-			if(yytext[yyleng - 2] == ','){
-				yyless(yyleng - 2);
+			if(yytext[yyleng - 1] == ','){
+				yyless(yyleng - 1);
 			}
 			yylval->atom = osc_atom_u_allocWithString(yytext);
 			return OSCADDRESS;
