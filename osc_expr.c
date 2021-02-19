@@ -3204,7 +3204,8 @@ int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
         }
         *out = osc_atom_array_u_alloc(argc_out);
 
-        if(osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], 0)) == 'b'){
+	long argv0len = osc_atom_array_u_getLen(argv[0]);
+        if(argv0len == 1 && osc_atom_u_getTypetag(osc_atom_array_u_get(argv[0], 0)) == 'b'){
                 t_osc_atom_u *a = osc_atom_array_u_get(argv[0], 0);
                 char *blob = osc_atom_u_getBlob(a);
                 int32_t nbytes = ntoh32(*((int32_t *)blob));
@@ -3230,7 +3231,6 @@ int osc_expr_nth(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_
                         }
                 }
         }else{
-                long argv0len = osc_atom_array_u_getLen(argv[0]);
                 for(j = 1; j < argc; j++){
                         for(i = 0; i < osc_atom_array_u_getLen(argv[j]); i++){
                                 osc_atom_u_setDouble(osc_atom_array_u_get(*out, k), 0.);
