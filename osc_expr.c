@@ -5883,13 +5883,37 @@ int osc_expr_explicitCast_string(t_osc_atom_u *dest, t_osc_atom_u *src)
 		osc_atom_u_setString(dest, b + 4);
 		return 0;
 	}else{
-		osc_atom_u_getString(src, 0, &s);
-		if(s){
-			osc_atom_u_setString(dest, s);
-			osc_mem_free(s);
+		if(osc_atom_u_getTypetag(src) == 'c'){
+			char c = osc_atom_u_getInt8(src);
+			char buf[6];
+			if(c >= 32 && c < 127){
+				buf[0] = c;
+				buf[1] = 0;
+			}else{
+				snprintf(buf, 4, "%d", c);
+			}
+			osc_atom_u_setString(dest, buf);
+			return 0;
+		}else if(osc_atom_u_getTypetag(src) == 'C'){
+			unsigned char c = osc_atom_u_getInt8(src);
+			char buf[4];
+			if(c >= 32 && c < 127){
+				buf[0] = c;
+				buf[1] = 0;
+			}else{
+				snprintf(buf, 4, "%u", c);
+			}
+			osc_atom_u_setString(dest, buf);
 			return 0;
 		}else{
-			return 1;
+			osc_atom_u_getString(src, 0, &s);
+			if(s){
+				osc_atom_u_setString(dest, s);
+				osc_mem_free(s);
+				return 0;
+			}else{
+				return 1;
+			}
 		}
 	}
 }
