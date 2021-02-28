@@ -28,16 +28,17 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <libgen.h>
+  //#include <libgen.h>
 
 typedef uint64_t t_osc_err;
 
 typedef int (*t_osc_error_handler)(void *context, const char * const errorstr);
 
-#define OSC_ERROR_VERBOSE(context, errorcode, moreinfo_fmt, args...)				\
-	osc_error_handler(context, basename(__FILE__), __func__, __LINE__, errorcode, moreinfo_fmt, ##args);
-#define OSC_ERROR_SIMPLE(context, errorcode, moreinfo_fmt, args...)				\
-	osc_error_handler(context, NULL, NULL, -1, errorcode, moreinfo_fmt, ##args);
+#define OSC_ERROR_VERBOSE(context, errorcode, moreinfo_fmt, ...)				\
+  osc_error_handler(context, __FILE__, __func__, __LINE__, errorcode, moreinfo_fmt, ##__VA_ARGS__);
+  //osc_error_handler(context, basename(__FILE__), __func__, __LINE__, errorcode, moreinfo_fmt, ##args);
+#define OSC_ERROR_SIMPLE(context, errorcode, moreinfo_fmt, ...)				\
+	osc_error_handler(context, NULL, NULL, -1, errorcode, moreinfo_fmt, ##__VA_ARGS__);
 
 //#define OSC_ERROR_VERBOSE_REPORTING
 #ifdef OSC_ERROR_VERBOSE_REPORTING
