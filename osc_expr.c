@@ -6865,7 +6865,33 @@ void osc_expr_makeFunctionBundle(void)
 		t_osc_expr_rec r = osc_expr_funcsym[i];
 		while(r.categories[j]){
 			t_osc_msg_u *m = osc_message_u_alloc();
-			sprintf(buf, "/doc/category%s/%s", r.categories[j++], r.name);
+			char *name = r.name;
+			if(!strcmp(r.name, "+")){
+				name = "add";
+			}else if(!strcmp(r.name, "-")){
+				name = "sub";
+			}else if(!strcmp(r.name, "*")){
+				name = "mul";
+			}else if(!strcmp(r.name, "/")){
+				name = "div";
+			}else if(!strcmp(r.name, "%")){
+				name = "mod";
+			}else if(!strcmp(r.name, "++")){
+				name = "inc";
+			}else if(!strcmp(r.name, "--")){
+				name = "dec";
+			}else if(!strcmp(r.name, "+=")){
+				name = "addassign";
+			}else if(!strcmp(r.name, "-=")){
+				name = "subassign";
+			}else if(!strcmp(r.name, "*=")){
+				name = "mulassign";
+			}else if(!strcmp(r.name, "/=")){
+				name = "divassign";
+			}else if(!strcmp(r.name, "%=")){
+				name = "modassign";
+			}
+			sprintf(buf, "/doc/category%s/%s", r.categories[j++], name);
 			osc_message_u_setAddress(m, buf);
 			osc_message_u_appendString(m, r.name);
 			osc_bundle_u_addMsg(b, m);
