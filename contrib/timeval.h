@@ -13,10 +13,10 @@
 #ifndef _TIMEVAL_H
 #define _TIMEVAL_H
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 
 //#define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
+#include <windows.h>
 #include <time.h>
 
 #ifndef __GNUC__
@@ -25,12 +25,12 @@
 #define EPOCHFILETIME (116444736000000000LL)
 #endif
 
-struct timezone {
-    int tz_minuteswest; /* minutes W of Greenwich */
-    int tz_dsttime;     /* type of dst correction */
-};
+/* struct timezone { */
+/*     int tz_minuteswest; /\* minutes W of Greenwich *\/ */
+/*     int tz_dsttime;     /\* type of dst correction *\/ */
+/* }; */
 
-__inline int gettimeofday(struct timeval *tv, struct timezone *tz)
+__inline int gettimeofday_win(struct timeval *tv, struct timezone *tz)
 {
     FILETIME        ft;
     LARGE_INTEGER   li;
@@ -39,7 +39,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 
     if (tv)
     {
-        GetSystemTimeAsFileTime(&ft);
+        GetSystemTimePreciseAsFileTime(&ft);
         li.LowPart  = ft.dwLowDateTime;
         li.HighPart = ft.dwHighDateTime;
         t  = li.QuadPart;       /* In 100-nanosecond intervals */

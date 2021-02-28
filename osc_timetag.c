@@ -2,19 +2,17 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-/*
-#ifdef WIN_VERSION
-#include <Winsock.h>
+
+#ifdef _WIN64
+// crossplatform gettimeofday
+#include "contrib/timeval.h"
+#define osc_timetag_gettimeofday gettimeofday_win
 #else
-#include <arpa/inet.h>
-#endif
-*/
 #define __USE_BSD
 #include <sys/time.h>
 #include <time.h>
-
-// crossplatform gettimeofday
-//#include "contrib/timeval.h"
+#define osc_timetag_gettimeofday gettimeofday
+#endif
 
 // this is for windows which doesn't have
 // strptime
@@ -574,7 +572,7 @@ void osc_timetag_ut_to_ntp(time_t ut, t_osc_timetag_ntptime *n)
 	struct timeval tv;
 	struct timezone tz;
     
-	gettimeofday(&tv, &tz); // this is just to get the timezone...
+	osc_timetag_gettimeofday(&tv, &tz); // this is just to get the timezone...
     
 	n->sec = (uint64_t)2208988800UL + 
 		(uint32_t)ut - 
@@ -590,7 +588,7 @@ time_t osc_timetag_ntp_to_ut(t_osc_timetag_ntptime n)
 	struct timeval tv;
 	struct timezone tz;
     
-	gettimeofday(&tv, &tz); // this is just to get the timezone...
+	osc_timetag_gettimeofday(&tv, &tz); // this is just to get the timezone...
 
 	// 2147483647
 	// 2208988800
@@ -608,7 +606,7 @@ t_osc_timetag osc_timetag_now(void)
 	struct timezone tz;
 	t_osc_timetag_ntptime n;
 
-	gettimeofday(&tv, &tz);
+	osc_timetag_gettimeofday(&tv, &tz);
     
 	n.sec = (uint32_t)2208988800UL + 
 		(uint32_t) tv.tv_sec;// - 
