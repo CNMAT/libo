@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-  //#include <libgen.h>
+#include <libgen.h>
 
 typedef uint64_t t_osc_err;
 
