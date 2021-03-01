@@ -1831,37 +1831,33 @@ static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 }
 
 static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
-					     t_osc_expr_lexenv *lexenv,
-					     long *len,
-					     char **oscbndl,
-					     t_osc_atom_ar_u **out,
-                         void *context )
+						  t_osc_expr_lexenv *lexenv,
+						  long *len,
+						  char **oscbndl,
+						  t_osc_atom_ar_u **out,
+						  void *context )
 {
 	t_osc_expr_arg *f_argv = osc_expr_getArgs(f);
 	t_osc_atom_ar_u *arg1 = NULL;
 
 	t_osc_err error = osc_expr_evalArgInLexEnv(f_argv, lexenv, len, oscbndl, &arg1, context);
 	if(!arg1){
-        
-        if( error == OSC_ERR_EXPR_ADDRESSUNBOUND && osc_expr_getArgCount(f) > 2 &&
-           f_argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS && f_argv->next->type == OSC_EXPR_ARG_TYPE_OSCADDRESS )
-        {
-            t_osc_msg_u *m = osc_message_u_allocWithAddress( f_argv->arg.osc_address );
-            t_osc_bundle_u * b = osc_bundle_u_alloc();
-            osc_message_u_appendBndl_u(m, b);
+		// if arg1 is unbound, create a bundle with message arg2 : arg3
+		if( error == OSC_ERR_EXPR_ADDRESSUNBOUND && osc_expr_getArgCount(f) > 2 &&
+		    f_argv->type == OSC_EXPR_ARG_TYPE_OSCADDRESS && f_argv->next->type == OSC_EXPR_ARG_TYPE_OSCADDRESS ){
+			t_osc_msg_u *m = osc_message_u_allocWithAddress( f_argv->arg.osc_address );
+			t_osc_bundle_u * b = osc_bundle_u_alloc();
+			osc_message_u_appendBndl_u(m, b);
             
-            osc_bundle_s_appendMessage(len, oscbndl, osc_message_u_serialize(m) );
+			osc_bundle_s_appendMessage(len, oscbndl, osc_message_u_serialize(m) );
             
-            arg1 = osc_message_u_getArgArrayCopy(m);
+			arg1 = osc_message_u_getArgArrayCopy(m);
             
-        }
-        else
-        {
-            return 1;
-        }
-        
+		}else{
+			return 1;
+		}
 	}
-    int free_arg1 = 1;
+	int free_arg1 = 1;
 	long bndl_len_s = 0;
 	char *bndl_s = NULL;
 	if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
@@ -1946,8 +1942,24 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 				osc_expr_setArg(assign, target);
 				*out = NULL;
 				ret = osc_expr_specFunc_assigntoindex(assign, lexenv, len, oscbndl, out, context);
+			}else if(osc_atom_u_getTypetag(osc_atom_array_u_get(arg1, 0)) == 's'){
+				char *target_address = NULL;
+				osc_util_strdup(&target_address, osc_atom_u_getStringPtr(osc_atom_array_u_get(arg1, 0)));
+				t_osc_expr_arg *target = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAddress(target, target_address);
+
+				t_osc_atom_u *value_atom = osc_atom_u_alloc();
+				osc_atom_u_setBndl(value_atom, bndl_len_s, bndl_s);
+				t_osc_expr_arg *value = osc_expr_arg_alloc();
+				osc_expr_arg_setOSCAtom(value, value_atom);
+
+				osc_expr_arg_append(target, value);
+				osc_expr_setArg(assign, target);
+				*out = NULL;
+				ret = osc_expr_specFunc_assign(assign, lexenv, len, oscbndl, out, context);
 			}else{
-				return 1;
+				osc_error(context, OSC_ERR_EXPR_ARGCHK, "the first argument to assigntobundlemember() is an expression that is not assignable");
+				ret = 1;
 			}
 		}else{
 			osc_atom_u_setBndl_s(osc_atom_array_u_get(arg1, 0), bndl_len_s, bndl_s);

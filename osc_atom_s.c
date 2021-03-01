@@ -633,8 +633,10 @@ t_osc_bndl_s *osc_atom_s_getBndlCopy(t_osc_atom_s *a)
 	}
 	uint32_t len = ntoh32(*((uint32_t *)a->data));
 	if(len > 0){
-		char *ptr = osc_mem_alloc(len + 4);
-		memcpy(ptr, a->data, len + 4);
+		/* char *ptr = osc_mem_alloc(len + 4); */
+		/* memcpy(ptr, a->data, len + 4); */
+		char *ptr = osc_mem_alloc(len);
+		memcpy(ptr, a->data + 4, len);
 		return osc_bundle_s_alloc(len, ptr);
 	}else{
 		return NULL;
