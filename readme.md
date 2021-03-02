@@ -1,7 +1,7 @@
 # libo
 
 libo is a library for managing OSC bundles and the odot-expression language,
-by John MacCallum.
+by [https://github.com/maccallum](John MacCallum).
 
 ## Building libo
 
