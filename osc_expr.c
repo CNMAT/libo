@@ -1921,7 +1921,8 @@ static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 
 		if(ret){
 			// cleanup
-			return ret;
+			//return ret;
+			goto cleanup;
 		}
 
 		if(osc_expr_arg_getType(f_argv) == OSC_EXPR_ARG_TYPE_EXPR){
