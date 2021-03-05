@@ -5791,6 +5791,30 @@ int osc_expr_sqrthalf(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_ato
 	return 0;
 }
 
+int osc_expr_phi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+	*out = osc_atom_array_u_alloc(1);
+
+	osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), 1.618033988749895);
+	return 0;
+}
+
+int osc_expr_twelfth_root_of_2(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+	*out = osc_atom_array_u_alloc(1);
+
+	osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), 1.059463094359295);
+	return 0;
+}
+
+int osc_expr_thirteenth_root_of_3(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+	*out = osc_atom_array_u_alloc(1);
+
+	osc_atom_u_setDouble(osc_atom_array_u_get(*out, 0), 1.088182243463317);
+	return 0;
+}
+
 int osc_expr_explicitCast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
 {
 	if(argc){

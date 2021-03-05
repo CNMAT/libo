@@ -169,6 +169,9 @@ int osc_expr_logtwoe(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
 int osc_expr_logtene(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_sqrttwo(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_sqrthalf(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
+int osc_expr_phi(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
+int osc_expr_twelfth_root_of_2(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
+int osc_expr_thirteenth_root_of_3(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context);
 
 int osc_expr_explicitCast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 int osc_expr_explicitCast_float32(t_osc_atom_u *dest, t_osc_atom_u *src);
@@ -2704,6 +2707,42 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (char *[]){"", NULL},
 	 "makes a bundle from a list of bindings",
 	 osc_expr_bundle,
+	 NULL},
+	{"phi",
+	 "/result = pi()",
+	 0,
+	 0,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/constant", NULL},
+	 "golden ratio: (1 + sqrt(5))/2 => 1.618034...",
+	 osc_expr_phi,
+	 NULL},
+	{"twelfth_root_of_2",
+	 "/result = twelfth_root_of_2()",
+	 0,
+	 0,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/constant", NULL},
+	 "1.05946...",
+	 osc_expr_twelfth_root_of_2,
+	 NULL},
+	{"thirteenth_root_of_3",
+	 "/result = thirteenth_root_of_3()",
+	 0,
+	 0,
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){NULL},
+	 (int []){},
+	 (char *[]){"/math/constant", NULL},
+	 "1.08818...",
+	 osc_expr_thirteenth_root_of_3,
 	 NULL},
 };
 
