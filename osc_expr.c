@@ -828,6 +828,7 @@ static int osc_expr_specFunc_assign(t_osc_expr *f,
     
     t_osc_err err;
 	if((err = osc_error_validateAddress(address))){
+		osc_error(context, OSC_ERR_EXPR_ARGCHK, "the first argument of assign() must be an OSC address.");		
 		return err;
 	}
 

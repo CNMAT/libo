@@ -520,7 +520,7 @@ static struct _osc_expr_rec osc_expr_funcsym[] __attribute__((unused)) = {
 	 (int []){OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS, OSC_EXPR_ARG_TYPE_STRING | OSC_EXPR_ARG_TYPE_OSCADDRESS},
 	 (char *[]){NULL},
 	 (int []){},
-	 (char *[]){"/core", NULL},
+	 (char *[]){"/core", "/math/operator/assignment", NULL},
 	 "Extract a message from a nested bundle.",
 	 osc_expr_getbundlemember,
 	 NULL},

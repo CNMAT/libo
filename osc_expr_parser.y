@@ -557,6 +557,27 @@ t_osc_expr *osc_expr_parser_reduce_NullCoalescingOperator(void *context, YYLTYPE
 	return osc_expr_parser_reduce_PrefixFunction(context, llocp, input_string, "if", arg1);
 }
 
+void osc_expr_parser_reduce_Value(void *context, YYLTYPE *llocp, char *input_string,
+			          t_osc_atom_u *value, t_osc_expr **tmp_exprstack, int isaddress)
+{
+	t_osc_expr_arg *a = osc_expr_arg_alloc();
+	if(isaddress){
+		char *st = osc_atom_u_getStringPtr(value);
+		int len = strlen(st) + 1;
+		char *buf = osc_mem_alloc(len);
+		memcpy(buf, st, len);
+		osc_expr_arg_setOSCAddress(a, buf);
+	}else{
+		osc_expr_arg_setOSCAtom(a, value);
+	}
+	t_osc_expr *e = osc_expr_parser_reduce_PrefixFunction(context, llocp, input_string, "progn", a);
+	if(*tmp_exprstack){
+		osc_expr_appendExpr(*tmp_exprstack, e);
+	}else{
+		*tmp_exprstack = e;
+	}
+}
+
 %}
 
 %define api.pure full
@@ -663,10 +684,22 @@ expns:  {
 			*tmp_exprstack = $3;
 		}
  	}
-    | expns ',' {
-        osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "trailing comma", NULL, NULL);
-        return 1;
-    }
+	| expns ',' {
+        	osc_expr_error(context, &yylloc, input_string, OSC_ERR_EXPPARSE, "trailing comma", NULL, NULL);
+        	return 1;
+ 	}
+	| OSC_EXPR_OSCADDRESS {
+		osc_expr_parser_reduce_Value(context, &yylloc, input_string, $1, tmp_exprstack, 1);
+ 	}
+	| expns ',' OSC_EXPR_OSCADDRESS {
+		osc_expr_parser_reduce_Value(context, &yylloc, input_string, $3, tmp_exprstack, 1);
+ 	}
+	| OSC_EXPR_NUM {
+		osc_expr_parser_reduce_Value(context, &yylloc, input_string, $1, tmp_exprstack, 0);
+ 	}
+	| expns ','OSC_EXPR_NUM {
+		osc_expr_parser_reduce_Value(context, &yylloc, input_string, $3, tmp_exprstack, 0);
+ 	}
 ;
 /*
 number: OSC_EXPR_NUM
@@ -1113,13 +1146,13 @@ parameter: OSC_EXPR_STRING {
 msg:
 	OSC_EXPR_OSCADDRESS ':' arg {
 		t_osc_expr_arg *a = osc_expr_arg_alloc();
-		long len = osc_atom_u_getStringLen($1);
-		char *buf = NULL;
-		osc_atom_u_getString($1, len, &buf);
-		osc_expr_arg_setOSCAddress(a, buf);
+		/* long len = osc_atom_u_getStringLen($1); */
+		/* char *buf = NULL; */
+		/* osc_atom_u_getString($1, len, &buf); */
+		osc_expr_arg_setOSCAtom(a, $1);
 		osc_expr_arg_append(a, $3);
 		$$ = a;
-		osc_atom_u_free($1);
+		/* osc_atom_u_free($1); */
 	  }
 ;
 msgs: msg
