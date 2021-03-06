@@ -3819,6 +3819,24 @@ int osc_expr_sortidx(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom
     return 0;
 }
 
+int osc_expr_nonzero(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
+{
+	long n = osc_atom_array_u_getLen(argv[0]);
+	long idxs[n];
+	long idxcount = 0;
+	for(int i = 0; i < n; i++){
+		t_osc_atom_u *a = osc_atom_array_u_get(argv[0], i);
+		int b = osc_atom_u_getBool(a);
+		if(b){
+			idxs[idxcount++] = i;
+		}
+	}
+	*out = osc_atom_array_u_alloc(idxcount);
+	for(int i = 0; i < idxcount; i++){
+		osc_atom_u_setInt32(osc_atom_array_u_get(*out, i), idxs[i]);
+	}
+	return 0;
+}
 
 int osc_expr_list(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void* context)
 {
