@@ -688,11 +688,12 @@ long osc_bundle_u_nformatNestedBndl(char *buf, long n, t_osc_bndl_u *bndl, int n
 		return 0;
 	}
 	long offset = 0;
-	char tabs[nindent];
-	for(int i = 0; i < nindent - 1; i++){
-		tabs[i] = '\t';
+	int nspaces = (nindent - 1) * OSC_SUBBUNDLE_INDENT;
+	char tabs[nspaces + 1];
+	for(int i = 0; i < nspaces; i++){
+		tabs[i] = ' ';
 	}
-	tabs[nindent - 1] = '\0';
+	tabs[nspaces] = '\0';
 	if(!buf){
 		offset += snprintf(NULL, 0, "{\n");
 		offset += osc_bundle_u_nformat(NULL, 0, bndl, nindent);

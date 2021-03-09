@@ -63,6 +63,8 @@ extern "C" {
 #define OSC_DEPRECATED(decl, msg) decl __attribute__((deprecated(msg)));
 #endif
 
+#define OSC_SUBBUNDLE_INDENT 2
+
 #ifdef __cplusplus
 }
 #endif

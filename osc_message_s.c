@@ -307,11 +307,12 @@ long osc_message_s_nformat(char *buf, long n, t_osc_msg_s *m, int nindent)
 	long numargs = osc_message_s_getArgCount(m);
 	long offset = 0;
 	t_osc_msg_it_s *it = osc_msg_it_s_get(m);
-	char tabs[nindent + 1];
-	for(int i = 0; i < nindent; i++){
-		tabs[i] = '\t';
+	int nspaces = nindent * OSC_SUBBUNDLE_INDENT;
+	char tabs[nspaces + 1];
+	for(int i = 0; i < nspaces; i++){
+		tabs[i] = ' ';
 	}
-	tabs[nindent] = '\0';
+	tabs[nspaces] = '\0';
 	if(!buf){
 		if(numargs){
 			if(numargs > 1){
