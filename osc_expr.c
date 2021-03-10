@@ -2800,6 +2800,21 @@ int osc_expr_eq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void*
 		osc_atom_u_setBool(*result, 1);
 	}else if(tt1 == 'N' || tt2 == 'N'){
 		osc_atom_u_setBool(*result, 0);
+	}else if(tt1 == OSC_BUNDLE_TYPETAG && tt2 == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b1 = osc_atom_u_getBndl(f1);
+		t_osc_bndl_u *b2 = osc_atom_u_getBndl(f2);
+		long len1 = osc_bundle_u_nserialize(NULL, 0, b1);
+		long len2 = osc_bundle_u_nserialize(NULL, 0, b2);
+		if(len1 != len2){
+			osc_atom_u_setBool(*result, 0);
+		}else{
+			char buf1[len1];
+			osc_bundle_u_nserialize(buf1, len1, b1);
+			char buf2[len2];
+			osc_bundle_u_nserialize(buf2, len2, b2);
+			long r = memcmp(buf1, buf2, len1);
+			osc_atom_u_setBool(*result, !r);
+		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg(context, "==", tt1, 1, f1, f2);
@@ -2828,6 +2843,21 @@ int osc_expr_neq(t_osc_atom_u *f1, t_osc_atom_u *f2, t_osc_atom_u **result, void
 	}else if((tt1 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt1)) &&
 		 (tt2 == OSC_TIMETAG_TYPETAG || OSC_TYPETAG_ISNUMERIC(tt2))){
 		osc_atom_u_setBool(*result, osc_expr_compareTimetag(f1, f2) != 0);
+	}else if(tt1 == OSC_BUNDLE_TYPETAG && tt2 == OSC_BUNDLE_TYPETAG){
+		t_osc_bndl_u *b1 = osc_atom_u_getBndl(f1);
+		t_osc_bndl_u *b2 = osc_atom_u_getBndl(f2);
+		long len1 = osc_bundle_u_nserialize(NULL, 0, b1);
+		long len2 = osc_bundle_u_nserialize(NULL, 0, b2);
+		if(len1 != len2){
+			osc_atom_u_setBool(*result, 1);
+		}else{
+			char buf1[len1];
+			osc_bundle_u_nserialize(buf1, len1, b1);
+			char buf2[len2];
+			osc_bundle_u_nserialize(buf2, len2, b2);
+			long r = memcmp(buf1, buf2, len1);
+			osc_atom_u_setBool(*result, r);
+		}
 	}else{
 		if(!OSC_TYPETAG_ISNUMERIC(tt1) && !OSC_TYPETAG_ISSTRING(tt1)){
 			osc_expr_err_badInfixArg(context, "!=", tt1, 1, f1, f2);
