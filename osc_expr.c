@@ -5868,13 +5868,24 @@ int osc_expr_explicitCast(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 	if(argc){
 		if(f->rec->extra == osc_expr_explicitCast_blob){
 			long n = osc_atom_array_u_getLen(*argv);
-			char *blob = osc_mem_alloc(n + 4);
-			for(int i = 0; i < n; i++){
-				blob[i + 4] = osc_atom_u_getInt8(osc_atom_array_u_get(*argv, i));
+			if(n == 1 && osc_atom_u_getTypetag(osc_atom_array_u_get(*argv, 0)) == OSC_BUNDLE_TYPETAG){
+				*out = osc_atom_array_u_alloc(1);
+				int32_t l = 0;
+				char *b = NULL;
+				osc_atom_u_getBlobCopy(osc_atom_array_u_get(*argv, 0), &l, &b);
+				if(!b){
+					return 1;
+				}
+				osc_atom_u_setBlob(osc_atom_array_u_get(*out, 0), b);
+			}else{
+				char *blob = osc_mem_alloc(n + 4);
+				for(int i = 0; i < n; i++){
+					blob[i + 4] = osc_atom_u_getInt8(osc_atom_array_u_get(*argv, i));
+				}
+				*((int32_t *)blob) = hton32(n);
+				*out = osc_atom_array_u_alloc(1);
+				osc_atom_u_setBlobPtr(osc_atom_array_u_get(*out, 0), blob);
 			}
-			*((int32_t *)blob) = hton32(n);
-			*out = osc_atom_array_u_alloc(1);
-			osc_atom_u_setBlobPtr(osc_atom_array_u_get(*out, 0), blob);
 		}else{
 			int n = osc_atom_array_u_getLen(*argv);
 			*out = osc_atom_array_u_alloc(n);
