@@ -95,9 +95,9 @@ float osc_atom_s_getFloat(t_osc_atom_s *a)
 	case 'c':
 	case 'u':
 	case 'i': // signed 32-bit int
-		return (float)(ntoh32(*((int32_t *)(a->data))));
+		return (float)((int32_t)ntoh32(*((int32_t *)(a->data))));
 	case 'h': // signed 64-bit int
-		return (float)(ntoh64(*((int64_t *)(a->data))));
+		return (float)((int64_t)ntoh64(*((int64_t *)(a->data))));
 	case 'C':
 	case 'U':
 	case 'I': // unsigned 32-bit int
@@ -138,9 +138,9 @@ double osc_atom_s_getDouble(t_osc_atom_s *a)
 	case 'c':
 	case 'u':
 	case 'i': // signed 32-bit int
-		return (double)(ntoh32(*((int32_t *)(a->data))));
+		return (double)((int32_t)ntoh32(*((int32_t *)(a->data))));
 	case 'h': // signed 64-bit int
-		return (double)(ntoh64(*((int64_t *)(a->data))));
+		return (double)((int64_t)ntoh64(*((int64_t *)(a->data))));
 	case 'C':
 	case 'U':
 	case 'I': // unsigned 32-bit int
