@@ -54,6 +54,7 @@ $ make linux
 ### Issues
 
 * If a linker error is produced stating that libfl.a could not be found,
-it was probably installed somewhere other than `/usr/local/lib`. You'll have
-to find it on your system (or reinstall Flex), and either symlink to
-`/usr/local/lib` or add its location to your path.
+it was probably installed somewhere other than `/usr/local/lib`. 
+You can either move or symlink it into `/usr/local/lib`, or 
+pass its location when you call `make`, for example: 
+`make FLEX_LIB_FOLDER=/usr/local/opt/flex/lib`
