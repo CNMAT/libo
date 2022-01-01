@@ -77,6 +77,7 @@ win64: CC = x86_64-w64-mingw32-gcc
 win64: I = $(WIN64-INCLUDES)
 win64: libs
 win64: STATIC-LINK = x86_64-w64-mingw32-gcc-ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+win64: DYNAMIC-LINK = x86_64-w64-mingw32-gcc *.o contrib/*.o -shared -o libo.dylib
 
 linux: CC = clang
 linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
