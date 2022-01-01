@@ -20,11 +20,28 @@ Note for OS X: the OS X Developer's
 Tools install an old version of Flex and Bison that *will not work*---newer
 versions can be installed using [https://brew.sh](homebrew) or from source.
 
+### Dynamic and static libraries
+
+By default, only a static library is built. If you want a dynamic library,
+set the variable `DYNAMIC` to `true`. Similarly, you can suppress the build
+of the static library by setting `STATIC` to `false`. E.g.
+
+```
+$ DYNAMIC=true STATIC=false make
+```
+
 ### Mac OS X
 
 ```
 $ cd <path/to/libo>
 $ make
+```
+
+Note: if building for Catalina or earlier versions of Mac OS X, set 
+`NOM1` to `true`:
+
+```
+$ NOM1=true make
 ```
 
 ### Windows 10

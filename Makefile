@@ -26,7 +26,7 @@ DEBUG-CFLAGS += -Wall -Wno-trigraphs -fno-strict-aliasing -O0 -g -std=c99
 FLEX_LIB_FOLDER = /usr/local/lib
 #FLEX_LIB_FOLDER = /usr/local/Cellar/flex/2.6.4/lib
 
-MAC-CFLAGS = -arch x86_64 -arch arm64 -mmacosx-version-min=10.10 -std=c99
+MAC-CFLAGS = -arch x86_64 -mmacosx-version-min=10.10 -std=c99
 ARM-CFLAGS = -arch armv7 -arch armv7s
 WIN-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE
 #WIN64-CFLAGS = -DWIN_VERSION -DWIN_EXT_VERSION -U__STRICT_ANSI__ -U__ANSI_SOURCE -fPIC
@@ -40,7 +40,11 @@ all: CFLAGS += $(RELEASE-CFLAGS)
 all: CFLAGS += $(MAC-CFLAGS)
 all: CC = clang
 all: I = $(MAC-INCLUDES)
-all: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
+all: libs
+ifeq ($(NOM1), true)
+else
+all: CFLAGS += -arch arm64
+endif
 all: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) $(FLEX_LIB_FOLDER)/libfl.a
 all: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
@@ -48,7 +52,7 @@ arm: CFLAGS += $(RELEASE-CFLAGS)
 arm: CFLAGS += $(ARM-CFLAGS)
 arm: CC = clang
 arm: I = $(ARM-INCLUDES)
-arm: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
+arm: libs
 arm: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
 arm: DYNAMIC-LINK = clang -dynamiclib $(MAC-CFLAGS) -single_module -compatibility_version 1 -current_version 1 -o libo.dylib $(LIBO_OBJECTS)
 
@@ -56,14 +60,14 @@ debug: CFLAGS += $(DEBUG-CFLAGS)
 debug: CFLAGS += $(MAC-CFLAGS)
 debug: CC = clang
 debug: I = $(MAC-INCLUDES)
-debug: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
+debug: libs
 debug: STATIC-LINK = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/local/lib/libfl.a
 
 win: CFLAGS += $(RELEASE-CFLAGS)
 win: CFLAGS += $(WIN-CFLAGS)
 win: CC = i686-w64-mingw32-gcc
 win: I = $(WIN-INCLUDES)
-win: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
+win: libs
 win: STATIC-LINK = ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 win: PLACE = rm -f libs/i686/*.a; mkdir -p libs/i686; cp libo.a libs/i686
 
@@ -71,16 +75,22 @@ win64: CFLAGS += $(RELEASE-CFLAGS)
 win64: CFLAGS += $(WIN-CFLAGS)
 win64: CC = x86_64-w64-mingw32-gcc
 win64: I = $(WIN64-INCLUDES)
-win64: $(LIBO_PARSER_CFILES) $(LIBO_SCANNER_CFILES) libo.a
+win64: libs
 win64: STATIC-LINK = x86_64-w64-mingw32-gcc-ar cru libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
-#win64: PLACE = rm -f libs/x86_64/*.a; mkdir -p libs/x86_64; cp libo.a libs/x86_64
 
 linux: CC = clang
 linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
-linux: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) libo.a
 #linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
+linux: libs
 linux: STATIC-LINK = ar rcs libo.a $(LIBO_OBJECTS) /usr/lib/libfl.so
-#; ranlib libo.a
+
+ifeq ($(STATIC), false)
+else
+libs: libo.a
+endif
+ifeq ($(DYNAMIC), true)
+libs: libo.dylib
+endif
 
 swig: CC = clang
 swig: CFLAGS += -std=c99
@@ -114,12 +124,12 @@ build/Release/odot.node:
 # 	$(CC) -bundle -L/Users/john/anaconda/envs/py2.7/lib/python2.7/config -ldl -framework CoreFoundation -lpython2.7 $(LIBO_OBJECTS) libo_wrap.o -o _libo.so
 #	$(CC) -bundle -L/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config -ldl -framework CoreFoundation -lpython2.7 $(LIBO_OBJECTS) libo_wrap.o -o _libo.so
 
-libo.a: $(LIBO_OBJECTS)
+libo.a: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) $(LIBO_OBJECTS)
 	rm -f libo.a
 	$(STATIC-LINK)
 	$(PLACE)
 
-libo.dylib: $(LIBO_OBJECTS)
+libo.dylib: $(LIBO_CFILES) $(LIBO_HFILES) $(LIBO_SCANNER_CFILES) $(LIBO_PARSER_CFILES) $(LIBO_OBJECTS)
 	rm -f libo.dylib
 	$(DYNAMIC-LINK)
 

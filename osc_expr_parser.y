@@ -81,6 +81,7 @@ int osc_expr_scanner_lex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan
 extern "C"{
 #endif
 t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f, void *context);
+t_osc_expr *osc_expr_parser_parseExpr_r(char *ptr, void *context);
 t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f, void *context);
 #ifdef __cplusplus
 }
@@ -205,6 +206,17 @@ t_osc_err osc_expr_parser_parseExpr(char *ptr, t_osc_expr **f, void *context)
 		osc_mem_free(ptr);
 	}
 	return ret;
+}
+
+t_osc_expr *osc_expr_parser_parseExpr_r(char *ptr, void *context)
+{
+    t_osc_expr *f = NULL;
+    t_osc_err e = osc_expr_parser_parseExpr(ptr, &f, context);
+    if(e)
+    {
+        return NULL;
+    }
+    return f;
 }
 
 t_osc_err osc_expr_parser_parseFunction(char *ptr, t_osc_expr_rec **f, void *context)
