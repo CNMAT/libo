@@ -83,6 +83,7 @@ linux: CFLAGS += -std=c99 -fPIC -DLINUX_VERSION -D_XOPEN_SOURCE=500
 #linux: LIBTOOL = libtool -static -o libo.a $(LIBO_OBJECTS) /usr/lib/libfl.a
 linux: libs
 linux: STATIC-LINK = ar rcs libo.a $(LIBO_OBJECTS) /usr/lib/libfl.so
+linux: DYNAMIC-LINK = clang *.o -shared -o libo.so
 
 ifeq ($(STATIC), false)
 else
