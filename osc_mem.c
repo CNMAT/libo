@@ -213,7 +213,7 @@ size_t osc_sizeof(unsigned char typetag, char *data){
 	}
 	switch(typetag){
 	case 'b':
-		return ntoh32(*((int32_t *)data)) + 4;
+		return osc_util_getBlobLength(ntoh32(*((int32_t *)data)));
 	case 's':
 	case 'S':
 		return osc_util_getPaddedStringLen(data);
