@@ -2215,10 +2215,10 @@ int osc_expr_2arg_dbl_dbl(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc
 
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
-	if(argc0 < 1 || argc1 < 1){
-		osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name);
-		return 1;
-	}
+	/* if(argc0 < 1 || argc1 < 1){ */
+	/* 	osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name); */
+	/* 	return 1; */
+	/* } */
 	uint32_t min_argc = argc0, max_argc = argc1;
 	if(argc0 > argc1){
 		min_argc = argc1, max_argc = argc0;
@@ -2269,10 +2269,10 @@ int osc_expr_2arg(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar
     
 	uint32_t argc0 = osc_atom_array_u_getLen(argv[0]);
 	uint32_t argc1 = osc_atom_array_u_getLen(argv[1]);
-	if(argc0 < 1 || argc1 < 1){
-		osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name);
-		return 1;
-	}
+	/* if(argc0 < 1 || argc1 < 1){ */
+	/* 	osc_expr_err_argnum(context, 2, argc0 < 1 && argc1 < 1 ? 0 : 1, 0, f->rec->name); */
+	/* 	return 1; */
+	/* } */
 	uint32_t min_argc = argc0, max_argc = argc1;
 	if(argc0 > argc1){
 		min_argc = argc1, max_argc = argc0;
