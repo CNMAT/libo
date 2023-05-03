@@ -35,172 +35,172 @@ static t_osc_err osc_expr_evalArgInLexEnv(t_osc_expr_arg *arg,
 					  long *len,
 					  char **oscbndl,
 					  t_osc_atom_ar_u **out,
-						void *context);
+						void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_apply(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_map(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_reduce(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_assign(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_assigntoindex(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_if(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_emptybundle(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_bound(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_exists(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_getaddresses(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_delete(t_osc_expr *f,
 			    t_osc_expr_lexenv *lexenv,
 			    long *len,
 			    char **oscbndl,
 				    t_osc_atom_ar_u **out,
- 					 void *context);
+ 					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_getmsgcount(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_value(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_quote(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_eval(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_tokenize(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_compile(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_gettimetag(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_settimetag(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_getBundleMember(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_assignToBundleMember(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_andalso(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_orelse(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 
 static int osc_expr_specFunc_bundle(t_osc_expr *f,
 				   t_osc_expr_lexenv *lexenv,
 				   long *len,
 				   char **oscbndl,
 				   t_osc_atom_ar_u **out,
-					 void *context);
+					 void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));

@@ -42,6 +42,8 @@ typedef t_osc_hashtab t_osc_expr_lexenv;
 
 typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **argv, t_osc_atom_ar_u **out, void *context);
 
+typedef void (*osc_expr_delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl);
+
 #include <math.h>
 #include "osc_message_s.h"
 #include "osc_atom_u.h"
@@ -49,12 +51,14 @@ typedef int (*t_osc_expr_funcptr)(t_osc_expr *f, int argc, t_osc_atom_ar_u **arg
 
 
 int osc_expr_evalInLexEnv(t_osc_expr *f,
-			  t_osc_expr_lexenv *lexenv,
-			  long *len,
-			  char **oscbndl,
-			  t_osc_atom_ar_u **out,
-				void *context);
+                          t_osc_expr_lexenv *lexenv,
+                          long *len,
+                          char **oscbndl,
+                          t_osc_atom_ar_u **out,
+                          void *context,
+                          osc_expr_delegationfn delegationfn);
 int osc_expr_eval(t_osc_expr *function, long *len, char **oscbndl, t_osc_atom_ar_u **out, void *context);
+int osc_expr_evalWithDelegation(t_osc_expr *f, long *len, char **oscbndl, t_osc_atom_ar_u **out, void *context, void (*delegationfn)(void *context, long len, char *oscbndl, long *return_len, char **return_oscbndl));
 //int osc_expr_evalLexExprsInBndl(long *len, char **oscbndl, t_osc_atom_ar_u **out);
 t_osc_expr_rec *osc_expr_lookupFunction(char *name);
 t_osc_expr_lexenv *osc_expr_makeLexenv(void);
