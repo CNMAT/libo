@@ -91,6 +91,14 @@ void osc_atom_u_copyInto(t_osc_atom_u **dest, t_osc_atom_u *src)
             aa->w.bndl = NULL;
             osc_bundle_u_copy(&(aa->w.bndl), src->w.bndl);
         break;
+    case 'b':
+    {
+        int32_t len = ntoh32(*((int32_t *)(src->w.b)));
+        int32_t size = osc_util_getPaddingForNBytes(len);
+        aa->w.s = osc_mem_alloc(size + 4);
+        memcpy(aa->w.b, src->w.b, len + 4);
+    }
+        break;
         default:
       //      memcpy(&aa->w, &src->w, sizeof(union _word));
       //      printf("%s %i copied %p %p size %ld \n", __func__, __LINE__, &aa->w, &src->w, sizeof(union _word) );
