@@ -259,7 +259,8 @@ static t_osc_err osc_bundle_u_addMsg_impl(t_osc_bndl_u *bndl, t_osc_msg_u *msg, 
 			t_osc_msg_u *m = bndl->msghead;
 			while(m){
 				t_osc_msg_u *next = m->next;
-				if(!strcmp(address, osc_message_u_getAddress(m))){
+                const char * const messageaddr = osc_message_u_getAddress(m);
+				if(messageaddr && !strcmp(address, messageaddr)){
 					osc_bundle_u_removeMsg(bndl, m);
 					osc_message_u_free(m);
 					bndl->msgcount--;
